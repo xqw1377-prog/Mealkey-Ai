@@ -131,6 +131,40 @@ export const ORG_EXPERTS: ExpertSeat[] = [
   },
 ];
 
+/** Founder 四席：与 startMeeting 返回的 roleId=founder.M-* 对齐 */
+export const FOUNDER_SEATS: ExpertSeat[] = [
+  {
+    roleId: "founder.M-MKT",
+    displayName: "市场顾问",
+    duty: "分析行业空间",
+    focus: ["市场", "进入", "窗口"],
+  },
+  {
+    roleId: "founder.M-PNT",
+    displayName: "品牌顾问",
+    duty: "分析品牌定位",
+    focus: ["定位", "心智", "差异"],
+  },
+  {
+    roleId: "founder.M-BIZ",
+    displayName: "商业顾问",
+    duty: "分析扩张模型",
+    focus: ["模型", "单元经济", "扩张"],
+  },
+  {
+    roleId: "founder.M-ED",
+    displayName: "组织顾问",
+    duty: "分析管理能力",
+    focus: ["股权", "治理", "团队"],
+  },
+];
+
+export function getFounderSeatsForAgents(agentIds: string[]): ExpertSeat[] {
+  const set = new Set(agentIds.map((id) => `founder.${id}`));
+  const matched = FOUNDER_SEATS.filter((seat) => set.has(seat.roleId));
+  return matched.length > 0 ? matched : FOUNDER_SEATS;
+}
+
 export function getExpertsForDepartment(department: MeetingDepartment): ExpertSeat[] {
   switch (department) {
     case "brand":

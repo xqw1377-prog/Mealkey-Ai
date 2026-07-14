@@ -5,6 +5,7 @@ import { agentRouter } from "./routers/agent";
 import { dashboardRouter } from "./routers/dashboard";
 import { decisionArchiveRouter } from "./routers/decision-archive";
 import { founderRouter } from "./routers/founder";
+import { meetingSessionRouter } from "./routers/meeting-session";
 
 /**
  * 根 Router — 合并所有子 Router
@@ -20,6 +21,7 @@ export const appRouter = router({
   asset: assetRouter,
   decisionArchive: decisionArchiveRouter,
   founder: founderRouter,
+  meetingSession: meetingSessionRouter,
 });
 
 export type AppRouter = typeof appRouter;

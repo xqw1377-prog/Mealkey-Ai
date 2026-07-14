@@ -1,6 +1,6 @@
 /**
- * M-BIZ Product Service — D3 商业模式引擎（SSE）
- * 外呼 FastAPI；不可用时降级启发式，并落库 Decision / Memory / profile.mBiz。
+ * M-BIZ Product Service - D3 business model engine (SSE)
+ * Calls FastAPI; falls back to heuristic when unavailable; persists Decision / Memory / profile.mBiz.
  */
 
 import type { StreamChunk } from "@mealkey/agent-sdk";
@@ -21,12 +21,14 @@ import {
   normalizeBizIndustry,
   normalizeBizStage,
 } from "./m-biz-client";
+import { injectDomainKnowledge, withKnowledgeMessage } from "@/server/knowledge/inject-domain";
+import type { MKContext } from "@mealkey/agent-sdk";
 
 export const mBizManifest = {
   id: "m-biz",
-  name: "商业模式引擎",
+  name: "Business Model Engine",
   version: "1.0.0",
-  description: "围绕赚钱、复制与验证，形成商业模式判断。",
+  description: "Business model judgement around monetization, replication and verification.",
   capabilities: ["business_model", "unit_economics", "replication", "verification"],
 };
 
@@ -223,9 +225,6 @@ export async function* streamMBizProduct(
 ): AsyncGenerator<StreamChunk | MBizMetaChunk | MBizResultChunk> {
   const { projectId, userId, message, assetIds = [] } = options;
   const startedAt = Date.now();
-  const enrichedMessage = options.assetContextBlock
-    ? `${message}\n\n补充资料：\n${options.assetContextBlock}`
-    : message;
 
   const healthy = await checkMBizHealth();
   const provider = healthy ? "external" : "heuristic";
@@ -259,6 +258,32 @@ export async function* streamMBizProduct(
       yield { type: "error", message: "项目不存在或无权限访问" };
       return;
     }
+
+    const stubContext = {
+      owner: { id: ownerId, name: null, email: null, experience: "0年", strengths: [], weaknesses: [], overallScore: 60, riskTolerance: "medium", investmentStyle: "moderate" },
+      project: {
+        id: project.id,
+        name: project.name,
+        stage: project.stage,
+        category: project.category,
+        target: message,
+        city: null,
+        district: null,
+        budget: null,
+        profile: null,
+        healthScore: null,
+        confidence: null,
+      },
+      memories: [],
+      decisions: [],
+      knowledge: { rules: [], cases: [], models: [] },
+    } as MKContext;
+    const knowledgeContext = injectDomainKnowledge(stubContext, "business", message);
+    const enrichedMessage = withKnowledgeMessage(
+      message,
+      knowledgeContext,
+      options.assetContextBlock,
+    );
 
     yield {
       type: "text",
@@ -373,7 +398,9 @@ export async function* streamMBizProduct(
     await updateAgentRun(prisma, agentRun.id, {
       status: "failed",
       duration: Date.now() - startedAt,
-      error: error instanceof Error ? error.message : "M-BIZ 执行失败",
+      output: {
+        error: error instanceof Error ? error.message : "M-BIZ failed",
+      },
     });
     yield {
       type: "error",

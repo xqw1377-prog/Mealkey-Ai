@@ -1,7 +1,7 @@
 # Agent 系统
 
-> 更新时间: 2026-07-12  
-> 当前生产路径：**多 Agent 编排**（M-MKT / M-PNT / M-ED / ChiefAgent）
+> 更新时间: 2026-07-14  
+> 当前生产路径：**多 Agent 编排**（M-MKT / M-PNT / M-BIZ / M-ED / ChiefAgent）
 
 ## 执行路径
 
@@ -21,7 +21,14 @@
                5. Memory Update + AgentRun ↔ Decision
 ```
 
-M-BIZ（商业模式）当前通过 tRPC 外呼，**不**进入主 SSE 流。
+M-BIZ 已接入主 SSE：`forceAgent: "m-biz"` → `streamMBizProduct()`（外呼失败则规则降级）。
+
+## Founder 会议闭环
+
+- 启动：`trpc.founder.startMeeting`（四席判断 + `memoryWrites` 落库）
+- 推进 Round2/3：`trpc.founder.advanceRound`（有 Key 时 LLM 真辩论，否则 runtime 投影）
+- 进行中草稿：`Project.profile.activeMeeting`，经 `trpc.meetingSession.get/save/clear`；确认决策后清空
+- 会议历史：`trpc.meetingSession.listHistory` 读 Memory `founder_meeting_*`
 
 ## ChiefAgent
 
@@ -37,7 +44,10 @@ M-BIZ（商业模式）当前通过 tRPC 外呼，**不**进入主 SSE 流。
 |-------|------|--------|------------|
 | M-MKT | `m-mkt.service.ts` | `/market` | `market_result` |
 | M-PNT | `m-pnt.service.ts` | `/positioning` | `positioning_result` |
+| M-BIZ | `m-biz.service.ts` | `/business` | `business_result` |
 | M-ED | `m-ed.service.ts` | `/equity` | `equity_result` |
+
+M-MKT / M-ED / M-BIZ 均注入领域 seeds；M-MKT 额外叠加 knowledge-engine `matchRules`。
 
 `@mealkey/agents` 仍包含 LaunchAgent / MPntAgent 包级定义；M-ED / M-MKT 目前在 Web service 层实现。
 

@@ -39,15 +39,18 @@ export class MEdFounderAdapter extends BaseFounderAgentAdapter {
         stage: input.companyContext.basicInfo.stage,
         scale: input.companyContext.business?.scale,
         goals: input.companyContext.goals,
+        assetContextBlock: input.assetContextBlock,
       },
-      timeoutMs: 3000,
+      timeoutMs: 8000,
     };
   }
 
   async invoke(request: AdapterRequest): Promise<AdapterRawResponse> {
     const startedAt = Date.now();
-    const raw = previewMEdSnapshot({
-      message: String(request.payload.question ?? "").trim() || "当前组织与股权结构是否支撑下一阶段",
+    const raw = await previewMEdSnapshot({
+      message:
+        String(request.payload.question ?? "").trim() ||
+        "当前组织与股权结构是否支撑下一阶段",
       companyContext: {
         companyId: String(request.payload.companyId ?? "founder-company"),
         basicInfo: {
@@ -63,6 +66,10 @@ export class MEdFounderAdapter extends BaseFounderAgentAdapter {
           ? request.payload.goals.map((item) => String(item))
           : [],
       },
+      assetContextBlock:
+        typeof request.payload.assetContextBlock === "string"
+          ? request.payload.assetContextBlock
+          : undefined,
     });
 
     return {
@@ -77,7 +84,7 @@ export class MEdFounderAdapter extends BaseFounderAgentAdapter {
     response: AdapterRawResponse,
     context: AdapterNormalizeContext,
   ): FounderDecision {
-    const raw = response.raw as ReturnType<typeof previewMEdSnapshot>;
+    const raw = response.raw as Awaited<ReturnType<typeof previewMEdSnapshot>>;
 
     return {
       decisionId: this.buildDecisionId(),

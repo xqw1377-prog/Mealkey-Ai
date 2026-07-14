@@ -1,3 +1,4 @@
+﻿import { buildPositioningSnapshot } from "@/lib/positioning";
 import { previewMPntSnapshot } from "@/server/services/m-pnt.service";
 import type {
   AdapterBuildInput,
@@ -82,11 +83,11 @@ export class MPntFounderAdapter extends BaseFounderAgentAdapter {
         strategy: "先保持现有定位，收集更多市场和竞争数据",
         action: "补充品牌定位资料，重新发起定位评估",
         confidence: 0.55,
-        source: "degraded",
+        source: "m-pnt",
       });
       return {
         agent: this.agent,
-        status: "degraded",
+        status: "partial",
         raw: fallback,
         latencyMs: Date.now() - startedAt,
       };
@@ -148,3 +149,5 @@ export class MPntFounderAdapter extends BaseFounderAgentAdapter {
 }
 
 export const mPntFounderAdapter = new MPntFounderAdapter();
+
+

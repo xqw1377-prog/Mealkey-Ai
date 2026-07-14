@@ -32,6 +32,8 @@ export type ExpertStatement = {
   stance: "support" | "oppose" | "conditional" | "neutral";
   claim: string;
   reasons: string[];
+  /** Round2：被挑战的席位 roleId 或 agent 名 */
+  challengeTo?: string;
 };
 
 export type MeetingConflict = {
@@ -209,10 +211,13 @@ export function buildMeetingHref(
   projectId: string,
   topic?: string | null,
   department?: MeetingDepartment,
+  options?: { autoStart?: boolean; autoSend?: boolean },
 ): string {
   const params = new URLSearchParams();
   if (topic) params.set("topic", topic);
   if (department && department !== "general") params.set("dept", department);
+  if (options?.autoStart) params.set("autoStart", "1");
+  if (options?.autoSend) params.set("autoSend", "1");
   const q = params.toString();
   return q ? `/projects/${projectId}/advisor?${q}` : `/projects/${projectId}/advisor`;
 }

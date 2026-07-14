@@ -98,6 +98,7 @@ export async function runFounderLoop(
     mission,
     companyContext: input.request.companyContext,
     memory: input.request.currentMemory,
+    assetContextBlock: input.request.assetContextBlock,
   };
 
   const decisions = await Promise.all(

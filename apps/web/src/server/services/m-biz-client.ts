@@ -1,5 +1,6 @@
-type MBizRequestInit = RequestInit & {
+﻿type MBizRequestInit = RequestInit & {
   bodyJson?: unknown;
+  timeoutMs?: number;
 };
 
 const MEALKEY_M_BIZ_AGENT_ID = "mealkey-web-m-biz";
@@ -204,7 +205,10 @@ export function normalizeBizStage(projectStage?: string | null) {
   }
 }
 
-export async function mbizChat(request: MBizChatRequest) {
+export async function mbizChat(
+  request: MBizChatRequest,
+  init?: { timeoutMs?: number },
+) {
   return mbizFetch<{
     session_id: string;
     status: string;
@@ -220,6 +224,7 @@ export async function mbizChat(request: MBizChatRequest) {
   }>("/chat", {
     method: "POST",
     bodyJson: request,
+    timeoutMs: init?.timeoutMs,
   });
 }
 
@@ -295,3 +300,4 @@ export async function mbizGetSession(sessionId: string) {
     progress: number;
   }>(`/chat/session/${encodeURIComponent(sessionId)}`);
 }
+

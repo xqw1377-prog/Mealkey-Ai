@@ -94,8 +94,9 @@ export const decisionArchiveRouter = router({
 
       {
         const prefs = validateProfile(project.profile);
+        const { activeMeeting: _cleared, ...restPrefs } = prefs as Record<string, unknown>;
         const nextProfile = {
-          ...prefs,
+          ...restPrefs,
           ...(input.focusChoice ? { founderPreference: input.focusChoice } : {}),
           lastMeetingDecisionId: record.id,
           lastMeetingAt: new Date().toISOString(),

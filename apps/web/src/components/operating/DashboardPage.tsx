@@ -44,6 +44,13 @@ type DashboardHomeData = {
     judgement: string;
     problem: string;
   } | null;
+  pendingMeetingDraft?: {
+    topic: string;
+    lifecycleLabel: string;
+    deliberationRound: number;
+    updatedAt: string;
+    href: string;
+  } | null;
 };
 
 function statusTone(label: string): string {
@@ -88,7 +95,9 @@ export function DashboardPage({
     home.dailyJudgement ||
     "召开一次评估会议，把分歧压成可验证决策。";
   const department = detectDepartmentFromTopic(topic);
-  const meetingHref = buildMeetingHref(currentProject.id, topic, department);
+  const meetingHref = buildMeetingHref(currentProject.id, topic, department, {
+    autoStart: true,
+  });
   const reasons = (home.brainChanges ?? []).slice(0, 3);
   const validating = home.pendingReviewItems?.[0];
 
@@ -127,6 +136,29 @@ export function DashboardPage({
           </p>
         )}
       </header>
+
+      {home.pendingMeetingDraft ? (
+        <section className="space-y-3 rounded-[18px] border border-[rgba(102,115,94,0.28)] bg-[#EEF1EA] px-4 py-4 md:px-5">
+          <p className="text-[12px] tracking-[0.08em] text-[#66735E]">未完成的会议</p>
+          <h2 className="text-[18px] font-semibold leading-7 text-[#202124] md:text-[20px]">
+            {home.pendingMeetingDraft.topic}
+          </h2>
+          <p className="text-[13px] leading-6 text-[#5f6368]">
+            {home.pendingMeetingDraft.lifecycleLabel}
+            {home.pendingMeetingDraft.deliberationRound > 0
+              ? ` · 第 ${home.pendingMeetingDraft.deliberationRound} 轮`
+              : ""}
+          </p>
+          <Link
+            href={home.pendingMeetingDraft.href}
+            prefetch={false}
+            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[16px] bg-[#181817] px-5 text-[15px] font-semibold text-white no-underline"
+          >
+            继续会议
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+        </section>
+      ) : null}
 
       {companion && home.growthPlan ? (
         <section className="space-y-4 border-y border-[rgba(24,24,23,0.08)] py-6">

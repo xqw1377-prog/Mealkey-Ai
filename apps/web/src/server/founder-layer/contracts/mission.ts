@@ -67,6 +67,8 @@ export interface FounderMissionRequest {
   message: string;
   companyContext: CompanyContext;
   currentMemory?: FounderMemorySnapshot;
+  /** 用户本轮选中的资料摘要 */
+  assetContextBlock?: string;
   createdAt: string;
 }
 

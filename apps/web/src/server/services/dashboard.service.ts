@@ -5,6 +5,13 @@
  */
 import type { PrismaClient } from "@/generated/prisma";
 import { parseJsonField } from "@/lib/prisma";
+import {
+  buildMeetingHref,
+  detectDepartmentFromTopic,
+  lifecycleLabel,
+  type MeetingLifecycle,
+} from "@/lib/meeting";
+import { ActiveMeetingDraftSchema } from "@/lib/meeting-session";
 import { getProject, listProjects, type ProjectResponse } from "./project.service";
 
 // ─── Types ───
@@ -74,6 +81,17 @@ function parseJsonStringArray(value: string | null | undefined): string[] {
   } catch {
     return [];
   }
+}
+
+function buildFounderMeetingLink(
+  projectId: string,
+  topic: string,
+  options?: { autoStart?: boolean; autoSend?: boolean },
+) {
+  return buildMeetingHref(projectId, topic, detectDepartmentFromTopic(topic), {
+    autoStart: options?.autoStart ?? true,
+    autoSend: options?.autoSend,
+  });
 }
 
 function asString(value: unknown): string | null {
@@ -404,9 +422,9 @@ export function buildDashboardHome(bundle: ProjectInsightBundle) {
             : undefined;
           const newOneLiner = i.newOneLiner ? String(i.newOneLiner) : undefined;
           const reason = i.reason ? String(i.reason) : undefined;
-          const qs = new URLSearchParams({
-            intent: "positioning_review",
-            topic: [
+          const reviewHrefBase = buildMeetingHref(
+            bundle.project.id,
+            [
               `【定位变更复审】请复审经营判断：${problem}`,
               judgement ? `原判断结论：${judgement}` : "",
               previousOneLiner || newOneLiner
@@ -418,8 +436,12 @@ export function buildDashboardHome(bundle: ProjectInsightBundle) {
             ]
               .filter(Boolean)
               .join("\n"),
-          });
-          if (decisionId) qs.set("decisionId", decisionId);
+            "brand",
+            { autoStart: true },
+          );
+          const reviewHref = `${reviewHrefBase}&intent=positioning_review${
+            decisionId ? `&decisionId=${encodeURIComponent(decisionId)}` : ""
+          }`;
           return {
             date: i.flaggedAt
               ? formatShortDate(new Date(String(i.flaggedAt)))
@@ -429,7 +451,7 @@ export function buildDashboardHome(bundle: ProjectInsightBundle) {
             status: "定位复审",
             kind: "positioning" as const,
             decisionId,
-            href: `/projects/${bundle.project.id}/advisor?${qs.toString()}`,
+            href: reviewHref,
             decisionsHref: `/projects/${bundle.project.id}/decisions#decision-${decisionId}`,
           };
         })
@@ -506,6 +528,25 @@ export function buildDashboardHome(bundle: ProjectInsightBundle) {
         }
       : null;
 
+  const activeMeetingParsed = ActiveMeetingDraftSchema.safeParse(
+    (profile as Record<string, unknown>).activeMeeting,
+  );
+  const pendingMeetingDraft =
+    activeMeetingParsed.success &&
+    activeMeetingParsed.data.status === "draft" &&
+    activeMeetingParsed.data.topicConfirmed
+      ? {
+          topic: activeMeetingParsed.data.topic,
+          lifecycle: activeMeetingParsed.data.lifecycle,
+          lifecycleLabel: lifecycleLabel(
+            activeMeetingParsed.data.lifecycle as MeetingLifecycle,
+          ),
+          deliberationRound: activeMeetingParsed.data.deliberationRound,
+          updatedAt: activeMeetingParsed.data.updatedAt,
+          href: `/projects/${bundle.project.id}/advisor`,
+        }
+      : null;
+
   return {
     todayLabel: formatTodayLabel(),
     ownerName,
@@ -531,6 +572,7 @@ export function buildDashboardHome(bundle: ProjectInsightBundle) {
     pendingReviewItems,
     positioningReviewCount,
     positioningReviewAlert,
+    pendingMeetingDraft,
     abilityMap: abilities,
     strongestAbility: strongest?.label ?? "产品能力",
     strongestCoreAbility: CORE_MAP[strongest?.label ?? "产品能力"] ?? "决策力",
@@ -753,7 +795,10 @@ export function buildProjectOverview(bundle: ProjectInsightBundle) {
           title: "先完成品牌定位",
           description: `把「${currentChallenge}」收成一句心智位置，再开经营会议。`,
           href: `/projects/${bundle.project.id}/positioning`,
-          meetingHref: `/projects/${bundle.project.id}/advisor`,
+          meetingHref: buildFounderMeetingLink(
+            bundle.project.id,
+            `围绕“${currentChallenge}”先完成品牌定位，再进入经营会议。`,
+          ),
           actions: ["品类判断", "客群收敛", "一句话定位"],
         };
       }
@@ -762,17 +807,23 @@ export function buildProjectOverview(bundle: ProjectInsightBundle) {
           title: "补齐品牌定位",
           description: "定位未收束前，选址与投放都容易发散。",
           href: `/projects/${bundle.project.id}/positioning`,
-          meetingHref: `/projects/${bundle.project.id}/advisor`,
+          meetingHref: buildFounderMeetingLink(
+            bundle.project.id,
+            "先补齐品牌定位，再决定后续经营动作。",
+          ),
           actions: ["启动 M-PNT", "明确心智位置", "写入决策档案"],
         };
       }
+      const meetingTopic = isInitialWorld
+        ? `先把“${currentChallenge}”压成第一条经营判断。`
+        : tasks[0].title;
       return {
         title: isInitialWorld ? "进入第一次经营会议" : tasks[0].title,
         description: isInitialWorld
           ? `先把“${currentChallenge}”压成第一条经营判断。`
           : tasks[0].description,
         href: `/projects/${bundle.project.id}/advisor`,
-        meetingHref: `/projects/${bundle.project.id}/advisor`,
+        meetingHref: buildFounderMeetingLink(bundle.project.id, meetingTopic),
         actions: isInitialWorld
           ? ["重定义问题", "锁定关键变量", "形成第一条判断"]
           : tasks.map((t) => t.title),
@@ -1107,7 +1158,10 @@ export function buildOwnerPortrait(
 
   const weakLabel = weakest?.label ?? "增长能力";
   const meetingHref = bundle?.project.id
-    ? `/projects/${bundle.project.id}/advisor`
+    ? buildFounderMeetingLink(
+        bundle.project.id,
+        isInitialPortrait ? currentChallenge : `${weakLabel}复盘会议`,
+      )
     : "/dashboard";
 
   return {

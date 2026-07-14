@@ -97,8 +97,9 @@ export function understandMissionGoal(rawGoal: string): MissionUnderstanding {
     department: multiDept ? "general" : department,
     meetingTitle,
     meetingHref: (projectId: string) => {
-      const href = buildMeetingHref(projectId, topic, multiDept ? "general" : department);
-      return href.includes("?") ? `${href}&autoStart=1` : `${href}?autoStart=1`;
+      return buildMeetingHref(projectId, topic, multiDept ? "general" : department, {
+        autoStart: true,
+      });
     },
   };
 }

@@ -74,7 +74,11 @@ export default function ProjectDetailPage({
   const risk = overview.biggestRisk || "关键风险待识别";
   const topic = overview.biggestRisk || overview.nextPush?.title || "当前核心经营问题";
   const department = detectDepartmentFromTopic(topic);
-  const meetingHref = overview.nextPush?.meetingHref ?? buildMeetingHref(project.id, topic, department);
+  const meetingHref =
+    overview.nextPush?.meetingHref ??
+    buildMeetingHref(project.id, topic, department, {
+      autoStart: true,
+    });
 
   const discussing = [
     { label: "商业战略部", href: `/projects/${project.id}/business` },

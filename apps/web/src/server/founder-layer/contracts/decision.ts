@@ -29,6 +29,8 @@ export interface AdapterBuildInput {
   mission: FounderMission;
   companyContext: import("./mission").CompanyContext;
   memory?: import("./mission").FounderMemorySnapshot;
+  /** 用户本轮选中的资料摘要，供各席判断优先引用 */
+  assetContextBlock?: string;
 }
 
 export interface AdapterRequest {

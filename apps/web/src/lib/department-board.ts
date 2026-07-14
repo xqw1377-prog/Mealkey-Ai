@@ -68,17 +68,14 @@ export function getDepartmentMeetingHref(
   projectId: string,
   key: DepartmentBoardKey,
   topic?: string | null,
-  options?: { autoStart?: boolean },
+  options?: { autoStart?: boolean; autoSend?: boolean },
 ): string {
   const board = DEPARTMENT_BOARDS[key];
-  const params = new URLSearchParams();
-  params.set("topic", topic || board.title);
-  params.set("dept", board.department);
-  if (options?.autoStart !== false) {
-    // 部门看板默认带 autoStart，进入会议后自动打开会前确认流
-    params.set("autoStart", "1");
-  }
-  return `/projects/${projectId}/advisor?${params.toString()}`;
+  return buildMeetingHref(projectId, topic || board.title, board.department, {
+    // 部门看板默认直接拉起 Founder 会议发起链
+    autoStart: options?.autoStart !== false,
+    autoSend: options?.autoSend,
+  });
 }
 
 export function getDepartmentAgentCode(key: DepartmentBoardKey) {

@@ -67,6 +67,10 @@ export async function polishAdvisorJudgement(input: {
   message: string;
   draft: PolishFields;
 }): Promise<{ fields: PolishFields; provider: LlmProvider; model: string; polished: boolean }> {
+  if (process.env.HEURISTIC_ONLY === "true") {
+    return { fields: input.draft, provider: "none", model: "heuristic", polished: false };
+  }
+
   const provider = resolveLlmProvider();
   const model = resolveLlmModel(provider);
   const llm = tryCreateSharedLlmAdapter();

@@ -11,8 +11,9 @@ export function buildFounderLoopRequest(input: {
   userId: string;
   message: string;
   companyContext: CompanyContext;
+  assetContextBlock?: string;
 }): FounderMissionRequest {
-  const { companyContext, message, project, userId } = input;
+  const { companyContext, message, project, userId, assetContextBlock } = input;
 
   return {
     requestId: `req_${Date.now().toString(36)}`,
@@ -36,6 +37,7 @@ export function buildFounderLoopRequest(input: {
       },
       goals: [companyContext.yearlyGoal, message].filter(Boolean) as string[],
     },
+    assetContextBlock,
     createdAt: new Date().toISOString(),
   };
 }

@@ -90,8 +90,19 @@ export class MBizFounderAdapter extends BaseFounderAgentAdapter {
   }
 
   buildRequest(input: AdapterBuildInput): AdapterRequest {
+    const baseMessage = input.mission.question || input.mission.objective;
+    const bizHints = [
+      "先验证单店回本与人效，再谈扩张店数。",
+      "现金流约束增长节奏，回款慢于投入时应降速。",
+      "未标准化的出品与供应链不宜跨城复制。",
+    ].join("；");
+    const withAssets = input.assetContextBlock
+      ? `${baseMessage}\n\n补充资料：\n${input.assetContextBlock}`
+      : baseMessage;
+    const message = `${withAssets}\n\n【商业参考】${bizHints}`;
+
     const request: MBizChatRequest = {
-      message: input.mission.question || input.mission.objective,
+      message,
       enterprise_name: input.companyContext.basicInfo.name,
       industry: normalizeBizIndustry(input.companyContext.basicInfo.industry),
       stage: normalizeBizStage(input.companyContext.basicInfo.stage),
@@ -101,7 +112,7 @@ export class MBizFounderAdapter extends BaseFounderAgentAdapter {
       agent: this.agent,
       endpoint: "/chat",
       payload: request,
-      timeoutMs: 30000,
+      timeoutMs: 3000,
     };
   }
 
@@ -109,7 +120,9 @@ export class MBizFounderAdapter extends BaseFounderAgentAdapter {
     const startedAt = Date.now();
     let raw: Awaited<ReturnType<typeof mbizChat>>;
     try {
-      raw = await mbizChat(request.payload as MBizChatRequest);
+      raw = await mbizChat(request.payload as MBizChatRequest, {
+        timeoutMs: request.timeoutMs ?? 3000,
+      });
     } catch (error) {
       console.warn("[Founder-MBIZ] 服务不可用，降级为启发式回复:", (error as Error)?.message);
       const degraded = mbizDegradedResponse(
@@ -117,7 +130,7 @@ export class MBizFounderAdapter extends BaseFounderAgentAdapter {
       );
       return {
         agent: this.agent,
-        status: "degraded",
+        status: "partial",
         raw: degraded,
         latencyMs: Date.now() - startedAt,
       };

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * 用 Founder Layer runtime（服务端会议引擎）投影 Round 2/3，
  * 替代客户端硬编码剧本。
  */
@@ -9,19 +9,25 @@ import type {
   MeetingConflict,
 } from "./meeting";
 import type { DecisionOption, DeliberationResult } from "./meeting-deliberation";
-import { AGENT_SEAT } from "@/server/founder/contracts";
-import type { FounderAgentId } from "@/server/founder/contracts";
+
+const SEAT_LABEL: Record<string, { roleId: string; displayName: string }> = {
+  "M-MKT": { roleId: "founder.M-MKT", displayName: "市场顾问" },
+  "M-PNT": { roleId: "founder.M-PNT", displayName: "品牌顾问" },
+  "M-BIZ": { roleId: "founder.M-BIZ", displayName: "商业顾问" },
+  "M-ED": { roleId: "founder.M-ED", displayName: "组织顾问" },
+  CHIEF: { roleId: "founder.CHIEF", displayName: "主持人" },
+};
 
 type RuntimeLike = {
   meeting: {
-    recommendation: string;
+    recommendation?: string;
     conflicts: Array<{
       conflictId: string;
       summary: string;
       sideA: string;
       sideB: string;
       dimension: string;
-      agents: string[];
+      agents: readonly string[];
     }>;
     rounds: Array<{
       round: number;
@@ -33,7 +39,7 @@ type RuntimeLike = {
     decisionId: string;
     sourceAgent: string;
     judgement: string;
-    stance?: "support" | "oppose" | "conditional" | "neutral";
+    stance?: "support" | "oppose" | "conditional" | "neutral" | string;
     risks: string[];
     nextSteps: string[];
   }>;
@@ -46,14 +52,7 @@ type RuntimeLike = {
 };
 
 function seatLabel(agent: string): { roleId: string; displayName: string } {
-  const id = (["M-PNT", "M-MKT", "M-BIZ", "M-ED", "CHIEF"].includes(agent)
-    ? agent
-    : "CHIEF") as FounderAgentId;
-  const seat = AGENT_SEAT[id];
-  return {
-    roleId: `founder.${id}`,
-    displayName: seat.seatLabel,
-  };
+  return SEAT_LABEL[agent] || SEAT_LABEL.CHIEF;
 }
 
 function clip(text: string, max = 72): string {
@@ -93,28 +92,28 @@ function optionsFromRuntime(runtime: RuntimeLike): DecisionOption[] {
 }
 
 function consensusFromRuntime(runtime: RuntimeLike, topic: string): ConsensusDraft {
+  const judgement =
+    runtime.finalDecision.reason[0] ||
+    runtime.meeting.recommendation ||
+    `${runtime.finalDecision.chosen}：${runtime.finalDecision.problem}`;
+
   return {
-    id: `consensus-${Date.now()}`,
-    topic,
-    judgement:
-      runtime.finalDecision.reason[0] ||
-      runtime.meeting.recommendation ||
-      `${runtime.finalDecision.chosen}：${runtime.finalDecision.problem}`,
-    reasons:
+    summary: clip(`${topic}：${judgement}`, 120),
+    proposedDecision: clip(runtime.meeting.recommendation || judgement, 100),
+    coreReasons:
       runtime.finalDecision.reason.length > 0
         ? runtime.finalDecision.reason.slice(0, 4)
         : runtime.decisions.slice(0, 3).map((d) => `${d.sourceAgent}：${clip(d.judgement, 48)}`),
-    risks: runtime.decisions.flatMap((d) => d.risks).filter(Boolean).slice(0, 3),
-    nextSteps: [
+    nextActions: [
       ...runtime.finalDecision.validationPlan,
       ...runtime.decisions.flatMap((d) => d.nextSteps),
     ]
       .filter(Boolean)
       .slice(0, 4),
+    validationPlan: runtime.finalDecision.validationPlan.join("；") || undefined,
   };
 }
 
-/** Round 2：基于服务端冲突与各席风险，形成挑战发言 */
 export function projectRuntimeRound2(input: {
   runtime: RuntimeLike;
   previous: ExpertStatement[];
@@ -129,16 +128,16 @@ export function projectRuntimeRound2(input: {
       roundTwoItems[index]?.summary ||
       conflict?.issue ||
       decision.risks[0] ||
-      `需要回应其他席位对「${clip(decision.judgement, 28)}」的质疑。`;
-    const stance =
+      ("需要回应其他席位对「" + clip(decision.judgement, 28) + "」的质疑。");
+    const stance: ExpertStatement["stance"] =
       decision.stance === "oppose"
         ? "oppose"
         : decision.stance === "support"
           ? "conditional"
-          : decision.stance || "conditional";
+          : "conditional";
 
     return {
-      id: `r2-${decision.decisionId}`,
+      id: "r2-" + decision.decisionId,
       roleId: seat.roleId,
       displayName: seat.displayName,
       round: 2,
@@ -146,26 +145,20 @@ export function projectRuntimeRound2(input: {
       claim: clip(challenge, 64),
       reasons: [
         clip(decision.risks[0] || decision.judgement, 100),
-        conflict ? `冲突点：${clip(conflict.issue, 60)}` : `围绕议题：${clip(input.topic, 40)}`,
+        conflict ? ("冲突点：" + clip(conflict.issue, 60)) : ("围绕议题：" + clip(input.topic, 40)),
       ].filter(Boolean),
     };
   });
 
-  const merged = [
-    ...input.previous.filter((s) => s.round === 1),
-    ...statements,
-  ];
-
   return {
     round: 2,
-    statements: merged,
+    statements: input.previous.filter((s) => s.round === 1).concat(statements),
     conflict,
     consensus: null,
     options: optionsFromRuntime(input.runtime),
   };
 }
 
-/** Round 3：综合服务端 finalDecision / recommendation 收口 */
 export function projectRuntimeRound3(input: {
   runtime: RuntimeLike;
   previous: ExpertStatement[];
@@ -174,41 +167,34 @@ export function projectRuntimeRound3(input: {
 }): DeliberationResult {
   const consensus = consensusFromRuntime(input.runtime, input.topic);
   if (input.focusChoice) {
-    consensus.reasons = [
-      `创始人关注：${input.focusChoice}`,
-      ...consensus.reasons,
-    ].slice(0, 4);
+    consensus.coreReasons = ["创始人关注：" + input.focusChoice].concat(consensus.coreReasons).slice(0, 4);
   }
 
   const statements: ExpertStatement[] = input.runtime.decisions.map((decision) => {
     const seat = seatLabel(decision.sourceAgent);
     return {
-      id: `r3-${decision.decisionId}`,
+      id: "r3-" + decision.decisionId,
       roleId: seat.roleId,
       displayName: seat.displayName,
       round: 3,
-      stance: decision.stance === "oppose" ? "conditional" : decision.stance || "support",
+      stance: decision.stance === "oppose" ? "conditional" : "support",
       claim: clip(
         decision.nextSteps[0] ||
           input.runtime.finalDecision.validationPlan[0] ||
-          input.runtime.meeting.recommendation,
+          input.runtime.meeting.recommendation ||
+          "按验证计划推进",
         64,
       ),
       reasons: [
-        clip(consensus.judgement, 100),
-        decision.nextSteps[0] ? `下一步：${clip(decision.nextSteps[0], 60)}` : "按验证计划推进",
+        clip(consensus.proposedDecision, 100),
+        decision.nextSteps[0] ? ("下一步：" + clip(decision.nextSteps[0], 60)) : "按验证计划推进",
       ],
     };
   });
 
-  const merged = [
-    ...input.previous.filter((s) => s.round === 1 || s.round === 2),
-    ...statements,
-  ];
-
   return {
     round: 3,
-    statements: merged,
+    statements: input.previous.filter((s) => s.round === 1 || s.round === 2).concat(statements),
     conflict: conflictFromRuntime(input.runtime),
     consensus,
     options: optionsFromRuntime(input.runtime),

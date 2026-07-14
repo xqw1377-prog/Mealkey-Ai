@@ -29,20 +29,25 @@ export class MMktFounderAdapter extends BaseFounderAgentAdapter {
   buildRequest(input: AdapterBuildInput): AdapterRequest {
     return {
       agent: this.agent,
-      endpoint: "heuristic://m-mkt",
+      endpoint: "preview://m-mkt",
       payload: {
         question: input.mission.question || input.mission.objective,
-        city: input.companyContext.basicInfo.city,
+        companyId: input.companyContext.companyId,
+        name: input.companyContext.basicInfo.name,
         industry: input.companyContext.basicInfo.industry,
+        city: input.companyContext.basicInfo.city,
+        stage: input.companyContext.basicInfo.stage,
+        scale: input.companyContext.business?.scale,
         goals: input.companyContext.goals,
+        assetContextBlock: input.assetContextBlock,
       },
-      timeoutMs: 3000,
+      timeoutMs: 8000,
     };
   }
 
   async invoke(request: AdapterRequest): Promise<AdapterRawResponse> {
     const startedAt = Date.now();
-    const raw = previewMMktSnapshot({
+    const raw = await previewMMktSnapshot({
       message: String(request.payload.question ?? "").trim() || "当前市场是否值得进入",
       companyContext: {
         companyId: String(request.payload.companyId ?? "founder-company"),
@@ -59,6 +64,10 @@ export class MMktFounderAdapter extends BaseFounderAgentAdapter {
           ? request.payload.goals.map((item) => String(item))
           : [],
       },
+      assetContextBlock:
+        typeof request.payload.assetContextBlock === "string"
+          ? request.payload.assetContextBlock
+          : undefined,
     });
 
     return {
@@ -73,7 +82,7 @@ export class MMktFounderAdapter extends BaseFounderAgentAdapter {
     response: AdapterRawResponse,
     context: AdapterNormalizeContext,
   ): FounderDecision {
-    const raw = response.raw as ReturnType<typeof previewMMktSnapshot>;
+    const raw = response.raw as Awaited<ReturnType<typeof previewMMktSnapshot>>;
 
     return {
       decisionId: this.buildDecisionId(),

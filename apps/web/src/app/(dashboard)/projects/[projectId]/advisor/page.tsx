@@ -18,6 +18,7 @@ import {
   detectConflict,
   buildConsensusDraft,
   toDecisionCard,
+  lifecycleLabel,
   type MeetingLifecycle,
   type MeetingDepartment,
   type ExpertStatement,
@@ -26,6 +27,7 @@ import {
 } from "@/lib/meeting";
 import {
   getExpertsForDepartment,
+  getFounderSeatsForAgents,
   getForceAgent,
   runDeliberationRound,
   type DeliberationRound,
@@ -33,6 +35,7 @@ import {
   type ForceAgentCode,
 } from "@/lib/meeting-deliberation";
 import { statementFromAgentStream } from "@/lib/meeting-stream";
+import type { ActiveMeetingDraft } from "@/lib/meeting-session";
 
 interface ChatMessage {
   id: string;
@@ -116,9 +119,21 @@ function AdvisorPageContent({
     projectId: params.projectId,
     limit: 12,
   });
+  const { data: savedMeetingDraft } = trpc.meetingSession.get.useQuery(
+    { projectId: params.projectId },
+    { staleTime: 30_000 },
+  );
+  const { data: meetingHistory = [] } = trpc.meetingSession.listHistory.useQuery(
+    { projectId: params.projectId, limit: 8 },
+    { staleTime: 60_000 },
+  );
+  const saveMeetingSession = trpc.meetingSession.save.useMutation();
+  const clearMeetingSession = trpc.meetingSession.clear.useMutation();
   const setCurrentProject = useProjectStore((s) => s.setCurrentProject);
   const utils = trpc.useUtils();
   const deepLinkConsumedRef = useRef(false);
+  const meetingDraftRestoredRef = useRef(false);
+  const meetingSaveTimerRef = useRef<number | null>(null);
   const reviewDecisionId = searchParams?.get("decisionId") || null;
   const reviewIntent = searchParams?.get("intent") || null;
 
@@ -172,11 +187,56 @@ function AdvisorPageContent({
     reasons: string[];
     validationPlan: string;
   } | null>(null);
+  const [meetingRuntime, setMeetingRuntime] = useState<{
+    meeting: {
+      recommendation?: string;
+      conflicts: Array<{
+        conflictId: string;
+        summary: string;
+        sideA: string;
+        sideB: string;
+        dimension: string;
+        agents: string[];
+      }>;
+      rounds: Array<{
+        round: number;
+        title: string;
+        items: Array<{ agent: string; summary: string; stance?: string }>;
+      }>;
+    };
+    decisions: Array<{
+      decisionId: string;
+      sourceAgent: string;
+      judgement: string;
+      stance?: string;
+      risks: string[];
+      nextSteps: string[];
+    }>;
+    finalDecision: {
+      chosen: string;
+      problem: string;
+      reason: string[];
+      validationPlan: string[];
+    };
+  } | null>(null);
   const [extraFacts, setExtraFacts] = useState<string[]>([]);
   const [deliberating, setDeliberating] = useState(false);
+  const [showDraftBanner, setShowDraftBanner] = useState(false);
+  const [draftConflict, setDraftConflict] = useState<{
+    draft: ActiveMeetingDraft;
+    incomingTopic: string;
+  } | null>(null);
+  const [showMeetingHistory, setShowMeetingHistory] = useState(false);
+  const [historyPreview, setHistoryPreview] = useState<{
+    topic: string;
+    summary: string;
+    recommendation?: string;
+    createdAt: string;
+  } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const topicConfirmedRef = useRef(false);
   const deliberationRoundRef = useRef<DeliberationRound | 0>(0);
+  const autoStartTriggeredRef = useRef(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const recorderChunksRef = useRef<Blob[]>([]);
@@ -201,8 +261,120 @@ function AdvisorPageContent({
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, streamingText]);
 
+  // 刷新恢复：从 profile.activeMeeting 还原会议桌
+  const applySavedDraft = useCallback((draft: ActiveMeetingDraft) => {
+    setMeetingTopic(draft.topic);
+    setTopicConfirmed(draft.topicConfirmed);
+    setMeetingLifecycle(draft.lifecycle);
+    setDeliberationRound(draft.deliberationRound);
+    setLiveStatements(draft.liveStatements);
+    setLiveConflict(draft.liveConflict);
+    setLiveConsensus(draft.liveConsensus);
+    setLiveOptions(draft.liveOptions);
+    setSelectedOptionId(draft.selectedOptionId);
+    setFocusChoice(draft.focusChoice);
+    setServerSynthesis(draft.serverSynthesis);
+    setMeetingRuntime(draft.meetingRuntime);
+    if (draft.conversationId) setConversationId(draft.conversationId);
+    if (draft.selectedAssetIds?.length) setSelectedAssetIds(draft.selectedAssetIds);
+    setShowDraftBanner(true);
+    setDraftConflict(null);
+    setAgentState("completed");
+    setAgentStateDescription("已恢复上次未结束的会议");
+  }, []);
+
+  useEffect(() => {
+    if (meetingDraftRestoredRef.current) return;
+    if (savedMeetingDraft === undefined) return;
+    meetingDraftRestoredRef.current = true;
+    if (!savedMeetingDraft || !savedMeetingDraft.topicConfirmed) return;
+
+    const incomingTopic = searchParams?.get("topic")?.trim() || "";
+    if (incomingTopic && incomingTopic !== savedMeetingDraft.topic) {
+      setDraftConflict({ draft: savedMeetingDraft, incomingTopic });
+      return;
+    }
+
+    applySavedDraft(savedMeetingDraft);
+  }, [savedMeetingDraft, searchParams, applySavedDraft]);
+
+  // 进行中会议 debounce 落库
+  useEffect(() => {
+    if (!meetingDraftRestoredRef.current) return;
+    if (draftConflict) return;
+    if (!topicConfirmed || deliberating) return;
+    if (!meetingTopic?.trim()) return;
+    if (
+      meetingLifecycle === "DECISION" ||
+      meetingLifecycle === "VALIDATE" ||
+      meetingLifecycle === "MEMORY_UPDATE" ||
+      meetingLifecycle === "ABANDONED"
+    ) {
+      return;
+    }
+
+    const draft: ActiveMeetingDraft = {
+      topic: meetingTopic,
+      topicConfirmed,
+      lifecycle: meetingLifecycle,
+      deliberationRound: (deliberationRound || 0) as 0 | 1 | 2 | 3,
+      liveStatements,
+      liveConflict,
+      liveConsensus,
+      liveOptions,
+      selectedOptionId,
+      focusChoice,
+      serverSynthesis,
+      meetingRuntime,
+      conversationId: conversationId ?? null,
+      selectedAssetIds,
+      updatedAt: new Date().toISOString(),
+      status: "draft",
+    };
+
+    if (meetingSaveTimerRef.current) {
+      window.clearTimeout(meetingSaveTimerRef.current);
+    }
+    meetingSaveTimerRef.current = window.setTimeout(() => {
+      saveMeetingSession.mutate(
+        { projectId: params.projectId, draft },
+        {
+          onSuccess: () => {
+            void utils.dashboard.getHome.invalidate();
+          },
+        },
+      );
+    }, 900);
+
+    return () => {
+      if (meetingSaveTimerRef.current) {
+        window.clearTimeout(meetingSaveTimerRef.current);
+      }
+    };
+  }, [
+    topicConfirmed,
+    meetingLifecycle,
+    deliberationRound,
+    liveStatements,
+    liveConflict,
+    liveConsensus,
+    liveOptions,
+    selectedOptionId,
+    focusChoice,
+    serverSynthesis,
+    meetingRuntime,
+    conversationId,
+    selectedAssetIds,
+    meetingTopic,
+    deliberating,
+    draftConflict,
+    params.projectId,
+  ]);
+
   useEffect(() => {
     if (!topicConfirmed) return;
+    // Founder 审议回合已接管生命周期时，勿被聊天消息自动推着跳阶段
+    if (deliberationRoundRef.current > 0) return;
     const substantive = messages.filter(
       (m) => m.id !== "welcome" && m.id !== "loading" && m.id !== "streaming",
     );
@@ -661,9 +833,32 @@ function AdvisorPageContent({
   // Deep-link from Decisions / Today / 部门看板：载入议题，部门入口可自动进入会议桌
   useEffect(() => {
     if (deepLinkConsumedRef.current) return;
+    // 等草稿查询完成，避免与恢复逻辑抢写 topic
+    if (savedMeetingDraft === undefined) return;
+
     const topic = searchParams?.get("topic");
     const dept = searchParams?.get("dept");
-    if (!topic?.trim() && !dept) return;
+    if (!topic?.trim() && !dept) {
+      deepLinkConsumedRef.current = true;
+      return;
+    }
+
+    // 有未完成草稿且议题冲突时，交给冲突横幅处理
+    if (
+      savedMeetingDraft?.topicConfirmed &&
+      topic?.trim() &&
+      topic.trim() !== savedMeetingDraft.topic
+    ) {
+      deepLinkConsumedRef.current = true;
+      return;
+    }
+
+    // 无冲突草稿已恢复时，不再用 deep link 覆盖
+    if (savedMeetingDraft?.topicConfirmed && (!topic?.trim() || topic.trim() === savedMeetingDraft.topic)) {
+      deepLinkConsumedRef.current = true;
+      return;
+    }
+
     deepLinkConsumedRef.current = true;
 
     if (topic?.trim()) {
@@ -681,23 +876,13 @@ function AdvisorPageContent({
     );
     setAgentReferences(["部门上下文", "项目记忆", "历史判断"]);
 
-    // 部门深链：跳过空聊，直接进入会前确认态（用户仍需点确认议题 / 或 autoStart=1 自动确认）
-    if (dept && searchParams?.get("autoStart") === "1" && topic?.trim()) {
-      // 留给会前「邀请顾问」动画完成后再自动确认议题
-      const t = window.setTimeout(() => {
-        setTopicConfirmed(true);
-        setMeetingLifecycle("OPEN");
-      }, 2800);
-      return () => window.clearTimeout(t);
-    }
-
     if (searchParams?.get("autoSend") === "1" && topic?.trim()) {
       const t = window.setTimeout(() => {
         void handleSend(topic);
       }, 400);
       return () => window.clearTimeout(t);
     }
-  }, [searchParams, handleSend]);
+  }, [searchParams, handleSend, savedMeetingDraft]);
 
   const resolveReview = trpc.decisionArchive.resolveReview.useMutation({
     onSuccess: () => {
@@ -712,15 +897,21 @@ function AdvisorPageContent({
       setAcceptedDecisionId(result.decisionId);
       setAcceptedGrowthPlan(result.growthPlan ?? null);
       setMeetingLifecycle("DECISION");
+      window.setTimeout(() => setMeetingLifecycle("VALIDATE"), 450);
+      window.setTimeout(() => setMeetingLifecycle("MEMORY_UPDATE"), 1100);
+      clearMeetingSession.mutate({ projectId: params.projectId });
       void utils.decisionArchive.list.invalidate({ projectId: params.projectId });
       void utils.decisionArchive.stats.invalidate({ projectId: params.projectId });
       void utils.dashboard.getHome.invalidate();
       void utils.dashboard.getAdvisorWorkspace.invalidate({ projectId: params.projectId });
+      void utils.meetingSession.get.invalidate({ projectId: params.projectId });
     },
   });
 
   const startFounderMeeting = trpc.founder.startMeeting.useMutation();
   const runFounderLoop = trpc.founder.runLoop.useMutation();
+  const advanceFounderRound = trpc.founder.advanceRound.useMutation();
+  type FounderLoopRuntime = NonNullable<typeof runFounderLoop.data>;
 
   const deleteAsset = trpc.asset.delete.useMutation({
     onSuccess: () => {
@@ -743,12 +934,204 @@ function AdvisorPageContent({
     }, 3000);
   }, [miniFeedbackState]);
 
+  const activateFounderMeetingFromRuntime = useCallback(
+    (input: {
+      runtime: FounderLoopRuntime;
+      synthesis?: {
+        judgement: string;
+        reasons: string[];
+        validationPlan: string;
+      };
+    }) => {
+      const seatMap = new Map(
+        getFounderSeatsForAgents(input.runtime.decisions.map((decision) => decision.sourceAgent)).map((seat) => [
+          seat.roleId.replace("founder.", ""),
+          seat,
+        ]),
+      );
+
+      const statements: ExpertStatement[] = input.runtime.decisions.map((decision) => {
+        const seat = seatMap.get(decision.sourceAgent);
+        const stance: ExpertStatement["stance"] =
+          decision.stance === "support" ||
+          decision.stance === "oppose" ||
+          decision.stance === "conditional"
+            ? decision.stance
+            : "neutral";
+        return {
+          id: decision.decisionId,
+          roleId: seat?.roleId ?? `founder.${decision.sourceAgent}`,
+          displayName: seat?.displayName ?? decision.sourceAgent,
+          round: 1,
+          stance,
+          claim: decision.judgement,
+          reasons:
+            decision.evidence.length > 0
+              ? decision.evidence.map((item) => `${item.label}：${item.content}`).slice(0, 3)
+              : decision.nextSteps.slice(0, 2),
+        };
+      });
+
+      const firstConflict = input.runtime.meeting.conflicts[0];
+      const synthesis = input.synthesis ?? {
+        judgement:
+          input.runtime.finalDecision.reason[0] ||
+          input.runtime.meeting.recommendation ||
+          `${input.runtime.finalDecision.chosen}：${input.runtime.finalDecision.problem}`,
+        reasons: input.runtime.finalDecision.reason,
+        validationPlan:
+          input.runtime.finalDecision.validationPlan.join("；") ||
+          "先完成关键验证，再决定是否放大动作。",
+      };
+
+      setMeetingTopic(input.runtime.mission.question);
+      setTopicConfirmed(true);
+      setMeetingLifecycle("DISCUSS");
+      setDeliberationRound(1);
+      setLiveStatements(statements);
+      setLiveConflict(
+        firstConflict
+          ? {
+              id: firstConflict.conflictId,
+              issue: firstConflict.summary,
+              positionA: firstConflict.sideA,
+              positionB: firstConflict.sideB,
+              conflictLabel: firstConflict.dimension,
+            }
+          : null,
+      );
+      setLiveConsensus(null);
+      setLiveOptions([]);
+      setSelectedOptionId(null);
+      setFocusChoice(null);
+      setAcceptedDecisionId(null);
+      setAcceptedGrowthPlan(null);
+      setServerSynthesis(synthesis);
+      setMeetingRuntime({
+        meeting: {
+          recommendation: input.runtime.meeting.recommendation,
+          conflicts: input.runtime.meeting.conflicts.map((c) => ({
+            conflictId: c.conflictId,
+            summary: c.summary,
+            sideA: c.sideA,
+            sideB: c.sideB,
+            dimension: c.dimension,
+            agents: [...c.agents],
+          })),
+          rounds: input.runtime.meeting.rounds.map((r) => ({
+            round: r.round,
+            title: r.title,
+            items: r.items.map((item) => ({
+              agent: item.agent,
+              summary: item.summary,
+              stance: item.stance,
+            })),
+          })),
+        },
+        decisions: input.runtime.decisions.map((d) => ({
+          decisionId: d.decisionId,
+          sourceAgent: d.sourceAgent,
+          judgement: d.judgement,
+          stance: d.stance,
+          risks: d.risks,
+          nextSteps: d.nextSteps,
+        })),
+        finalDecision: {
+          chosen: input.runtime.finalDecision.chosen,
+          problem: input.runtime.finalDecision.problem,
+          reason: input.runtime.finalDecision.reason,
+          validationPlan: input.runtime.finalDecision.validationPlan,
+        },
+      });
+      setDeliberating(false);
+    },
+    [],
+  );
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (typeof window !== "undefined" && window.matchMedia("(min-width: 1024px)").matches && e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       void handleSend();
     }
   };
+
+  const launchFounderMeeting = useCallback(
+    (inputTopic: string) => {
+      setMeetingTopic(inputTopic);
+      setTopicConfirmed(true);
+      setMeetingLifecycle("PREPARE");
+      setDeliberationRound(0);
+      setLiveStatements([]);
+      setLiveConflict(null);
+      setLiveConsensus(null);
+      setLiveOptions([]);
+      setSelectedOptionId(null);
+      setServerSynthesis(null);
+      setMeetingRuntime(null);
+      setDeliberating(true);
+
+      startFounderMeeting.mutate(
+        {
+          projectId: params.projectId,
+          question: inputTopic,
+          topic: inputTopic,
+          assetIds: selectedAssetIds,
+        },
+        {
+          onSuccess: (payload) => {
+            activateFounderMeetingFromRuntime({
+              runtime: payload.runtime,
+              synthesis: payload.synthesis,
+            });
+          },
+          onError: () => {
+            setMeetingLifecycle("OPEN");
+            setDeliberating(false);
+          },
+        },
+      );
+    },
+    [
+      activateFounderMeetingFromRuntime,
+      params.projectId,
+      selectedAssetIds,
+      startFounderMeeting,
+    ],
+  );
+
+  useEffect(() => {
+    const topic = searchParams?.get("topic")?.trim();
+    const dept = searchParams?.get("dept");
+    if (!dept || searchParams?.get("autoStart") !== "1" || !topic) return;
+    if (autoStartTriggeredRef.current) return;
+    // 有冲突或已恢复进行中会议时，不自动开新会
+    if (draftConflict) return;
+    if (topicConfirmed && deliberationRound > 0) return;
+    if (
+      savedMeetingDraft?.topicConfirmed &&
+      savedMeetingDraft.topic !== topic
+    ) {
+      return;
+    }
+
+    autoStartTriggeredRef.current = true;
+    setAgentState("reasoning");
+    setAgentStateDescription("正在自动发起 Founder 会议并邀请顾问席");
+    setAgentReferences(["部门上下文", "项目记忆", "历史判断", "Founder Loop"]);
+
+    const timer = window.setTimeout(() => {
+      launchFounderMeeting(topic);
+    }, 900);
+
+    return () => window.clearTimeout(timer);
+  }, [
+    launchFounderMeeting,
+    searchParams,
+    draftConflict,
+    topicConfirmed,
+    deliberationRound,
+    savedMeetingDraft,
+  ]);
 
   if (isLoading) {
     return <PageLoadingState eyebrow="咨询会议" title="AI 正在准备这场经营会议" description="正在读取上下文、证据和议题。" />;
@@ -804,7 +1187,9 @@ function AdvisorPageContent({
       ? deptParam
       : detectDepartmentFromTopic(topic);
   const meetingTitle = DEPARTMENT_MEETING_TITLE[department];
-  const experts = getExpertsForDepartment(department);
+  const experts = meetingRuntime
+    ? getFounderSeatsForAgents(meetingRuntime.decisions.map((d) => d.sourceAgent))
+    : getExpertsForDepartment(department);
   const mergedFacts = [...knownFacts, ...extraFacts];
   const unknownGaps = (
     kickoffQuestions.length > 0
@@ -840,56 +1225,7 @@ function AdvisorPageContent({
       : null;
 
   const handleConfirmTopic = () => {
-    setTopicConfirmed(true);
-    setMeetingLifecycle("PREPARE");
-    setDeliberationRound(0);
-    setLiveStatements([]);
-    setLiveConflict(null);
-    setLiveConsensus(null);
-    setLiveOptions([]);
-    setSelectedOptionId(null);
-    setServerSynthesis(null);
-    setDeliberating(true);
-
-    startFounderMeeting.mutate(
-      {
-        projectId: params.projectId,
-        question: topic,
-        topic,
-      },
-      {
-        onSuccess: (payload) => {
-          const statements: ExpertStatement[] = payload.opinions.map((opinion) => ({
-            id: opinion.opinionId,
-            roleId: `founder.${opinion.agentId}`,
-            displayName: opinion.seatLabel,
-            round: 1,
-            stance: opinion.stance,
-            claim: opinion.claim,
-            reasons: opinion.reasons.length ? opinion.reasons : opinion.risks.slice(0, 1),
-          }));
-          setLiveStatements(statements);
-          setServerSynthesis(payload.synthesis);
-          if (payload.runtime.meeting.conflicts.length > 0) {
-            const first = payload.runtime.meeting.conflicts[0];
-            setLiveConflict({
-              id: first.conflictId,
-              issue: first.summary,
-              positionA: first.sideA,
-              positionB: first.sideB,
-              conflictLabel: first.dimension,
-            });
-          }
-          setDeliberationRound(1);
-          setMeetingLifecycle("DISCUSS");
-          setDeliberating(false);
-        },
-        onError: () => {
-          setMeetingLifecycle("OPEN");
-          setDeliberating(false);
-        },
-      },
-    );
+    launchFounderMeeting(topic);
   };
 
   const handleAdvanceRound = () => {
@@ -901,16 +1237,14 @@ function AdvisorPageContent({
     }
     const nextRound = (Math.min(3, deliberationRound + 1) || 1) as DeliberationRound;
     setDeliberating(true);
-    window.setTimeout(() => {
-      const result = runDeliberationRound({
-        round: nextRound,
-        department,
-        topic,
-        knownFacts: mergedFacts,
-        focusChoice,
-        previous: liveStatements,
-        seed: seedInput,
-      });
+
+    const applyResult = (result: {
+      round: DeliberationRound;
+      statements: ExpertStatement[];
+      conflict: MeetingConflict | null;
+      consensus: ConsensusDraft | null;
+      options: DecisionOption[];
+    }) => {
       setDeliberationRound(result.round);
       setLiveStatements(result.statements);
       if (result.conflict) setLiveConflict(result.conflict);
@@ -923,6 +1257,49 @@ function AdvisorPageContent({
         window.setTimeout(() => setMeetingLifecycle("USER_CONFIRM"), 400);
       }
       setDeliberating(false);
+    };
+
+    if (meetingRuntime && (nextRound === 2 || nextRound === 3)) {
+      advanceFounderRound.mutate(
+        {
+          projectId: params.projectId,
+          round: nextRound,
+          topic,
+          focusChoice,
+          previous: liveStatements,
+          runtime: meetingRuntime,
+        },
+        {
+          onSuccess: (result) => applyResult(result),
+          onError: () => {
+            const fallback = runDeliberationRound({
+              round: nextRound,
+              department,
+              topic,
+              knownFacts: mergedFacts,
+              focusChoice,
+              previous: liveStatements,
+              seed: seedInput,
+            });
+            applyResult(fallback);
+          },
+        },
+      );
+      return;
+    }
+
+    window.setTimeout(() => {
+      applyResult(
+        runDeliberationRound({
+          round: nextRound,
+          department,
+          topic,
+          knownFacts: mergedFacts,
+          focusChoice,
+          previous: liveStatements,
+          seed: seedInput,
+        }),
+      );
     }, 450);
   };
 
@@ -936,6 +1313,48 @@ function AdvisorPageContent({
     // 若已在 Round2，选完关注方向后自动收口
     if (deliberationRound === 2) {
       setDeliberating(true);
+      if (meetingRuntime) {
+        advanceFounderRound.mutate(
+          {
+            projectId: params.projectId,
+            round: 3,
+            topic,
+            focusChoice: value,
+            previous: liveStatements,
+            runtime: meetingRuntime,
+          },
+          {
+            onSuccess: (result) => {
+              setDeliberationRound(3);
+              setLiveStatements(result.statements);
+              if (result.conflict) setLiveConflict(result.conflict);
+              if (result.consensus) setLiveConsensus(result.consensus);
+              if (result.options.length) setLiveOptions(result.options);
+              setMeetingLifecycle("USER_CONFIRM");
+              setDeliberating(false);
+            },
+            onError: () => {
+              const result = runDeliberationRound({
+                round: 3,
+                department,
+                topic,
+                knownFacts: mergedFacts,
+                focusChoice: value,
+                previous: liveStatements,
+                seed: seedInput,
+              });
+              setDeliberationRound(3);
+              setLiveStatements(result.statements);
+              if (result.conflict) setLiveConflict(result.conflict);
+              if (result.consensus) setLiveConsensus(result.consensus);
+              if (result.options.length) setLiveOptions(result.options);
+              setMeetingLifecycle("USER_CONFIRM");
+              setDeliberating(false);
+            },
+          },
+        );
+        return;
+      }
       window.setTimeout(() => {
         const result = runDeliberationRound({
           round: 3,
@@ -1040,16 +1459,16 @@ function AdvisorPageContent({
             className="inline-flex items-center gap-2 rounded-full border border-[rgba(24,24,23,0.08)] bg-[#F5F3EE] px-3 py-2 text-[13px] font-medium text-[#202124]"
           >
             <History className="h-4 w-4" />
-            历史
-          </Link>
-          <Link
-            href={`/projects/${project.id}/decisions`}
-            prefetch={false}
-            className="hidden items-center gap-2 rounded-full border border-[rgba(24,24,23,0.08)] bg-white px-3 py-2 text-[13px] font-medium text-[#202124] md:inline-flex"
-          >
             决策档案
-            <ArrowRight className="h-4 w-4" />
           </Link>
+          <button
+            type="button"
+            onClick={() => setShowMeetingHistory((prev) => !prev)}
+            className="inline-flex items-center gap-2 rounded-full border border-[rgba(24,24,23,0.08)] bg-white px-3 py-2 text-[13px] font-medium text-[#202124]"
+          >
+            会议历史
+            <ArrowRight className="h-4 w-4" />
+          </button>
         </div>
       </div>
 
@@ -1155,6 +1574,178 @@ function AdvisorPageContent({
     <div className="mx-auto flex h-[100dvh] max-h-[100dvh] max-w-4xl flex-col md:h-[calc(100dvh-5.5rem)] md:max-h-[calc(100dvh-5.5rem)] md:max-w-5xl">
       <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3 md:px-6 md:py-6">
         <div className="space-y-4 md:space-y-5">
+          {draftConflict ? (
+            <section className="rounded-[18px] border border-[rgba(180,124,92,0.28)] bg-[rgba(180,124,92,0.08)] p-4">
+              <p className="text-[12px] tracking-[0.08em] text-[#B47C5C]">发现未完成会议</p>
+              <p className="mt-2 text-[15px] leading-7 text-[#202124]">
+                上次议题：「{draftConflict.draft.topic}」仍在
+                {lifecycleLabel(draftConflict.draft.lifecycle)}。
+                当前入口议题是「{draftConflict.incomingTopic}」。
+              </p>
+              <p className="mt-1 text-[13px] leading-6 text-[#6f747b]">
+                审议进度可恢复；聊天记录未保存。
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => applySavedDraft(draftConflict.draft)}
+                  className="inline-flex min-h-10 items-center justify-center rounded-full bg-[#181817] px-4 text-[13px] font-semibold text-white"
+                >
+                  继续上次会议
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    clearMeetingSession.mutate(
+                      { projectId: params.projectId },
+                      {
+                        onSuccess: () => {
+                          setDraftConflict(null);
+                          setShowDraftBanner(false);
+                          setMeetingTopic(draftConflict.incomingTopic);
+                          setTopicConfirmed(false);
+                          setMeetingLifecycle("PREPARE");
+                          setDeliberationRound(0);
+                          setLiveStatements([]);
+                          setLiveConflict(null);
+                          setLiveConsensus(null);
+                          setLiveOptions([]);
+                          setMeetingRuntime(null);
+                          void utils.meetingSession.get.invalidate({ projectId: params.projectId });
+                          void utils.dashboard.getHome.invalidate();
+                        },
+                      },
+                    );
+                  }}
+                  className="inline-flex min-h-10 items-center justify-center rounded-full border border-[rgba(24,24,23,0.1)] bg-white px-4 text-[13px] font-medium text-[#202124]"
+                >
+                  改用新议题
+                </button>
+              </div>
+            </section>
+          ) : null}
+
+          {showDraftBanner && topicConfirmed && !draftConflict ? (
+            <section className="rounded-[18px] border border-[rgba(102,115,94,0.28)] bg-[#EEF1EA] p-4">
+              <p className="text-[12px] tracking-[0.08em] text-[#66735E]">继续未完成会议</p>
+              <p className="mt-2 text-[15px] leading-7 text-[#202124]">
+                {meetingTopic} · {lifecycleLabel(meetingLifecycle)}
+                {deliberationRound > 0 ? ` · 第 ${deliberationRound} 轮` : ""}
+              </p>
+              <p className="mt-1 text-[13px] leading-6 text-[#5f6368]">
+                审议进度已恢复；聊天记录未保存。
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowDraftBanner(false)}
+                  className="inline-flex min-h-10 items-center justify-center rounded-full bg-[#181817] px-4 text-[13px] font-semibold text-white"
+                >
+                  继续会议
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    clearMeetingSession.mutate(
+                      { projectId: params.projectId },
+                      {
+                        onSuccess: () => {
+                          setShowDraftBanner(false);
+                          setTopicConfirmed(false);
+                          setMeetingLifecycle("PREPARE");
+                          setDeliberationRound(0);
+                          setLiveStatements([]);
+                          setLiveConflict(null);
+                          setLiveConsensus(null);
+                          setLiveOptions([]);
+                          setMeetingRuntime(null);
+                          setServerSynthesis(null);
+                          void utils.meetingSession.get.invalidate({ projectId: params.projectId });
+                          void utils.dashboard.getHome.invalidate();
+                        },
+                      },
+                    );
+                  }}
+                  className="inline-flex min-h-10 items-center justify-center rounded-full border border-[rgba(24,24,23,0.1)] bg-white px-4 text-[13px] font-medium text-[#202124]"
+                >
+                  放弃并重新开始
+                </button>
+              </div>
+            </section>
+          ) : null}
+
+          {showMeetingHistory ? (
+            <section className="rounded-[18px] border border-[rgba(24,24,23,0.08)] bg-white p-4 shadow-[0_14px_28px_rgba(24,24,23,0.04)]">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-[12px] tracking-[0.08em] text-[#66735E]">会议历史</p>
+                  <h2 className="mt-1 text-[18px] font-semibold text-[#202124]">近期 Founder 会议</h2>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowMeetingHistory(false);
+                    setHistoryPreview(null);
+                  }}
+                  className="text-[13px] text-[#6f747b]"
+                >
+                  收起
+                </button>
+              </div>
+              {meetingHistory.length === 0 ? (
+                <p className="mt-3 text-[14px] leading-6 text-[#6f747b]">
+                  暂无已落库的会议摘要。完成一轮独立判断后会出现在这里。
+                </p>
+              ) : (
+                <ul className="mt-3 space-y-2">
+                  {meetingHistory.map((item) => (
+                    <li key={item.id}>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setHistoryPreview({
+                            topic: item.topic,
+                            summary: item.summary,
+                            recommendation: item.recommendation,
+                            createdAt: item.createdAt,
+                          })
+                        }
+                        className="w-full rounded-[14px] border border-[rgba(24,24,23,0.06)] bg-[#FBFAF7] px-3 py-3 text-left transition hover:bg-[#F5F3EE]"
+                      >
+                        <p className="text-[14px] font-medium text-[#202124]">{item.topic}</p>
+                        <p className="mt-1 line-clamp-2 text-[12px] leading-5 text-[#6f747b]">
+                          {item.summary}
+                        </p>
+                        <p className="mt-1 text-[11px] text-[#9aa0a6]">
+                          {new Date(item.createdAt).toLocaleString("zh-CN")}
+                        </p>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {historyPreview ? (
+                <div className="mt-3 rounded-[14px] border border-[rgba(24,24,23,0.08)] bg-[#EEF1EA] p-3">
+                  <p className="text-[13px] font-semibold text-[#202124]">{historyPreview.topic}</p>
+                  <p className="mt-2 text-[13px] leading-6 text-[#5f6368]">{historyPreview.summary}</p>
+                  {historyPreview.recommendation ? (
+                    <p className="mt-2 text-[13px] leading-6 text-[#202124]">
+                      建议：{historyPreview.recommendation}
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
+              <Link
+                href={`/projects/${project.id}/decisions`}
+                prefetch={false}
+                className="mt-3 inline-flex items-center gap-2 text-[13px] font-medium text-[#202124] no-underline"
+              >
+                打开决策档案
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </section>
+          ) : null}
+
           {reviewIntent === "positioning_review" && reviewDecisionId ? (
             <section className="rounded-[18px] border border-[rgba(180,124,92,0.25)] bg-[rgba(180,124,92,0.08)] p-4">
               <p className="text-[12px] font-medium text-[#B47C5C]">定位变更复审模式</p>
@@ -1192,23 +1783,38 @@ function AdvisorPageContent({
                   协同闭环预览
                 </h2>
                 <p className="mt-2 text-[13px] leading-6 text-[#6f747b]">
-                  直接预跑 Founder 协同闭环，先看 Mission、四席判断、会议结论和记忆写入怎么理解当前议题。
+                  先预跑 Founder 协同闭环，再把结果一键接入会议桌。记忆写入会在服务端同步落库，不只停在前台预览。
                 </p>
               </div>
-              <button
-                type="button"
-                disabled={runFounderLoop.isPending}
-                onClick={() =>
-                  runFounderLoop.mutate({
-                    projectId: params.projectId,
-                    message: topic,
-                  })
-                }
-                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-[rgba(24,24,23,0.08)] bg-[#181817] px-4 py-2 text-[13px] font-medium text-white disabled:opacity-50"
-              >
-                {runFounderLoop.isPending ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <ArrowRight className="h-4 w-4" />}
-                运行 Founder Loop
-              </button>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  disabled={runFounderLoop.isPending}
+                  onClick={() =>
+                    runFounderLoop.mutate({
+                      projectId: params.projectId,
+                      message: topic,
+                    })
+                  }
+                  className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-[rgba(24,24,23,0.08)] bg-[#181817] px-4 py-2 text-[13px] font-medium text-white disabled:opacity-50"
+                >
+                  {runFounderLoop.isPending ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <ArrowRight className="h-4 w-4" />}
+                  运行 Founder Loop
+                </button>
+                {founderLoopPreview ? (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      activateFounderMeetingFromRuntime({
+                        runtime: founderLoopPreview,
+                      })
+                    }
+                    className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-[rgba(24,24,23,0.08)] bg-[#F5F3EE] px-4 py-2 text-[13px] font-medium text-[#202124]"
+                  >
+                    接入会议桌
+                  </button>
+                ) : null}
+              </div>
             </div>
 
             {runFounderLoop.error ? (
@@ -1359,6 +1965,17 @@ function AdvisorPageContent({
                决策档案
               <History className="h-4 w-4" />
             </Link>
+            <button
+              type="button"
+              onClick={() => {
+                setShowMeetingHistory(true);
+                setShowMobileComposerTools(false);
+              }}
+              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-[14px] border border-[rgba(24,24,23,0.08)] bg-white px-3.5 text-[13px] font-semibold text-[#202124] md:hidden"
+            >
+              会议历史
+              <History className="h-4 w-4" />
+            </button>
           </div>
         </div>
 

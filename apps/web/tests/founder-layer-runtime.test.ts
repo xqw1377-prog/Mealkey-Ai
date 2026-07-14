@@ -4,19 +4,13 @@ import { runFounderLoop } from "@/server/founder-layer";
 /**
  * founder-layer 集成测试
  *
- * 测试会调用真实的 LLM API（DeepSeek）和 M-BIZ HTTP 服务。
- * 当外部服务不可用时，测试会超时。
- *
- * 配置环境变量以跳过真实 API 调用：
- *   SKIP_EXTERNAL_API=true npx vitest run
- *
- * 或在 vitest.config.ts 中配置 testTimeout 为较大值。
+ * 默认强制 heuristic，避免外部 LLM / M-BIZ 导致超时。
+ * 若要跑真实联调：HEURISTIC_ONLY=false npx vitest run tests/founder-layer-runtime.test.ts
  */
+process.env.HEURISTIC_ONLY = process.env.HEURISTIC_ONLY ?? "true";
 
 /**
- * 集成测试超时：M-BIZ 服务在没有外部服务时也会降级返回（不 hang），
- * M-PNT 在 heuristic 模式下也不依赖外部 API。
- * 30 秒足以覆盖降级路径和启发式执行。
+ * 集成测试超时：降级路径应在数秒内完成。
  */
 const RUNTIME_TIMEOUT = 30000;
 

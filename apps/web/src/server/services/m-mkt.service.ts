@@ -14,6 +14,8 @@ import {
   type MarketSnapshot,
 } from "@/lib/market";
 import { withFounderMarketContext } from "@/lib/founder-decision-snapshot";
+import { polishAdvisorJudgement } from "./llm-polish";
+import { injectDomainKnowledge, withKnowledgeMessage } from "@/server/knowledge/inject-domain";
 
 export const mMktManifest = {
   id: "m-mkt",
@@ -31,9 +33,9 @@ export const mMktManifest = {
 export type MMktMetaChunk = {
   type: "meta";
   runtime: "m-mkt";
-  provider: "heuristic";
-  model: "rule-based";
-  fallback: true;
+  provider: "deepseek" | "openai" | "none" | "heuristic";
+  model: string;
+  fallback: boolean;
   assetCount: number;
   conversationId: string;
   agentId: "m-mkt";
@@ -90,18 +92,6 @@ export async function* streamMMktProduct(
     ? `${message}\n\n补充资料：\n${options.assetContextBlock}`
     : message;
 
-  yield {
-    type: "meta",
-    runtime: "m-mkt",
-    provider: "heuristic",
-    model: "rule-based",
-    fallback: true,
-    assetCount: assetIds.length,
-    conversationId: conversation.id,
-    agentId: "m-mkt",
-    agentName: mMktManifest.name,
-  };
-
   const agentRun = await createAgentRun(prisma, {
     agentId: "m-mkt",
     userId,
@@ -111,17 +101,58 @@ export async function* streamMMktProduct(
   });
 
   try {
-    const mkContext = await buildMKContext(prisma, userId, projectId);
-    const generated = buildMarketWorkspace(mkContext, enrichedMessage);
+    let mkContext = await buildMKContext(prisma, userId, projectId);
+    mkContext = injectDomainKnowledge(mkContext, "market", enrichedMessage);
+    const analysisMessage = withKnowledgeMessage(
+      message,
+      mkContext,
+      options.assetContextBlock,
+    );
+    const generated = buildMarketWorkspace(mkContext, analysisMessage);
+    const polished = await polishAdvisorJudgement({
+      domain: "market",
+      message: analysisMessage,
+      draft: {
+        judgement: generated.judgement,
+        strategy: generated.strategy,
+        action: generated.action,
+      },
+    });
+    const pageOutput: MarketPageOutput = {
+      ...generated.pageOutput,
+      finalDecision: {
+        ...generated.pageOutput.finalDecision,
+        judgement: polished.fields.judgement,
+        actions: [
+          polished.fields.action,
+          ...generated.pageOutput.finalDecision.actions.slice(1),
+        ],
+      },
+    };
+    const provider = polished.polished ? polished.provider : "heuristic";
+    const model = polished.polished ? polished.model : "rule-based";
+
+    yield {
+      type: "meta",
+      runtime: "m-mkt",
+      provider,
+      model,
+      fallback: !polished.polished,
+      assetCount: assetIds.length,
+      conversationId: conversation.id,
+      agentId: "m-mkt",
+      agentName: mMktManifest.name,
+    };
+
     const snapshot = buildMarketSnapshot({
       problem: generated.problem,
       observation: generated.observation,
       diagnosis: generated.diagnosis,
-      judgement: generated.judgement,
-      strategy: generated.strategy,
-      action: generated.action,
+      judgement: polished.fields.judgement,
+      strategy: polished.fields.strategy,
+      action: polished.fields.action,
       confidence: generated.confidence,
-      structured: { pageOutput: generated.pageOutput },
+      structured: { pageOutput },
       source: "m-mkt",
     });
 
@@ -167,7 +198,7 @@ export async function* streamMMktProduct(
       userId,
       agentRunId: agentRun.id,
       snapshot,
-      pageOutput: generated.pageOutput,
+      pageOutput,
       message,
     });
 
@@ -200,8 +231,8 @@ export async function* streamMMktProduct(
           agentRunId: agentRun.id,
           decisionId: persisted.decisionId,
           runtime: "m-mkt",
-          provider: "heuristic",
-          model: "rule-based",
+          provider,
+          model,
           snapshot: finalSnapshot,
           previous: persisted.previous,
         }),
@@ -225,7 +256,7 @@ export async function* streamMMktProduct(
         summary: finalSnapshot.oneLiner,
         content: JSON.stringify({
           snapshot: finalSnapshot,
-          pageOutput: generated.pageOutput,
+          pageOutput,
         }),
         status: "published",
       },
@@ -660,7 +691,7 @@ function buildMarketWorkspace(
   };
 }
 
-export function previewMMktSnapshot(input: {
+export async function previewMMktSnapshot(input: {
   message: string;
   companyContext: {
     companyId: string;
@@ -675,8 +706,9 @@ export function previewMMktSnapshot(input: {
     };
     goals: string[];
   };
-}): MarketSnapshot {
-  const mkContext = {
+  assetContextBlock?: string;
+}): Promise<MarketSnapshot> {
+  const baseContext = {
     owner: {
       id: "founder-layer",
       name: null,
@@ -710,17 +742,43 @@ export function previewMMktSnapshot(input: {
     },
   } as MKContext;
 
-  const generated = buildMarketWorkspace(mkContext, input.message);
+  const mkContext = injectDomainKnowledge(baseContext, "market", input.message);
+  const analysisMessage = withKnowledgeMessage(
+    input.message,
+    mkContext,
+    input.assetContextBlock,
+  );
+  const generated = buildMarketWorkspace(mkContext, analysisMessage);
+  const polished = await polishAdvisorJudgement({
+    domain: "market",
+    message: analysisMessage,
+    draft: {
+      judgement: generated.judgement,
+      strategy: generated.strategy,
+      action: generated.action,
+    },
+  });
+  const pageOutput: MarketPageOutput = {
+    ...generated.pageOutput,
+    finalDecision: {
+      ...generated.pageOutput.finalDecision,
+      judgement: polished.fields.judgement,
+      actions: [
+        polished.fields.action,
+        ...generated.pageOutput.finalDecision.actions.slice(1),
+      ],
+    },
+  };
 
   return buildMarketSnapshot({
     problem: generated.problem,
     observation: generated.observation,
     diagnosis: generated.diagnosis,
-    judgement: generated.judgement,
-    strategy: generated.strategy,
-    action: generated.action,
+    judgement: polished.fields.judgement,
+    strategy: polished.fields.strategy,
+    action: polished.fields.action,
     confidence: generated.confidence,
-    structured: { pageOutput: generated.pageOutput },
+    structured: { pageOutput },
     source: "m-mkt",
   });
 }

@@ -18,6 +18,8 @@ import {
   type EquitySimulationInputs,
 } from "@/lib/equity";
 import { withFounderEquityContext } from "@/lib/founder-decision-snapshot";
+import { polishAdvisorJudgement } from "./llm-polish";
+import { injectDomainKnowledge, withKnowledgeMessage } from "@/server/knowledge/inject-domain";
 
 export const mEdManifest = {
   id: "m-ed",
@@ -35,9 +37,9 @@ export const mEdManifest = {
 export type MEdMetaChunk = {
   type: "meta";
   runtime: "m-ed";
-  provider: "heuristic";
-  model: "rule-based";
-  fallback: true;
+  provider: "deepseek" | "openai" | "none" | "heuristic";
+  model: string;
+  fallback: boolean;
   assetCount: number;
   conversationId: string;
   agentId: "m-ed";
@@ -92,18 +94,6 @@ export async function* streamMEdProduct(
     ? `${message}\n\n补充资料：\n${options.assetContextBlock}`
     : message;
 
-  yield {
-    type: "meta",
-    runtime: "m-ed",
-    provider: "heuristic",
-    model: "rule-based",
-    fallback: true,
-    assetCount: assetIds.length,
-    conversationId: conversation.id,
-    agentId: "m-ed",
-    agentName: mEdManifest.name,
-  };
-
   const agentRun = await createAgentRun(prisma, {
     agentId: "m-ed",
     userId,
@@ -113,17 +103,58 @@ export async function* streamMEdProduct(
   });
 
   try {
-    const mkContext = await buildMKContext(prisma, userId, projectId);
-    const generated = buildEquityWorkspace(mkContext, enrichedMessage);
+    let mkContext = await buildMKContext(prisma, userId, projectId);
+    mkContext = injectDomainKnowledge(mkContext, "equity", enrichedMessage);
+    const analysisMessage = withKnowledgeMessage(
+      message,
+      mkContext,
+      options.assetContextBlock,
+    );
+    const generated = buildEquityWorkspace(mkContext, analysisMessage);
+    const polished = await polishAdvisorJudgement({
+      domain: "equity",
+      message: analysisMessage,
+      draft: {
+        judgement: generated.judgement,
+        strategy: generated.strategy,
+        action: generated.action,
+      },
+    });
+    const pageOutput: EquityPageOutput = {
+      ...generated.pageOutput,
+      finalDecision: {
+        ...generated.pageOutput.finalDecision,
+        judgement: polished.fields.judgement,
+        actions: [
+          polished.fields.action,
+          ...generated.pageOutput.finalDecision.actions.slice(1),
+        ],
+      },
+    };
+    const provider = polished.polished ? polished.provider : "heuristic";
+    const model = polished.polished ? polished.model : "rule-based";
+
+    yield {
+      type: "meta",
+      runtime: "m-ed",
+      provider,
+      model,
+      fallback: !polished.polished,
+      assetCount: assetIds.length,
+      conversationId: conversation.id,
+      agentId: "m-ed",
+      agentName: mEdManifest.name,
+    };
+
     const snapshot = buildEquitySnapshot({
       problem: generated.problem,
       observation: generated.observation,
       diagnosis: generated.diagnosis,
-      judgement: generated.judgement,
-      strategy: generated.strategy,
-      action: generated.action,
+      judgement: polished.fields.judgement,
+      strategy: polished.fields.strategy,
+      action: polished.fields.action,
       confidence: generated.confidence,
-      structured: { pageOutput: generated.pageOutput },
+      structured: { pageOutput },
       source: "m-ed",
     });
 
@@ -195,7 +226,7 @@ export async function* streamMEdProduct(
       userId,
       agentRunId: agentRun.id,
       snapshot,
-      pageOutput: generated.pageOutput,
+      pageOutput,
       message,
     });
 
@@ -228,8 +259,8 @@ export async function* streamMEdProduct(
           agentRunId: agentRun.id,
           decisionId: persisted.decisionId,
           runtime: "m-ed",
-          provider: "heuristic",
-          model: "rule-based",
+          provider,
+          model,
           snapshot: finalSnapshot,
           previous: persisted.previous,
         }),
@@ -253,7 +284,7 @@ export async function* streamMEdProduct(
         summary: finalSnapshot.oneLiner,
         content: JSON.stringify({
           snapshot: finalSnapshot,
-          pageOutput: generated.pageOutput,
+          pageOutput,
         }),
         status: "published",
       },
@@ -572,7 +603,7 @@ function buildEquityWorkspace(
   };
 }
 
-export function previewMEdSnapshot(input: {
+export async function previewMEdSnapshot(input: {
   message: string;
   companyContext: {
     companyId: string;
@@ -587,8 +618,9 @@ export function previewMEdSnapshot(input: {
     };
     goals: string[];
   };
-}): EquitySnapshot {
-  const mkContext = {
+  assetContextBlock?: string;
+}): Promise<EquitySnapshot> {
+  const baseContext = {
     owner: {
       id: "founder-layer",
       name: input.companyContext.basicInfo.name,
@@ -622,17 +654,43 @@ export function previewMEdSnapshot(input: {
     },
   } as MKContext;
 
-  const generated = buildEquityWorkspace(mkContext, input.message);
+  const mkContext = injectDomainKnowledge(baseContext, "equity", input.message);
+  const analysisMessage = withKnowledgeMessage(
+    input.message,
+    mkContext,
+    input.assetContextBlock,
+  );
+  const generated = buildEquityWorkspace(mkContext, analysisMessage);
+  const polished = await polishAdvisorJudgement({
+    domain: "equity",
+    message: analysisMessage,
+    draft: {
+      judgement: generated.judgement,
+      strategy: generated.strategy,
+      action: generated.action,
+    },
+  });
+  const pageOutput: EquityPageOutput = {
+    ...generated.pageOutput,
+    finalDecision: {
+      ...generated.pageOutput.finalDecision,
+      judgement: polished.fields.judgement,
+      actions: [
+        polished.fields.action,
+        ...generated.pageOutput.finalDecision.actions.slice(1),
+      ],
+    },
+  };
 
   return buildEquitySnapshot({
     problem: generated.problem,
     observation: generated.observation,
     diagnosis: generated.diagnosis,
-    judgement: generated.judgement,
-    strategy: generated.strategy,
-    action: generated.action,
+    judgement: polished.fields.judgement,
+    strategy: polished.fields.strategy,
+    action: polished.fields.action,
     confidence: generated.confidence,
-    structured: { pageOutput: generated.pageOutput },
+    structured: { pageOutput },
     source: "m-ed",
   });
 }

@@ -1,0 +1,30 @@
+{
+  "name": "@mealkey/agent-runtime",
+  "version": "0.1.0",
+  "private": true,
+  "description": "MealKey Agent Runtime - Agent 操作系统内核: WorkflowEngine, MissionRouter, CapabilityRegistry, LLMAdapter",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit",
+    "clean": "node -e \"require('fs').rmSync('dist', { recursive: true, force: true })\""
+  },
+  "dependencies": {
+    "@mealkey/agent-sdk": "*",
+    "openai": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "typescript": "^5.4.0"
+  }
+}

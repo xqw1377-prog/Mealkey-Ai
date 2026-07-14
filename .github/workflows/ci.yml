@@ -1,0 +1,109 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Typecheck · Lint · Test · Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    env:
+      # CI 使用 SQLite 内存/文件库，不依赖外部服务
+      DATABASE_URL: "file:./ci.db"
+      AUTH_SECRET: "ci-test-auth-secret-min-16-chars"
+      SKIP_ENV_VALIDATION: "1"
+      BLOB_STORAGE_PROVIDER: "local"
+      NEXT_TELEMETRY_DISABLED: "1"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        working-directory: apps/web
+        run: npx prisma generate
+
+      - name: Typecheck
+        run: npx turbo typecheck --force
+
+      - name: Lint
+        run: npx turbo lint --force
+
+      - name: Unit tests (packages + web)
+        run: npm test
+
+      - name: Build packages + web
+        run: npx turbo build --force
+        env:
+          # Next build may load env; keep secrets non-empty
+          AUTH_SECRET: "ci-test-auth-secret-min-16-chars"
+          DATABASE_URL: "file:./ci.db"
+
+  postgres-smoke:
+    name: Postgres migrate smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: quality
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: mealkey
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/mealkey"
+      AUTH_SECRET: "ci-test-auth-secret-min-16-chars"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Switch schema to PostgreSQL
+        run: |
+          cp apps/web/prisma/schema.prisma apps/web/prisma/schema.sqlite.prisma
+          cp apps/web/prisma/schema.postgresql.prisma apps/web/prisma/schema.prisma
+
+      - name: Prisma generate + migrate deploy (init)
+        working-directory: apps/web
+        run: |
+          npx prisma generate
+          # CI 无历史 PG migration：用 db push 验证 schema 兼容
+          npx prisma db push --accept-data-loss
+          npx tsx prisma/seed.ts

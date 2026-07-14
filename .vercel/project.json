@@ -1,0 +1,16 @@
+{
+  "projectId": "prj_vjoZTdWqELjRrJpDJ98qDO0zDA66",
+  "orgId": "team_UO60HCdRTvLCNiDgYzfXqx0E",
+  "projectName": "trae_ucfpws48",
+  "settings": {
+    "createdAt": 1783597783198,
+    "framework": null,
+    "devCommand": null,
+    "installCommand": null,
+    "buildCommand": null,
+    "outputDirectory": null,
+    "rootDirectory": null,
+    "directoryListing": false,
+    "nodeVersion": "24.x"
+  }
+}

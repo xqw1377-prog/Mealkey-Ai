@@ -39,6 +39,17 @@ apps/web/src/generated/prisma/query_engine-windows.dll.node
 logs/
 *.log
 
+# Agent Python caches
+agents/**/__pycache__/
+agents/**/*.py[cod]
+agents/**/.pytest_cache/
+agents/**/.git/
+agents/**/*.egg-info/
+agents/**/.ruff_cache/
+agents/**/.coverage
+agents/**/htmlcov/
+agents/**/node_modules/
+
 # Temp
 temp_find.txt
 apps/web/prisma/dev.db

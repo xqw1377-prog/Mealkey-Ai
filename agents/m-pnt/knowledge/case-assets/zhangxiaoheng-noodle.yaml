@@ -1,0 +1,37 @@
+id: case-zhangxiaoheng-noodle
+brand_name: 张小花骨汤面（化名）
+category: 面馆
+city_context: 西安
+market_stage: 成熟期
+project_stage: 从零创业
+initial_problem: 西安面食竞争极度饱和，几乎所有品牌都打「老字号」「手工」「传统」标签，消费者无法区分
+resource_condition: 预算20万，创始人有餐饮打工经验，无品牌背景
+competition_context: 西安面馆心智被「老字号」品牌占据，新品牌基本没有信任状
+candidate_positions:
+  - 「正宗西安面」——与老字号正面冲突
+  - 「年轻人的面馆」——人群不对，面食客群偏全年龄
+  - 「骨汤不勾兑，喝完不口渴」——冲突锋利，可感知
+final_position: 「骨汤不勾兑，喝完不口渴」——用"吃完面不口渴"这个细微但真实的痛点制造冲突
+why_choose: 预算只有20万，做不了品牌建设；最便宜的策略是「攻击竞品的弱点」——很多面馆用勾兑汤底，吃完口渴，这是一个真实但没有人公开说的痛点
+why_not_others: 「正宗」打不过老字号；「年轻人」不是场景
+differentiation_design: 透明厨房展示骨汤熬制过程、碗上印「今天你口渴了吗」文案、提供"汤底可免费加"建立信任
+execution_actions:
+  - 门头口号直接打「我们不用勾兑汤」
+  - 厨房门口放骨头展示区（真材实料可视化）
+  - 抖音内容：「吃面不口渴挑战」
+  - 汤底可以免费续，降低决策门槛
+market_feedback: 开业即引发本地讨论「面馆还用勾兑汤？」的话题，竞品被动回应；6个月内盈亏平衡，复购率高于区域均值
+result_summary: 预算极低的情况下，用「攻击竞品弱点」的策略以小博大，验证了特劳特侧翼战和叶茂中冲突论的实战价值
+success_or_failure: success
+quality_tier: gold_case
+mental_takeaway: 预算越少，定位越要锋利；用"竞品的弱点"做自己的攻击点，是一分钱不花的美人
+reusable_principles:
+  - 预算少的时候，不要做品牌建设，做冲突攻击
+  - 最好的差异化来自竞品"有但不敢说的弱点"
+  - 「不做什么」比「做什么」更容易传播
+risk_lessons:
+  - 攻击竞品策略会引来反击，需准备应对
+  - 如果骨汤只是营销噱头而非真材实料，口碑崩塌很快
+theory_tags:
+  - trout
+  - ye_maozhong

@@ -37,8 +37,8 @@ export const MPNT_JOURNEY_LABEL: Record<
   },
   [MpntJourneyStep.THREE_ADVISORS]: {
     no: "03",
-    title: "三顾问",
-    feel: "各自出定位方案",
+    title: "七顾问",
+    feel: "七席专家各自出定位方案",
   },
   [MpntJourneyStep.WAR_ROOM]: {
     no: "04",
@@ -57,9 +57,9 @@ export const MPNT_JOURNEY_LABEL: Record<
   },
 };
 
-export type AdvisorId = "ries" | "trout" | "ye";
+export type AdvisorId = "ries" | "trout" | "ye" | "huayehu" | "kotler" | "growth" | "culture";
 
-/** 对外去真名：心智官 / 空位官 / 冲突官（内部 id 保持兼容） */
+/** 对外去真名：心智官 / 空位官 / 冲突官 / 符号官 / 细分官 / 增长官 / 文化官 */
 export const ADVISOR_META: Record<
   AdvisorId,
   { name: string; model: string; question: string; code: string }
@@ -81,6 +81,30 @@ export const ADVISOR_META: Record<
     code: "MK-CLASH",
     model: "冲突记忆 · 成交",
     question: "什么冲突让人记住并进店？",
+  },
+  huayehu: {
+    name: "符号官",
+    code: "MK-SYMBOL",
+    model: "超级符号 · 文化母体",
+    question: "用什么符号让品牌寄生在文化母体中？",
+  },
+  kotler: {
+    name: "细分官",
+    code: "MK-STP",
+    model: "细分 · 目标 · 定位",
+    question: "市场怎么切？选哪块？怎么定？",
+  },
+  growth: {
+    name: "增长官",
+    code: "MK-GROWTH",
+    model: "飞轮 · 增长 · 复利",
+    question: "怎么让增长飞轮转起来？",
+  },
+  culture: {
+    name: "文化官",
+    code: "MK-CULTURE",
+    model: "文化战略 · 意识形态",
+    question: "什么社会矛盾让品牌成为文化符号？",
   },
 };
 
@@ -110,6 +134,16 @@ export type MarketResearchPack = {
   };
   /** 采集模式 */
   collectionMode?: "live_crawl" | "local_intel" | "hybrid";
+  /** V2：文化母体 / 符号集 / 人口细分 / 增长杠杆 / 社会矛盾 / 预算 / 现有符号 / 价格弹性 */
+  culturalCode?: string;
+  symbolSet?: string[];
+  demographicTiers?: Array<{ name: string; size: string; growth: string }>;
+  growthLevers?: string[];
+  socialContradiction?: string;
+  brandBudget?: number;
+  brandStage?: string;
+  existingSymbols?: string[];
+  priceElasticity?: string;
   /** 三柱覆盖：区域 / 竞对 / 用户门店 */
   pillarCoverage?: {
     evaluatedAt: string;

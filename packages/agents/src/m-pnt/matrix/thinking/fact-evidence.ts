@@ -1,5 +1,5 @@
 /**
- * 三席共用：从调研事实包提炼可审计 RTB / 词权 / 对照句
+ * 七席共用：从调研事实包提炼可审计 RTB / 词权 / 对照句
  * 禁止把「创始人信念」单独当证明。
  */
 import { clipWord, type ThinkingFactPack } from "./protocol";
@@ -11,7 +11,7 @@ export function ownedMentalWord(f: ThinkingFactPack): string {
 /** 证据句：优先调研来源/竞对摘要，其次景观句，最后才用 edge */
 export function evidenceBackedProof(
   f: ThinkingFactPack,
-  angle: "mind" | "rival" | "clash",
+  angle: "mind" | "rival" | "clash" | "symbol" | "stp" | "growth" | "culture",
 ): string {
   const snippets = (f.evidenceSnippets || []).filter((s) => s.trim().length >= 12);
   const briefs = f.competitorBriefs || [];
@@ -28,13 +28,30 @@ export function evidenceBackedProof(
     );
   }
 
+  if (angle === "symbol" && f.culturalCode) {
+    return `文化母体「${f.culturalCode}」是${f.who}高频场景；用超级符号让品牌寄生其中`.slice(0, 140);
+  }
+
+  if (angle === "stp" && f.demographicTiers && f.demographicTiers.length > 0) {
+    const t = f.demographicTiers[0];
+    return `细分「${t.name}」规模${t.size}、增长${t.growth}；聚焦该细分建立不可替代位置`.slice(0, 140);
+  }
+
+  if (angle === "growth" && f.growthLevers && f.growthLevers.length > 0) {
+    return `增长飞轮轴心选「${f.growthLevers[0]}」，带动${f.growthLevers.slice(1).join("、")}正循环`.slice(0, 140);
+  }
+
+  if (angle === "culture" && f.socialContradiction) {
+    return `社会矛盾「${f.socialContradiction}」中，品牌文化叙事让消费者表达身份和立场`.slice(0, 140);
+  }
+
   if (snippets[0]) {
     const head =
       angle === "clash"
         ? `场合可验：${snippets[0]}`
         : angle === "mind"
           ? `可追溯证据：${snippets[0]}`
-          : `竞争证据：${snippets[0]}`;
+          : `可用证据：${snippets[0]}`;
     return head.slice(0, 140);
   }
 

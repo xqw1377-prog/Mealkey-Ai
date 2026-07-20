@@ -41,14 +41,26 @@ export {
 } from "./agents";
 export { runTheoryMatrix, runSingleTheoryAgent } from "./run-matrix";
 export {
+  runThreeSeatThinkingEngines as runSevenSeatThinkingEngines,
   runThreeSeatThinkingEngines,
   buildThinkingFactPack,
   SEAT_PUBLIC,
+} from "./thinking";
+export {
+  runMindEngine,
+  runRivalEngine,
+  runClashEngine,
+  runSymbolEngine,
+  runSTPEngine,
+  runGrowthEngine,
+  runCultureEngine,
 } from "./thinking";
 export type {
   ThinkingFactPack,
   SeatVerdict,
   ThinkingEngineResult,
+  SeatCode,
+  SeatAdvisorId,
 } from "./thinking/protocol";
 
 export {

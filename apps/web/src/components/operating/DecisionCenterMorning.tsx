@@ -95,7 +95,7 @@ export function DecisionCenterMorning({
   projectId: string;
   onToggleAction?: (actionId: string) => void;
   pendingActionId?: string | null;
-  recentActionUpdate?: { id: string; done: boolean } | null;
+  recentActionUpdate?: { id: string; done: boolean; title: string } | null;
 }) {
   const router = useRouter();
   const [topicDraft, setTopicDraft] = useState("");
@@ -384,6 +384,21 @@ export function DecisionCenterMorning({
             去打卡
           </Link>
         </div>
+        {recentActionUpdate ? (
+          <p
+            role="status"
+            aria-live="polite"
+            className={`rounded-[14px] px-3 py-2 text-[12px] font-medium ${
+              recentActionUpdate.done
+                ? "bg-[rgba(102,115,94,0.10)] text-[#465240]"
+                : "bg-[rgba(24,24,23,0.06)] text-[#5f6368]"
+            }`}
+          >
+            {recentActionUpdate.done
+              ? `已完成：${recentActionUpdate.title}`
+              : `已恢复未完成：${recentActionUpdate.title}`}
+          </p>
+        ) : null}
         {scan.actions.length === 0 ? (
           <p className="text-[13px] leading-6 text-[#6f747b]">
             拍板后的动作会出现在这里。

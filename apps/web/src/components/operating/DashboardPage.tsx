@@ -208,6 +208,7 @@ export function DashboardPage({
   const [recentActionUpdate, setRecentActionUpdate] = useState<{
     id: string;
     done: boolean;
+    title: string;
   } | null>(null);
   const toggleTodayAction = trpc.dashboard.toggleTodayAction.useMutation({
     onSuccess: async () => {
@@ -412,7 +413,11 @@ export function DashboardPage({
                     const confirmedDone = updated
                       ? updated.status === "done" || updated.status === "completed"
                       : nextDone;
-                    setRecentActionUpdate({ id: actionId, done: confirmedDone });
+                    setRecentActionUpdate({
+                      id: actionId,
+                      done: confirmedDone,
+                      title: action.title,
+                    });
                     setActionFeedback({
                       tone: "success",
                       message: confirmedDone

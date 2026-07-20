@@ -307,6 +307,30 @@ export async function runMindEngine(
         defenseHint: "冲突服务心智词，而不是替代心智词",
         severity: "R2",
       },
+      {
+        targetSeat: "huayehu",
+        attack: `符号能帮心智词进入眼睛，但心智词才是能进脑子的——符号官先回答：这个符号代表什么心智第一？`,
+        defenseHint: "符号必须浓缩成一个心智词",
+        severity: "R2",
+      },
+      {
+        targetSeat: "kotler",
+        attack: `STP 细分再精准，如果不能在目标客群心智中成为第一，细分只是个分析报告。`,
+        defenseHint: "细分结论必须导向心智第一的行动",
+        severity: "R1",
+      },
+      {
+        targetSeat: "growth",
+        attack: `增长飞轮转得再快，没有心智锚点的飞轮是空转——客人为什么回来？因为你在脑子里有位置。`,
+        defenseHint: "飞轮必须有「第一词」作为锚点",
+        severity: "R1",
+      },
+      {
+        targetSeat: "culture",
+        attack: `文化叙事让品牌有灵魂，但若不能在品类中成为第一联想，文化变成自嗨。先占住第一，再谈深度。`,
+        defenseHint: "文化故事要服务心智第一的目标",
+        severity: "R1",
+      },
     ],
   };
 }

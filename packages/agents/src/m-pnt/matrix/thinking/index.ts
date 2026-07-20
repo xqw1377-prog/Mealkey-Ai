@@ -1,5 +1,5 @@
 /**
- * 跑三席思维引擎 → 咨询策略集 + 可接 Cross-Fire 的 TheoryView
+ * 跑七席思维引擎 → 咨询策略集 + 可接 Cross-Fire 的 TheoryView
  */
 import type {
   CrossFireResult,
@@ -20,11 +20,16 @@ import type {
 import { runMindEngine } from "./mind-engine";
 import { runRivalEngine } from "./rival-engine";
 import { runClashEngine } from "./clash-engine";
+import { runSymbolEngine } from "./symbol-engine";
+import { runSTPEngine } from "./stp-engine";
+import { runGrowthEngine } from "./growth-engine";
+import { runCultureEngine } from "./culture-engine";
 import {
   SEAT_PUBLIC,
   type SeatVerdict,
   type ThinkingEngineResult,
   type ThinkingFactPack,
+  type SeatAdvisorId,
 } from "./protocol";
 
 function createId(prefix: string) {
@@ -95,7 +100,7 @@ export function buildThinkingFactPack(
       "运营",
     ].filter(Boolean) as string[],
     weaknesses: ["资源有限，不能多线开战"],
-    constraints: ["三席必须互斥", "输出须指导菜单与话术", "proof 须挂证据而非口号"],
+    constraints: ["七席必须互斥", "输出须指导菜单与话术", "proof 须挂证据而非口号"],
     competitorBriefs: (research.competitorBriefs || []).slice(0, 5).map((b) => ({
       name: b.name,
       mentalPosition: b.mentalPosition,
@@ -104,12 +109,21 @@ export function buildThinkingFactPack(
       summary: b.summary,
     })),
     evidenceSnippets: evidenceSnippets.slice(0, 8),
+    // V2 扩展字段
+    culturalCode: research.culturalCode,
+    symbolSet: research.symbolSet,
+    demographicTiers: research.demographicTiers,
+    growthLevers: research.growthLevers,
+    socialContradiction: research.socialContradiction,
+    brandBudget: research.brandBudget,
+    brandStage: research.brandStage,
+    existingSymbols: research.existingSymbols,
+    priceElasticity: research.priceElasticity,
   };
 }
 
 function verdictToTheoryView(v: SeatVerdict): TheoryView {
-  const agentId =
-    v.advisorId === "ye" ? "ye_maozhong" : (v.advisorId as "ries" | "trout");
+  const agentId = seatVerdictToAgentId(v.advisorId);
   const all = [v.preferred, ...v.alternatives];
   return {
     agent_id: agentId,
@@ -142,6 +156,17 @@ function verdictToTheoryView(v: SeatVerdict): TheoryView {
     recommendation_level: v.recommend,
     confidence: v.confidence,
   };
+}
+
+function seatVerdictToAgentId(advisorId: SeatAdvisorId): "ries" | "trout" | "ye_maozhong" {
+  if (advisorId === "ye") return "ye_maozhong";
+  if (advisorId === "ries" || advisorId === "trout") return advisorId;
+  // For new seats, map to the closest existing one for compatibility
+  if (advisorId === "huayehu") return "ries";
+  if (advisorId === "kotler") return "trout";
+  if (advisorId === "growth") return "ye_maozhong";
+  if (advisorId === "culture") return "ye_maozhong";
+  return "ries";
 }
 
 function toDossier(v: SeatVerdict): TheoryDossier {
@@ -189,7 +214,6 @@ function verdictToCard(v: SeatVerdict): AdvisorStrategyCard {
     proofPlan: s.proofPlan,
     theoryDossier: {
       ...toDossier(v),
-      // 把推理迹压进 coreLogic 供案卷可见
       coreLogic: [
         v.coreLogic,
         ...v.reasoningTrace.map((t) => `${t.step} ${t.judgment}`),
@@ -203,32 +227,24 @@ function enrichCrossFireWithAmmo(
   seats: ThinkingEngineResult["seats"],
 ): CrossFireResult {
   const ammoChallenges: TheoryChallenge[] = [];
-  const list = [seats.ries, seats.trout, seats.ye];
-  for (const from of list) {
+  const seatList = [
+    seats.ries, seats.trout, seats.ye,
+    seats.huayehu, seats.kotler, seats.growth, seats.culture,
+  ];
+  for (const from of seatList) {
+    if (!from || !from.attackAmmo) continue;
     for (const a of from.attackAmmo) {
-      const to =
-        a.targetSeat === "ye"
-          ? seats.ye
-          : a.targetSeat === "trout"
-            ? seats.trout
-            : seats.ries;
+      const targetSeatId = mapSeatAdvisorId(a.targetSeat);
       ammoChallenges.push({
-        from:
-          from.advisorId === "ye"
-            ? "ye_maozhong"
-            : (from.advisorId as "ries" | "trout"),
-        to:
-          a.targetSeat === "ye"
-            ? "ye_maozhong"
-            : (a.targetSeat as "ries" | "trout"),
-        target_direction: to.preferred.name,
+        from: seatVerdictToAgentId(from.advisorId),
+        to: targetSeatId,
+        target_direction: "",
         attack: a.attack,
         defense_hint: a.defenseHint,
         severity: a.severity,
       });
     }
   }
-  // 引擎弹药优先；再补矩阵原有交火
   const merged = [...ammoChallenges, ...(base.challenges || [])];
   const seen = new Set<string>();
   const challenges = merged.filter((c) => {
@@ -243,8 +259,18 @@ function enrichCrossFireWithAmmo(
     challenges,
     game_summary:
       base.game_summary ||
-      `三席互斥：${SEAT_PUBLIC.ries.name}押「${seats.ries.preferred.name}」；${SEAT_PUBLIC.trout.name}押「${seats.trout.preferred.name}」；${SEAT_PUBLIC.ye.name}押「${seats.ye.preferred.name}」。`,
+      `七席交锋：心智官/空位官/冲突官/符号官/细分官/增长官/文化官 七方并行造策后博弈。`,
   };
+}
+
+function mapSeatAdvisorId(id: SeatAdvisorId): "ries" | "trout" | "ye_maozhong" {
+  if (id === "ries" || id === "trout") return id;
+  if (id === "ye") return "ye_maozhong";
+  if (id === "huayehu") return "ries";
+  if (id === "kotler") return "trout";
+  if (id === "growth") return "ye_maozhong";
+  if (id === "culture") return "ye_maozhong";
+  return "ries";
 }
 
 function toCrossFireBrief(cross: CrossFireResult): CrossFireBrief {
@@ -266,7 +292,7 @@ function toCrossFireBrief(cross: CrossFireResult): CrossFireBrief {
   };
 }
 
-/** LLM 可选：有 adapter 时三席并行 LLM invent，失败回退模板 */
+/** LLM 可选：有 adapter 时七席并行 LLM invent，失败回退模板 */
 export async function runThreeSeatThinkingEngines(
   project: BrandStrategyProject,
   research: MarketResearchPack,
@@ -278,21 +304,25 @@ export async function runThreeSeatThinkingEngines(
 }> {
   const factPack = buildThinkingFactPack(project, research, city);
   const llm = options?.llm;
-  const [ries, trout, ye] = await Promise.all([
+  const [ries, trout, ye, huayehu, kotler, growth, culture] = await Promise.all([
     runMindEngine(factPack, { llm }),
     runRivalEngine(factPack, { llm }),
     runClashEngine(factPack, { llm }),
+    runSymbolEngine(factPack, { llm }),
+    runSTPEngine(factPack, { llm }),
+    runGrowthEngine(factPack, { llm }),
+    runCultureEngine(factPack, { llm }),
   ]);
 
   const usedLlm =
     Boolean(llm) &&
-    [ries, trout, ye].some((v) =>
+    [ries, trout, ye, huayehu, kotler, growth, culture].some((v) =>
       v.reasoningTrace.some((t) => /LLM invent/.test(t.judgment)),
     );
 
   const engine: ThinkingEngineResult = {
     factPack,
-    seats: { ries, trout, ye },
+    seats: { ries, trout, ye, huayehu, kotler, growth, culture },
     mode: usedLlm ? "llm_hybrid" : "heuristic",
   };
 
@@ -302,7 +332,11 @@ export async function runThreeSeatThinkingEngines(
     ye_maozhong: verdictToTheoryView(ye),
   };
 
-  // 用三席自造方向作为候选包，供 synthesis / cross-fire 对齐
+  // 用七席自造方向作为候选包
+  const allCandidates = [
+    ries.preferred, trout.preferred, ye.preferred,
+    huayehu.preferred, kotler.preferred, growth.preferred, culture.preferred,
+  ];
   const pkg = {
     project: {
       name: project.projectId,
@@ -316,7 +350,7 @@ export async function runThreeSeatThinkingEngines(
       weaknesses: factPack.weaknesses,
     },
     previousSummary: factPack.researchHeadline,
-    candidates: [ries.preferred, trout.preferred, ye.preferred].map((d) => ({
+    candidates: allCandidates.map((d) => ({
       id: d.id,
       name: d.name,
       oneLiner: d.oneLiner,
@@ -339,6 +373,10 @@ export async function runThreeSeatThinkingEngines(
     verdictToCard(ries),
     verdictToCard(trout),
     verdictToCard(ye),
+    verdictToCard(huayehu),
+    verdictToCard(kotler),
+    verdictToCard(growth),
+    verdictToCard(culture),
   ];
 
   const set: AdvisorStrategySet = {
@@ -348,9 +386,13 @@ export async function runThreeSeatThinkingEngines(
     conflictSummary: [
       `${SEAT_PUBLIC.ries.name}押「${ries.preferred.name}」（${ries.totalScore}分）；`,
       `${SEAT_PUBLIC.trout.name}押「${trout.preferred.name}」（${trout.totalScore}分）；`,
-      `${SEAT_PUBLIC.ye.name}押「${ye.preferred.name}」（${ye.totalScore}分）。`,
+      `${SEAT_PUBLIC.ye.name}押「${ye.preferred.name}」（${ye.totalScore}分）；`,
+      `${SEAT_PUBLIC.huayehu.name}押「${huayehu.preferred.name}」（${huayehu.totalScore}分）；`,
+      `${SEAT_PUBLIC.kotler.name}押「${kotler.preferred.name}」（${kotler.totalScore}分）；`,
+      `${SEAT_PUBLIC.growth.name}押「${growth.preferred.name}」（${growth.totalScore}分）；`,
+      `${SEAT_PUBLIC.culture.name}押「${culture.preferred.name}」（${culture.totalScore}分）。`,
       brief.gameSummary ? `${brief.gameSummary}；` : "",
-      "三案不能同时当主航道——会议室必须选一个主轴，其余降为约束。",
+      "七案不能同时当主航道——会议室必须选一个主轴，其余降为约束。",
     ].join(""),
     generatedAt: new Date().toISOString(),
     theoryMode: engine.mode === "llm_hybrid" ? "llm_hybrid" : "heuristic",
@@ -362,7 +404,7 @@ export async function runThreeSeatThinkingEngines(
   return { engine, set };
 }
 
-export { SEAT_PUBLIC };
+export { SEAT_PUBLIC } from "./protocol";
 export {
   evidenceBackedProof,
   ownedMentalWord,

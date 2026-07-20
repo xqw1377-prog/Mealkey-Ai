@@ -41,21 +41,11 @@
     --mealkey-font-sans: "Noto Sans SC", "HarmonyOS Sans SC", "Alibaba PuHuiTi 3.0", "PingFang SC", "Microsoft YaHei", "Inter", sans-serif;
     --mealkey-font-latin: "Inter", "SF Pro Display", "Segoe UI", sans-serif;
 
-    --mk-bg: #f6f3ed;
-    --mk-surface: #ffffff;
-    --mk-surface-soft: #f5f1ea;
-    --mk-surface-muted: #ede8de;
-    --mk-foreground: #171717;
-    --mk-muted: #6f747b;
-    --mk-line: rgba(23, 23, 23, 0.10);
-    --mk-green: #77805f;
-    --mk-green-deep: #66735e;
-    --mk-blue: #66735e;
-    --mk-orange: #b47c5c;
-
+    /* MK* 别名 → mealkey 真源（避免重复硬编码） */
     --mk-bg: var(--mealkey-background);
     --mk-surface: var(--mealkey-surface);
     --mk-surface-soft: var(--mealkey-surface-soft);
+    --mk-surface-muted: #ede8de;
     --mk-foreground: var(--mealkey-foreground);
     --mk-muted: var(--mealkey-muted-foreground);
     --mk-line: var(--mealkey-line);
@@ -72,7 +62,7 @@
   html,
   body {
     @apply scroll-smooth;
-    /* 固定页面，禁止横向拖动/缩放查看 */
+    /* 防止横向溢出撑破移动端布局 */
     overflow-x: hidden;
     max-width: 100%;
   }
@@ -108,7 +98,7 @@
     color: #171717;
   }
 
-  /* 键盘焦点可见环：仅 focus-visible，不影响鼠标点击外观 */
+  /* ????????? focus-visible?????????? */
   :where(a, button, input, textarea, select, [tabindex]):focus-visible {
     outline: 2px solid var(--mealkey-primary-strong);
     outline-offset: 2px;
@@ -218,7 +208,7 @@
 }
 
 @layer utilities {
-  /* 隐藏横滑容器的滚动条，避免破坏渐隐遮罩视觉 */
+  /* ????????????????????? */
   .overflow-x-auto {
     scrollbar-width: none;
     -ms-overflow-style: none;
@@ -227,13 +217,13 @@
     display: none;
   }
 
-  /* 防止会议页对话区滚动带动整页下拉刷新 */
+  /* ?????????????????? */
   .overscroll-contain {
     overscroll-behavior: contain;
   }
 }
 
-/* 触屏设备关闭卡片级 backdrop-filter，降低中低端机滚动掉帧 */
+/* ????????? backdrop-filter??????????? */
 @media (hover: none) and (pointer: coarse) {
   .card,
   .mk-panel,
@@ -243,7 +233,7 @@
   }
 }
 
-/* 尊重系统的“减少动态效果”偏好 */
+/* ?????�??????�?? */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -254,3 +244,322 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* ������ M-PNT ?��?��??���?� ������ */
+.mpnt-atelier {
+  --mpnt-ink: #141413;
+  --mpnt-ink-soft: #2a2a28;
+  --mpnt-paper: #fbfaf7;
+  --mpnt-field: #f3f1eb;
+  --mpnt-line: rgba(20, 20, 19, 0.1);
+  --mpnt-olive: #5f6b4e;
+  --mpnt-olive-soft: rgba(95, 107, 78, 0.12);
+  --mpnt-copper: #a56b4d;
+  position: relative;
+}
+
+.mpnt-atelier::before {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 50% at 10% -10%, rgba(95, 107, 78, 0.09), transparent 55%),
+    radial-gradient(ellipse 60% 40% at 100% 0%, rgba(20, 20, 19, 0.05), transparent 50%);
+  z-index: 0;
+}
+
+.mpnt-atelier > * {
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes mpnt-rise {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes mpnt-ink-in {
+  from { opacity: 0; transform: scale(0.98); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.mpnt-rise {
+  animation: mpnt-rise 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.mpnt-rise-delay-1 { animation-delay: 0.08s; }
+.mpnt-rise-delay-2 { animation-delay: 0.16s; }
+.mpnt-rise-delay-3 { animation-delay: 0.24s; }
+
+@keyframes mk-home-glow-drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.9;
+  }
+  50% {
+    transform: translate3d(3%, -2%, 0) scale(1.04);
+    opacity: 1;
+  }
+}
+.mk-home-glow {
+  animation: mk-home-glow-drift 12s ease-in-out infinite;
+}
+
+.mpnt-doc {
+  animation: mpnt-ink-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  background: linear-gradient(180deg, #fffcf7 0%, #f7f4ee 100%);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.7) inset,
+    0 24px 48px rgba(20, 20, 19, 0.06);
+}
+
+.mpnt-seat {
+  transition: transform 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+}
+.mpnt-seat:hover { transform: translateY(-2px); }
+
+.mpnt-timeline-line {
+  background: linear-gradient(180deg, #5f6b4e, rgba(95, 107, 78, 0.15));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mpnt-rise,
+  .mpnt-doc,
+  .mk-home-glow { animation: none; }
+}
+
+/* M-PNT ?????? */
+.mpnt-report-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(95, 107, 78, 0.45) transparent;
+}
+
+.mpnt-report-prose {
+  color: var(--mpnt-ink-soft, #2a2a28);
+  font-size: 14px;
+  line-height: 1.75;
+}
+
+.mpnt-report-prose > *:first-child {
+  margin-top: 0;
+}
+
+.mpnt-report-prose h1 {
+  font-family: "Songti SC", "Noto Serif SC", "Source Han Serif SC", serif;
+  font-size: 1.65rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--mpnt-ink, #141413);
+  margin: 0 0 1rem;
+  line-height: 1.3;
+}
+
+.mpnt-report-prose h2 {
+  font-family: "Songti SC", "Noto Serif SC", "Source Han Serif SC", serif;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--mpnt-ink, #141413);
+  margin: 1.75rem 0 0.65rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(20, 20, 19, 0.08);
+  letter-spacing: -0.01em;
+}
+
+.mpnt-report-prose h2:first-child {
+  border-top: 0;
+  padding-top: 0;
+  margin-top: 0;
+}
+
+.mpnt-report-prose h3 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--mpnt-olive, #5f6b4e);
+  margin: 1.15rem 0 0.4rem;
+  letter-spacing: 0.02em;
+}
+
+.mpnt-report-prose p {
+  margin: 0.55rem 0;
+}
+
+.mpnt-report-prose blockquote {
+  margin: 0.85rem 0;
+  padding: 0.35rem 0 0.35rem 0.9rem;
+  border-left: 3px solid var(--mpnt-ink, #141413);
+  color: var(--mpnt-ink, #141413);
+  font-family: "Songti SC", "Noto Serif SC", serif;
+  font-size: 1.02rem;
+  line-height: 1.65;
+}
+
+.mpnt-report-prose ul,
+.mpnt-report-prose ol {
+  margin: 0.5rem 0 0.75rem;
+  padding-left: 1.25rem;
+}
+
+.mpnt-report-prose li {
+  margin: 0.28rem 0;
+}
+
+.mpnt-report-prose li::marker {
+  color: var(--mpnt-olive, #5f6b4e);
+}
+
+.mpnt-report-prose strong {
+  color: var(--mpnt-ink, #141413);
+  font-weight: 600;
+}
+
+.mpnt-report-prose a {
+  color: var(--mpnt-olive, #5f6b4e);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.mpnt-report-prose hr {
+  border: 0;
+  border-top: 1px solid rgba(20, 20, 19, 0.1);
+  margin: 1.5rem 0;
+}
+
+.mpnt-report-prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.85rem 0 1.1rem;
+  font-size: 13px;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.mpnt-report-prose th,
+.mpnt-report-prose td {
+  border: 1px solid rgba(20, 20, 19, 0.1);
+  padding: 0.55rem 0.7rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.mpnt-report-prose th {
+  background: rgba(95, 107, 78, 0.1);
+  color: var(--mpnt-ink, #141413);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.mpnt-report-prose code {
+  font-size: 0.85em;
+  background: rgba(20, 20, 19, 0.05);
+  padding: 0.1em 0.35em;
+}
+
+.mpnt-report-prose em {
+  color: #6f747b;
+  font-style: normal;
+  font-size: 0.92em;
+}
+
+/* 会议发言渐进出现 */
+@keyframes mpnt-turn-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.mpnt-turn-in {
+  animation: mpnt-turn-in 0.4s ease both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .mpnt-turn-in { animation: none; }
+}
+
+/* 六步移动端：步条横滑；主 CTA 贴底（叠在底栏之上） */
+@media (max-width: 767px) {
+  .mpnt-sticky-cta {
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: auto;
+    bottom: calc(4.25rem + env(safe-area-inset-bottom, 0px));
+    z-index: 35;
+    border-bottom: none;
+    border-top: 1px solid rgba(20, 20, 19, 0.12);
+    box-shadow: 0 -10px 28px rgba(20, 20, 19, 0.1);
+    padding-left: max(1.25rem, env(safe-area-inset-left, 0px));
+    padding-right: max(1.25rem, env(safe-area-inset-right, 0px));
+  }
+  .mpnt-sticky-cta > button {
+    width: 100%;
+    min-height: 3rem;
+  }
+  .mpnt-step-rail {
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .mpnt-step-rail::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@media print {
+  .mpnt-sticky-cta,
+  .mpnt-seat button,
+  nav,
+  aside {
+    display: none !important;
+  }
+  .mpnt-report-scroll {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+  .mpnt-doc,
+  .mpnt-report-prose {
+    border: none !important;
+    box-shadow: none !important;
+  }
+  .mpnt-decision-card {
+    break-inside: avoid;
+    border: 1px solid #141413 !important;
+  }
+  /* 仅打印店员交付包时：隐藏其余页面，强制展开墙卡 */
+  body.mpnt-print-staff * {
+    visibility: hidden !important;
+  }
+  body.mpnt-print-staff .mpnt-staff-pack,
+  body.mpnt-print-staff .mpnt-staff-pack * {
+    visibility: visible !important;
+  }
+  body.mpnt-print-staff .mpnt-staff-pack {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    border: 1px solid #141413 !important;
+    background: white !important;
+  }
+  body.mpnt-print-staff .mpnt-staff-pack button {
+    display: none !important;
+  }
+  body.mpnt-print-staff .mpnt-staff-pack details > summary {
+    display: none !important;
+  }
+  body.mpnt-print-staff .mpnt-staff-pack details[open] > *:not(summary) {
+    display: block !important;
+  }
+}
+
+.mpnt-decision-card {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.92),
+    rgba(245, 243, 236, 0.96)
+  );
+}
+
+.mpnt-staff-pack {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.95),
+    rgba(248, 246, 240, 0.98)
+  );
+}
+

@@ -107,6 +107,8 @@ export type MarketSnapshot = {
   action: string;
   confidence: number;
   pageOutput: MarketPageOutput;
+  /** 透传引擎元数据（含 provider: external | heuristic） */
+  structured?: Record<string, unknown> | null;
   updatedAt?: string;
   source?: "m-mkt" | "profile" | "decision";
 };
@@ -144,6 +146,7 @@ export function buildMarketSnapshot(input: {
     action: input.action || "",
     confidence: clamp01(input.confidence ?? 0.74),
     pageOutput,
+    structured: input.structured || null,
     updatedAt: input.updatedAt || new Date().toISOString(),
     source: input.source || "m-mkt",
   };

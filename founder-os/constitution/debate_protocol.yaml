@@ -1,0 +1,25 @@
+round_1:
+  name: "观点陈述"
+  goal: "在不受其他人影响的前提下，表达初始立场。"
+  required_output:
+    - "position"
+    - "summary"
+    - "top_reason"
+    - "top_risk"
+round_2:
+  name: "相互质询"
+  goal: "围绕最大冲突点提出挑战，并要求对方回应。"
+  required_output:
+    - "challenge_to_others"
+    - "response_to_challenges"
+round_3:
+  name: "最终修正"
+  goal: "重新评估是否改判，并给出可执行条件。"
+  required_output:
+    - "change_of_view"
+    - "change_reason"
+    - "biggest_uncertainty"
+    - "conditions"
+display_order:
+  - "先展示 strongest objection"
+  - "再展示 majority case"

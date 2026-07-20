@@ -64,7 +64,13 @@ export {
 
 // ─── 联网搜索能力（Web Search）───
 
-export { WebSearchManager, getWebSearch, resetWebSearch } from "./web-search";
+export {
+  WebSearchManager,
+  getWebSearch,
+  resetWebSearch,
+  parseDuckDuckGoHtml,
+  parseBingHtml,
+} from "./web-search";
 export type { WebSearchResult, WebSearchOptions } from "./web-search";
 
 // ─── 品类分析模板 ───
@@ -76,3 +82,33 @@ export type { CategoryProfile } from "./category-profiles";
 
 export { VisionAnalyzer, getVisionAnalyzer } from "./vision";
 export type { VisionAnalysisResult, OCRAdapter, VisionLLMAdapter } from "./vision";
+
+// ─── M-MKT 市场情报蒸馏知识 ───
+
+export {
+  MARKET_INTELLIGENCE_RULES,
+  MARKET_ENTRY_CASES,
+  searchMarketRules,
+  matchMarketRules,
+  findMarketCases,
+} from "./market-intelligence";
+
+// ─── M-BIZ 商业模式蒸馏知识 ───
+
+export {
+  BUSINESS_MODEL_RULES,
+  BUSINESS_MODEL_CASES,
+  searchBizRules,
+  matchBizRules,
+  findBizCases,
+} from "./business-model";
+
+// ─── M-ED 股权治理蒸馏知识 ───
+
+export {
+  EQUITY_GOVERNANCE_RULES,
+  EQUITY_GOVERNANCE_CASES,
+  searchEquityRules,
+  matchEquityRules,
+  findEquityCases,
+} from "./equity-governance";

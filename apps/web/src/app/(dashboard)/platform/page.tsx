@@ -2,8 +2,9 @@ import Link from "next/link";
 import { Activity, ArrowRight, CheckCheck, Clock3, Coins, ReceiptText, TriangleAlert } from "lucide-react";
 
 import { MKPageHeader } from "@/components/operating";
-import { PageErrorState } from "@/components/operating/PageState";
-import { requirePlatformAdmin } from "@/lib/auth-helpers";
+import { PlatformDeniedState } from "@/components/operating/PlatformDeniedState";
+import { formatNumber } from "@/lib/format";
+import { getAuthenticatedUser, requirePlatformAdmin } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/prisma";
 import { getPlatformOverview } from "@/server/services/platform-dashboard.service";
 
@@ -13,18 +14,13 @@ const WINDOW_OPTIONS = [
   { label: "30d", value: 24 * 30 },
 ] as const;
 
-function formatNumber(value: number | null | undefined) {
-  if (typeof value !== "number" || Number.isNaN(value)) return "--";
-  return new Intl.NumberFormat("zh-CN").format(value);
-}
-
 function formatPercent(value: number | null | undefined) {
-  if (typeof value !== "number" || Number.isNaN(value)) return "--";
+  if (typeof value !== "number" || Number.isNaN(value)) return "—";
   return `${value}%`;
 }
 
 function formatCost(value: number | null | undefined) {
-  if (typeof value !== "number" || Number.isNaN(value)) return "--";
+  if (typeof value !== "number" || Number.isNaN(value)) return "—";
   return `¥${value.toFixed(4)}`;
 }
 
@@ -303,7 +299,7 @@ export default async function PlatformPage({
                   href="/projects"
                   className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[14px] border border-[rgba(24,24,23,0.08)] bg-[#F5F3EE] px-4 text-[15px] font-semibold text-[#202124] no-underline transition active:scale-[0.98]"
                 >
-                  <span>进入经营世界</span>
+                  <span>我的企业</span>
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               </div>
@@ -313,16 +309,13 @@ export default async function PlatformPage({
       </div>
     );
   } catch (error) {
+    const user = await getAuthenticatedUser();
     return (
-      <div className="space-y-5 pb-2 pt-6 md:pt-8">
-        <PageErrorState
-          eyebrow="平台"
-          title="平台监控暂时无法生成"
-          description={error instanceof Error ? error.message : "平台事实层读取失败"}
-          primaryAction={{ href: "/dashboard", label: "回到今日" }}
-          secondaryAction={{ href: "/projects", label: "进入经营世界" }}
-        />
-      </div>
+      <PlatformDeniedState
+        surface="observe"
+        error={error}
+        currentEmail={user?.email}
+      />
     );
   }
 }

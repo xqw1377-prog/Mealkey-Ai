@@ -81,11 +81,6 @@ export function resolveLocalPrivateRoot(): string {
     : path.join(process.cwd(), "apps", "web", "private");
 }
 
-/** @deprecated 使用 resolveLocalPrivateRoot；保留别名避免外部引用断裂 */
-export function resolveLocalPublicRoot(): string {
-  return resolveLocalPrivateRoot();
-}
-
 async function ensureLocalUploadDir(relativeDir: string) {
   const target = path.join(resolveLocalPrivateRoot(), relativeDir);
   await mkdir(target, { recursive: true });

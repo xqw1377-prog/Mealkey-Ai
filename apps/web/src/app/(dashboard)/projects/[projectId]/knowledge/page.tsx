@@ -14,18 +14,27 @@ export default function ProjectKnowledgePage({
   const { data, isLoading, error } = trpc.dashboard.getProjectKnowledge.useQuery({ projectId: params.projectId });
 
   if (isLoading) {
-    return <PageLoadingState eyebrow="项目智慧" title="AI 正在整理项目智慧" description="正在关联项目风险、经营规则和适合当前阶段的认知提示。" />;
+    return (
+      <PageLoadingState
+        eyebrow="知识库"
+        title="正在打开…"
+        description="整理记得住的经验。"
+      />
+    );
   }
 
   if (error) {
     return (
       <div className="space-y-5 pb-2 pt-6 md:pt-8">
         <PageErrorState
-          eyebrow="项目智慧"
-          title="当前无法生成项目认知"
-          description="项目或知识数据还没同步完成。先回经营世界或经营会议。"
-          primaryAction={{ href: `/projects/${params.projectId}`, label: "返回经营世界" }}
-          secondaryAction={{ href: `/projects/${params.projectId}/advisor`, label: "进入会议" }}
+          eyebrow="知识库"
+          title="暂时打不开"
+          description="数据还在同步。"
+          primaryAction={{ href: `/projects/${params.projectId}`, label: "回企业" }}
+          secondaryAction={{
+            href: `/projects/${params.projectId}/advisor`,
+            label: "去开会",
+          }}
         />
       </div>
     );
@@ -35,11 +44,11 @@ export default function ProjectKnowledgePage({
     return (
       <div className="space-y-5 pb-2 pt-6 md:pt-8">
         <PageEmptyState
-          eyebrow="项目智慧"
-          title="当前无法打开这份经营洞察"
-          description="当前经营世界不存在或链接已经失效。先回到经营世界，重新进入一个有效世界。"
-          primaryAction={{ href: "/projects", label: "返回经营世界" }}
-          secondaryAction={{ href: "/dashboard", label: "回到今日" }}
+          eyebrow="知识库"
+          title="进不了知识库"
+          description="回列表再选企业。"
+          primaryAction={{ href: "/projects", label: "我的企业" }}
+          secondaryAction={{ href: "/dashboard", label: "回今日" }}
         />
       </div>
     );
@@ -51,13 +60,12 @@ export default function ProjectKnowledgePage({
   return (
     <div className="space-y-5 pb-2">
       <MKPageHeader
-        eyebrow="项目智慧"
-        title="项目智慧"
-        description={`${project.name} · 这里放判断依据。`}
-        
+        eyebrow="知识库"
+        title={project.name}
+        description="记得住的规则与经验，开会会用到。"
         badge={
           <div className="inline-flex min-h-7 items-center rounded-[12px] border border-[rgba(24,24,23,0.08)] bg-white px-3 text-[13px] leading-5 tracking-[0.01em] text-[#6f747b]">
-            项目关联
+            经验
           </div>
         }
       />
@@ -68,7 +76,7 @@ export default function ProjectKnowledgePage({
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-[13px] leading-5 tracking-[0.01em] text-[#66735E]">项目判断</p>
-                <h2 className="mt-1 text-[18px] font-semibold leading-[1.25] tracking-[-0.02em] text-[#202124]">今日项目认知</h2>
+                <h2 className="mt-1 text-[18px] font-semibold leading-[1.25] tracking-[-0.02em] text-[#202124]">今天可用</h2>
               </div>
               <Lightbulb className="h-5 w-5 text-[#66735E]" />
             </div>
@@ -86,9 +94,9 @@ export default function ProjectKnowledgePage({
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-[13px] leading-5 tracking-[0.01em] text-[#66735E]">证据</p>
-                <h2 className="mt-1 text-[18px] font-semibold leading-[1.25] tracking-[-0.02em] text-[#202124]">案例支撑</h2>
+                <h2 className="mt-1 text-[18px] font-semibold leading-[1.25] tracking-[-0.02em] text-[#202124]">依据</h2>
               </div>
-              <p className="text-[13px] leading-5 tracking-[0.01em] text-[#6f747b]">面向当前项目</p>
+              <p className="text-[13px] leading-5 tracking-[0.01em] text-[#6f747b]">当前企业</p>
             </div>
 
             <div className="mt-5 flex flex-col gap-3">
@@ -155,11 +163,11 @@ export default function ProjectKnowledgePage({
         </>
       ) : (
         <PageEmptyState
-          eyebrow="项目智慧"
-          title="当前项目还没有可引用的认知节点"
-          description="先继续经营会议或生成决策档案，AI 会把更适合这个项目的知识依据逐步沉淀进来。"
-          primaryAction={{ href: `/projects/${project.id}/advisor`, label: "进入经营会议" }}
-          secondaryAction={{ href: `/projects/${project.id}`, label: "返回经营世界" }}
+          eyebrow="知识库"
+          title="还没有可引用的经验"
+          description="先开会或留下决策，经验会慢慢沉淀。"
+          primaryAction={{ href: `/projects/${project.id}/advisor`, label: "去开会" }}
+          secondaryAction={{ href: `/projects/${project.id}`, label: "回企业" }}
         />
       )}
     </div>

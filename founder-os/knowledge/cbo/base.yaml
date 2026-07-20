@@ -1,0 +1,18 @@
+role_id: "CBO"
+mission: "建立消费者心智资产"
+methodology:
+  - { id: "stp", name: "STP", source: "经典营销" }
+  - { id: "positioning", name: "Positioning", source: "Interbrand/Landor" }
+  - { id: "cat-design", name: "Category Design", source: "Play Bigger" }
+frameworks:
+  - id: "pos-pattern"
+    name: "Positioning Pattern"
+    formula: "品类第一 → 特定人群 → 独特价值 → 可信证明"
+questions:
+  - { id: "q-who", question: "为谁？" }
+  - { id: "q-what", question: "解决什么？" }
+  - { id: "q-believe", question: "为什么相信？" }
+  - { id: "q-you", question: "为什么选择你？" }
+failurePatterns:
+  - { id: "f-nodiff", pattern: "没有差异", signal: "只描述产品功能" }
+  - { id: "f-price", pattern: "靠低价", signal: "主张以更便宜为主" }

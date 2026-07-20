@@ -2,10 +2,24 @@ import { NextResponse } from "next/server";
 
 import { requireAuth, unauthorizedResponse } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/prisma";
-import { confirmSandboxPayment, getPaymentMode } from "@/server/services/payment.service";
+import {
+  confirmSandboxPayment,
+  getPaymentMode,
+  isProductionSandboxAllowed,
+} from "@/server/services/payment.service";
 
 export async function POST(request: Request) {
   try {
+    if (
+      process.env.NODE_ENV === "production" &&
+      !isProductionSandboxAllowed()
+    ) {
+      return NextResponse.json(
+        { ok: false, error: "生产环境禁止沙箱支付确认" },
+        { status: 403 },
+      );
+    }
+
     const authUser = await requireAuth();
 
     if (getPaymentMode() !== "sandbox") {

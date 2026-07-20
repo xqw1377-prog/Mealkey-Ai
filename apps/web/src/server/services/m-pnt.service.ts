@@ -83,6 +83,17 @@ export type MPntMetaChunk = {
   agentName: string;
 };
 
+export interface MPntServiceOptions {
+  projectId: string;
+  userId: string;
+  message: string;
+  missionId?: string;
+  conversationId?: string;
+  assetIds?: string[];
+  force?: boolean;
+  assetContextBlock?: string | null;
+}
+
 export type MPntResultChunk = {
   type: "positioning_result";
   data: PositioningSnapshot;
@@ -195,6 +206,7 @@ export async function* streamMPntProduct(
     agentId: "m-pnt",
     userId,
     projectId,
+    missionId: options.missionId,
     conversationId: conversation.id,
     input: { message, assetIds, agent: "m-pnt" },
   });
@@ -228,7 +240,7 @@ export async function* streamMPntProduct(
   yield {
     type: "text",
     content:
-      "## 🎯 MealKey 品牌定位工作台\n\n已识别当前定位议题，系统将结合项目背景、历史判断、上传资料与竞争线索，开始 7 步定位推演。\n",
+      "## 餐启 · Mealkey 品牌定位\n\n已识别当前定位议题，系统将结合项目背景、历史判断、上传资料与竞争线索，开始定位推演。\n",
   };
 
   const stepDecisions: MKDecision[] = [];
@@ -808,127 +820,188 @@ export async function syncProjectPositioning(
         : null),
   };
 
-  // Keep short history (max 5) for audit / compare UI
-  const historyRaw = Array.isArray(profile.mPntHistory)
-    ? (profile.mPntHistory as Record<string, unknown>[])
-    : [];
-  const mPntHistory = previousBlob
-    ? [previousBlob, ...historyRaw].slice(0, 5)
-    : historyRaw.slice(0, 5);
-
   // When positioning materially changes, flag related decisions for re-review
-  let positioningReviewQueue = Array.isArray(profile.positioningReviewQueue)
+  let reviewQueueOverride: unknown[] | null = null;
+  const initialReviewQueue = Array.isArray(profile.positioningReviewQueue)
     ? profile.positioningReviewQueue
     : [];
   if (previous && previous.oneLiner !== oneLiner) {
-    positioningReviewQueue = await flagRelatedDecisionsForReview(prisma, {
+    reviewQueueOverride = await flagRelatedDecisionsForReview(prisma, {
       ownerId,
       projectId,
       positioningDecisionId: decisionId,
       previousOneLiner: previous.oneLiner,
       newOneLiner: oneLiner,
-      existingQueue: positioningReviewQueue,
+      existingQueue: initialReviewQueue,
     });
   }
 
-  const nextProfile: Record<string, unknown> = withFounderPositioningContext(
-    {
-      ...profile,
-      brandName:
-        normalizedBrandPositioning.brandName ?? profile.brandName ?? project.name,
-      category:
-        normalizedBrandPositioning.category ??
-        profile.category ??
-        project.category ??
-        undefined,
-      positioning: oneLiner,
-      mentalPosition: mental,
-      targetCustomers:
-        normalizedBrandPositioning.targetCustomers ?? profile.targetCustomers,
-      priceRange: normalizedBrandPositioning.priceRange ?? profile.priceRange,
-      differentiation:
-        normalizedBrandPositioning.differentiation ?? profile.differentiation,
-      brandTonality:
-        normalizedBrandPositioning.brandTonality ?? profile.brandTonality,
-      mPnt,
-      mPntPrevious: previousBlob ?? profile.mPntPrevious ?? null,
-      mPntHistory,
-      positioningReviewQueue,
+  const { updateProjectProfile } = await import("@/server/services/project-profile");
+  await updateProjectProfile(
+    projectId,
+    (latest) => {
+      const latestPreviousBlob = (latest.mPnt || null) as Record<string, unknown> | null;
+      const historyRaw = Array.isArray(latest.mPntHistory)
+        ? (latest.mPntHistory as Record<string, unknown>[])
+        : [];
+      const mPntHistory = latestPreviousBlob
+        ? [latestPreviousBlob, ...historyRaw].slice(0, 5)
+        : historyRaw.slice(0, 5);
+      const positioningReviewQueue =
+        reviewQueueOverride ??
+        (Array.isArray(latest.positioningReviewQueue)
+          ? latest.positioningReviewQueue
+          : []);
+
+      const latestBrandPositioning: Record<string, unknown> = {
+        ...normalizedBrandPositioning,
+        brandName:
+          normalizedBrandPositioning.brandName ??
+          latest.brandName ??
+          project.name,
+        category:
+          normalizedBrandPositioning.category ??
+          latest.category ??
+          project.category ??
+          undefined,
+      };
+
+      return withFounderPositioningContext(
+        {
+          ...latest,
+          brandName:
+            latestBrandPositioning.brandName ?? latest.brandName ?? project.name,
+          category:
+            latestBrandPositioning.category ??
+            latest.category ??
+            project.category ??
+            undefined,
+          positioning: oneLiner,
+          mentalPosition: mental,
+          targetCustomers:
+            latestBrandPositioning.targetCustomers ?? latest.targetCustomers,
+          priceRange: latestBrandPositioning.priceRange ?? latest.priceRange,
+          differentiation:
+            latestBrandPositioning.differentiation ?? latest.differentiation,
+          brandTonality:
+            latestBrandPositioning.brandTonality ?? latest.brandTonality,
+          mPnt: {
+            ...mPnt,
+            brandPositioning: latestBrandPositioning,
+          },
+          mPntPrevious: latestPreviousBlob ?? latest.mPntPrevious ?? null,
+          mPntHistory,
+          positioningReviewQueue,
+        },
+        {
+          decisionId,
+          brandName:
+            typeof latestBrandPositioning.brandName === "string"
+              ? latestBrandPositioning.brandName
+              : undefined,
+          category:
+            typeof latestBrandPositioning.category === "string"
+              ? latestBrandPositioning.category
+              : undefined,
+          mentalPosition: typeof mental === "string" ? mental : undefined,
+          targetCustomers:
+            typeof latestBrandPositioning.targetCustomers === "string"
+              ? latestBrandPositioning.targetCustomers
+              : undefined,
+          priceRange:
+            typeof latestBrandPositioning.priceRange === "string"
+              ? latestBrandPositioning.priceRange
+              : undefined,
+          differentiation:
+            typeof latestBrandPositioning.differentiation === "string"
+              ? latestBrandPositioning.differentiation
+              : undefined,
+          finalJudgement: oneLiner,
+          handoffPayload: {
+            brandName:
+              typeof latestBrandPositioning.brandName === "string"
+                ? latestBrandPositioning.brandName
+                : undefined,
+            category:
+              typeof latestBrandPositioning.category === "string"
+                ? latestBrandPositioning.category
+                : undefined,
+            mentalPosition: typeof mental === "string" ? mental : undefined,
+            targetCustomers:
+              typeof latestBrandPositioning.targetCustomers === "string"
+                ? latestBrandPositioning.targetCustomers
+                : undefined,
+            priceRange:
+              typeof latestBrandPositioning.priceRange === "string"
+                ? latestBrandPositioning.priceRange
+                : undefined,
+            differentiation:
+              typeof latestBrandPositioning.differentiation === "string"
+                ? latestBrandPositioning.differentiation
+                : undefined,
+          },
+        },
+        projectId,
+      );
     },
     {
-      decisionId,
+      ownerId,
+      prisma,
+      extraData: () => {
+        const data: Record<string, unknown> = {
+          target: String(mental).slice(0, 240),
+        };
+        if (!project.stage || project.stage === "idea") {
+          data.stage = "positioning";
+        }
+        if (
+          !project.category &&
+          typeof normalizedBrandPositioning.category === "string" &&
+          normalizedBrandPositioning.category.trim()
+        ) {
+          data.category = normalizedBrandPositioning.category.trim().slice(0, 40);
+        }
+        return data;
+      },
+    },
+  );
+
+  // Restaurant Brain：结构化定位事实 → DNA（不复制决策正文）
+  try {
+    const { syncBrandFactsToRestaurantBrain } = await import(
+      "@/server/restaurant-brain/sync-brand-facts"
+    );
+    await syncBrandFactsToRestaurantBrain(prisma, {
+      projectId,
+      ownerId,
+      source: "decision",
+      confidence:
+        typeof decision.confidence === "number" ? decision.confidence : 0.6,
       brandName:
         typeof normalizedBrandPositioning.brandName === "string"
           ? normalizedBrandPositioning.brandName
-          : undefined,
+          : null,
       category:
         typeof normalizedBrandPositioning.category === "string"
           ? normalizedBrandPositioning.category
-          : undefined,
-      mentalPosition: typeof mental === "string" ? mental : undefined,
+          : null,
+      positioning: typeof mental === "string" ? mental : oneLiner,
       targetCustomers:
         typeof normalizedBrandPositioning.targetCustomers === "string"
           ? normalizedBrandPositioning.targetCustomers
-          : undefined,
+          : null,
       priceRange:
         typeof normalizedBrandPositioning.priceRange === "string"
           ? normalizedBrandPositioning.priceRange
-          : undefined,
+          : null,
       differentiation:
         typeof normalizedBrandPositioning.differentiation === "string"
           ? normalizedBrandPositioning.differentiation
-          : undefined,
-      finalJudgement: oneLiner,
-      handoffPayload: {
-        brandName:
-          typeof normalizedBrandPositioning.brandName === "string"
-            ? normalizedBrandPositioning.brandName
-            : undefined,
-        category:
-          typeof normalizedBrandPositioning.category === "string"
-            ? normalizedBrandPositioning.category
-            : undefined,
-        mentalPosition: typeof mental === "string" ? mental : undefined,
-        targetCustomers:
-          typeof normalizedBrandPositioning.targetCustomers === "string"
-            ? normalizedBrandPositioning.targetCustomers
-            : undefined,
-        priceRange:
-          typeof normalizedBrandPositioning.priceRange === "string"
-            ? normalizedBrandPositioning.priceRange
-            : undefined,
-        differentiation:
-          typeof normalizedBrandPositioning.differentiation === "string"
-            ? normalizedBrandPositioning.differentiation
-            : undefined,
-      },
-    },
-    projectId,
-  );
-
-  const data: Record<string, unknown> = {
-    target: String(mental).slice(0, 240),
-    profile: JSON.stringify(nextProfile),
-  };
-
-  // Stage progression: idea → positioning
-  if (!project.stage || project.stage === "idea") {
-    data.stage = "positioning";
+          : null,
+    });
+  } catch (error) {
+    console.warn("Restaurant Brain brand DNA sync failed:", error);
   }
-
-  // Fill empty category from brand card if possible
-  if (
-    !project.category &&
-    typeof normalizedBrandPositioning.category === "string" &&
-    normalizedBrandPositioning.category.trim()
-  ) {
-    data.category = normalizedBrandPositioning.category.trim().slice(0, 40);
-  }
-
-  await prisma.project.update({
-    where: { id: projectId },
-    data,
-  });
 
   return previous;
 }

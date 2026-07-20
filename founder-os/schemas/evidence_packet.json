@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Evidence Packet",
+  "type": "object",
+  "required": ["caseId", "items"],
+  "properties": {
+    "caseId": { "type": "string" },
+    "generatedAt": { "type": "string" },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["evidenceId", "sourceAgent", "claim"],
+        "properties": {
+          "evidenceId": { "type": "string" },
+          "sourceAgent": { "type": "string" },
+          "claim": { "type": "string" },
+          "strength": {
+            "type": "string",
+            "enum": ["weak", "medium", "strong"]
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "market",
+              "brand",
+              "unit_economics",
+              "operations",
+              "capital",
+              "risk",
+              "strategy"
+            ]
+          },
+          "refs": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    },
+    "gaps": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  }
+}

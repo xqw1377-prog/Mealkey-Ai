@@ -1,0 +1,18 @@
+decision_type: "restructuring"
+name: "组织重组"
+level: 4
+pass_requirement: "7/7 + 创始人确认"
+weights:
+  CSO: 4
+  CMO: 2
+  CBO: 2
+  BMO: 4
+  CFO: 4
+  COO: 5
+  CRO: 5
+veto_roles:
+  - "COO"
+  - "CRO"
+default_required_agents:
+  - "M-ED"
+  - "M-BIZ"

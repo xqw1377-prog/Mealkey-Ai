@@ -1,17 +1,25 @@
+import NextAuth from "next-auth";
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { authConfig } from "@/lib/auth.config";
+
+const { auth } = NextAuth(authConfig);
 
 const protectedPrefixes = ["/dashboard", "/projects", "/profile", "/billing"];
 const authPages = new Set(["/login", "/register"]);
 
 function isProtectedPath(pathname: string) {
-  return pathname === "/onboarding" || protectedPrefixes.some((prefix) => pathname.startsWith(prefix));
+  return (
+    pathname === "/onboarding" ||
+    protectedPrefixes.some((prefix) => pathname.startsWith(prefix))
+  );
 }
 
 export default auth((req) => {
   const pathname = req.nextUrl.pathname;
   const isLoggedIn = Boolean(req.auth?.user);
-  const isOnboarded = Boolean((req.auth?.user as { onboarded?: boolean } | undefined)?.onboarded);
+  const isOnboarded = Boolean(
+    (req.auth?.user as { onboarded?: boolean } | undefined)?.onboarded,
+  );
 
   if (!isLoggedIn && isProtectedPath(pathname)) {
     const loginUrl = new URL("/login", req.nextUrl);
@@ -21,10 +29,17 @@ export default auth((req) => {
   }
 
   if (isLoggedIn && authPages.has(pathname)) {
-    return NextResponse.redirect(new URL(isOnboarded ? "/dashboard" : "/onboarding", req.nextUrl));
+    return NextResponse.redirect(
+      new URL(isOnboarded ? "/dashboard" : "/onboarding", req.nextUrl),
+    );
   }
 
-  if (isLoggedIn && !isOnboarded && pathname !== "/onboarding" && isProtectedPath(pathname)) {
+  if (
+    isLoggedIn &&
+    !isOnboarded &&
+    pathname !== "/onboarding" &&
+    isProtectedPath(pathname)
+  ) {
     return NextResponse.redirect(new URL("/onboarding", req.nextUrl));
   }
 

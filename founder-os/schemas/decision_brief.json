@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Decision Brief",
+  "description": "Founder OS 核心资产：企业决策数据库单元，不是聊天记录。",
+  "type": "object",
+  "required": [
+    "briefId",
+    "casePacket",
+    "expertReports",
+    "councilOpinions",
+    "conflicts",
+    "resolution",
+    "validationPlan"
+  ],
+  "properties": {
+    "briefId": { "type": "string" },
+    "createdAt": { "type": "string" },
+    "casePacket": { "$ref": "case_packet.json" },
+    "evidencePacket": { "$ref": "evidence_packet.json" },
+    "expertReports": {
+      "type": "array",
+      "items": { "$ref": "expert_report.json" }
+    },
+    "councilOpinions": {
+      "type": "array",
+      "items": { "$ref": "council_opinion.json" }
+    },
+    "conflicts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["axis", "summary", "sides"],
+        "properties": {
+          "axis": { "type": "string" },
+          "summary": { "type": "string" },
+          "sides": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "severityObjection": { "type": "string" }
+        }
+      }
+    },
+    "resolution": { "$ref": "decision_resolution.json" },
+    "founderOverride": {
+      "type": "object",
+      "properties": {
+        "overrode": { "type": "boolean" },
+        "finalAction": {
+          "type": "string",
+          "enum": ["执行", "暂缓", "推翻"]
+        },
+        "note": { "$ref": "founder_decision_note.json" }
+      }
+    },
+    "validationPlan": {
+      "type": "object",
+      "required": ["cycle", "killMetric"],
+      "properties": {
+        "cycle": { "type": "string" },
+        "killMetric": { "type": "string" },
+        "successMetrics": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "owners": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "learningHook": {
+      "type": "object",
+      "properties": {
+        "outcomeStatus": {
+          "type": "string",
+          "enum": ["pending", "validated", "killed", "overridden_success", "overridden_fail"]
+        },
+        "whoWasRight": {
+          "type": "string",
+          "enum": ["founder", "council", "mixed", "unknown"]
+        },
+        "lesson": { "type": "string" }
+      }
+    }
+  }
+}

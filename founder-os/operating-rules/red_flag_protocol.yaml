@@ -1,0 +1,37 @@
+version: "1.0.0"
+name: "Red Flag Protocol"
+principle: "否决不是结束；必须提出替代方案。"
+
+flags:
+  - id: "finance_red_line"
+    role: "CFO"
+    label: "财务红线"
+    examples:
+      - "现金流不足 6 个月"
+      - "杠杆过高导致生存风险"
+      - "回报不足以覆盖资本代价"
+    effect: "STOP → 暂缓 / 二次论证"
+  - id: "risk_red_line"
+    role: "CRO"
+    label: "风险红线"
+    examples:
+      - "高概率法律/合规风险"
+      - "食品安全或人身安全"
+      - "不可承受的品牌危机"
+    effect: "STOP → 暂缓 / 二次论证"
+  - id: "ops_red_line"
+    role: "COO"
+    label: "运营红线"
+    examples:
+      - "关键岗位无人可执行"
+      - "无标准化导致不可复制"
+      - "组织带宽接不住扩张"
+    effect: "STOP → 暂缓 / 二次论证"
+    note: "默认在 L2+ 扩张类议题授权；L1 不启用常委会红线"
+
+required_on_flag:
+  - "veto_reason"
+  - "alternative_proposal"
+
+unauthorized:
+  rule: "非红线角色声明 veto → 降级为强烈反对，进入少数报告，不触发 STOP"

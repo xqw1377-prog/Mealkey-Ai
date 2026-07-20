@@ -1,0 +1,87 @@
+# Founder OS V1.0 Architecture Freeze
+status: frozen
+frozen_at: "2026-07-16"
+definition: >
+  Founder OS 是一个面向企业创始人的 AI 决策操作系统，
+  通过专业判断引擎、决策委员会和企业记忆系统，
+  把 AI 的无限知识转化为企业家的长期决策能力。
+
+layers:
+  L1_expert_engines:
+    role: "专业判断层 — 单一领域顶级咨询能力产品化"
+    frozen_engines:
+      - id: M-PNT
+        name: Brand Positioning Engine
+        question: "企业应该在消费者心智中占据什么位置？"
+        peer: "Interbrand / Landor"
+      - id: M-MKT
+        name: Market Intelligence Engine
+        question: "市场机会在哪里？"
+        peer: "麦肯锡市场进入战略"
+      - id: M-BIZ
+        name: Business Model Engine
+        question: "这个企业模式是否成立？"
+        peer: "商业战略咨询"
+      - id: M-ED
+        name: Equity Design Engine
+        question: "企业如何长期组织资本和利益？"
+        peer: "投行 + 股权顾问"
+    no_fifth_engine_in_v1: true
+
+  L2_decision_council:
+    role: "决策治理层 — 企业最高决策机构（非第二专家层）"
+    name: Founder Decision Council
+    members_frozen: 7
+    members: [CSO, CMO, CBO, BMO, CFO, COO, CRO]
+    no_additional_members: true
+
+  L3_enterprise_intelligence:
+    role: "企业智能层 — 操作中枢（非第5专业Agent）"
+    agent: Chief of Staff Agent
+    duties:
+      - problem_discovery
+      - issue_routing
+      - decision_orchestration
+      - validation_tracking
+      - enterprise_memory
+
+closed_loop:
+  - 企业问题
+  - Chief of Staff
+  - Expert Engines
+  - Evidence Layer
+  - Decision Council
+  - Founder Final Decision
+  - Validation
+  - Memory
+  - Capability Evolution
+
+explicitly_out_of_scope:
+  - 餐饮ERP
+  - 门店管理系统
+  - 员工培训系统
+  - 营销执行工具
+  - 供应链系统
+  - 点餐系统
+  - 日常SOP工具
+
+agent_expansion_rule: >
+  新增 Agent 必须回答：若老板缺少这个能力，会导致重大决策错误吗？
+  符合才增加。M-INV / M-HR / M-OPS 现不进入 V1。
+
+dev_priority:
+  phase_1: [M-PNT, M-BIZ, M-MKT, M-ED]
+  phase_2: Evidence Layer
+  phase_3: Decision Council Engine (engineering depth)
+  phase_4: Chief of Staff Agent
+
+product_positioning:
+  is: "AI 企业决策操作系统"
+  is_not:
+    - AI咨询机器人
+    - 餐饮老板助手
+  value: >
+    帮助创始人像拥有世界级咨询团队 + 董事会 + CEO办公室一样经营企业。
+
+next_engineering_focus: "M-PNT V2 — Interbrand/Landor 级品牌战略引擎"
+no_more_macro_architecture: true

@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ExpertKnowledgeBase",
+  "type": "object",
+  "required": [
+    "role_id",
+    "methodology",
+    "frameworks",
+    "cases",
+    "benchmarks",
+    "questions",
+    "failurePatterns"
+  ],
+  "properties": {
+    "role_id": { "type": "string" },
+    "mission": { "type": "string" },
+    "methodology": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "source"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "source": { "type": "string" },
+          "summary": { "type": "string" }
+        }
+      }
+    },
+    "frameworks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "formula"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "formula": { "type": "string" },
+          "steps": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "outcome"],
+        "properties": {
+          "id": { "type": "string" },
+          "title": { "type": "string" },
+          "industry": { "type": "string" },
+          "lesson": { "type": "string" },
+          "outcome": {
+            "type": "string",
+            "enum": ["success", "failure", "mixed"]
+          }
+        }
+      }
+    },
+    "benchmarks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "metric", "reference"],
+        "properties": {
+          "id": { "type": "string" },
+          "metric": { "type": "string" },
+          "reference": { "type": "string" },
+          "context": { "type": "string" }
+        }
+      }
+    },
+    "questions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "question"],
+        "properties": {
+          "id": { "type": "string" },
+          "theme": { "type": "string" },
+          "question": { "type": "string" }
+        }
+      }
+    },
+    "failurePatterns": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "pattern", "signal"],
+        "properties": {
+          "id": { "type": "string" },
+          "pattern": { "type": "string" },
+          "signal": { "type": "string" },
+          "countermeasure": { "type": "string" }
+        }
+      }
+    },
+    "learning_adjustments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "observation": { "type": "string" },
+          "weight_hint": { "type": "string" },
+          "updatedAt": { "type": "string" }
+        }
+      }
+    }
+  }
+}

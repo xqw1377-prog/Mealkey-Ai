@@ -1,0 +1,13 @@
+role_id: "COO"
+mission: "把想法变成系统"
+methodology:
+  - { id: "tps", name: "Toyota Production System", source: "丰田" }
+  - { id: "sop", name: "SOP 体系", source: "连锁运营" }
+frameworks:
+  - id: "capability-ladder"
+    name: "能力阶梯"
+    formula: "老板能力 → 团队能力 → 系统能力"
+questions:
+  - { id: "q-30", question: "如果老板离开30天，还能运行吗？" }
+failurePatterns:
+  - { id: "f-hero", pattern: "依赖个人能力", signal: "关键环节只有一人会" }

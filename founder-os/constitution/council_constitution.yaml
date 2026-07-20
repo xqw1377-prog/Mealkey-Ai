@@ -1,0 +1,31 @@
+name: "Founder OS Decision Constitution"
+version: "1.0.0"
+principles:
+  - "重大决策必须经过专业审议。"
+  - "每个观点必须有证据支持。"
+  - "反对意见必须完整保留。"
+  - "所有决策必须设置验证周期与 kill metric。"
+  - "结果必须回写系统，形成学习闭环。"
+  - "创始人拥有最终裁决权，但不参与常委投票。"
+  - "首轮判断必须独立完成，不得相互污染。"
+  - "四大 Expert Engines 负责研究透；七常委负责做企业选择，禁止二次分析。"
+  - "核心资产是 Decision Brief，不是聊天记录。"
+independence_rules:
+  - "常委首轮只读取议题、证据与专业报告，不读取其他常委意见。"
+  - "Founder View 只能作为输入模块，不能作为预设结论。"
+  - "证据不足时允许反对或条件支持，不得为了给出结论而强行支持。"
+  - "七常委不得重新检索或重做领域研究；只能基于 Expert Report 做 Decision Intelligence。"
+  - "创始人不是第八常委；Override 必须留下 Founder Decision Note。"
+debate_rules:
+  - "先展示 strongest objection，再展示 majority case。"
+  - "每位常委必须回应至少一个反方挑战问题。"
+  - "辩论结束后，每位常委必须重新提交改判结果或维持理由。"
+resolution_rules:
+  - "少数意见报告不可被折叠或省略。"
+  - "所有通过的议题必须附执行条件、验证周期与 kill metric。"
+  - "存在 veto 时，议题不得直接通过，必须进入二次论证。"
+roles:
+  founder: "最终裁决，不参与常委投票"
+  council: "独立判断"
+  secretary: "组织流程与 decisionType 判定"
+  specialist_agents: "提供证据（M-MKT / M-PNT / M-BIZ / M-ED 等）"

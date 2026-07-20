@@ -1,0 +1,30 @@
+# 委员会价值来自固定轴线上的稳定冲突，而非消灭冲突。
+axes:
+  - id: long_term_vs_cash
+    label: "长期下注 vs 现金安全"
+    sides: ["CSO", "CFO"]
+    essence: "未来优势值不值得现在花钱"
+  - id: brand_vs_expansion
+    label: "品牌纯度 vs 商业扩张"
+    sides: ["CBO", "BMO"]
+    essence: "认知资产与收入速度谁优先"
+  - id: market_vs_execution
+    label: "市场机会 vs 执行承载"
+    sides: ["CMO", "COO"]
+    essence: "看到窗口和接住窗口不是一回事"
+  - id: offense_vs_survival
+    label: "战略进攻 vs 生存边界"
+    sides: ["CSO", "CRO"]
+    essence: "抢位与防事故天然张力"
+  - id: model_vs_capital
+    label: "经营模型 vs 资本结构"
+    sides: ["BMO", "CFO"]
+    essence: "生意成立不等于资本上可承受"
+  - id: founder_vs_council
+    label: "创始人直觉 vs 集体审议"
+    sides: ["Founder View", "Council"]
+    essence: "创始人可以提出主张，但不能提前决定结论"
+outputs:
+  - "最大共识"
+  - "最大风险"
+  - "可执行条件"

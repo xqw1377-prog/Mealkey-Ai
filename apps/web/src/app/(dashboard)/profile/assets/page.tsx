@@ -73,10 +73,10 @@ export default function AssetCenterPage() {
       <div className="space-y-5 pb-2 pt-6 md:pt-8">
         <PageErrorState
           eyebrow="资料中心"
-          title="资料资产暂时不可用"
-          description="资料分类或素材索引当前没有同步完成，所以这页暂时还不能稳定打开。你可以先回到经营画像或经营会议。"
-          primaryAction={{ href: "/profile", label: "回到经营画像" }}
-          secondaryAction={{ href: "/projects", label: "进入经营世界" }}
+          title="暂时打不开"
+          description="资料还在同步。先回画像或去开会。"
+          primaryAction={{ href: "/profile", label: "回画像" }}
+          secondaryAction={{ href: "/projects", label: "我的企业" }}
         />
       </div>
     );
@@ -86,11 +86,11 @@ export default function AssetCenterPage() {
     <div className="space-y-5 pb-2">
       <MKPageHeader
         eyebrow="资料中心"
-        title="专业资料资产"
-        description="这里不是附件列表，而是 AI 经营判断可持续调用的资料资产中心。"
+        title="资料"
+        description="开会会用到的材料，不是附件堆。"
         badge={
           <div className="inline-flex min-h-7 items-center rounded-[12px] border border-[rgba(24,24,23,0.08)] bg-white px-3 text-[13px] leading-5 tracking-[0.01em] text-[#6f747b]">
-            长期资产
+            长期
           </div>
         }
       />
@@ -243,7 +243,7 @@ export default function AssetCenterPage() {
           <div className="mt-4 rounded-[18px] border border-dashed border-[rgba(24,24,23,0.12)] bg-[#FBFAF7] px-4 py-10 text-center">
             <p className="text-[16px] leading-7 text-[#202124]">当前分类下还没有资料</p>
             <p className="mt-2 text-[14px] leading-6 text-[#6f747b]">
-              先去经营会议上传预算、图片、语音或文档，资料中心就会开始建立。
+              开会时上传预算、图片、语音或文档，就会出现在这里。
             </p>
           </div>
         ) : null}

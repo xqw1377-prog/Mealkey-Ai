@@ -1,0 +1,59 @@
+version: "1.0.0"
+name: "常委会议五阶段"
+stages:
+  stage_1:
+    id: "agenda"
+    name: "议题定义"
+    owner: "CDO"
+    output: "Agenda Brief"
+    fields:
+      - "topic"
+      - "why_now"
+      - "objective"
+      - "constraints"
+      - "questions_to_answer"
+      - "deadline"
+  stage_2:
+    id: "expert_input"
+    name: "专业输入"
+    owner: "Expert Engines"
+    output: "Expert Reports"
+    rule: "研究透；不投票；不替代常委"
+  stage_3:
+    id: "deliberation"
+    name: "常委审议"
+    owner: "Council（盲评）"
+    output: "五段意见"
+    five_segment:
+      - "judgment"      # 我的判断
+      - "pros"          # 支持理由
+      - "cons"          # 反对理由
+      - "top_risk"      # 最大风险
+      - "proposal"      # 建议方案
+    forbid: "泛泛而谈、无证据口号"
+  stage_4:
+    id: "cross_examination"
+    name: "交叉质询"
+    owner: "Council"
+    output: "challenges + responses"
+    note: "最重要环节；模拟董事会"
+    examples:
+      - "BMO → CBO：客单价假设在哪里？"
+      - "CMO → BMO：用户为什么来？"
+      - "CFO → BMO：回本 18 个月，现金是否允许？"
+      - "COO → BMO：三家店模型能否复制？"
+  stage_5:
+    id: "resolution"
+    name: "形成决议"
+    owner: "CDO + Rules"
+    output: "Decision Resolution"
+    fields:
+      - "final_recommendation"
+      - "supported_plan"
+      - "abandoned_plan"
+      - "key_conditions"
+      - "risks"
+      - "validation_tasks"
+      - "owners"
+      - "timeline"
+    then: "提交 Founder Final Decision"

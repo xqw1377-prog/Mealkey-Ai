@@ -98,14 +98,14 @@ export function PositioningReviewQueue({
                   newOneLiner: item.newOneLiner,
                   reason: item.reason,
                 })}
-                className="inline-flex items-center gap-1 rounded-full bg-[#181817] px-3 py-1.5 text-[12px] text-white no-underline"
+                className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-full bg-[#181817] px-4 text-[13px] text-white no-underline touch-manipulation"
               >
-                <RefreshCw className="h-3 w-3" />
+                <RefreshCw className="h-3.5 w-3.5" />
                 去复审
               </Link>
               <Link
                 href={`#decision-${item.decisionId}`}
-                className="inline-flex rounded-full border border-[rgba(24,24,23,0.08)] bg-[#F5F3EE] px-3 py-1.5 text-[12px] text-[#202124] no-underline"
+                className="inline-flex min-h-11 items-center justify-center rounded-full border border-[rgba(24,24,23,0.08)] bg-[#F5F3EE] px-4 text-[13px] text-[#202124] no-underline touch-manipulation"
                 onClick={() => {
                   const el = document.getElementById(`decision-${item.decisionId}`);
                   el?.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -118,7 +118,7 @@ export function PositioningReviewQueue({
                   type="button"
                   disabled={dismissingId === item.decisionId}
                   onClick={() => onReviewed(item.decisionId)}
-                  className="rounded-full border border-[rgba(102,115,94,0.2)] bg-[rgba(102,115,94,0.08)] px-3 py-1.5 text-[12px] text-[#66735E] disabled:opacity-50"
+                  className="inline-flex min-h-11 items-center justify-center rounded-full border border-[rgba(102,115,94,0.2)] bg-[rgba(102,115,94,0.08)] px-4 text-[13px] text-[#66735E] touch-manipulation disabled:opacity-50"
                 >
                   已复审
                 </button>
@@ -128,7 +128,7 @@ export function PositioningReviewQueue({
                   type="button"
                   disabled={dismissingId === item.decisionId}
                   onClick={() => onDismiss(item.decisionId)}
-                  className="rounded-full border border-[rgba(24,24,23,0.08)] px-3 py-1.5 text-[12px] text-[#5f6368] disabled:opacity-50"
+                  className="inline-flex min-h-11 items-center justify-center rounded-full border border-[rgba(24,24,23,0.08)] px-4 text-[13px] text-[#5f6368] touch-manipulation disabled:opacity-50"
                 >
                   忽略
                 </button>

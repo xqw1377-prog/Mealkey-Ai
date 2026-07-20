@@ -1,0 +1,28 @@
+id: "fundraising_equity"
+name: "融资与股权"
+founder_prompt_example: "投资人给500万，占20%，可以吗？"
+value: "M-ED 核心 + 生死级审议"
+frequency: "low"
+default_level: "L4"
+decision_type: "fundraising"
+engines: ["M-ED", "M-BIZ", "M-MKT"]
+council: true
+founder_required: true
+med_output:
+  - "估值"
+  - "未来融资空间"
+  - "控制权"
+  - "员工激励"
+council_lenses:
+  CSO: "现在需要这笔钱吗？"
+  BMO: "增长是否值得这笔资本？"
+  CFO: "资本成本与稀释是否可接受？"
+  CRO: "控制权与治理风险？"
+triggers:
+  - "融资"
+  - "投资人"
+  - "占股"
+  - "估值"
+  - "股权"
+  - "稀释"
+  - "500万"

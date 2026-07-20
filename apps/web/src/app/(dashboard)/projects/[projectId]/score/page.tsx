@@ -50,18 +50,27 @@ export default function ScorePage({
   }, [data?.scorecard]);
 
   if (isLoading) {
-    return <PageLoadingState eyebrow="经营体检" title="AI 正在生成这份体检" description="正在计算评分和关键影响因素。" />;
+    return (
+      <PageLoadingState
+        eyebrow="记分卡"
+        title="正在算分…"
+        description="读取关键指标。"
+      />
+    );
   }
 
   if (error) {
     return (
       <div className="space-y-5 pb-2 pt-6 md:pt-8">
         <PageErrorState
-          eyebrow="经营体检"
-          title="当前无法生成这份体检"
-          description="项目数据还没完全同步。先回到世界或会议。"
-          primaryAction={{ href: "/projects", label: "回到世界" }}
-          secondaryAction={{ href: `/projects/${params.projectId}/advisor`, label: "进入会议" }}
+          eyebrow="记分卡"
+          title="暂时打不开"
+          description="数据还在同步。"
+          primaryAction={{ href: "/dashboard", label: "回今日" }}
+          secondaryAction={{
+            href: `/projects/${params.projectId}/advisor`,
+            label: "去开会",
+          }}
         />
       </div>
     );
@@ -71,11 +80,11 @@ export default function ScorePage({
     return (
       <div className="space-y-5 pb-2 pt-6 md:pt-8">
         <PageEmptyState
-          eyebrow="经营体检"
-          title="当前无法生成这份体检"
-          description="当前没有可用的判断上下文。先回到世界重新进入。"
-          primaryAction={{ href: "/projects", label: "回到世界" }}
-          secondaryAction={{ href: "/dashboard", label: "回到今日" }}
+          eyebrow="记分卡"
+          title="还没有分数"
+          description="先开几次会、做验证，分数才可信。"
+          primaryAction={{ href: "/dashboard", label: "回今日" }}
+          secondaryAction={{ href: `/projects/${params.projectId}`, label: "企业" }}
         />
       </div>
     );
@@ -87,23 +96,17 @@ export default function ScorePage({
   return (
     <div className="space-y-5 pb-2">
       <MKPageHeader
-        eyebrow="经营体检"
-        title="经营体检"
-        description={`${project.name} · 先看联合体检。`}
-        badge={
-          <div className="inline-flex min-h-7 items-center rounded-[12px] border border-[rgba(24,24,23,0.08)] bg-white px-3 text-[13px] leading-5 tracking-[0.01em] text-[#6f747b]">
-            联合评分
-          </div>
-        }
+        eyebrow="记分卡"
+        title={project.name}
+        description="一眼看健康度；分数要有验证才可信。"
       />
 
       <section className="rounded-[22px] border border-[rgba(24,24,23,0.08)] bg-[linear-gradient(180deg,#fbfaf7_0%,#eef1ea_100%)] p-4 shadow-[0_14px_30px_rgba(24,24,23,0.04)]">
         <div className="text-center">
           <p className="font-display text-[78px] leading-none tracking-[-0.05em] text-[#202124] md:text-[108px]">{displayScore}</p>
-          <p className="mt-2 text-[16px] font-medium tracking-[-0.02em] text-[#202124]">经营等级</p>
-          <div className="mt-2 inline-flex items-center rounded-full bg-[rgba(102,115,94,0.12)] px-3 py-1 text-sm text-[#66735E]">
+          <p className="mt-2 text-[16px] font-medium tracking-[-0.02em] text-[#202124]">
             {scorecard.scoreLabel}
-          </div>
+          </p>
         </div>
 
         <div className="mt-4 flex flex-wrap justify-center gap-2">
@@ -118,8 +121,10 @@ export default function ScorePage({
       <section className="rounded-[22px] border border-[rgba(24,24,23,0.08)] bg-white p-4 shadow-[0_14px_28px_rgba(24,24,23,0.04)]">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="text-[13px] leading-5 tracking-[0.01em] text-[#66735E]">综合建议</p>
-            <h2 className="mt-1 text-[19px] font-semibold leading-[1.25] tracking-[-0.02em] text-[#202124]">为什么不是更高</h2>
+            <p className="text-[13px] leading-5 tracking-[0.01em] text-[#66735E]">建议</p>
+            <h2 className="mt-1 text-[19px] font-semibold leading-[1.25] tracking-[-0.02em] text-[#202124]">
+              为什么不是更高
+            </h2>
           </div>
         </div>
 
@@ -129,17 +134,17 @@ export default function ScorePage({
 
         <div className="mt-5 grid gap-3 md:grid-cols-2">
           <Link
-            href={`/projects/${project.id}/report`}
+            href={`/projects/${project.id}/capability`}
             className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-[14px] bg-[#181817] px-4 text-[15px] font-semibold text-white no-underline transition hover:-translate-y-0.5 active:scale-[0.98]"
           >
-            完整报告
+            看能力
             <ArrowRight className="h-4 w-4" />
           </Link>
           <Link
-            href={`/projects/${project.id}`}
+            href="/dashboard"
             className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-[14px] border border-[rgba(24,24,23,0.08)] bg-[#F5F3EE] px-4 text-[15px] font-semibold text-[#202124] no-underline transition hover:-translate-y-0.5 active:scale-[0.98]"
           >
-            回到世界
+            回今日
             <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
@@ -148,8 +153,10 @@ export default function ScorePage({
       <section className="rounded-[22px] border border-[rgba(24,24,23,0.08)] bg-white p-4 shadow-[0_14px_28px_rgba(24,24,23,0.04)]">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="text-[13px] leading-5 tracking-[0.01em] text-[#66735E]">判断依据</p>
-            <h2 className="mt-1 text-[19px] font-semibold leading-[1.25] tracking-[-0.02em] text-[#202124]">依据</h2>
+            <p className="text-[13px] leading-5 tracking-[0.01em] text-[#66735E]">分项</p>
+            <h2 className="mt-1 text-[19px] font-semibold leading-[1.25] tracking-[-0.02em] text-[#202124]">
+              依据
+            </h2>
           </div>
         </div>
 

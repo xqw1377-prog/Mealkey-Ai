@@ -1,0 +1,55 @@
+# 专业意见 → 决策意见：转换契约
+# 七常委只做 Decision Intelligence，禁止二次研究。
+
+version: "1.0.0"
+name: "Expert → Council Conversion Contract"
+
+hard_rules:
+  - "常委输入 = Case Packet + Evidence Packet + Expert Reports；不得自行检索外部世界重做研究。"
+  - "常委输出 = 企业视角的 support/oppose/conditional + 条件 + veto + kill metric。"
+  - "若 Expert Report 缺失关键章节，常委应标出证据缺口并倾向 conditional/oppose，不得编造事实。"
+  - "Founder View 是主张输入，不是结论。"
+
+conversion_map:
+  M-MKT:
+    council_lens:
+      CMO: "用户是否存在？需求是否真实？"
+      CSO: "窗口是否值得占位？"
+      BMO: "需求能否转化为可赚钱模型？"
+  M-PNT:
+    council_lens:
+      CBO: "是否破坏或稀释品牌？"
+      CSO: "是否强化长期位置？"
+      CMO: "心智是否支撑购买选择？"
+  M-BIZ:
+    council_lens:
+      BMO: "是否盈利、可否复制？"
+      CFO: "投入产出是否覆盖资本代价？"
+      COO: "模型假设在组织上能否落地？"
+  M-ED:
+    council_lens:
+      CFO: "资本结构是否可承受？"
+      CRO: "控制权/合规/治理底线是否触碰？"
+      CSO: "资本路径是否服务长期方向？"
+
+example_shanghai:
+  question: "是否进入上海市场？"
+  expert_briefs:
+    M-MKT:
+      opportunity: "上海消费升级"
+      risk: "竞争密度高"
+    M-PNT:
+      brand: "可以进入"
+      condition: "必须强化湖南文化差异"
+    M-BIZ:
+      model: "目前无法支撑上海租金"
+    M-ED:
+      capital: "建议直营 1 店验证，不要融资扩张"
+  council_questions:
+    CSO: "五年后上海是否重要？"
+    CMO: "用户是否存在？"
+    CBO: "是否破坏品牌？"
+    BMO: "是否盈利？"
+    CFO: "会不会拖死公司？"
+    COO: "能不能复制？"
+    CRO: "最大失败是什么？"

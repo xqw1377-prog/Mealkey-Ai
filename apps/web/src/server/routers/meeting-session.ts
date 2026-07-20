@@ -7,6 +7,10 @@ import { router, protectedProcedure } from "../trpc";
 import { prisma } from "@/lib/prisma";
 import { validateProfile } from "@/lib/profile-schema";
 import { ActiveMeetingDraftSchema } from "@/lib/meeting-session";
+import {
+  toProfileConflictTRPC,
+  updateProjectProfile,
+} from "@/server/services/project-profile";
 
 export const meetingSessionRouter = router({
   get: protectedProcedure
@@ -38,26 +42,34 @@ export const meetingSessionRouter = router({
     .mutation(async ({ ctx, input }) => {
       const project = await prisma.project.findFirst({
         where: { id: input.projectId, owner: { userId: ctx.userId! } },
-        select: { id: true, profile: true },
+        select: { id: true, ownerId: true },
       });
       if (!project) throw new TRPCError({ code: "FORBIDDEN", message: "项目不存在或无权限" });
 
-      const prefs = validateProfile(project.profile) as Record<string, unknown>;
-      const nextProfile = {
-        ...prefs,
-        activeMeeting: {
-          ...input.draft,
-          status: "draft" as const,
-          updatedAt: new Date().toISOString(),
-        },
-      };
+      let updatedAt = new Date().toISOString();
+      try {
+        await updateProjectProfile(
+          project.id,
+          (prefs) => {
+            updatedAt = new Date().toISOString();
+            return {
+              ...prefs,
+              activeMeeting: {
+                ...input.draft,
+                status: "draft" as const,
+                updatedAt,
+              },
+            };
+          },
+          { ownerId: project.ownerId },
+        );
+      } catch (error) {
+        const conflict = toProfileConflictTRPC(error);
+        if (conflict) throw conflict;
+        throw error;
+      }
 
-      await prisma.project.update({
-        where: { id: project.id },
-        data: { profile: JSON.stringify(nextProfile) },
-      });
-
-      return { ok: true as const, updatedAt: nextProfile.activeMeeting.updatedAt };
+      return { ok: true as const, updatedAt };
     }),
 
   clear: protectedProcedure
@@ -65,18 +77,25 @@ export const meetingSessionRouter = router({
     .mutation(async ({ ctx, input }) => {
       const project = await prisma.project.findFirst({
         where: { id: input.projectId, owner: { userId: ctx.userId! } },
-        select: { id: true, profile: true },
+        select: { id: true, ownerId: true },
       });
       if (!project) throw new TRPCError({ code: "FORBIDDEN", message: "项目不存在或无权限" });
 
-      const prefs = validateProfile(project.profile) as Record<string, unknown>;
-      if (!("activeMeeting" in prefs)) return { ok: true as const };
-
-      const { activeMeeting: _removed, ...rest } = prefs;
-      await prisma.project.update({
-        where: { id: project.id },
-        data: { profile: JSON.stringify(rest) },
-      });
+      try {
+        await updateProjectProfile(
+          project.id,
+          (prefs) => {
+            if (!("activeMeeting" in prefs)) return null;
+            const { activeMeeting: _removed, ...rest } = prefs;
+            return rest;
+          },
+          { ownerId: project.ownerId },
+        );
+      } catch (error) {
+        const conflict = toProfileConflictTRPC(error);
+        if (conflict) throw conflict;
+        throw error;
+      }
 
       return { ok: true as const };
     }),

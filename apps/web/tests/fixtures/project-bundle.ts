@@ -5,6 +5,7 @@ export function makeProject(overrides: Partial<ProjectResponse> = {}): ProjectRe
   return {
     id: "proj_1",
     name: "杭州湘菜馆",
+    brandName: "杭州湘菜馆",
     status: "active",
     stage: "positioning",
     city: "杭州",

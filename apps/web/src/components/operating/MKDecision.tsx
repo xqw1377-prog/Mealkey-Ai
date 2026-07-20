@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AlertTriangle, ArrowRight, Sparkles } from "lucide-react";
+import { PRODUCT_BRAND_EYEBROW } from "@/lib/product-brand";
 import { MKCard } from "./MKCard";
 
 type MKDecisionProps = {
@@ -18,7 +19,7 @@ export function MKDecision({
   ctaHref,
 }: MKDecisionProps) {
   return (
-    <MKCard eyebrow="AI 餐饮经营大脑" title={title}>
+    <MKCard eyebrow={PRODUCT_BRAND_EYEBROW} title={title}>
       <div className="space-y-5">
         <div className="rounded-[24px] bg-[#171717] p-5 text-[#F6F3ED]">
           <div className="flex items-center gap-2 text-xs uppercase tracking-[0.24em] text-[#B7BEA8]">

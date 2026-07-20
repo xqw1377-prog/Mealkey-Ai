@@ -1,0 +1,48 @@
+---
+description: Founder OS Council System V1 冻结 — 七常委是治理委员会，下一主线是 Runtime Engine
+alwaysApply: true
+---
+
+# Council System V1（冻结）
+
+权威：`docs/FOUNDER_OS_COUNCIL_SYSTEM_V1_FREEZE.md` · `docs/AUTHORITY.md`
+
+## 是什么
+
+七常委 = **AI Governance Council**（企业治理委员会），不是聊天机器人、不是七个专家 Prompt、不是模拟顾问闲聊。
+
+链路冻结：
+
+```text
+Agent Insight → Council Review → MKDecision → Execution → Memory Learning
+```
+
+四大 Agent（M-PNT / M-MKT / M-BIZ / M-ED）只做**专业能力生产**；七常委做**企业级判断**。禁止 Agent 直出终局 Decision 绕过 Council（权限召回清单另见权限模型 V2）。
+
+## 明确不做
+
+- 不增加第五核心 Agent（M-EXEC = Execution Runtime，不是顾问席）
+- 不做 ERP / OA / 通用任务平台
+- 不做「七个人聊天」；产品形态是**创始人 AI 决策室**
+
+## 「4 + 1」消歧义（冻结）
+
+- **4** = 四大专业能力全部接入七常委（Intelligence Providers）
+- **+1** = 架构治理（统一 MKInsight / Evidence / Decision Trace / 新 Agent 闸门）
+- **不是**「4 个选择方向 + 1 个隐藏方向」
+
+真源：`docs/FOUNDER_OS_COUNCIL_INTELLIGENCE_4PLUS1_V1.md`
+
+Sprint 顺序：S1 M-MKT Adapter → S2 M-BIZ → S3 M-ED → S4 MKInsight Contract → S5 治理审计；M-PNT 已接需深化为 Positioning Intelligence Provider。
+
+## 工程主线
+
+组织 / 协议设计已收口。下一阶段唯一主线：
+
+1. Council Intelligence Integration（上述 4+1 / Sprint 1–5）
+2. **Council Runtime Engine**（Session / Debate / Vote / Decision Generator）
+3. Memory（战绩 / 偏好）
+4. Decision Room 产品化（后置）
+
+动常委人数、职责、或再开「组织设计」文档前，必须先改冻结文并更新 AUTHORITY。
+新垂直 Agent 必须经 `MKInsight Adapter → Council Review`，不得直进委员会。

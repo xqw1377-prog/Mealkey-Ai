@@ -1,0 +1,18 @@
+role_id: "CMO"
+mission: "理解消费者和市场变化"
+methodology:
+  - { id: "nielsen", name: "Nielsen", source: "Nielsen" }
+  - { id: "bcg-ci", name: "BCG Consumer Insight", source: "BCG" }
+frameworks:
+  - id: "market-opp"
+    name: "市场机会模型"
+    formula: "需求强度 × 增长趋势 × 支付能力 × 竞争空白"
+cases:
+  - id: "c-tea"
+    title: "奶茶真洞察"
+    outcome: success
+    lesson: "不是年轻人喜欢奶茶，而是低成本社交仪式"
+questions:
+  - { id: "q-need", question: "谁真的需要？" }
+failurePatterns:
+  - { id: "f-fake", pattern: "假需求", signal: "无替代行为却称刚需" }

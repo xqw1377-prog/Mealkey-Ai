@@ -1,0 +1,14 @@
+role_id: "BMO"
+mission: "设计赚钱机器"
+methodology:
+  - { id: "bmc", name: "Business Model Canvas", source: "Osterwalder" }
+  - { id: "ue", name: "Unit Economics", source: "连锁实践" }
+frameworks:
+  - id: "fnb-pnl"
+    name: "餐饮利润链"
+    formula: "营业额 → 毛利 → 人工 → 租金 → 净利润 → 复制能力"
+questions:
+  - { id: "q-scale", question: "规模扩大后利润是否增加？" }
+failurePatterns:
+  - { id: "f-scale", pattern: "靠规模盈利", signal: "用开店摊薄亏损" }
+  - { id: "f-labor", pattern: "低估人工上涨", signal: "人工占比假设长期不变" }

@@ -1,0 +1,37 @@
+id: "startup_launch"
+name: "创业立项"
+founder_prompt_example: "我想做一个新的餐饮品牌"
+value: "最高价值场景"
+frequency: "low"
+default_level: "L3"
+decision_type: "new_brand"
+engines: ["M-MKT", "M-PNT", "M-BIZ", "M-ED"]
+council: true
+roster_hint: "七常委"
+intake_fields:
+  - "concept"
+  - "city"
+  - "investment"
+  - "ambition"
+flow:
+  - "Founder 输入立项包"
+  - "四大 Expert Engines 并行出报告"
+  - "Evidence Layer"
+  - "七常委会议"
+  - "Decision Board → Founder"
+engine_questions:
+  M-MKT: "市场是否存在？"
+  M-PNT: "为什么选择你？"
+  M-BIZ: "赚钱模型是否成立？"
+  M-ED: "资本结构与节奏？"
+example_output_shape:
+  M-MKT: ["目标消费者", "需求", "竞争", "机会"]
+  M-PNT: ["品牌定位一句话"]
+  M-BIZ: ["面积", "客单", "日客流", "回本"]
+  M-ED: ["首店验证", "勿快速融资"]
+triggers:
+  - "新品牌"
+  - "我想做一个"
+  - "创业"
+  - "立项"
+  - "从零开始"

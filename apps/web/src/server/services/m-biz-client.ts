@@ -1,4 +1,4 @@
-﻿type MBizRequestInit = RequestInit & {
+type MBizRequestInit = RequestInit & {
   bodyJson?: unknown;
   timeoutMs?: number;
 };
@@ -183,8 +183,16 @@ export function mbizDegradedResponse(message: string): {
   };
 }
 
-export function normalizeBizIndustry(_projectCategory?: string | null) {
-  return "retail";
+export function normalizeBizIndustry(projectCategory?: string | null) {
+  const raw = (projectCategory || "").toLowerCase();
+  if (/餐饮|restaurant|food|湘菜|川菜|火锅|咖啡|茶饮|烘焙/.test(raw)) {
+    return "food_service";
+  }
+  if (/零售|retail|电商|便利店/.test(raw)) return "retail";
+  if (/教育|培训/.test(raw)) return "education";
+  if (/医疗|健康/.test(raw)) return "healthcare";
+  if (/科技|saas|软件|互联网/.test(raw)) return "technology";
+  return raw ? "retail" : "food_service";
 }
 
 export function normalizeBizStage(projectStage?: string | null) {

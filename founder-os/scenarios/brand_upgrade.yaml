@@ -1,0 +1,22 @@
+id: "brand_upgrade"
+name: "品牌升级"
+founder_prompt_example: "消费者不知道我们是谁"
+value: "认知资产重建"
+frequency: "medium"
+default_level: "L2"
+decision_type: "new_brand"
+engines: ["M-PNT", "M-MKT"]
+council: "conditional"
+council_when: "品牌改变影响市场/商业/财务时升入常委会"
+flow_name: "Brand Diagnosis"
+diagnosis:
+  - "当前认知：消费者怎么看你"
+  - "竞争位置：你在哪里"
+  - "心智空位：有没有机会"
+output: "Brand Strategy"
+triggers:
+  - "品牌升级"
+  - "定位"
+  - "消费者不知道"
+  - "心智"
+  - "品牌重塑"

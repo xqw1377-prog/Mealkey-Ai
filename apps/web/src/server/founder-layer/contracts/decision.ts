@@ -1,11 +1,21 @@
 import type { FounderAgentName, FounderMission } from "./mission";
+import type {
+  EvidenceNodeType,
+  EvidenceSourceLevel,
+} from "./evidence";
 
 export type FounderDecisionStance = "support" | "oppose" | "conditional";
 
 export interface DecisionEvidence {
+  /** Evidence Layer 节点 ID；绑定后必填 */
+  evidenceId?: string;
   label: string;
   content: string;
   confidence?: number;
+  role?: "supports" | "weakens" | "context";
+  source?: string;
+  sourceLevel?: EvidenceSourceLevel;
+  type?: EvidenceNodeType;
 }
 
 export interface FounderDecision {
@@ -18,10 +28,25 @@ export interface FounderDecision {
   risks: string[];
   nextSteps: string[];
   stance?: FounderDecisionStance;
+  /** Evidence Layer：推理说明 */
+  reasoning?: string;
+  /** Evidence Layer：显式假设 */
+  assumptions?: string[];
+  /** Evidence Layer：建议验证动作 */
+  validation?: string;
+  /** 仍缺哪些可核验事实 */
+  evidenceGap?: string[];
+  /** 是否达到最小硬证据门槛 */
+  evidenceSufficient?: boolean;
   metadata?: {
     missionId: string;
     producedAt: string;
     latencyMs?: number;
+    insightId?: string;
+    /** external = 真实引擎；heuristic = 降级 */
+    provider?: "external" | "heuristic" | string;
+    memoryPriorApplied?: boolean;
+    memoryStanceAdjusted?: boolean;
   };
 }
 
@@ -79,4 +104,10 @@ export interface FounderFinalDecision {
   validationPlan: string[];
   status: "proposed" | "accepted" | "executing" | "verified";
   createdAt: string;
+  /** Evidence Layer：整体证据是否足以执行 */
+  evidenceStatus?: "sufficient" | "insufficient";
+  /** 支撑终局决策的 Evidence IDs */
+  evidenceIds?: string[];
+  /** Decision Contract V2：企业行动协议 */
+  contract?: import("./decision-v2").FounderDecisionContract;
 }

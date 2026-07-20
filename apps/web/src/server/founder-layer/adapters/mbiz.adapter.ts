@@ -39,7 +39,7 @@ function inferStance(judgement: string, risks: string[]): "support" | "oppose" |
 
 function buildEvidence(response: MBizChatResponse): DecisionEvidence[] {
   const factEvidence = (response.fact_nodes ?? [])
-    .slice(0, 2)
+    .slice(0, 3)
     .map((item) => ({
       label: String(item.category ?? "business_fact"),
       content: String(item.statement ?? ""),
@@ -47,16 +47,34 @@ function buildEvidence(response: MBizChatResponse): DecisionEvidence[] {
     }))
     .filter((item) => item.content);
 
-  if (factEvidence.length > 0) return factEvidence;
-
-  return (response.rule_judgments ?? [])
-    .slice(0, 2)
+  const ruleEvidence = (response.rule_judgments ?? [])
+    .slice(0, 3)
     .map((item) => ({
       label: String(item.domain ?? "business_rule"),
       content: String(item.conclusion ?? ""),
       confidence: typeof item.confidence === "number" ? item.confidence : undefined,
     }))
     .filter((item) => item.content);
+
+  const merged = [...factEvidence, ...ruleEvidence];
+  if (merged.length > 0) return merged.slice(0, 4);
+
+  const reply = String(response.reply ?? "").trim();
+  return reply
+    ? [
+        { label: "商业判断", content: reply.slice(0, 120), confidence: 0.55 },
+        {
+          label: "进度",
+          content: `ECC 进度 ${(Number(response.progress ?? 0) * 100).toFixed(0)}%`,
+          confidence: 0.5,
+        },
+        {
+          label: "待验证",
+          content: String(response.pending_questions?.[0] ?? "单店模型与现金流仍需验证"),
+          confidence: 0.45,
+        },
+      ]
+    : [];
 }
 
 function buildRisks(response: MBizChatResponse) {
@@ -99,7 +117,10 @@ export class MBizFounderAdapter extends BaseFounderAgentAdapter {
     const withAssets = input.assetContextBlock
       ? `${baseMessage}\n\n补充资料：\n${input.assetContextBlock}`
       : baseMessage;
-    const message = `${withAssets}\n\n【商业参考】${bizHints}`;
+    const withMemory = input.memory?.priorBlock
+      ? `${withAssets}\n\n【企业记忆先验】\n${input.memory.priorBlock}`
+      : withAssets;
+    const message = `${withMemory}\n\n【商业参考】${bizHints}`;
 
     const request: MBizChatRequest = {
       message,
@@ -111,8 +132,8 @@ export class MBizFounderAdapter extends BaseFounderAgentAdapter {
     return {
       agent: this.agent,
       endpoint: "/chat",
-      payload: request,
-      timeoutMs: 3000,
+      payload: { ...request, ...this.memoryPriorPayload(input) },
+      timeoutMs: 15000,
     };
   }
 
@@ -121,7 +142,7 @@ export class MBizFounderAdapter extends BaseFounderAgentAdapter {
     let raw: Awaited<ReturnType<typeof mbizChat>>;
     try {
       raw = await mbizChat(request.payload as MBizChatRequest, {
-        timeoutMs: request.timeoutMs ?? 3000,
+        timeoutMs: request.timeoutMs ?? 15000,
       });
     } catch (error) {
       console.warn("[Founder-MBIZ] 服务不可用，降级为启发式回复:", (error as Error)?.message);
@@ -131,7 +152,7 @@ export class MBizFounderAdapter extends BaseFounderAgentAdapter {
       return {
         agent: this.agent,
         status: "partial",
-        raw: degraded,
+        raw: { ...degraded, __provider: "heuristic" },
         latencyMs: Date.now() - startedAt,
       };
     }
@@ -139,7 +160,7 @@ export class MBizFounderAdapter extends BaseFounderAgentAdapter {
     return {
       agent: this.agent,
       status: "success",
-      raw,
+      raw: { ...raw, __provider: "external" },
       latencyMs: Date.now() - startedAt,
     };
   }
@@ -148,17 +169,25 @@ export class MBizFounderAdapter extends BaseFounderAgentAdapter {
     response: AdapterRawResponse,
     context: AdapterNormalizeContext,
   ): FounderDecision {
-    const raw = response.raw as MBizChatResponse;
+    const raw = response.raw as MBizChatResponse & { __provider?: string };
     const evidence = buildEvidence(raw);
     const risks = buildRisks(raw);
-    const nextSteps = buildNextSteps(raw);
-    const judgement = String(raw.reply ?? "").trim() || "当前商业模式判断尚未形成。";
+    const nextSteps = [
+      ...buildNextSteps(raw),
+      "验证单店回本周期",
+      "验证坪效与人效门槛",
+      "验证现金流覆盖扩张投入",
+    ].filter((item, index, arr) => arr.indexOf(item) === index).slice(0, 5);
+    const provider = raw.__provider || (response.status === "partial" ? "heuristic" : "external");
+    const judgementBase = String(raw.reply ?? "").trim() || "当前商业模式判断尚未形成。";
+    const judgement =
+      provider === "heuristic" ? `【启发式】${judgementBase}` : `【真实引擎】${judgementBase}`;
 
     return {
       decisionId: this.buildDecisionId(),
       sourceAgent: this.agent,
       question: inferBusinessQuestion(context.mission),
-      judgement,
+      judgement: judgement.slice(0, 280),
       confidence: Math.max(0, Math.min(1, Number((raw.progress ?? 0) || 0.6))),
       evidence,
       risks,
@@ -168,6 +197,7 @@ export class MBizFounderAdapter extends BaseFounderAgentAdapter {
         missionId: context.mission.missionId,
         producedAt: this.buildNowIso(),
         latencyMs: response.latencyMs,
+        provider,
       },
     };
   }

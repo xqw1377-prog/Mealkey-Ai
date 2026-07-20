@@ -1,4 +1,9 @@
 import type { PrismaClient } from "@/generated/prisma";
+import {
+  creditWalletPoints,
+  ensureUserWallet,
+  LOCAL_TEST_WALLET_FLOOR_POINTS,
+} from "./wallet.service";
 
 export type AgentCode = "chief" | "m-mkt" | "m-pnt" | "m-ed" | "m-biz";
 
@@ -8,10 +13,10 @@ export const AGENT_CATALOG: Array<{
   description: string;
 }> = [
   { code: "chief", name: "经营会议", description: "母体会议入口，通用经营判断" },
-  { code: "m-mkt", name: "市场机会", description: "市场进入判断，独立咨询能力" },
-  { code: "m-pnt", name: "品牌定位", description: "品牌战略咨询，独立工作台" },
-  { code: "m-ed", name: "股权诊断", description: "股权与治理判断，独立工作台" },
-  { code: "m-biz", name: "商业模式", description: "商业顾问能力，独立工作台" },
+  { code: "m-mkt", name: "市场机会", description: "市场进入判断，专项咨询能力" },
+  { code: "m-pnt", name: "品牌定位", description: "品牌战略咨询，专项工作流" },
+  { code: "m-ed", name: "股权诊断", description: "股权与治理判断，专项工作流" },
+  { code: "m-biz", name: "商业模式", description: "商业顾问能力，专项工作流" },
 ];
 
 type PlanSeed = {
@@ -24,9 +29,11 @@ type PlanSeed = {
   includedTokens: number;
   includedAgents: AgentCode[];
   overageRunCents: number;
-  kind: "platform" | "agent_addon" | "credit_pack";
+  kind: "platform" | "specialty_pack" | "credit_pack";
   agentCode?: AgentCode;
   creditCents?: number;
+  pointsAmount?: number;
+  productType?: "BALANCE_CREDIT" | "BUSINESS_POINTS";
 };
 
 const PLAN_SEEDS: PlanSeed[] = [
@@ -34,7 +41,7 @@ const PLAN_SEEDS: PlanSeed[] = [
     id: "plan_starter",
     code: "starter",
     name: "体验版",
-    description: "母体会议体验：含经营会议，专项 Agent 需单独开通",
+    description: "体验版：含 Founder 会议与专项判断，按基础额度使用",
     priceCents: 0,
     includedRuns: 100,
     includedTokens: 500000,
@@ -46,7 +53,7 @@ const PLAN_SEEDS: PlanSeed[] = [
     id: "plan_growth",
     code: "growth",
     name: "增长版",
-    description: "母体 + 四专项 Agent，含 Hybrid 超额按次计费",
+    description: "增长版：更高额度与更低超额单价，覆盖完整 Founder 工作流",
     priceCents: 19900,
     includedRuns: 3000,
     includedTokens: 5000000,
@@ -58,7 +65,7 @@ const PLAN_SEEDS: PlanSeed[] = [
     id: "plan_partner",
     code: "partner",
     name: "合伙版",
-    description: "高用量团队：全 Agent + 更低超额单价",
+    description: "合伙版：高用量团队套餐，含更高额度与更低超额单价",
     priceCents: 69900,
     includedRuns: 15000,
     includedTokens: 20000000,
@@ -68,54 +75,54 @@ const PLAN_SEEDS: PlanSeed[] = [
   },
   {
     id: "plan_addon_m_mkt",
-    code: "addon_m-mkt",
-    name: "市场机会 Agent",
-    description: "独立开通 M-MKT，可单独运行",
+    code: "specialty_m-mkt",
+    name: "市场机会专项咨询包",
+    description: "市场机会专项咨询包，适合高频市场扫描与进入判断",
     priceCents: 9900,
     includedRuns: 0,
     includedTokens: 0,
     includedAgents: ["m-mkt"],
     overageRunCents: 99,
-    kind: "agent_addon",
+    kind: "specialty_pack",
     agentCode: "m-mkt",
   },
   {
     id: "plan_addon_m_pnt",
-    code: "addon_m-pnt",
-    name: "品牌定位 Agent",
-    description: "独立开通 M-PNT，可单独运行",
+    code: "specialty_m-pnt",
+    name: "品牌定位专项咨询包",
+    description: "品牌定位专项咨询包，适合高频定位复盘与品牌判断",
     priceCents: 9900,
     includedRuns: 0,
     includedTokens: 0,
     includedAgents: ["m-pnt"],
     overageRunCents: 99,
-    kind: "agent_addon",
+    kind: "specialty_pack",
     agentCode: "m-pnt",
   },
   {
     id: "plan_addon_m_ed",
-    code: "addon_m-ed",
-    name: "股权诊断 Agent",
-    description: "独立开通 M-ED，可单独运行",
+    code: "specialty_m-ed",
+    name: "股权诊断专项咨询包",
+    description: "股权诊断专项咨询包，适合高频股权结构与治理判断",
     priceCents: 9900,
     includedRuns: 0,
     includedTokens: 0,
     includedAgents: ["m-ed"],
     overageRunCents: 99,
-    kind: "agent_addon",
+    kind: "specialty_pack",
     agentCode: "m-ed",
   },
   {
     id: "plan_addon_m_biz",
-    code: "addon_m-biz",
-    name: "商业模式 Agent",
-    description: "独立开通 M-BIZ，可单独运行",
+    code: "specialty_m-biz",
+    name: "商业模式专项咨询包",
+    description: "商业模式专项咨询包，适合高频经营诊断与方案推演",
     priceCents: 9900,
     includedRuns: 0,
     includedTokens: 0,
     includedAgents: ["m-biz"],
     overageRunCents: 99,
-    kind: "agent_addon",
+    kind: "specialty_pack",
     agentCode: "m-biz",
   },
   {
@@ -130,8 +137,58 @@ const PLAN_SEEDS: PlanSeed[] = [
     overageRunCents: 99,
     kind: "credit_pack",
     creditCents: 5000,
+    productType: "BALANCE_CREDIT",
+  },
+  {
+    id: "plan_points_explore",
+    code: "points_explore",
+    name: "探索包",
+    description: "第一次使用：约 10,000 经营点，适合体验经营分析",
+    priceCents: 9900,
+    includedRuns: 0,
+    includedTokens: 0,
+    includedAgents: [],
+    overageRunCents: 99,
+    kind: "credit_pack",
+    pointsAmount: 10000,
+    productType: "BUSINESS_POINTS",
+  },
+  {
+    id: "plan_points_startup",
+    code: "points_startup",
+    name: "创业包",
+    description: "开店/创业规划：约 60,000 经营点",
+    priceCents: 49900,
+    includedRuns: 0,
+    includedTokens: 0,
+    includedAgents: [],
+    overageRunCents: 99,
+    kind: "credit_pack",
+    pointsAmount: 60000,
+    productType: "BUSINESS_POINTS",
+  },
+  {
+    id: "plan_points_chain",
+    code: "points_chain",
+    name: "连锁成长包",
+    description: "多店经营：约 300,000 经营点",
+    priceCents: 199900,
+    includedRuns: 0,
+    includedTokens: 0,
+    includedAgents: [],
+    overageRunCents: 99,
+    kind: "credit_pack",
+    pointsAmount: 300000,
+    productType: "BUSINESS_POINTS",
   },
 ];
+
+const LEGACY_SPECIALTY_PLAN_CODE_MAP = {
+  "addon_m-mkt": "specialty_m-mkt",
+  "addon_m-pnt": "specialty_m-pnt",
+  "addon_m-ed": "specialty_m-ed",
+  "addon_m-biz": "specialty_m-biz",
+} as const;
 
 function createId(prefix: string) {
   return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
@@ -149,6 +206,8 @@ function parsePlanMeta(raw: string | null | undefined): {
   kind: string;
   agentCode?: AgentCode;
   creditCents?: number;
+  pointsAmount?: number;
+  productType?: "BALANCE_CREDIT" | "BUSINESS_POINTS";
 } {
   try {
     const parsed = raw ? (JSON.parse(raw) as Record<string, unknown>) : {};
@@ -162,10 +221,18 @@ function parsePlanMeta(raw: string | null | undefined): {
       includedAgents,
       overageRunCents:
         typeof parsed.overageRunCents === "number" ? parsed.overageRunCents : 99,
-      kind: typeof parsed.kind === "string" ? parsed.kind : "platform",
+      kind:
+        typeof parsed.kind === "string"
+          ? parsed.kind === "agent_addon"
+            ? "specialty_pack"
+            : parsed.kind
+          : "platform",
       agentCode:
         typeof parsed.agentCode === "string" ? (parsed.agentCode as AgentCode) : undefined,
       creditCents: typeof parsed.creditCents === "number" ? parsed.creditCents : undefined,
+      pointsAmount: typeof parsed.pointsAmount === "number" ? parsed.pointsAmount : undefined,
+      productType:
+        parsed.productType === "BUSINESS_POINTS" ? "BUSINESS_POINTS" : "BALANCE_CREDIT",
     };
   } catch {
     return { includedAgents: ["chief"], overageRunCents: 99, kind: "platform" };
@@ -176,7 +243,82 @@ export function getPlanCommercialMeta(plan: { metadata: string | null }) {
   return parsePlanMeta(plan.metadata);
 }
 
+function normalizeLegacyBillingMetadata(raw: string | null | undefined) {
+  try {
+    const parsed = raw ? (JSON.parse(raw) as Record<string, unknown>) : {};
+    if (parsed.kind === "agent_addon") {
+      parsed.kind = "specialty_pack";
+    }
+    return JSON.stringify(parsed);
+  } catch {
+    return raw ?? null;
+  }
+}
+
+async function migrateLegacySpecialtyBilling(prisma: PrismaClient) {
+  for (const [legacyCode, specialtyCode] of Object.entries(LEGACY_SPECIALTY_PLAN_CODE_MAP)) {
+    const legacyPlan = await prisma.plan.findUnique({
+      where: { code: legacyCode },
+      select: { id: true, metadata: true },
+    });
+    if (!legacyPlan) continue;
+
+    const specialtyPlan = await prisma.plan.findUnique({
+      where: { code: specialtyCode },
+      select: { id: true },
+    });
+
+    if (specialtyPlan && specialtyPlan.id !== legacyPlan.id) {
+      await prisma.plan.update({
+        where: { id: legacyPlan.id },
+        data: {
+          code: `legacy_${legacyCode}`,
+          status: "inactive",
+          metadata: normalizeLegacyBillingMetadata(legacyPlan.metadata),
+        },
+      });
+      continue;
+    }
+
+    await prisma.plan.update({
+      where: { id: legacyPlan.id },
+      data: {
+        code: specialtyCode,
+        metadata: normalizeLegacyBillingMetadata(legacyPlan.metadata),
+      },
+    });
+  }
+
+  const legacyKindPlans = await prisma.plan.findMany({
+    where: { metadata: { contains: "\"agent_addon\"" } },
+    select: { id: true, metadata: true },
+  });
+  for (const plan of legacyKindPlans) {
+    await prisma.plan.update({
+      where: { id: plan.id },
+      data: { metadata: normalizeLegacyBillingMetadata(plan.metadata) },
+    });
+  }
+
+  const legacyKindSubscriptions = await prisma.subscription.findMany({
+    where: { metadata: { contains: "\"agent_addon\"" } },
+    select: { id: true, metadata: true },
+  });
+  for (const subscription of legacyKindSubscriptions) {
+    await prisma.subscription.update({
+      where: { id: subscription.id },
+      data: { metadata: normalizeLegacyBillingMetadata(subscription.metadata) },
+    });
+  }
+
+  await prisma.agentEntitlement.updateMany({
+    where: { source: "addon" },
+    data: { source: "specialty_pack" },
+  });
+}
+
 export async function ensureDefaultPlans(prisma: PrismaClient) {
+  await migrateLegacySpecialtyBilling(prisma);
   for (const plan of PLAN_SEEDS) {
     const metadata = JSON.stringify({
       seeded: true,
@@ -186,6 +328,8 @@ export async function ensureDefaultPlans(prisma: PrismaClient) {
       overageRunCents: plan.overageRunCents,
       agentCode: plan.agentCode ?? null,
       creditCents: plan.creditCents ?? null,
+      pointsAmount: plan.pointsAmount ?? null,
+      productType: plan.productType ?? null,
     });
 
     await prisma.plan.upsert({
@@ -251,7 +395,7 @@ export async function grantAgentEntitlements(
   input: {
     billingAccountId: string;
     agentCodes: AgentCode[];
-    source: "plan" | "addon" | "grant";
+    source: "plan" | "addon" | "specialty_pack" | "grant";
     planId?: string;
     subscriptionId?: string;
     endsAt?: Date | null;
@@ -369,6 +513,22 @@ async function countPeriodAgentRuns(
   });
 }
 
+async function resolveUserIdFromBillingAccount(
+  prisma: PrismaClient,
+  billingAccountId: string,
+) {
+  const account = await prisma.billingAccount.findUnique({
+    where: { id: billingAccountId },
+    select: { ownerId: true },
+  });
+  if (!account?.ownerId) return null;
+  const owner = await prisma.owner.findUnique({
+    where: { id: account.ownerId },
+    select: { userId: true },
+  });
+  return owner?.userId ?? null;
+}
+
 export async function listActiveEntitlements(prisma: PrismaClient, billingAccountId: string) {
   const now = new Date();
   const rows = await prisma.agentEntitlement.findMany({
@@ -390,7 +550,7 @@ export async function assertAgentAccess(
   const entitled = snapshot.entitlements.some((item) => item.agentCode === agentCode);
   if (!entitled) {
     const label = AGENT_CATALOG.find((item) => item.code === agentCode)?.name || agentCode;
-    throw new Error(`未开通「${label}」能力，请前往 /billing 单独开通该 Agent`);
+    throw new Error(`当前经营点不足，无法启动「${label}」。请前往 /billing 充值经营点`);
   }
   return snapshot;
 }
@@ -424,12 +584,13 @@ export async function getBillingSnapshot(prisma: PrismaClient, userId: string) {
   const periodRunsLimit = plan.includedRuns;
   const remainingRuns = Math.max(0, periodRunsLimit - periodRunsUsed);
   const entitlements = await listActiveEntitlements(prisma, account.id);
+  const wallet = await ensureUserWallet(prisma, userId);
 
   const usageByAgent = await Promise.all(
     AGENT_CATALOG.map(async (agent) => ({
       agentCode: agent.code,
       name: agent.name,
-      entitled: entitlements.some((item) => item.agentCode === agent.code),
+      entitled: true,
       runsUsed: await countPeriodAgentRuns(
         prisma,
         account.id,
@@ -441,6 +602,10 @@ export async function getBillingSnapshot(prisma: PrismaClient, userId: string) {
   );
 
   const balanceCents = Math.round((Number.parseFloat(account.balance || "0") || 0) * 100);
+  const visibleBusinessPoints =
+    process.env.NODE_ENV === "production"
+      ? wallet.balance
+      : Math.max(wallet.balance, LOCAL_TEST_WALLET_FLOOR_POINTS);
 
   return {
     account,
@@ -451,6 +616,8 @@ export async function getBillingSnapshot(prisma: PrismaClient, userId: string) {
     periodRunsLimit,
     remainingRuns,
     balanceCents,
+    businessPoints: visibleBusinessPoints,
+    frozenPoints: wallet.frozenAmount,
     overageRunCents: planMeta.overageRunCents,
     entitlements,
     usageByAgent,
@@ -479,11 +646,39 @@ export async function assertAgentQuota(
   userId: string,
   options?: { agentCode?: AgentCode },
 ): Promise<QuotaAssertion> {
-  if (options?.agentCode) {
-    await assertAgentAccess(prisma, userId, options.agentCode);
-  }
-
   const snapshot = await getBillingSnapshot(prisma, userId);
+
+  // 经营点门禁：优先检查真实经营点余额
+  try {
+    const {
+      getBusinessPointsBalance,
+      resolveSpendKind,
+      pointsCostForSpendKind,
+    } = await import("@/server/services/business-points.service");
+    const points = await getBusinessPointsBalance(prisma, userId);
+    const spendKind = resolveSpendKind({ agentCode: options?.agentCode });
+    const need = pointsCostForSpendKind(spendKind);
+    if (points < need && snapshot.remainingRuns <= 0) {
+      throw new Error(
+        `当前经营点不足\n本次分析需要：${need}点\n余额：${points}`,
+      );
+    }
+    if (points >= need) {
+      return {
+        billingAccountId: snapshot.account.id,
+        subscriptionId: snapshot.activeSubscription.id,
+        planCode: snapshot.plan.code,
+        chargeMode: "included",
+        overageRunCents: snapshot.overageRunCents,
+        agentCode: options?.agentCode,
+      };
+    }
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("经营点不足")) {
+      throw error;
+    }
+    // 账本异常时回退 Hybrid
+  }
 
   if (snapshot.remainingRuns > 0) {
     return {
@@ -507,9 +702,7 @@ export async function assertAgentQuota(
     };
   }
 
-  throw new Error(
-    "会议额度已用完且余额不足以支付超额费用，请前往 /billing 升级套餐或充值额度包",
-  );
+  throw new Error("当前经营点不足，请前往 /billing 充值经营点后继续");
 }
 
 export async function chargeOverageIfNeeded(
@@ -532,7 +725,7 @@ export async function chargeOverageIfNeeded(
   const prev = Number.parseFloat(account.balance || "0") || 0;
   const cost = input.overageRunCents / 100;
   if (prev + 1e-9 < cost) {
-    throw new Error("余额不足，无法完成超额扣费，请前往 /billing 充值");
+    throw new Error("当前余额不足，无法完成本次超额扣费，请前往 /billing 充值额度包");
   }
 
   const balanceAfter = (prev - cost).toFixed(2);
@@ -597,6 +790,48 @@ export async function applyPlanPurchaseSideEffects(
         sourceId: plan.id,
       },
     });
+
+    // 先初始化经营点账本，再发放充值点数（避免覆盖折算）
+    const { grantBusinessPoints, marketedPointsForPlanCode, ensureBusinessPointsBalance } =
+      await import("@/server/services/business-points.service");
+    if (account.ownerId) {
+      const owner = await prisma.owner.findUnique({
+        where: { id: account.ownerId },
+        select: { userId: true },
+      });
+      if (owner?.userId) {
+        await ensureBusinessPointsBalance(prisma, owner.userId);
+      }
+    }
+    const points = marketedPointsForPlanCode(plan.code, meta.creditCents);
+    if (points > 0) {
+      await grantBusinessPoints(prisma, {
+        billingAccountId: input.billingAccountId,
+        points,
+        description: `${plan.name} · +${points} 经营点`,
+        sourceType: "plan",
+        sourceId: `points-${plan.id}-${Date.now()}`,
+      });
+    }
+    return;
+  }
+
+  if (meta.kind === "credit_pack" && meta.pointsAmount) {
+    const userId = await resolveUserIdFromBillingAccount(prisma, input.billingAccountId);
+    if (!userId) return;
+
+    await creditWalletPoints(prisma, {
+      userId,
+      amount: meta.pointsAmount,
+      type: "PURCHASE",
+      reason: `购买 ${plan.name}`,
+      referenceId: input.subscriptionId ?? plan.id,
+      metadata: {
+        planId: plan.id,
+        planCode: plan.code,
+        productType: meta.productType ?? "BUSINESS_POINTS",
+      },
+    });
     return;
   }
 
@@ -604,7 +839,7 @@ export async function applyPlanPurchaseSideEffects(
     await grantAgentEntitlements(prisma, {
       billingAccountId: input.billingAccountId,
       agentCodes: meta.includedAgents,
-      source: meta.kind === "agent_addon" ? "addon" : "plan",
+      source: meta.kind === "specialty_pack" ? "specialty_pack" : "plan",
       planId: plan.id,
       subscriptionId: input.subscriptionId,
       endsAt: input.endsAt ?? null,

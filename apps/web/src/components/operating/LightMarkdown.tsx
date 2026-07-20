@@ -3,7 +3,7 @@ export function LightMarkdown({ text, className }: { text: string; className?: s
   const lines = text.replace(/\r\n/g, "\n").split("\n");
 
   return (
-    <div className={className ?? "space-y-2 text-[14px] leading-7 text-[#202124]"}>
+    <div className={className ?? "space-y-2 text-[15px] leading-7 text-[#202124]"}>
       {lines.map((line, index) => {
         const key = `${index}-${line.slice(0, 24)}`;
         const heading = line.match(/^(#{1,3})\s+(.*)$/);

@@ -41,9 +41,24 @@ model User {
   // 关联
   owner         Owner?
   conversations Conversation[]
+  passwordResetTokens PasswordResetToken[]
 
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  requestedFrom String?
+
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -120,10 +135,203 @@ model Project {
   reports     Report[]
   conversations Conversation[]
   assets      Asset[]
+  restaurant  Restaurant?
 
   @@index([ownerId])
   @@index([status])
   @@index([stage])
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Restaurant Brain V1 — 规范化实体（事实 Fact ≠ 判断 Decision）
+// 权威：docs/MEALKEY_RESTAURANT_BRAIN_PRISMA_ENTITY_V1.md
+// JSON 字段以 String 存（与全库一致），API 层解析
+// ═══════════════════════════════════════════════════════════════
+
+model Restaurant {
+  id        String   @id @default(cuid())
+  projectId String   @unique
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  ownerId   String
+  name      String
+  status    String   @default("active") // active | archived | paused
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  profile    RestaurantProfile?
+  brand      BrandProfile?
+  business   BusinessProfile?
+  capability CapabilityProfile?
+  founder    FounderProfile?
+  decisions  DecisionRecord[]
+  actions    ActionRecord[]
+  learnings  BrainLearning[]
+  events     BrainEvent[]
+  evolution  EvolutionState?
+
+  @@index([ownerId])
+  @@index([status])
+}
+
+model RestaurantProfile {
+  id           String   @id @default(cuid())
+  restaurantId String   @unique
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  category     String   @default("")
+  stage        String   @default("unknown") // idea|opening|growth|mature|expansion|unknown
+  city         String?
+  storeCount   Int      @default(1)
+  priceRange   String?
+  description  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model BrandProfile {
+  id                    String   @id @default(cuid())
+  restaurantId          String   @unique
+  restaurant            Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  positioning           String?
+  targetCustomer        String?
+  consumptionScene      String?
+  brandPromise          String?
+  competitiveAdvantage  String?
+  brandRisk             String?
+  confidence            Float    @default(0.5)
+  updatedAt             DateTime @updatedAt
+}
+
+model BusinessProfile {
+  id             String   @id @default(cuid())
+  restaurantId   String   @unique
+  restaurant     Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  monthlyRevenue Float?
+  grossMargin    Float?
+  netMargin      Float?
+  averageTicket  Float?
+  dailyOrders    Int?
+  laborRatio     Float?
+  rentRatio      Float?
+  businessModel  String?
+  updatedAt      DateTime @updatedAt
+}
+
+model CapabilityProfile {
+  id                 String   @id @default(cuid())
+  restaurantId       String   @unique
+  restaurant         Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  strategyScore      Int      @default(0)
+  marketScore        Int      @default(0)
+  productScore       Int      @default(0)
+  financeScore       Int      @default(0)
+  operationScore     Int      @default(0)
+  organizationScore  Int      @default(0)
+  overallScore       Int      @default(0)
+  confidence         Float    @default(0)
+  updatedAt          DateTime @updatedAt
+}
+
+model FounderProfile {
+  id              String   @id @default(cuid())
+  restaurantId    String   @unique
+  restaurant      Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  experience      String?
+  decisionStyle   String?
+  riskPreference  String?
+  strengthsJson   String?  // JSON string[]
+  weaknessesJson  String?
+  blindSpotsJson  String?
+  growthTrendJson String?
+  updatedAt       DateTime @updatedAt
+}
+
+model DecisionRecord {
+  id                 String   @id @default(cuid())
+  restaurantId       String
+  restaurant         Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  mkDecisionId       String?  @unique // 可选挂接 Prisma Decision
+  type               String   @default("general")
+  question           String
+  contextJson        String?  // 当时事实快照（非答案）
+  optionsJson        String?
+  chosenOption       String?
+  aiAssessmentJson   String?
+  councilResultJson  String?
+  expectedOutcomeJson String?
+  actualOutcomeJson  String?
+  learningGenerated  Boolean  @default(false)
+  status             String   @default("open")
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  actions ActionRecord[]
+
+  @@index([restaurantId, createdAt])
+  @@index([type])
+  @@index([status])
+}
+
+model ActionRecord {
+  id           String    @id @default(cuid())
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  decisionId   String?
+  decision     DecisionRecord? @relation(fields: [decisionId], references: [id], onDelete: SetNull)
+  action       String
+  owner        String?
+  deadline     DateTime?
+  status       String    @default("pending")
+  resultJson   String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([restaurantId, createdAt])
+  @@index([decisionId])
+  @@index([status])
+}
+
+/// Brain 学习记忆（与认知内核 LearningRecord 区分）
+model BrainLearning {
+  id           String   @id @default(cuid())
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  sourceType   String
+  sourceId     String?
+  pattern      String
+  insight      String
+  confidence   Float    @default(0.5)
+  appliedCount Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([restaurantId, createdAt])
+  @@index([pattern])
+}
+
+model BrainEvent {
+  id           String   @id @default(cuid())
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  type         String
+  payloadJson  String
+  source       String   @default("system")
+  createdAt    DateTime @default(now())
+
+  @@index([restaurantId, createdAt])
+  @@index([type, createdAt])
+}
+
+model EvolutionState {
+  id                 String    @id @default(cuid())
+  restaurantId       String    @unique
+  restaurant         Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  understandingScore Int       @default(0)
+  dataCompleteness   Int       @default(0)
+  decisionCount      Int       @default(0)
+  learningCount      Int       @default(0)
+  actionCount        Int       @default(0)
+  lastEvolutionAt    DateTime?
+  updatedAt          DateTime  @updatedAt
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -154,6 +362,29 @@ model Memory {
   @@index([ownerId])
   @@index([projectId])
   @@index([type])
+}
+
+/// 跨租户行业洞察池（脱敏后；无 owner 外键，仅 contributorHash）
+/// User Intelligence Evolution U4 · Memory Permission opt-in
+model IndustryInsight {
+  id              String   @id @default(cuid())
+  category        String
+  rule            String
+  outcome         String   @default("unknown") // confirmed | partial | invalidated | unknown
+  confidence      Float    @default(0.4)
+  evidenceLevel   String   @default("validated_outcome")
+  sourceKind      String   // validation | override | decision_pattern
+  anonymizedJson  String   // JSON：无 PII 结构化摘要
+  contributorHash String   // 单向哈希，不可反查 owner
+  fingerprint     String   // category+rule 去重键
+  supportCount    Int      @default(1)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([fingerprint])
+  @@index([category])
+  @@index([outcome, confidence])
+  @@index([createdAt])
 }
 
 // ═══════════════════════════════════════════════════════════════

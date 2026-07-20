@@ -1,0 +1,31 @@
+id: "ops_anomaly"
+name: "经营异常诊断"
+founder_prompt_example: "营业额下降15%"
+value: "未来高频入口（系统可主动发现）"
+frequency: "high"
+default_level: "L2"
+decision_type: "store_expansion"
+engines: ["M-BIZ", "M-MKT", "M-PNT"]
+council: true
+council_name: "经营诊断会议"
+proactive: true
+signals:
+  - "营业额下降"
+  - "评价下降"
+  - "人工上涨"
+  - "复购下降"
+  - "毛利下降"
+flow:
+  - "信号 → 自动 Decision Case"
+  - "召开经营诊断会议"
+  - "七常委/核心常委分析为什么"
+  - "形成改善方案"
+today_decision_template: "今日发现：你的{store}毛利下降{pct}% → 建议召开经营诊断会议"
+triggers:
+  - "营业额下降"
+  - "毛利下降"
+  - "复购下降"
+  - "评价下降"
+  - "异常"
+  - "诊断"
+  - "怎么办"

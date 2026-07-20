@@ -37,12 +37,35 @@ export type DebateRuntimeLike = {
       sideB: string;
       dimension: string;
       agents: readonly string[];
+      drivingEvidenceIds?: string[];
     }>;
     rounds: Array<{
       round: number;
       title: string;
-      items: Array<{ agent: string; summary: string; stance?: string }>;
+      items: Array<{
+        agent: string;
+        summary: string;
+        stance?: string;
+        challengeTo?: string;
+        challengeEvidenceId?: string;
+      }>;
     }>;
+    conflictMatrix?: {
+      rows?: Array<{
+        topic: string;
+        cells: Record<string, string>;
+        summary: string;
+        drivingEvidenceIds?: string[];
+      }>;
+      primary?: {
+        topic: string;
+        sideA: { agents: string[]; claim: string };
+        sideB: { agents: string[]; claim: string };
+        drivingEvidenceIds?: string[];
+        question?: string;
+      } | null;
+      tradeoffs?: Array<{ keep: string; giveUp: string; why: string }>;
+    };
   };
   decisions: Array<{
     decisionId: string;
@@ -51,6 +74,12 @@ export type DebateRuntimeLike = {
     stance?: string;
     risks: string[];
     nextSteps: string[];
+    evidence?: Array<{
+      evidenceId?: string;
+      label?: string;
+      content?: string;
+    }>;
+    evidenceGap?: string[];
   }>;
   finalDecision: {
     chosen: string;
@@ -78,6 +107,7 @@ type LlmStatement = {
   claim?: string;
   reasons?: string[];
   challengeTo?: string;
+  challengeEvidenceId?: string;
 };
 
 type LlmDebatePayload = {
@@ -115,15 +145,16 @@ function clip(text: string, max = 72): string {
 }
 
 function projectFallback(input: GenerateDebateRoundInput): GenerateDebateRoundResult {
+  const runtime = input.runtime as Parameters<typeof projectRuntimeRound2>[0]["runtime"];
   const base =
     input.round === 2
       ? projectRuntimeRound2({
-          runtime: input.runtime,
+          runtime,
           previous: input.previous,
           topic: input.topic,
         })
       : projectRuntimeRound3({
-          runtime: input.runtime,
+          runtime,
           previous: input.previous,
           topic: input.topic,
           focusChoice: input.focusChoice,
@@ -176,6 +207,12 @@ function mapLlmStatements(
       challengeTo:
         round === 2 && typeof draft?.challengeTo === "string" && draft.challengeTo.trim()
           ? draft.challengeTo.trim()
+          : undefined,
+      challengeEvidenceId:
+        round === 2 &&
+        typeof draft?.challengeEvidenceId === "string" &&
+        draft.challengeEvidenceId.trim()
+          ? draft.challengeEvidenceId.trim()
           : undefined,
     };
   });
@@ -282,8 +319,8 @@ async function tryLlmDebate(input: GenerateDebateRoundInput): Promise<GenerateDe
   const roundLabel = input.round === 2 ? "挑战辩论" : "综合收口";
   const system =
     input.round === 2
-      ? `你是餐饮创业战略会议的辩论导演。基于各方 Round1 独立判断，生成 Round2「${roundLabel}」发言。每位顾问必须回应分歧，可挑战另一席。只返回 JSON：{"statements":[{"agent":"M-MKT|M-PNT|M-BIZ|M-ED","stance":"support|oppose|conditional|neutral","claim":"不超过40字","reasons":["..."],"challengeTo":"被挑战的 agent 或留空"}],"conflict":{"issue":"...","positionA":"...","positionB":"...","conflictLabel":"..."}}。不要编造未给出的数据。`
-      : `你是餐饮创业战略会议的主持人助手。基于各方判断与冲突，生成 Round3「${roundLabel}」发言与共识草案。只返回 JSON：{"statements":[{"agent":"M-MKT|M-PNT|M-BIZ|M-ED","stance":"support|oppose|conditional|neutral","claim":"不超过40字","reasons":["..."]}],"consensus":{"summary":"...","proposedDecision":"...","coreReasons":["..."],"nextActions":["..."],"validationPlan":"..."}}。不要编造未给出的数据。`;
+      ? `你是餐饮创业战略会议的辩论导演。Round2 必须是观点冲突，不是轮流补充。每位顾问必须：1) 明确挑战另一席；2) 引用对方证据ID或指出证据缺口；3) 回答「为什么我的判断更重要」。只返回 JSON：{"statements":[{"agent":"M-MKT|M-PNT|M-BIZ|M-ED","stance":"support|oppose|conditional|neutral","claim":"不超过40字","reasons":["挑战对方证据或缺口","我的依据"],"challengeTo":"founder.M-BIZ","challengeEvidenceId":"E-xxx或空"}],"conflict":{"issue":"...","positionA":"...","positionB":"...","conflictLabel":"议题名"}}。不要编造未给出的数据。`
+      : `你是餐饮创业战略会议的主持人助手。Round3 必须形成 Decision Trade-off（保留什么/放弃什么）。只返回 JSON：{"statements":[{"agent":"M-MKT|M-PNT|M-BIZ|M-ED","stance":"support|oppose|conditional|neutral","claim":"不超过40字","reasons":["..."]}],"consensus":{"summary":"...","proposedDecision":"...","coreReasons":["取舍：保留…/放弃…"],"nextActions":["..."],"validationPlan":"..."}}。不要编造未给出的数据。`;
 
   try {
     const response = await llm.chat({
@@ -303,6 +340,16 @@ async function tryLlmDebate(input: GenerateDebateRoundInput): Promise<GenerateDe
               stance: d.stance,
               risks: d.risks.slice(0, 2),
               nextSteps: d.nextSteps.slice(0, 2),
+              evidence: (
+                "evidence" in d && Array.isArray((d as { evidence?: unknown[] }).evidence)
+                  ? (d as { evidence: Array<{ evidenceId?: string; content?: string }> }).evidence
+                  : []
+              )
+                .slice(0, 3)
+                .map((e) => ({
+                  evidenceId: e.evidenceId,
+                  content: e.content,
+                })),
             })),
             conflicts: input.runtime.meeting.conflicts.slice(0, 2),
             recommendation: input.runtime.meeting.recommendation,
@@ -314,6 +361,7 @@ async function tryLlmDebate(input: GenerateDebateRoundInput): Promise<GenerateDe
                 round: s.round,
                 claim: s.claim,
                 stance: s.stance,
+                evidence: s.evidence?.slice(0, 2),
               })),
           }),
         },

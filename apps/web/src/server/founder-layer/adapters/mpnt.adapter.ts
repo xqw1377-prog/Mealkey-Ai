@@ -1,4 +1,4 @@
-﻿import { buildPositioningSnapshot } from "@/lib/positioning";
+import { buildPositioningSnapshot } from "@/lib/positioning";
 import { previewMPntSnapshot } from "@/server/services/m-pnt.service";
 import type {
   AdapterBuildInput,
@@ -42,8 +42,13 @@ export class MPntFounderAdapter extends BaseFounderAgentAdapter {
         positioning: input.companyContext.brand?.positioning,
         users: input.companyContext.brand?.users,
         goals: input.companyContext.goals,
+        ...(input.assetContextBlock?.trim()
+          ? { assetContextBlock: input.assetContextBlock.trim() }
+          : {}),
+        ...this.memoryPriorPayload(input),
       },
-      timeoutMs: 3000,
+      // 进程内 runMPnt（hybrid/LLM）常见 12–18s；与 docs/AGENTS.md「20s」对齐，减少误降级
+      timeoutMs: 20000,
     };
   }
 
@@ -52,7 +57,17 @@ export class MPntFounderAdapter extends BaseFounderAgentAdapter {
     let raw: Awaited<ReturnType<typeof previewMPntSnapshot>>;
     try {
       raw = await previewMPntSnapshot({
-        message: String(request.payload.question ?? "").trim() || "当前品牌定位是否清晰",
+        message:
+          [
+            String(request.payload.question ?? "").trim() || "当前品牌定位是否清晰",
+            typeof request.payload.assetContextBlock === "string" &&
+            request.payload.assetContextBlock
+              ? `\n\n${request.payload.assetContextBlock}`
+              : "",
+            typeof request.payload.memoryPriorBlock === "string" && request.payload.memoryPriorBlock
+              ? `\n\n【企业记忆先验】\n${request.payload.memoryPriorBlock}`
+              : "",
+          ].join(""),
         companyContext: {
           companyId: String(request.payload.companyId ?? "founder-company"),
           basicInfo: {
@@ -124,6 +139,14 @@ export class MPntFounderAdapter extends BaseFounderAgentAdapter {
           content: raw.brandPositioning?.targetCustomers || "目标用户仍需继续压实",
           confidence: raw.confidence,
         },
+        {
+          label: "差异化",
+          content:
+            raw.brandPositioning?.differentiation ||
+            raw.brandPositioning?.category ||
+            "差异化表达仍需进一步蒸馏",
+          confidence: raw.confidence,
+        },
       ],
       risks: (raw.risks ?? [])
         .map((item) => item.risk || "")
@@ -139,6 +162,7 @@ export class MPntFounderAdapter extends BaseFounderAgentAdapter {
           : raw.decision_recommend === "primary"
             ? "support"
             : "conditional",
+      validation: (raw.nextSteps ?? [])[0]?.step,
       metadata: {
         missionId: context.mission.missionId,
         producedAt: this.buildNowIso(),

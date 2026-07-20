@@ -1,0 +1,83 @@
+# Founder OS 三层智能架构 — 冻结结论
+#
+# 错误模型：四大 Agent 与七常委都是「专家层」→ 重复分析、重复消耗。
+# 正确模型：四大 = 专业咨询机构（研究透）；七常委 = 最高决策委员会（做选择）。
+
+version: "1.0.0"
+name: "Founder OS Intelligence Stack"
+status: "superseded_by_v1_freeze"
+see: "architecture/v1_freeze.yaml"
+
+forbidden_pattern:
+  description: "禁止把四大与七常委设计成两个专家层"
+  anti_pattern: "4个专家分析一次 → 7个专家再分析一次"
+  reason: "企业治理中，专业研究与企业选择是不同职能，不是二次分析"
+
+layers:
+  knowledge:
+    id: "L1"
+    name: "知识智能"
+    english: "Knowledge Layer"
+    job: "AI 知道世界"
+  expert:
+    id: "L2"
+    name: "专业智能"
+    english: "Expert Engines"
+    job: "AI 像咨询专家：把一个领域研究透，形成专业判断"
+    analogy:
+      - "麦肯锡战略项目组"
+      - "Interbrand 品牌团队"
+      - "财务顾问团队"
+      - "投资银行团队"
+  governance:
+    id: "L3"
+    name: "治理智能"
+    english: "Decision Council"
+    job: "AI 帮助企业做选择：综合专业判断，在冲突中做企业选择"
+    analogy:
+      - "董事会战略委员会"
+      - "CEO Executive Committee"
+      - "国家决策机构"
+
+org_chart:
+  - "Founder（最终裁决 / Override，不是第八常委）"
+  - "Chief of Staff AI（秘书长：议题准入、材料组织、流程编排）"
+  - "七常委决策委员会（Decision Intelligence）"
+  - "四大 Expert Engines（M-PNT / M-MKT / M-BIZ / M-ED）"
+  - "Evidence Layer"
+  - "Validation OS"
+
+core_principle:
+  - "七常委不重新研究；只消费 Expert Report + Evidence Packet。"
+  - "四大不投票；只生产领域专业意见。"
+  - "核心资产是 Decision Brief，不是聊天记录。"
+  - "Founder Override 必须留下 Founder Decision Note。"
+
+pipeline:
+  - stage: "intake"
+    owner: "Chief of Staff"
+    output: "Case Packet + decisionType"
+  - stage: "expert_research"
+    owner: "Expert Engines"
+    output: "Expert Reports（按 required engines）"
+  - stage: "evidence_compile"
+    owner: "Chief of Staff"
+    output: "Evidence Packet"
+  - stage: "council_blind"
+    owner: "Decision Council Round 1"
+    output: "Council Opinions（独立）"
+  - stage: "council_debate"
+    owner: "Decision Council Round 2-3"
+    output: "修订意见 + 冲突点"
+  - stage: "resolution"
+    owner: "Secretary + Rules"
+    output: "Decision Resolution（加权 + veto）"
+  - stage: "founder_override"
+    owner: "Founder"
+    output: "Founder Decision Note（可选）"
+  - stage: "decision_brief"
+    owner: "System"
+    output: "Decision Brief（企业决策数据库单元）"
+  - stage: "validation"
+    owner: "Validation OS"
+    output: "验证结果回写 / 学习闭环"

@@ -1,0 +1,45 @@
+version: "1.0.0"
+name: "议题分级制度"
+levels:
+  L1:
+    name: "日常决策"
+    examples: ["菜单调整", "单项营销动作", "文案改版"]
+    convene_council: false
+    participants: "仅相关 Expert Engine"
+    founder_required: false
+  L2:
+    name: "经营决策"
+    examples: ["增加品类", "开新店", "区域小幅扩张"]
+    convene_council: true
+    council_size: "3-4"
+    default_roster: ["CSO", "BMO", "CFO", "COO"]
+    founder_required: false
+  L3:
+    name: "战略决策"
+    examples: ["进入新城市", "第二品牌", "重大定位转向"]
+    convene_council: true
+    council_size: "7"
+    default_roster: ["CSO", "CMO", "CBO", "BMO", "CFO", "COO", "CRO"]
+    founder_required: true
+  L4:
+    name: "生死决策"
+    examples: ["融资", "卖公司", "重大转型", "组织重组"]
+    convene_council: true
+    council_size: "7"
+    default_roster: ["CSO", "CMO", "CBO", "BMO", "CFO", "COO", "CRO"]
+    founder_required: true
+    note: "必须七常委 + Founder 最终裁决"
+
+# decisionType → 建议级别（CDO 可上调不可无理由下调 L4）
+decision_type_default_level:
+  store_expansion: "L2"
+  new_city_expansion: "L3"
+  new_brand: "L3"
+  fundraising: "L4"
+  restructuring: "L4"
+
+# L2 按类型微调花名册
+l2_roster_by_type:
+  store_expansion: ["CSO", "BMO", "CFO", "COO"]
+  new_brand: ["CSO", "CMO", "CBO", "BMO"]
+  default: ["CSO", "BMO", "CFO", "COO"]

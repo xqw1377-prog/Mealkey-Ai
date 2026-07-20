@@ -1,4 +1,4 @@
-import type { FounderMissionRequest } from "@/server/founder-layer/contracts";
+import type { FounderMemorySnapshot, FounderMissionRequest } from "@/server/founder-layer/contracts";
 import type { CompanyContext } from "@/server/founder";
 
 export function buildFounderLoopRequest(input: {
@@ -12,8 +12,9 @@ export function buildFounderLoopRequest(input: {
   message: string;
   companyContext: CompanyContext;
   assetContextBlock?: string;
+  currentMemory?: FounderMemorySnapshot;
 }): FounderMissionRequest {
-  const { companyContext, message, project, userId, assetContextBlock } = input;
+  const { companyContext, message, project, userId, assetContextBlock, currentMemory } = input;
 
   return {
     requestId: `req_${Date.now().toString(36)}`,
@@ -30,7 +31,10 @@ export function buildFounderLoopRequest(input: {
       },
       brand: {
         name: companyContext.brandName,
-        positioning: companyContext.strategicSummary,
+        positioning:
+          companyContext.mentalPosition ||
+          companyContext.strategicSummary,
+        users: companyContext.targetCustomers,
       },
       business: {
         scale: companyContext.storeCount,
@@ -38,6 +42,7 @@ export function buildFounderLoopRequest(input: {
       goals: [companyContext.yearlyGoal, message].filter(Boolean) as string[],
     },
     assetContextBlock,
+    currentMemory,
     createdAt: new Date().toISOString(),
   };
 }

@@ -5,6 +5,7 @@
  */
 import type { PrismaClient } from "@/generated/prisma";
 import { parseJsonField } from "@/lib/prisma";
+import { resolveActiveBrand } from "@/lib/brand-registry";
 import {
   buildMeetingHref,
   detectDepartmentFromTopic,
@@ -12,7 +13,17 @@ import {
   type MeetingLifecycle,
 } from "@/lib/meeting";
 import { ActiveMeetingDraftSchema } from "@/lib/meeting-session";
+import { parseActiveCouncilDraft } from "@/lib/council-session-draft";
 import { getProject, listProjects, type ProjectResponse } from "./project.service";
+import {
+  isBlockingRisk,
+  pickTopOpenRiskAlert,
+  pickTopOpportunity,
+} from "@/server/founder-layer/capability/runtime-priority";
+import {
+  buildFounderIntelligenceProfile,
+  buildIntelligenceBriefSummary,
+} from "@/server/founder-layer/intelligence";
 
 // ─── Types ───
 
@@ -395,8 +406,8 @@ export function buildDashboardHome(bundle: ProjectInsightBundle) {
       : [
           {
             date: formatShortDate(new Date()),
-            title: "经营世界已建立",
-            conclusion: "先进入经营会议，形成第一条结构化判断。",
+            title: "企业已建立",
+            conclusion: "先开一场会，留下第一条判断。",
           },
         ];
 
@@ -479,6 +490,34 @@ export function buildDashboardHome(bundle: ProjectInsightBundle) {
         }
       : null;
 
+  const lastMeetingRecommendationEarly =
+    typeof (profile as Record<string, unknown>).lastMeetingRecommendation === "string"
+      ? String((profile as Record<string, unknown>).lastMeetingRecommendation)
+      : null;
+  const lastDecisionPackRawEarly = (profile as Record<string, unknown>)
+    .lastDecisionPack as
+    | {
+        chosen?: string;
+        strategyDecision?: string;
+        summary?: string;
+        evidenceStatus?: string;
+        topRisks?: string[];
+      }
+    | undefined;
+  const decisionPackJudgement = lastDecisionPackRawEarly?.strategyDecision
+    ? lastDecisionPackRawEarly.chosen &&
+      lastDecisionPackRawEarly.chosen !== "带条件推进"
+      ? `${lastDecisionPackRawEarly.chosen}：${lastDecisionPackRawEarly.strategyDecision}`
+      : String(lastDecisionPackRawEarly.strategyDecision)
+    : null;
+  const decisionPackRisk =
+    Array.isArray(lastDecisionPackRawEarly?.topRisks) &&
+    lastDecisionPackRawEarly!.topRisks!.length > 0
+      ? String(lastDecisionPackRawEarly!.topRisks![0])
+      : lastDecisionPackRawEarly?.evidenceStatus === "insufficient"
+        ? "委员会证据仍不足，放大动作前先补关键证据"
+        : null;
+
   const observation =
     latest?.observation ||
     bundle.latestReport?.summary ||
@@ -486,17 +525,25 @@ export function buildDashboardHome(bundle: ProjectInsightBundle) {
       ? firstStageSummary
       : `${bundle.project.name} 当前处于「${bundle.project.stage ?? "idea"}」阶段，系统正在形成第一版经营判断。`);
   const diagnosis =
+    decisionPackRisk ||
     latest?.diagnosis ||
     (isInitialBrief ? firstRiskSummary : `最大不确定来自定位与执行闭环是否清晰，健康度约 ${projectHealth}。`);
   const judgement =
+    decisionPackJudgement ||
+    lastMeetingRecommendationEarly ||
     latest?.judgement ||
     (isInitialBrief
       ? `今天先不要试图解决所有问题，而是先把“${currentChallenge}”重新定义成一个可以验证的经营判断。`
       : "今天优先把当前问题压成一个可验证的经营动作，而不是继续发散信息。");
   const recommendation =
+    (lastDecisionPackRawEarly?.summary
+      ? String(lastDecisionPackRawEarly.summary)
+      : null) ||
     latest?.strategy ||
     latest?.action ||
-    (isInitialBrief ? "进入第一次经营会议，先锁定关键变量，再形成第一条经营判断。" : "进入经营会议，补充事实并完成一次完整判断链。");
+    (isInitialBrief
+      ? "进入第一次经营会议，先锁定关键变量，再形成第一条经营判断。"
+      : "进入经营会议，补充事实并完成一次完整判断链。");
 
   const growthPlanRaw = profile.growthPlan as
     | {
@@ -547,6 +594,474 @@ export function buildDashboardHome(bundle: ProjectInsightBundle) {
         }
       : null;
 
+  /** 七常委决策板已就绪、待创始人裁决 */
+  const councilDraft = parseActiveCouncilDraft(
+    (profile as Record<string, unknown>).activeCouncilDraft,
+  );
+  const pendingCouncilAdjudication = councilDraft
+    ? {
+        topic: councilDraft.topic,
+        level: councilDraft.level || null,
+        recommendedAction: councilDraft.recommendedAction || null,
+        insightCount: councilDraft.insightCount ?? 0,
+        supportCount: councilDraft.supportCount ?? 0,
+        opposeCount: councilDraft.opposeCount ?? 0,
+        observeCount: councilDraft.observeCount ?? 0,
+        biggestDispute: councilDraft.biggestDispute || null,
+        status: councilDraft.status,
+        statusLabel:
+          councilDraft.status === "awaiting_founder"
+            ? "待你裁决"
+            : "决策板已就绪",
+        href: `/projects/${bundle.project.id}/decision-room?resume=1`,
+      }
+    : null;
+
+  const validationTasksRaw = Array.isArray((profile as Record<string, unknown>).validationTasks)
+    ? ((profile as Record<string, unknown>).validationTasks as Array<Record<string, unknown>>)
+    : [];
+  const suggestedNextMeetingRaw = (profile as Record<string, unknown>)
+    .suggestedNextMeeting as { topic?: string; reason?: string } | undefined;
+  const suggestedNextMeeting =
+    suggestedNextMeetingRaw?.topic && String(suggestedNextMeetingRaw.topic).trim()
+      ? {
+          topic: String(suggestedNextMeetingRaw.topic).trim(),
+          reason: suggestedNextMeetingRaw.reason
+            ? String(suggestedNextMeetingRaw.reason).trim()
+            : "上次验证偏离，建议复会校准",
+        }
+      : null;
+  const activeValidationTaskRaw = validationTasksRaw.find((task) => {
+    const status = String(task.status || "");
+    const lifecycle = String(task.lifecycle || "");
+    return (
+      status === "in_progress" ||
+      status === "at_risk" ||
+      status === "planned" ||
+      lifecycle === "REVIEW" ||
+      lifecycle === "OBSERVING"
+    );
+  });
+  const triggerFired = Array.isArray(activeValidationTaskRaw?.triggers)
+    ? (activeValidationTaskRaw!.triggers as Array<{ fired?: boolean }>).some(
+        (t) => t.fired,
+      )
+    : false;
+  const activeValidationTask = activeValidationTaskRaw
+    ? {
+        id: String(activeValidationTaskRaw.id || ""),
+        title: String(activeValidationTaskRaw.title || "验证任务"),
+        objective: String(activeValidationTaskRaw.objective || ""),
+        status: String(activeValidationTaskRaw.status || "in_progress"),
+        lifecycle: String(activeValidationTaskRaw.lifecycle || ""),
+        owner: String(activeValidationTaskRaw.owner || "老板"),
+        horizonDays: Number(activeValidationTaskRaw.horizonDays || 90),
+        daysRemaining: Math.max(
+          0,
+          Math.ceil(
+            (new Date(String(activeValidationTaskRaw.dueAt || Date.now())).getTime() - Date.now()) /
+              (24 * 60 * 60 * 1000),
+          ),
+        ),
+        hypothesisStatement: String(
+          (activeValidationTaskRaw.hypothesis as { statement?: string } | undefined)?.statement ||
+            activeValidationTaskRaw.objective ||
+            "",
+        ),
+        aiJudgement: activeValidationTaskRaw.aiJudgement
+          ? String(activeValidationTaskRaw.aiJudgement)
+          : null,
+        passProbability:
+          typeof activeValidationTaskRaw.passProbability === "number"
+            ? activeValidationTaskRaw.passProbability
+            : null,
+        suggestRedeision:
+          triggerFired ||
+          String(activeValidationTaskRaw.status || "") === "at_risk" ||
+          String(activeValidationTaskRaw.lifecycle || "") === "REVIEW" ||
+          Boolean(suggestedNextMeeting),
+        triggerReasons: Array.isArray(activeValidationTaskRaw.triggers)
+          ? (activeValidationTaskRaw.triggers as Array<{ fired?: boolean; reason?: string }>)
+              .filter((t) => t.fired && t.reason)
+              .map((t) => String(t.reason))
+              .slice(0, 3)
+          : [],
+        metrics: Array.isArray(activeValidationTaskRaw.metrics)
+          ? (activeValidationTaskRaw.metrics as Array<Record<string, unknown>>)
+              .slice(0, 4)
+              .map((m) => ({
+                label: String(m.label || m.name || ""),
+                target: m.targetLabel
+                  ? String(m.targetLabel)
+                  : m.target !== undefined
+                    ? String(m.target)
+                    : undefined,
+                actual: m.actualLabel
+                  ? String(m.actualLabel)
+                  : m.actual !== undefined
+                    ? String(m.actual)
+                    : undefined,
+              }))
+          : [],
+        latestNote:
+          Array.isArray(activeValidationTaskRaw.checkIns) &&
+          (activeValidationTaskRaw.checkIns as Array<Record<string, unknown>>).length > 0
+            ? String(
+                (
+                  activeValidationTaskRaw.checkIns as Array<Record<string, unknown>>
+                ).at(-1)?.note || "",
+              )
+            : null,
+        decisionId: String(activeValidationTaskRaw.decisionId || ""),
+        href: `/projects/${bundle.project.id}/decisions`,
+      }
+    : null;
+
+  /** 偏航催办：即使任务已 FAILED，仍可读 suggestedNextMeeting */
+  const pendingRedeision = suggestedNextMeeting
+    ? {
+        topic: suggestedNextMeeting.topic,
+        reason: suggestedNextMeeting.reason,
+        href: buildMeetingHref(
+          bundle.project.id,
+          suggestedNextMeeting.topic,
+          detectDepartmentFromTopic(suggestedNextMeeting.topic),
+          { confirmSpend: true, spendKind: "growth" },
+        ),
+      }
+    : activeValidationTask?.suggestRedeision
+      ? {
+          topic: `复盘：${activeValidationTask.hypothesisStatement || activeValidationTask.title}`,
+          reason:
+            activeValidationTask.triggerReasons[0] ||
+            activeValidationTask.aiJudgement ||
+            "验证偏航，建议复会校准路径",
+          href: buildMeetingHref(
+            bundle.project.id,
+            `复盘：${activeValidationTask.hypothesisStatement || activeValidationTask.title}`,
+            "general",
+            { confirmSpend: true, spendKind: "growth" },
+          ),
+        }
+      : null;
+
+  /** E4：DeviationReport 可读投影（供 Brief 展示，不改战略） */
+  const lastDeviationRaw = (profile as Record<string, unknown>)
+    .lastDeviationReport as Record<string, unknown> | undefined;
+  const lastDeviation =
+    lastDeviationRaw && typeof lastDeviationRaw === "object"
+      ? {
+          summary: String(lastDeviationRaw.summary || "").trim(),
+          severity: String(lastDeviationRaw.severity || "medium"),
+          kind: String(lastDeviationRaw.kind || ""),
+          suggestedCouncilTopic: String(
+            lastDeviationRaw.suggestedCouncilTopic || "",
+          ).trim(),
+          decisionId: String(lastDeviationRaw.decisionId || ""),
+        }
+      : null;
+  const lastDeviationView =
+    lastDeviation?.summary || lastDeviation?.suggestedCouncilTopic
+      ? lastDeviation
+      : null;
+
+  /** R5：取最严重 openRisk；机会在阻断风险下对 Brief 隐藏 */
+  const openRiskAlert = pickTopOpenRiskAlert(
+    (profile as Record<string, unknown>).openRiskAlerts,
+  );
+  const riskBlocksOpportunity = isBlockingRisk(openRiskAlert);
+  const openRiskView = openRiskAlert
+    ? {
+        id: String(openRiskAlert.id || ""),
+        type: String(openRiskAlert.type || ""),
+        level: String(openRiskAlert.level || "medium"),
+        title: String(openRiskAlert.title || "").trim(),
+        description: String(openRiskAlert.description || "").trim(),
+        suggestedTopic: String(openRiskAlert.suggestedTopic || "").trim(),
+        suggestExpert: openRiskAlert.suggestExpert
+          ? String(openRiskAlert.suggestExpert)
+          : null,
+        suggestCouncil: Boolean(openRiskAlert.suggestCouncil),
+      }
+    : null;
+
+  const openOpportunity = pickTopOpportunity(
+    (profile as Record<string, unknown>).openOpportunities,
+    { hideWhenRiskBlocks: true, blockingRisk: openRiskAlert },
+  );
+  const openOpportunityView = openOpportunity
+    ? {
+        id: String(openOpportunity.id || ""),
+        title: String(openOpportunity.title || "").trim(),
+        score:
+          typeof openOpportunity.score === "number"
+            ? openOpportunity.score
+            : null,
+        status: String(openOpportunity.status || "detected"),
+        suggestedTopic: String(openOpportunity.suggestedTopic || "").trim(),
+        suggestExpert: openOpportunity.suggestExpert
+          ? String(openOpportunity.suggestExpert)
+          : null,
+      }
+    : null;
+
+  const lastDebateScenariosRaw = Array.isArray(
+    (profile as Record<string, unknown>).lastDebateScenarios,
+  )
+    ? ((profile as Record<string, unknown>).lastDebateScenarios as Array<
+        Record<string, unknown>
+      >)
+    : [];
+  const lastDebateScenarios = lastDebateScenariosRaw.slice(0, 3).map((s) => ({
+    scenario: String(s.scenario || ""),
+    trigger: String(s.trigger || ""),
+    impact: String(s.impact || ""),
+    mitigation: String(s.mitigation || ""),
+  }));
+  const lastDebateConflicts = Array.isArray(
+    (profile as Record<string, unknown>).lastDebateConflicts,
+  )
+    ? (
+        (profile as Record<string, unknown>).lastDebateConflicts as Array<
+          Record<string, unknown>
+        >
+      )
+        .slice(0, 2)
+        .map((c) => ({
+          topic: String(c.topic || ""),
+          severity: String(c.severity || ""),
+          summary: String(c.summary || ""),
+        }))
+    : [];
+  const lastMeetingRecommendation =
+    typeof (profile as Record<string, unknown>).lastMeetingRecommendation === "string"
+      ? String((profile as Record<string, unknown>).lastMeetingRecommendation)
+      : null;
+
+  const lastDecisionPackRaw = (profile as Record<string, unknown>).lastDecisionPack as
+    | {
+        packId?: string;
+        chosen?: string;
+        strategyDecision?: string;
+        summary?: string;
+        evidenceStatus?: string;
+        capitalBrief?: string | null;
+        topRisks?: string[];
+        createdAt?: string;
+      }
+    | undefined;
+  const lastDecisionPack = lastDecisionPackRaw?.strategyDecision
+    ? {
+        packId: String(lastDecisionPackRaw.packId || ""),
+        chosen: String(lastDecisionPackRaw.chosen || ""),
+        strategyDecision: String(lastDecisionPackRaw.strategyDecision),
+        summary: String(lastDecisionPackRaw.summary || ""),
+        evidenceStatus: String(lastDecisionPackRaw.evidenceStatus || ""),
+        capitalBrief: lastDecisionPackRaw.capitalBrief
+          ? String(lastDecisionPackRaw.capitalBrief)
+          : null,
+        topRisks: Array.isArray(lastDecisionPackRaw.topRisks)
+          ? lastDecisionPackRaw.topRisks.map((r) => String(r)).slice(0, 3)
+          : [],
+        createdAt: lastDecisionPackRaw.createdAt
+          ? String(lastDecisionPackRaw.createdAt)
+          : null,
+      }
+    : null;
+
+  const lastActionPlanRaw = (profile as Record<string, unknown>).lastActionPlan as
+    | Record<string, unknown>
+    | undefined;
+  const lastActionPlan = lastActionPlanRaw
+    ? {
+        planId: String(lastActionPlanRaw.planId || ""),
+        summary: String(lastActionPlanRaw.summary || ""),
+        goals: Array.isArray(lastActionPlanRaw.goals)
+          ? (lastActionPlanRaw.goals as Array<Record<string, unknown>>).slice(0, 3).map((g) => ({
+              title: String(g.title || ""),
+              horizonDays: typeof g.horizonDays === "number" ? g.horizonDays : undefined,
+            }))
+          : [],
+        actions: Array.isArray(lastActionPlanRaw.actions)
+          ? (lastActionPlanRaw.actions as Array<Record<string, unknown>>)
+              .slice(0, 3)
+              .map((a, i) => ({
+                actionId: String(a.actionId || `act_${i + 1}`),
+                title: String(a.title || ""),
+                owner: a.owner ? String(a.owner) : undefined,
+                status: String(a.status || "planned"),
+                dueInDays:
+                  typeof a.dueInDays === "number" ? a.dueInDays : undefined,
+              }))
+          : [],
+        validationTaskId: lastActionPlanRaw.validationTaskId
+          ? String(lastActionPlanRaw.validationTaskId)
+          : undefined,
+      }
+    : null;
+
+  const lastGrowthDeltaRaw = (profile as Record<string, unknown>).lastGrowthDelta as
+    | Record<string, unknown>
+    | undefined;
+  const lastCapabilityScoresRaw = Array.isArray(
+    (profile as Record<string, unknown>).lastCapabilityScores,
+  )
+    ? ((profile as Record<string, unknown>).lastCapabilityScores as Array<
+        Record<string, unknown>
+      >)
+    : [];
+  const capabilityScores = lastCapabilityScoresRaw
+    .map((s) => ({
+      id: String(s.id || ""),
+      label: String(s.label || ""),
+      score: typeof s.score === "number" ? s.score : Number(s.score) || 0,
+      note: s.note ? String(s.note) : "",
+      trend: String(s.trend || "flat"),
+    }))
+    .filter((s) => s.id);
+  const weakestCapabilityScore = capabilityScores.length
+    ? [...capabilityScores].sort((a, b) => a.score - b.score)[0]
+    : null;
+  const founderGrowth = lastGrowthDeltaRaw || weakestCapabilityScore
+    ? {
+        summary: lastGrowthDeltaRaw?.summary
+          ? String(lastGrowthDeltaRaw.summary)
+          : null,
+        learningNext: Array.isArray(lastGrowthDeltaRaw?.learningNext)
+          ? (lastGrowthDeltaRaw!.learningNext as unknown[])
+              .map((x) => String(x || ""))
+              .filter(Boolean)
+              .slice(0, 3)
+          : [],
+        reflections: Array.isArray(lastGrowthDeltaRaw?.reflections)
+          ? (lastGrowthDeltaRaw!.reflections as unknown[])
+              .map((x) => String(x || ""))
+              .filter(Boolean)
+              .slice(0, 3)
+          : [],
+        weakest: weakestCapabilityScore
+          ? {
+              id: weakestCapabilityScore.id,
+              label: weakestCapabilityScore.label,
+              score: weakestCapabilityScore.score,
+              note: weakestCapabilityScore.note,
+            }
+          : null,
+        cognitiveGap: (() => {
+          const raw = (profile as Record<string, unknown>).lastCognitiveGap as
+            | Record<string, unknown>
+            | null
+            | undefined;
+          if (!raw || typeof raw !== "object") return null;
+          return {
+            summary: String(raw.summary || ""),
+            believedCause: String(raw.believedCause || ""),
+            likelyRootCause: String(raw.likelyRootCause || ""),
+            kind: String(raw.kind || "unknown"),
+            suggestCommittee: raw.suggestCommittee
+              ? String(raw.suggestCommittee)
+              : null,
+          };
+        })(),
+        decisionLesson: (() => {
+          const raw = (profile as Record<string, unknown>)
+            .lastDecisionPattern as Record<string, unknown> | undefined;
+          if (!raw || typeof raw !== "object") return null;
+          const lesson = String(raw.lesson || "").trim();
+          return lesson || null;
+        })(),
+        growthPath: (() => {
+          const raw = (profile as Record<string, unknown>).lastGrowthPath;
+          if (!Array.isArray(raw)) return [] as string[];
+          return raw
+            .map((item) => {
+              if (!item || typeof item !== "object") return "";
+              return String((item as Record<string, unknown>).title || "");
+            })
+            .filter(Boolean)
+            .slice(0, 3);
+        })(),
+        decisionQuality: (() => {
+          const raw = (profile as Record<string, unknown>)
+            .lastDecisionQuality as Record<string, unknown> | undefined;
+          if (!raw || typeof raw !== "object") return null;
+          return {
+            total:
+              typeof raw.total === "number" ? raw.total : null,
+            judgement:
+              typeof raw.judgement === "number" ? raw.judgement : null,
+            execution:
+              typeof raw.execution === "number" ? raw.execution : null,
+            result: typeof raw.result === "number" ? raw.result : null,
+          };
+        })(),
+        growthTasks: (() => {
+          const raw = (profile as Record<string, unknown>).growthTasks;
+          if (!Array.isArray(raw)) return [] as Array<{ goal: string; topic: string }>;
+          return raw
+            .filter(
+              (t) =>
+                t &&
+                typeof t === "object" &&
+                (t as Record<string, unknown>).status !== "done",
+            )
+            .slice(0, 3)
+            .map((t) => {
+              const row = t as Record<string, unknown>;
+              return {
+                goal: String(row.goal || ""),
+                topic: String(row.suggestedTopic || row.goal || ""),
+              };
+            })
+            .filter((t) => t.goal);
+        })(),
+      }
+    : null;
+
+  const intelligenceProfile = buildFounderIntelligenceProfile({
+    ownerId: bundle.owner.id || "unknown",
+    projectId: bundle.project.id,
+    profile: profile as Record<string, unknown>,
+  });
+  const intelligenceBrief = buildIntelligenceBriefSummary(intelligenceProfile);
+  const founderIntelligence =
+    intelligenceProfile.confidence > 0 ||
+    intelligenceProfile.personality.traits.length > 0 ||
+    intelligenceProfile.historicalLessons.length > 0
+      ? {
+          headline: intelligenceBrief.headline,
+          styleLine: intelligenceBrief.styleLine,
+          confidence: intelligenceProfile.confidence,
+          riskPreference: intelligenceProfile.decisionStyle.riskPreference,
+          aiStance: intelligenceProfile.decisionStyle.aiStance,
+          followThrough: intelligenceProfile.executionAbility.followThrough,
+          completionRate:
+            intelligenceProfile.executionAbility.recentCompletionRate,
+          lesson: intelligenceProfile.historicalLessons[0]?.summary || null,
+          industryOptIn:
+            intelligenceProfile.permissions.contributeToIndustryModel,
+          href: `/profile`,
+        }
+      : null;
+
+  const brandView = resolveActiveBrand(
+    profile as Record<string, unknown>,
+    bundle.project.name,
+  );
+  const brandsRaw = Array.isArray((profile as Record<string, unknown>).brands)
+    ? ((profile as Record<string, unknown>).brands as Array<Record<string, unknown>>)
+    : [];
+  const brandPortfolio = {
+    enterpriseName: bundle.project.name,
+    brandCount: Math.max(1, brandsRaw.length || 1),
+    activeBrandName: brandView.brandName,
+    activeBrandId: brandView.id,
+    brandNames: brandsRaw
+      .map((b) => String(b.brandName || "").trim())
+      .filter(Boolean)
+      .slice(0, 6),
+  };
+
   return {
     todayLabel: formatTodayLabel(),
     ownerName,
@@ -555,10 +1070,25 @@ export function buildDashboardHome(bundle: ProjectInsightBundle) {
     projectStatus: STAGE_FLOW[stageIndex(bundle.project.stage, bundle.decisions.length)] ?? "创业探索",
     homeMode,
     todayStatus: homeMode === "forming" ? (isInitialBrief ? "第一次经营校准已生成" : "经营简报形成中") : "今日经营简报已就绪",
+    brandPortfolio,
     ...focus,
     strategicSummary: recommendation,
-    biggestRisk: latest?.diagnosis || (isInitialBrief ? firstRiskSummary : "定位与选择理由尚未完全收束"),
-    currentProblemTitle: latest?.problem || currentChallenge || "明确当前最重要的经营问题",
+    biggestRisk:
+      openRiskView?.title ||
+      lastDeviationView?.summary ||
+      latest?.diagnosis ||
+      (isInitialBrief ? firstRiskSummary : "定位与选择理由尚未完全收束"),
+    currentProblemTitle: riskBlocksOpportunity
+      ? openRiskView?.suggestedTopic ||
+        openRiskView?.title ||
+        latest?.problem ||
+        currentChallenge ||
+        "明确当前最重要的经营问题"
+      : openOpportunityView?.suggestedTopic ||
+        openOpportunityView?.title ||
+        latest?.problem ||
+        currentChallenge ||
+        "明确当前最重要的经营问题",
     currentProblemImpact: diagnosis,
     currentProblemAction: latest?.action || recommendation,
     currentFocus: focus.focusCapability,
@@ -573,6 +1103,39 @@ export function buildDashboardHome(bundle: ProjectInsightBundle) {
     positioningReviewCount,
     positioningReviewAlert,
     pendingMeetingDraft,
+    pendingCouncilAdjudication,
+    activeValidationTask,
+    pendingRedeision:
+      riskBlocksOpportunity && openRiskView?.suggestedTopic
+        ? {
+            topic: openRiskView.suggestedTopic,
+            reason: openRiskView.description || openRiskView.title,
+            href: buildMeetingHref(
+              bundle.project.id,
+              openRiskView.suggestedTopic,
+              detectDepartmentFromTopic(openRiskView.suggestedTopic),
+              { confirmSpend: true, spendKind: "growth" },
+            ),
+          }
+        : pendingRedeision,
+    suggestedNextMeeting:
+      riskBlocksOpportunity && openRiskView?.suggestedTopic
+        ? {
+            topic: openRiskView.suggestedTopic,
+            reason: openRiskView.description || openRiskView.title,
+          }
+        : suggestedNextMeeting,
+    lastDeviation: lastDeviationView,
+    openRiskAlert: openRiskView,
+    openOpportunity: openOpportunityView,
+    riskBlocksOpportunity,
+    lastDebateScenarios,
+    lastDebateConflicts,
+    lastMeetingRecommendation,
+    lastActionPlan,
+    lastDecisionPack,
+    founderGrowth,
+    founderIntelligence,
     abilityMap: abilities,
     strongestAbility: strongest?.label ?? "产品能力",
     strongestCoreAbility: CORE_MAP[strongest?.label ?? "产品能力"] ?? "决策力",
@@ -855,7 +1418,7 @@ export function buildScorecard(bundle: ProjectInsightBundle) {
   }));
   const score = overview.score;
   const scoreLabel =
-    score >= 85 ? "经营大脑优秀" : score >= 70 ? "经营大脑良好" : score >= 55 ? "经营大脑形成中" : "需要重点校准";
+    score >= 85 ? "状态优秀" : score >= 70 ? "状态良好" : score >= 55 ? "正在成形" : "需要重点校准";
 
   return {
     score,
@@ -940,7 +1503,7 @@ export function buildKnowledgeCenter(
     primaryInsight:
       primary?.content?.slice(0, 160) ||
       latest?.judgement ||
-      "经营智慧只有回到项目决策里才有价值。",
+      "认知只有带回决策里才有价值。",
     takeaway:
       latest?.action ||
       "今天把一条认知带回项目：先验证，再扩张。",
@@ -951,7 +1514,14 @@ export function buildKnowledgeCenter(
   };
 }
 
-export function buildAdvisorWorkspace(bundle: ProjectInsightBundle) {
+export function buildAdvisorWorkspace(
+  bundle: ProjectInsightBundle,
+  options?: {
+    /** 已验证咨询一手事实（店访优先），由调用方从 profile 只读提取 */
+    consultingFactLines?: string[];
+    storeVisitFactCount?: number;
+  },
+) {
   const abilities = resolveAbilityMap(bundle.project, bundle.owner);
   const ranked = sortAbilities(abilities);
   const focus = focusFromWeakest(ranked[ranked.length - 1]);
@@ -1028,28 +1598,49 @@ export function buildAdvisorWorkspace(bundle: ProjectInsightBundle) {
       latest?.action || (isInitialMeeting ? "先把真实问题、关键变量与第一步动作收束出来" : "形成一条可执行动作"),
     ...focus,
     strongestAbility: ranked[0]?.label ?? "产品能力",
-    knownFacts: [
-      `项目：${bundle.project.name}`,
-      `阶段：${bundle.project.stage ?? "idea"}`,
-      bundle.project.city ? `城市：${bundle.project.city}` : null,
-      bundle.project.category ? `品类：${bundle.project.category}` : null,
-      isInitialMeeting ? `经营挑战：${currentChallenge}` : null,
-      isInitialMeeting ? `年度目标：${yearlyGoal}` : null,
-      `历史决策：${bundle.decisions.length} 条`,
-    ].filter(Boolean) as string[],
-    evidenceItems: isInitialMeeting
-      ? [
-          `诊断输入：当前经营类型为 ${businessType}`,
-          `当前最大挑战：${currentChallenge}`,
-          `未来一年目标：${yearlyGoal}`,
-          ...(bundle.memories.slice(0, 2).map((m) => m.content.slice(0, 80)) || []),
-        ]
-      : [
-          ...bundle.memories.slice(0, 4).map((m) => m.content.slice(0, 80)),
-          ...(bundle.memories.length === 0
-            ? ["项目基础信息已加载", "等待补充更多经营资料"]
-            : []),
-        ],
+    knownFacts: (() => {
+      const profile =
+        (bundle.project.profile as Record<string, unknown> | null) || {};
+      const brand = resolveActiveBrand(profile, bundle.project.name);
+      const stageLabel =
+        typeof profile.stageLabel === "string" && profile.stageLabel
+          ? profile.stageLabel
+          : bundle.project.stage ?? "idea";
+      const category =
+        brand.category ||
+        (typeof profile.category === "string" ? profile.category : null);
+      const consultingLines = (options?.consultingFactLines || []).slice(0, 8);
+      return [
+        ...consultingLines,
+        `品牌：${brand.brandName}`,
+        `项目：${bundle.project.name}`,
+        `阶段：${stageLabel}`,
+        category ? `品类：${category}` : null,
+        brand.mentalPosition ? `心智定位：${brand.mentalPosition}` : null,
+        bundle.project.city ? `城市：${bundle.project.city}` : null,
+        isInitialMeeting ? `经营挑战：${currentChallenge}` : null,
+        isInitialMeeting ? `年度目标：${yearlyGoal}` : null,
+        `历史决策：${bundle.decisions.length} 条`,
+      ].filter(Boolean) as string[];
+    })(),
+    storeVisitFactCount: options?.storeVisitFactCount ?? 0,
+    evidenceItems: (() => {
+      const consultingLines = (options?.consultingFactLines || []).slice(0, 6);
+      const base = isInitialMeeting
+        ? [
+            `诊断输入：当前经营类型为 ${businessType}`,
+            `当前最大挑战：${currentChallenge}`,
+            `未来一年目标：${yearlyGoal}`,
+            ...(bundle.memories.slice(0, 2).map((m) => m.content.slice(0, 80)) || []),
+          ]
+        : [
+            ...bundle.memories.slice(0, 4).map((m) => m.content.slice(0, 80)),
+            ...(bundle.memories.length === 0
+              ? ["项目基础信息已加载", "等待补充更多经营资料"]
+              : []),
+          ];
+      return [...consultingLines, ...base].slice(0, 10);
+    })(),
     challenge: isInitialMeeting
       ? "如果现在把表面症状当成根因，后续 Today 和 Meeting 都会围绕错误问题持续发力。"
       : "如果核心客群并不买单当前差异化，现有策略可能高估了转化效率。",
@@ -1165,7 +1756,7 @@ export function buildOwnerPortrait(
     : "/dashboard";
 
   return {
-    portraitName: owner?.name || user.name || "我的经营大脑",
+    portraitName: owner?.name || user.name || "我的成长画像",
     isInitialPortrait,
     initialChallenge: isInitialPortrait ? currentChallenge : null,
     initialYearlyGoal: isInitialPortrait ? yearlyGoal : null,
@@ -1175,8 +1766,8 @@ export function buildOwnerPortrait(
     stateJudgement:
       bundle?.decisions[0]?.judgement ||
       (isInitialPortrait
-        ? `系统已经根据你的首次经营诊断建立第一版能力坐标。当前会优先围绕“${currentChallenge}”训练你的 ${weakLabel}。`
-        : "AI 正在根据你的判断、反馈和经营结果，理解你当前最值得突破的能力瓶颈。"),
+        ? `已根据首次诊断建好第一版坐标。眼下优先练「${currentChallenge}」相关的 ${weakLabel}。`
+        : "正在根据你的判断与结果，找最该突破的短板。"),
     currentStage: STAGE_FLOW[idx] ?? "创业探索",
     stageSummary: STAGE_FLOW[idx] ?? "创业探索",
     abilityMap: abilities.map((item) => ({
@@ -1184,43 +1775,43 @@ export function buildOwnerPortrait(
       stars: `${Math.round(item.value / 20)}/5`,
       width: `${item.value}%`,
       strength: abilityInsights[item.label]?.strength ?? "持续学习、吸收反馈、形成结构",
-      insight: abilityInsights[item.label]?.insight ?? "这项能力正在形成，需要更多真实判断来校准。",
+      insight: abilityInsights[item.label]?.insight ?? "还在成形，多留下真实判断会更准。",
     })),
     strongestCapability: strongest?.label ?? "产品能力",
     weakestCapability: weakLabel,
     growthBottleneck: weakLabel,
     bottleneckReason: isInitialPortrait
-      ? `在真正形成第一条判断之前，${weakLabel} 还是最不稳定的一环，它会直接影响你后续是继续发散还是开始闭环。`
-      : `当前 ${weakLabel} 相对偏弱，限制了判断到增长的转化。`,
+      ? `还没留下第一条判断前，${weakLabel} 最不稳，决定你是继续发散还是开始闭环。`
+      : `当前 ${weakLabel} 偏弱，卡住了判断到增长。`,
     growthPath: isInitialPortrait
       ? [
-          { label: "重定义问题", action: `先把“${currentChallenge}”重新定义成一个可以验证的经营问题` },
-          { label: "锁定变量", action: `围绕“${yearlyGoal}”确认一个最不能判断错的关键变量` },
-          { label: "形成首判", action: "在第一次经营会议里收束出第一条经营判断与下一步动作" },
+          { label: "重定义问题", action: `把「${currentChallenge}」压成一个能验证的问题` },
+          { label: "锁定变量", action: `围绕「${yearlyGoal}」锁定最不能判错的关键变量` },
+          { label: "形成首判", action: "第一次开会，收束出第一条判断和下一步" },
         ]
       : [
-          { label: "形成判断", action: "每周至少完成一次经营会议判断" },
-          { label: "验证动作", action: "给关键决策补充结果反馈" },
-          { label: "沉淀能力", action: "把有效打法写入项目记忆" },
+          { label: "形成判断", action: "每周至少开一次会，留下判断" },
+          { label: "验证动作", action: "给关键决策补结果反馈" },
+          { label: "沉淀能力", action: "把有效打法写进企业记忆" },
         ],
     decisionEvolution: {
       count: stats.decisionCount,
       latest: bundle?.decisions[0]?.problem ?? "尚无决策",
       trend: stats.decisionCount > 3 ? "up" : "forming",
-      past: isInitialPortrait ? "你还没有留下足够多的真实判断样本，系统目前只掌握了首次经营诊断。" : "更多依赖经验判断，遇到问题时先做动作再解释原因。",
+      past: isInitialPortrait ? "真实判断样本还不够，目前只有首次诊断。" : "偏经验判断：先做事，再解释原因。",
       present:
         bundle?.decisions[0]?.judgement ||
-        (isInitialPortrait ? "系统已经开始把你的挑战、目标和经营方式压成第一版成长画像。" : "开始先识别问题，再形成判断和验证动作。"),
-      summary: isInitialPortrait ? "接下来每一次会议和反馈，都会把这张成长画像从假设变成证据。" : "你正在从经验判断，逐步升级为系统判断与验证闭环。",
+        (isInitialPortrait ? "已把挑战、目标和做事方式压成第一版画像。" : "先认清问题，再形成判断和验证动作。"),
+      summary: isInitialPortrait ? "每一次会议和反馈，都会把画像从假设变成证据。" : "正在从经验判断，升级为可验证的闭环。",
     },
     growthCoach: {
       focus: weakLabel,
-      advice: isInitialPortrait ? "先不要急着扩展信息面，优先完成第一条结构化判断。" : "少发散、多闭环：每次判断都带着可验证动作。",
-      title: isInitialPortrait ? `开始一次《${weakLabel}首轮校准会议》` : `开始一次《${weakLabel}复盘会议》`,
-      reason: isInitialPortrait ? `基于你的首次经营诊断，${weakLabel} 是当前最值得优先校准的一项能力。` : `系统发现你最近的经营判断里，${weakLabel} 是最值得优先补强的一项能力。`,
+      advice: isInitialPortrait ? "先别急着扩信息面，优先留下第一条判断。" : "少发散、多闭环：每次判断都带着可验证动作。",
+      title: isInitialPortrait ? `开一场《${weakLabel}首轮校准》` : `开一场《${weakLabel}复盘》`,
+      reason: isInitialPortrait ? `按首次诊断，${weakLabel} 最该先校准。` : `最近的判断里，${weakLabel} 最值得先补。`,
       expectedImprovement: weakLabel,
       actionHref: meetingHref,
-      actionLabel: isInitialPortrait ? "开始第一次成长训练" : "开始成长训练",
+      actionLabel: isInitialPortrait ? "开始第一次训练" : "开始训练",
     },
     currentProjectId: bundle?.project.id ?? null,
     currentProjectName: bundle?.project.name ?? null,
@@ -1229,14 +1820,14 @@ export function buildOwnerPortrait(
     stageTrack: buildStageTrack(idx),
     currentKnown:
       stats.projectCount === 0
-        ? "MealKey 还需要一个真实项目来建立第一版经营能力坐标。"
+        ? "还需要一个真实企业，才能建立第一版能力坐标。"
         : isInitialPortrait
-          ? `MealKey 已知道你当前经营 ${bundle?.project.category || "餐饮业务"}，眼下挑战是“${currentChallenge}”，未来目标是“${yearlyGoal}”。`
-          : `MealKey 已根据你的项目与判断，开始理解你在经营场景里的能力结构。`,
-    nextAction: bundle?.decisions[0]?.action ?? (isInitialPortrait ? "进入第一次经营会议，留下第一条结构化判断。" : "继续进入经营会议，留下新的判断。"),
+          ? `已知你在做 ${bundle?.project.category || "餐饮业务"}，眼下挑战是“${currentChallenge}”，目标是“${yearlyGoal}”。`
+          : `已根据你的企业与判断，开始摸清能力短板。`,
+    nextAction: bundle?.decisions[0]?.action ?? (isInitialPortrait ? "开第一次会，留下第一条判断。" : "继续开会，留下新的判断。"),
     currentJudgement:
       bundle?.decisions[0]?.judgement ??
       bundle?.latestReport?.summary ??
-      (isInitialPortrait ? `你现在最需要的不是继续搜集信息，而是先把“${currentChallenge}”压成第一条经营判断。` : "画像仍在形成，更多使用会让系统更懂你的经营倾向。"),
+      (isInitialPortrait ? `现在别再只搜集信息，先把「${currentChallenge}」压成第一条判断。` : "画像还在成形，多用几次会更懂你。"),
   };
 }

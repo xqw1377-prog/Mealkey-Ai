@@ -52,6 +52,15 @@ export interface DirectionScore {
   theory_recommend: TheoryRecommend;
 }
 
+/** 单条理论维度/商规检验（专家案卷可见） */
+export interface TheoryDimensionLine {
+  name: string;
+  /** 相对贡献或 0–100 项分；启发式可为 delta */
+  score?: number;
+  note: string;
+  pass?: boolean;
+}
+
 export interface TheoryRisk {
   risk: string;
   severity: RiskLevel;
@@ -69,6 +78,8 @@ export interface TheoryView {
   key_mental_position: string;
   main_risks: TheoryRisk[];
   direction_scores: DirectionScore[];
+  /** 对本理论首选方向的商规/维度拆解 */
+  dimension_breakdown?: TheoryDimensionLine[];
   theory_recommend: TheoryRecommend;
   recommendation_level: TheoryRecommend;
   confidence: number;

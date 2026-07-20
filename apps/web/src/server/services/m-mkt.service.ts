@@ -52,6 +52,7 @@ export interface MMktServiceOptions {
   projectId: string;
   userId: string;
   message: string;
+  missionId?: string;
   conversationId?: string;
   assetIds?: string[];
   force?: boolean;
@@ -96,6 +97,7 @@ export async function* streamMMktProduct(
     agentId: "m-mkt",
     userId,
     projectId,
+    missionId: options.missionId,
     conversationId: conversation.id,
     input: { message, assetIds, agent: "m-mkt" },
   });
@@ -359,69 +361,59 @@ async function syncProjectMarket(
   });
   if (!project) return null;
 
-  let profile: Record<string, unknown> = {};
-  if (project.profile) {
-    try {
-      const parsed = JSON.parse(project.profile) as unknown;
-      if (parsed && typeof parsed === "object") {
-        profile = parsed as Record<string, unknown>;
-      }
-    } catch {
-      profile = {};
-    }
-  }
+  const { updateProjectProfile } = await import("@/server/services/project-profile");
+  let previous: MarketSnapshot | null = null;
 
-  const previousBlob = (profile.mMkt || null) as Record<string, unknown> | null;
-  const previous = snapshotFromMMktBlob(previousBlob, "profile");
-
-  const mMkt = {
-    decisionId: args.decisionId,
-    updatedAt: new Date().toISOString(),
-    oneLiner: args.snapshot.oneLiner,
-    problem: args.snapshot.problem,
-    observation: args.snapshot.observation,
-    diagnosis: args.snapshot.diagnosis,
-    strategy: args.snapshot.strategy,
-    action: args.snapshot.action,
-    confidence: args.snapshot.confidence,
-    pageOutput: args.pageOutput,
-  };
-
-  const historyRaw = Array.isArray(profile.mMktHistory)
-    ? (profile.mMktHistory as Record<string, unknown>[])
-    : [];
-  const mMktHistory = previousBlob
-    ? [previousBlob, ...historyRaw].slice(0, 5)
-    : historyRaw.slice(0, 5);
-
-  const nextProfile = withFounderMarketContext(
-    {
-      ...profile,
-      marketOpportunityScore: args.pageOutput.scores.entryProbability,
-      marketJudgement: args.pageOutput.finalDecision.judgement,
-      marketBiggestRisk: args.pageOutput.health.biggestRisk,
-      mMkt,
-      mMktPrevious: previousBlob ?? profile.mMktPrevious ?? null,
-      mMktHistory,
-    },
-    {
-      opportunityId: args.pageOutput.opportunityCard?.opportunityId,
-      city: args.pageOutput.city,
-      district: args.pageOutput.district,
-      category: args.pageOutput.category,
-      entryProbability: args.pageOutput.scores.entryProbability,
-      finalJudgement: args.pageOutput.finalDecision.judgement,
-      handoffPayload: args.pageOutput.opportunityCard?.handoffPayload,
-    },
+  await updateProjectProfile(
     args.projectId,
-  );
+    (profile) => {
+      const previousBlob = (profile.mMkt || null) as Record<string, unknown> | null;
+      previous = snapshotFromMMktBlob(previousBlob, "profile");
 
-  await prisma.project.update({
-    where: { id: args.projectId },
-    data: {
-      profile: JSON.stringify(nextProfile),
+      const mMkt = {
+        decisionId: args.decisionId,
+        updatedAt: new Date().toISOString(),
+        oneLiner: args.snapshot.oneLiner,
+        problem: args.snapshot.problem,
+        observation: args.snapshot.observation,
+        diagnosis: args.snapshot.diagnosis,
+        strategy: args.snapshot.strategy,
+        action: args.snapshot.action,
+        confidence: args.snapshot.confidence,
+        pageOutput: args.pageOutput,
+      };
+
+      const historyRaw = Array.isArray(profile.mMktHistory)
+        ? (profile.mMktHistory as Record<string, unknown>[])
+        : [];
+      const mMktHistory = previousBlob
+        ? [previousBlob, ...historyRaw].slice(0, 5)
+        : historyRaw.slice(0, 5);
+
+      return withFounderMarketContext(
+        {
+          ...profile,
+          marketOpportunityScore: args.pageOutput.scores.entryProbability,
+          marketJudgement: args.pageOutput.finalDecision.judgement,
+          marketBiggestRisk: args.pageOutput.health.biggestRisk,
+          mMkt,
+          mMktPrevious: previousBlob ?? profile.mMktPrevious ?? null,
+          mMktHistory,
+        },
+        {
+          opportunityId: args.pageOutput.opportunityCard?.opportunityId,
+          city: args.pageOutput.city,
+          district: args.pageOutput.district,
+          category: args.pageOutput.category,
+          entryProbability: args.pageOutput.scores.entryProbability,
+          finalJudgement: args.pageOutput.finalDecision.judgement,
+          handoffPayload: args.pageOutput.opportunityCard?.handoffPayload,
+        },
+        args.projectId,
+      );
     },
-  });
+    { ownerId: args.ownerId, prisma },
+  );
 
   return previous;
 }
@@ -708,6 +700,133 @@ export async function previewMMktSnapshot(input: {
   };
   assetContextBlock?: string;
 }): Promise<MarketSnapshot> {
+  // 优先真实 M-MKT Python 引擎
+  try {
+    const { checkMMktHealth, mmktAnalyze, inferMMktCategoryCity } = await import(
+      "./m-mkt-client"
+    );
+    const healthy = await checkMMktHealth();
+    if (healthy) {
+      const { category, city } = inferMMktCategoryCity({
+        message: input.message,
+        industry: input.companyContext.basicInfo.industry,
+        city: input.companyContext.basicInfo.city,
+      });
+      const data = await mmktAnalyze(
+        {
+          category,
+          city,
+          message: input.message,
+          experience: input.companyContext.business?.scale || "首次创业",
+          capital_level: "medium",
+          mode: "default",
+        },
+        { timeoutMs: 15000 },
+      );
+      const score = Number(data.opportunity_score ?? 0);
+      const level = String(data.opportunity_level || "待评估");
+      const score01 = Math.max(0.35, Math.min(0.95, score / 5));
+      const dims = data.dimension_scores || {};
+      const dimLines = Object.entries(dims)
+        .slice(0, 6)
+        .map(([k, v]) => `${k}:${Number(v).toFixed(1)}`);
+      const warnings = [
+        ...(data.warnings || []),
+        ...(data.risk_warnings || []),
+      ].filter(Boolean);
+      const suggestions = [
+        ...(data.strategic_recommendations || []),
+        ...(data.positioning_suggestions || []),
+      ].filter(Boolean);
+      const judgement = `【真实引擎】${category}@${city} 机会评分 ${score.toFixed(2)}（${level}）`;
+      const strategy =
+        suggestions[0] ||
+        data.rule_notes?.[0] ||
+        "先验证区域需求与供给缺口，再决定进入强度";
+      const action =
+        suggestions[1] ||
+        warnings[0] ||
+        "完成小样本验证后再放大开店节奏";
+      const pageOutput = {
+        topic: input.message,
+        city,
+        category,
+        scores: {
+          demand: Math.round((Number(Object.values(dims)[0] ?? score) / 5) * 100),
+          competition: Math.round((Number(Object.values(dims)[1] ?? 2.5) / 5) * 100),
+          gap: Math.round(score01 * 80),
+          timing: Math.round(score01 * 90),
+          economics: Math.round(score01 * 85),
+          founderFit: Math.round(score01 * 100),
+          entryProbability: Math.round(score01 * 100),
+        },
+        gaps: (warnings.length ? warnings : ["需补充区域供给与客单验证"]).slice(0, 3).map((w, i) => ({
+          title: `缺口${i + 1}`,
+          summary: String(w),
+        })),
+        health: {
+          biggestRisk: String(warnings[0] || "证据仍需区域验证"),
+          judgement: (score >= 3.5 ? "enter" : score >= 2.5 ? "cautious" : "kill") as
+            | "enter"
+            | "cautious"
+            | "kill",
+          rationale: level,
+        },
+        marketStructure: {
+          trendSummary: dimLines.length ? dimLines.join("；") : `${category} @ ${city}`,
+        },
+        competition: {
+          headPlayers: [],
+          densitySummary: "以引擎评分为准",
+          homogenization: "待验证",
+          biggestPressure: String(warnings[0] || "竞争强度待核验"),
+        },
+        opportunityCard: {
+          opportunityId: `MMKT-${category}-${city}`,
+          city,
+          category,
+          opportunity: level,
+          risk: warnings[0] ? String(warnings[0]) : undefined,
+        },
+        entryStrategies: [
+          {
+            id: "primary",
+            title: level,
+            summary: strategy,
+            fit: (score >= 3.2 ? "primary" : score >= 2.4 ? "secondary" : "reject") as
+              | "primary"
+              | "secondary"
+              | "reject",
+            pros: suggestions.slice(0, 2).map(String),
+            risks: warnings.slice(0, 2).map(String),
+          },
+        ],
+        finalDecision: {
+          judgement,
+          reasoning: [strategy, ...(data.rule_notes || []).slice(0, 2).map(String)],
+          risks: warnings.slice(0, 3).map(String),
+          actions: [action, strategy].filter(Boolean),
+        },
+      } satisfies MarketPageOutput;
+
+      return buildMarketSnapshot({
+        problem: input.message,
+        observation: dimLines.length
+          ? `六维要点：${dimLines.join("；")}`
+          : `品类 ${category} / 城市 ${city}`,
+        diagnosis: warnings[0] ? String(warnings[0]) : "需关注竞争与复制能力",
+        judgement,
+        strategy,
+        action,
+        confidence: score01,
+        structured: { pageOutput, engineRaw: data, provider: "external" },
+        source: "m-mkt",
+      });
+    }
+  } catch (error) {
+    console.warn("[Founder-MMKT] 真实引擎不可用，降级启发式:", (error as Error)?.message);
+  }
+
   const baseContext = {
     owner: {
       id: "founder-layer",
@@ -774,11 +893,11 @@ export async function previewMMktSnapshot(input: {
     problem: generated.problem,
     observation: generated.observation,
     diagnosis: generated.diagnosis,
-    judgement: polished.fields.judgement,
+    judgement: `【启发式】${polished.fields.judgement}`,
     strategy: polished.fields.strategy,
     action: polished.fields.action,
     confidence: generated.confidence,
-    structured: { pageOutput },
+    structured: { pageOutput, provider: "heuristic" },
     source: "m-mkt",
   });
 }

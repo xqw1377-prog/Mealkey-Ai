@@ -1,5 +1,4 @@
 import { streamAgentResponse } from "@/server/services/agent.service";
-import { assertAgentQuota } from "@/server/services/billing.service";
 import { prisma } from "@/lib/prisma";
 import { requireAuth, unauthorizedResponse } from "@/lib/auth-helpers";
 import { rateLimit } from "@/lib/rate-limit";
@@ -20,7 +19,7 @@ function clientSafeError(error: unknown, fallback: string): string {
           ? String((error as { message: unknown }).message)
           : "";
   if (
-    /不能为空|过长|不存在|无权限|请先配置|过于频繁|经营者信息不存在|项目不存在|会议次数已用完|升级套餐|未开通|余额不足|超额/.test(
+    /不能为空|过长|不存在|无权限|请先配置|过于频繁|经营者信息不存在|项目不存在|额度已用完|额度不足|升级套餐|购买额度包|余额不足|超额|经营点不足|经营点已退回/.test(
       message,
     )
   ) {
@@ -102,22 +101,6 @@ export async function POST(request: Request) {
         status: 403,
         headers: { "Content-Type": "application/json" },
       });
-    }
-
-    try {
-      await assertAgentQuota(prisma, authUser.id);
-    } catch (error) {
-      return new Response(
-        JSON.stringify({
-          error: clientSafeError(error, "会议额度不足，请先升级套餐"),
-          code: "QUOTA_EXCEEDED",
-          billingUrl: "/billing",
-        }),
-        {
-          status: 402,
-          headers: { "Content-Type": "application/json" },
-        },
-      );
     }
 
     const stream = new ReadableStream({

@@ -56,6 +56,7 @@ export interface MEdServiceOptions {
   projectId: string;
   userId: string;
   message: string;
+  missionId?: string;
   conversationId?: string;
   assetIds?: string[];
   force?: boolean;
@@ -98,6 +99,7 @@ export async function* streamMEdProduct(
     agentId: "m-ed",
     userId,
     projectId,
+    missionId: options.missionId,
     conversationId: conversation.id,
     input: { message, assetIds, agent: "m-ed" },
   });
@@ -396,73 +398,63 @@ async function syncProjectEquity(
   });
   if (!project) return null;
 
-  let profile: Record<string, unknown> = {};
-  if (project.profile) {
-    try {
-      const parsed = JSON.parse(project.profile) as unknown;
-      if (parsed && typeof parsed === "object") {
-        profile = parsed as Record<string, unknown>;
-      }
-    } catch {
-      profile = {};
-    }
-  }
+  const { updateProjectProfile } = await import("@/server/services/project-profile");
+  let previous: EquitySnapshot | null = null;
 
-  const previousBlob = (profile.mEd || null) as Record<string, unknown> | null;
-  const previous = snapshotFromMEDBlob(previousBlob, "profile");
-
-  const mEd = {
-    decisionId: args.decisionId,
-    updatedAt: new Date().toISOString(),
-    oneLiner: args.snapshot.oneLiner,
-    stage: args.snapshot.stage,
-    problem: args.snapshot.problem,
-    observation: args.snapshot.observation,
-    diagnosis: args.snapshot.diagnosis,
-    strategy: args.snapshot.strategy,
-    action: args.snapshot.action,
-    confidence: args.snapshot.confidence,
-    pageOutput: args.pageOutput,
-  };
-
-  const historyRaw = Array.isArray(profile.mEdHistory)
-    ? (profile.mEdHistory as Record<string, unknown>[])
-    : [];
-  const mEdHistory = previousBlob
-    ? [previousBlob, ...historyRaw].slice(0, 5)
-    : historyRaw.slice(0, 5);
-
-  const nextProfile = withFounderEquityContext(
-    {
-      ...profile,
-      equityStage: args.pageOutput.stage,
-      equityHealthScore: args.pageOutput.health.score,
-      equityBiggestRisk: args.pageOutput.health.biggestRisk,
-      mEd,
-      mEdPrevious: previousBlob ?? profile.mEdPrevious ?? null,
-      mEdHistory,
-    },
-    {
-      decisionId: args.decisionId,
-      stage: args.pageOutput.stage,
-      healthScore: args.pageOutput.health.score,
-      biggestRisk: args.pageOutput.health.biggestRisk,
-      finalJudgement: args.pageOutput.finalDecision.judgement,
-      handoffPayload: {
-        stage: args.pageOutput.stage,
-        healthScore: args.pageOutput.health.score,
-        biggestRisk: args.pageOutput.health.biggestRisk,
-      },
-    },
+  await updateProjectProfile(
     args.projectId,
-  );
+    (profile) => {
+      const previousBlob = (profile.mEd || null) as Record<string, unknown> | null;
+      previous = snapshotFromMEDBlob(previousBlob, "profile");
 
-  await prisma.project.update({
-    where: { id: args.projectId },
-    data: {
-      profile: JSON.stringify(nextProfile),
+      const mEd = {
+        decisionId: args.decisionId,
+        updatedAt: new Date().toISOString(),
+        oneLiner: args.snapshot.oneLiner,
+        stage: args.snapshot.stage,
+        problem: args.snapshot.problem,
+        observation: args.snapshot.observation,
+        diagnosis: args.snapshot.diagnosis,
+        strategy: args.snapshot.strategy,
+        action: args.snapshot.action,
+        confidence: args.snapshot.confidence,
+        pageOutput: args.pageOutput,
+      };
+
+      const historyRaw = Array.isArray(profile.mEdHistory)
+        ? (profile.mEdHistory as Record<string, unknown>[])
+        : [];
+      const mEdHistory = previousBlob
+        ? [previousBlob, ...historyRaw].slice(0, 5)
+        : historyRaw.slice(0, 5);
+
+      return withFounderEquityContext(
+        {
+          ...profile,
+          equityStage: args.pageOutput.stage,
+          equityHealthScore: args.pageOutput.health.score,
+          equityBiggestRisk: args.pageOutput.health.biggestRisk,
+          mEd,
+          mEdPrevious: previousBlob ?? profile.mEdPrevious ?? null,
+          mEdHistory,
+        },
+        {
+          decisionId: args.decisionId,
+          stage: args.pageOutput.stage,
+          healthScore: args.pageOutput.health.score,
+          biggestRisk: args.pageOutput.health.biggestRisk,
+          finalJudgement: args.pageOutput.finalDecision.judgement,
+          handoffPayload: {
+            stage: args.pageOutput.stage,
+            healthScore: args.pageOutput.health.score,
+            biggestRisk: args.pageOutput.health.biggestRisk,
+          },
+        },
+        args.projectId,
+      );
     },
-  });
+    { ownerId: args.ownerId, prisma },
+  );
 
   return previous;
 }
@@ -620,6 +612,126 @@ export async function previewMEdSnapshot(input: {
   };
   assetContextBlock?: string;
 }): Promise<EquitySnapshot> {
+  // 优先真实 M-ED FastAPI 引擎
+  try {
+    const {
+      checkMEdHealth,
+      medEquity,
+      inferMEdAction,
+      buildDefaultEquityPayload,
+    } = await import("./m-ed-client");
+    const healthy = await checkMEdHealth();
+    if (healthy) {
+      const action = inferMEdAction(input.message);
+      const payload =
+        action === "design_equity"
+          ? buildDefaultEquityPayload({
+              projectName: input.companyContext.basicInfo.name,
+              stage: input.companyContext.basicInfo.stage,
+              message: input.message,
+            })
+          : {
+              ...buildDefaultEquityPayload({
+                projectName: input.companyContext.basicInfo.name,
+                stage: input.companyContext.basicInfo.stage,
+                message: input.message,
+              }),
+              context_note: input.message,
+              user_question: input.message,
+            };
+      const response = await medEquity(
+        {
+          user_id: input.companyContext.companyId || "founder",
+          action,
+          payload,
+        },
+        { timeoutMs: 20000 },
+      );
+      const data = (response.data || {}) as Record<string, unknown>;
+      const summary =
+        typeof data.summary === "string"
+          ? data.summary
+          : typeof data.recommendation === "string"
+            ? data.recommendation
+            : typeof data.message === "string"
+              ? data.message
+              : JSON.stringify(data).slice(0, 180);
+      const risksRaw = data.risks || data.warnings || data.concerns;
+      const risks = Array.isArray(risksRaw)
+        ? risksRaw.map((r) => String(r)).slice(0, 4)
+        : ["控制权与稀释边界需书面确认"];
+      const actionsRaw = data.actions || data.next_steps || data.suggestions;
+      const actions = Array.isArray(actionsRaw)
+        ? actionsRaw.map((a) => String(a)).slice(0, 4)
+        : ["锁定创始人控制权底线", "预留期权池", "明确 Vesting"];
+      const judgement = `【真实引擎】${summary}`.slice(0, 160);
+      const strategy = actions[0] || "先锁控制权与融资节奏，再谈扩张投入";
+      const actionText = actions[1] || risks[0] || "完成股权协议关键条款确认";
+      const allocations = Array.isArray(data.allocations)
+        ? (data.allocations as Array<Record<string, unknown>>)
+        : Array.isArray((data.scheme as Record<string, unknown> | undefined)?.allocations)
+          ? ((data.scheme as Record<string, unknown>).allocations as Array<Record<string, unknown>>)
+          : [];
+      const founders =
+        allocations.length > 0
+          ? allocations.slice(0, 4).map((item, index) => ({
+              name: String(item.member || item.name || `成员${index + 1}`),
+              role: String(item.role || "股东"),
+              equity: Number(item.equity_percent ?? item.equity ?? 0),
+            }))
+          : [
+              { name: "创始人", role: "创始人", equity: 60 },
+              { name: "核心合伙人", role: "联合创始人", equity: 25 },
+            ];
+      const pageOutput: EquityPageOutput = {
+        topic: input.message,
+        stage: input.companyContext.basicInfo.stage,
+        health: {
+          score: 72,
+          control: 70,
+          fundingSafety: 65,
+          incentiveRoom: 60,
+          biggestRisk: risks[0] || "稀释与控制权冲突",
+        },
+        profile: {
+          founders,
+          capTable: founders.map((f) => ({ label: f.name, equity: f.equity })),
+          optionPool: 10,
+        },
+        scenarios: [
+          {
+            id: "baseline",
+            title: "当前建议方案",
+            summary: judgement,
+            highlights: actions.slice(0, 3),
+            risks: risks.slice(0, 3),
+            recommendation: "primary",
+          },
+        ],
+        finalDecision: {
+          judgement,
+          reasoning: [strategy, summary].filter(Boolean),
+          risks,
+          actions,
+        },
+      };
+
+      return buildEquitySnapshot({
+        problem: input.message,
+        observation: `M-ED action=${action}`,
+        diagnosis: risks[0] || "股权结构需与融资节奏对齐",
+        judgement,
+        strategy,
+        action: actionText,
+        confidence: 0.78,
+        structured: { pageOutput, engineRaw: data, provider: "external" },
+        source: "m-ed",
+      });
+    }
+  } catch (error) {
+    console.warn("[Founder-MED] 真实引擎不可用，降级启发式:", (error as Error)?.message);
+  }
+
   const baseContext = {
     owner: {
       id: "founder-layer",
@@ -686,11 +798,11 @@ export async function previewMEdSnapshot(input: {
     problem: generated.problem,
     observation: generated.observation,
     diagnosis: generated.diagnosis,
-    judgement: polished.fields.judgement,
+    judgement: `【启发式】${polished.fields.judgement}`,
     strategy: polished.fields.strategy,
     action: polished.fields.action,
     confidence: generated.confidence,
-    structured: { pageOutput },
+    structured: { pageOutput, provider: "heuristic" },
     source: "m-ed",
   });
 }

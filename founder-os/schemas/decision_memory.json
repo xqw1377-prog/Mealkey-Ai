@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Decision Memory",
+  "description": "企业 Decision Intelligence Database 单元",
+  "type": "object",
+  "required": ["memoryId", "decision", "rationale", "objections", "resolutionSnapshot"],
+  "properties": {
+    "memoryId": { "type": "string" },
+    "caseId": { "type": "string" },
+    "briefId": { "type": "string" },
+    "decision": {
+      "type": "string",
+      "description": "当时选择什么"
+    },
+    "rationale": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "依据"
+    },
+    "objections": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "反对意见 / 谁反对"
+    },
+    "resolutionSnapshot": { "type": "object" },
+    "founderOverride": { "type": "object" },
+    "outcome": {
+      "type": "object",
+      "properties": {
+        "whatHappened": { "type": "string" },
+        "deviation": { "type": "string" },
+        "whoWasRight": {
+          "type": "string",
+          "enum": ["founder", "council", "mixed", "unknown"]
+        },
+        "lesson": { "type": "string" }
+      }
+    },
+    "createdAt": { "type": "string" },
+    "closedAt": { "type": "string" }
+  }
+}

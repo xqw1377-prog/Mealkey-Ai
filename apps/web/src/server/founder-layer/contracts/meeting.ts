@@ -2,6 +2,8 @@ import type {
   FounderDecision,
   FounderDecisionStance,
 } from "./decision";
+import type { ConflictMatrix } from "./debate";
+import type { DebateSession } from "./debate-session";
 import type { FounderAgentName, FounderMission } from "./mission";
 
 export interface FounderMeetingInput {
@@ -13,6 +15,8 @@ export interface MeetingRoundItem {
   agent: FounderAgentName;
   summary: string;
   stance?: FounderDecisionStance;
+  challengeTo?: string;
+  challengeEvidenceId?: string;
 }
 
 export interface MeetingRound {
@@ -30,6 +34,7 @@ export interface MeetingConflict {
   sideA: string;
   sideB: string;
   severity: "low" | "medium" | "high";
+  drivingEvidenceIds?: string[];
 }
 
 export interface FounderMeeting {
@@ -39,6 +44,10 @@ export interface FounderMeeting {
   experts: FounderAgentName[];
   rounds: MeetingRound[];
   conflicts: MeetingConflict[];
+  /** Debate Engine：冲突矩阵 */
+  conflictMatrix?: ConflictMatrix;
+  /** Debate Engine V1：完整辩论会话 */
+  debateSession?: DebateSession;
   recommendation?: string;
   createdAt: string;
 }

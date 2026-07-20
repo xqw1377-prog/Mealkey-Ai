@@ -99,6 +99,8 @@ export type EquitySnapshot = {
   action: string;
   confidence: number;
   pageOutput: EquityPageOutput;
+  /** 透传引擎元数据（含 provider: external | heuristic） */
+  structured?: Record<string, unknown> | null;
   updatedAt?: string;
   source?: "m-ed" | "profile" | "decision";
 };
@@ -135,6 +137,7 @@ export function buildEquitySnapshot(input: {
     action: input.action || "",
     confidence: clamp01(input.confidence ?? 0.72),
     pageOutput,
+    structured: input.structured || null,
     updatedAt: input.updatedAt || new Date().toISOString(),
     source: input.source || "m-ed",
   };

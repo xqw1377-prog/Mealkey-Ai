@@ -15,11 +15,101 @@ import { lifecycleLabel } from "@/lib/meeting";
 import type { DecisionOption, DeliberationRound } from "@/lib/meeting-deliberation";
 import type { GrowthPlan } from "@/lib/onboarding-interview";
 
+type ValidationTaskPreview = {
+  id: string;
+  title: string;
+  objective: string;
+  owner: string;
+  horizonDays: number;
+  metrics: Array<{ id: string; label: string; target?: string | number }>;
+  status?: string;
+};
+
+type DecisionContractPreview = {
+  decisionId: string;
+  intent: string;
+  intentLabel: string;
+  decision: string;
+  status: string;
+  statusLabel: string;
+  confidence: number;
+  gateReason: string;
+  tensions: Array<{
+    topic: string;
+    supporters: string[];
+    opponents: string[];
+    criticalEvidence: string[];
+  }>;
+  committeeViews: Array<{
+    committee: string;
+    committeeLabel: string;
+    position: string;
+    reason: string;
+  }>;
+  validationPlan: {
+    goal: string;
+    hypothesis: string;
+    metrics: string[];
+    period: string;
+    successCriteria: string;
+    killCriteria?: string;
+  };
+  claimRefs: string[];
+  memo?: {
+    title: string;
+    decision: string;
+    whyNow: string;
+    tradeoffs: string[];
+    conditions: string[];
+    validation: string;
+    killCriteria: string;
+    stopLine: string;
+    evidenceIds: string[];
+  };
+};
+
+type DebateSessionPreview = {
+  conflicts: Array<{
+    topic: string;
+    severity: string;
+    summary: string;
+    committees: string[];
+  }>;
+  challenges: Array<{
+    challengeType: string;
+    challengeTypeLabel: string;
+    fromCommitteeLabel: string;
+    targetCommitteeLabel: string;
+    statement: string;
+  }>;
+  proposal?: {
+    decision: string;
+    whyNow: string;
+    tradeoffs: string[];
+    conditions: string[];
+    risksAccepted: string[];
+    validationPlan: string;
+  };
+  scenarioTests: Array<{
+    scenario: string;
+    trigger: string;
+    impact: string;
+    mitigation: string;
+  }>;
+};
+
+const COMMITTEE_DISPLAY: Record<string, string> = {
+  market: "市场",
+  brand: "品牌",
+  business: "商业",
+  capital: "组织",
+};
+
 const INVITE_ADVISORS = [
-  { name: "市场顾问", duty: "分析行业空间" },
-  { name: "品牌顾问", duty: "分析品牌定位" },
-  { name: "商业顾问", duty: "分析扩张模型" },
-  { name: "组织顾问", duty: "分析管理能力" },
+  { name: "市场", duty: "机会与需求" },
+  { name: "品牌", duty: "定位与差异" },
+  { name: "商业", duty: "赚钱与复制" },
+  { name: "组织", duty: "股权与控制权" },
 ];
 
 type MeetingRoomProps = {
@@ -29,10 +119,28 @@ type MeetingRoomProps = {
   lifecycle: MeetingLifecycle;
   preparing?: boolean;
   knownFacts: string[];
+  /** 已验证店访一手事实条数；>0 时会前提示「店访证据已带入」 */
+  storeVisitFactCount?: number;
   unknownGaps: string[];
   experts: ExpertSeat[];
   statements: ExpertStatement[];
   conflict: MeetingConflict | null;
+  conflictMatrix?: {
+    rows: Array<{
+      topic: string;
+      cells: Record<string, string>;
+      summary?: string;
+    }>;
+    primary?: {
+      topic: string;
+      question?: string;
+      sideA: { agents: string[]; claim: string };
+      sideB: { agents: string[]; claim: string };
+      drivingEvidenceIds?: string[];
+    } | null;
+    tradeoffs?: Array<{ keep: string; giveUp: string; why: string }>;
+  } | null;
+  debateSession?: DebateSessionPreview | null;
   consensus: ConsensusDraft | null;
   decisionCard: DecisionCard | null;
   options?: DecisionOption[];
@@ -53,6 +161,8 @@ type MeetingRoomProps = {
   accepting?: boolean;
   acceptedDecisionId?: string | null;
   growthPlan?: GrowthPlan | null;
+  validationTask?: ValidationTaskPreview | null;
+  decisionContract?: DecisionContractPreview | null;
   showTranscript?: boolean;
   onToggleTranscript?: () => void;
   transcriptSlot?: ReactNode;
@@ -65,17 +175,17 @@ const FOCUS_OPTIONS = [
 ];
 
 function roundLabel(round: number): string {
-  if (round === 1) return "Round 1 · 独立判断";
-  if (round === 2) return "Round 2 · 互相挑战";
-  if (round === 3) return "Round 3 · 形成共识";
+  if (round === 1) return "第 1 轮 · 独立判断";
+  if (round === 2) return "第 2 轮 · 压力测试";
+  if (round === 3) return "第 3 轮 · 决策提案";
   return "等待开始";
 }
 
 function advanceLabel(round: DeliberationRound | 0): string {
   if (round === 0) return "开始独立判断";
-  if (round === 1) return "进入互相挑战";
-  if (round === 2) return "请收口共识";
-  return "共识已形成";
+  if (round === 1) return "继续推演";
+  if (round === 2) return "解决冲突";
+  return "提案已形成";
 }
 
 export function MeetingRoom({
@@ -85,10 +195,13 @@ export function MeetingRoom({
   lifecycle,
   preparing,
   knownFacts,
+  storeVisitFactCount = 0,
   unknownGaps,
   experts,
   statements,
   conflict,
+  conflictMatrix,
+  debateSession,
   consensus,
   decisionCard,
   options = [],
@@ -109,12 +222,17 @@ export function MeetingRoom({
   accepting,
   acceptedDecisionId,
   growthPlan,
+  validationTask,
+  decisionContract,
   showTranscript,
   onToggleTranscript,
   transcriptSlot,
 }: MeetingRoomProps) {
   const showPrepare = preparing || lifecycle === "PREPARE" || !topicConfirmed;
   const [inviteReadyCount, setInviteReadyCount] = useState(0);
+  const [expandGaps, setExpandGaps] = useState(false);
+  const [expandChallenges, setExpandChallenges] = useState(false);
+  const [expandConflictRows, setExpandConflictRows] = useState(false);
   const inviteComplete = inviteReadyCount >= INVITE_ADVISORS.length;
 
   useEffect(() => {
@@ -160,35 +278,35 @@ export function MeetingRoom({
       <header className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <Link
-            href={`/projects/${projectId}`}
+            href="/dashboard"
             prefetch={false}
-            className="inline-flex min-h-8 items-center gap-1 rounded-full border border-[rgba(24,24,23,0.08)] bg-white px-3 text-[12px] font-medium text-[#66735E] no-underline"
+            className="inline-flex min-h-11 items-center gap-1 border border-[rgba(24,24,23,0.08)] bg-white px-3 text-[13px] font-medium text-[#66735E] no-underline touch-manipulation"
           >
-            退出会议
+            回今日
           </Link>
           <span className="rounded-full border border-[rgba(24,24,23,0.08)] bg-white px-3 py-1 text-[12px] text-[#6f747b]">
             {lifecycleLabel(lifecycle)} · {roundLabel(deliberationRound)}
           </span>
         </div>
         <div>
-          <p className="text-[12px] tracking-[0.08em] text-[#66735E]">{title}</p>
+          <p className="text-[12px] tracking-[0.08em] text-[#66735E]">会议 · {title}</p>
           <h1 className="mt-1 font-display text-[26px] font-semibold leading-[1.15] tracking-[-0.04em] text-[#202124] md:text-[36px]">
             {topic}
           </h1>
           <p className="mt-2 text-[14px] leading-6 text-[#6f747b]">
-            你不是在和 AI 聊天，你在参加一场咨询会议。
+            先各自表态，再互相质疑，最后你拍板。
           </p>
         </div>
       </header>
 
       {showPrepare ? (
-        <section className="rounded-[22px] border border-[rgba(24,24,23,0.08)] bg-[linear-gradient(180deg,#fbfaf7_0%,#eef1ea_100%)] p-4 md:p-5">
-          <p className="text-[12px] tracking-[0.08em] text-[#66735E]">会前准备</p>
+        <section className="border border-[rgba(24,24,23,0.08)] bg-[linear-gradient(180deg,#fbfaf7_0%,#eef1ea_100%)] p-4 md:p-5">
+          <p className="text-[12px] tracking-[0.08em] text-[#66735E]">准备开会</p>
           <p className="mt-2 text-[18px] leading-[1.4] text-[#202124]">
-            {inviteComplete ? "顾问团队已就位" : "正在邀请顾问"}
+            {inviteComplete ? "顾问已到齐" : "正在召集顾问…"}
           </p>
           <p className="mt-2 text-[14px] leading-7 text-[#5f655d]">
-            这个问题需要一次战略评审会议——团队正在形成。
+            确认议题后开始。
           </p>
 
           <ul className="mt-5 space-y-2.5">
@@ -197,8 +315,8 @@ export function MeetingRoom({
               return (
                 <li
                   key={advisor.name}
-                  className={`flex items-start gap-3 rounded-[14px] px-3 py-2.5 transition ${
-                    ready ? "bg-white/90" : "bg-white/40"
+                  className={`flex items-start gap-3 px-1 py-2.5 transition ${
+                    ready ? "opacity-100" : "opacity-55"
                   }`}
                 >
                   <span
@@ -224,32 +342,40 @@ export function MeetingRoom({
           {inviteComplete ? (
             <>
               <p className="mt-5 text-[14px] leading-7 text-[#5f655d]">
-                我理解你的问题是：「{topic}」是否正确？
+                本次议题：「{topic}」——是否正确？
               </p>
               <div className="mt-4 flex flex-col gap-2 sm:flex-row">
                 <button
                   type="button"
                   onClick={onConfirmTopic}
-                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[14px] bg-[#181817] px-4 text-[14px] font-semibold text-white"
+                  className="inline-flex min-h-12 items-center justify-center gap-2 bg-[#181817] px-4 text-[14px] font-semibold text-white touch-manipulation active:scale-[0.98] sm:min-h-11"
                 >
                   <Check className="h-4 w-4" />
-                  确认议题，开始会议
+                  确认并开始
                 </button>
                 <button
                   type="button"
                   onClick={onEditTopic}
-                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[14px] border border-[rgba(24,24,23,0.08)] bg-white px-4 text-[14px] font-medium text-[#202124]"
+                  className="inline-flex min-h-12 items-center justify-center gap-2 border border-[rgba(24,24,23,0.08)] bg-white px-4 text-[14px] font-medium text-[#202124] touch-manipulation sm:min-h-11"
                 >
                   <Pencil className="h-4 w-4" />
-                  修改议题
+                  改议题
                 </button>
               </div>
+
+              {storeVisitFactCount > 0 ? (
+                <p className="mt-4 rounded-[12px] border border-[rgba(95,107,78,0.25)] bg-[rgba(95,107,78,0.08)] px-3 py-2 text-[13px] leading-5 text-[#3f4a35]">
+                  已带入 {storeVisitFactCount} 条店访事实，会按现场情况谈。
+                </p>
+              ) : null}
 
               <div className="mt-5 grid gap-3 md:grid-cols-2">
                 <div className="rounded-[16px] bg-white/85 px-4 py-3">
                   <p className="text-[12px] text-[#66735E]">已有事实</p>
                   <ul className="mt-2 space-y-1.5">
-                    {(knownFacts.length ? knownFacts : ["项目上下文已加载"]).slice(0, 6).map((fact) => (
+                    {(knownFacts.length ? knownFacts : ["项目上下文已加载"])
+                      .slice(0, storeVisitFactCount > 0 ? 8 : 6)
+                      .map((fact) => (
                       <li key={fact} className="text-[13px] leading-6 text-[#202124]">
                         ✓ {fact}
                       </li>
@@ -259,12 +385,25 @@ export function MeetingRoom({
                 <div className="rounded-[16px] bg-white/85 px-4 py-3">
                   <p className="text-[12px] text-[#B47C5C]">未知 / 请补充</p>
                   <ul className="mt-2 space-y-1.5">
-                    {(unknownGaps.length ? unknownGaps : ["关键限制条件待补充"]).slice(0, 4).map((gap) => (
+                    {(unknownGaps.length ? unknownGaps : ["关键限制条件待补充"])
+                      .slice(0, expandGaps ? undefined : 4)
+                      .map((gap) => (
                       <li key={gap} className="text-[13px] leading-6 text-[#202124]">
                         ? {gap}
                       </li>
                     ))}
                   </ul>
+                  {unknownGaps.length > 4 ? (
+                    <button
+                      type="button"
+                      onClick={() => setExpandGaps((v) => !v)}
+                      className="mt-2 inline-flex min-h-11 items-center text-[13px] font-medium text-[#66735E] touch-manipulation"
+                    >
+                      {expandGaps
+                        ? "收起"
+                        : `还有 ${unknownGaps.length - 4} 条`}
+                    </button>
+                  ) : null}
                   {onSupplementFact ? (
                     <div className="mt-3 flex flex-wrap gap-2">
                       {unknownGaps.slice(0, 2).map((gap) => (
@@ -272,7 +411,7 @@ export function MeetingRoom({
                           key={`fill-${gap}`}
                           type="button"
                           onClick={() => onSupplementFact(gap)}
-                          className="inline-flex min-h-9 items-center gap-1 rounded-full border border-[rgba(24,24,23,0.08)] bg-white px-3 text-[12px] text-[#202124]"
+                          className="inline-flex min-h-11 items-center gap-1 rounded-full border border-[rgba(24,24,23,0.08)] bg-white px-3 text-[13px] text-[#202124] touch-manipulation"
                         >
                           <Plus className="h-3.5 w-3.5" />
                           补充：{gap.length > 12 ? `${gap.slice(0, 12)}…` : gap}
@@ -294,9 +433,9 @@ export function MeetingRoom({
               <p className="text-[12px] tracking-[0.08em] text-[#66735E]">顾问席</p>
               <p className="mt-1 text-[13px] text-[#6f747b]">
                 {deliberating
-                  ? "当前会议状态：正在形成判断…"
+                  ? "正在形成判断…"
                   : deliberationRound === 0
-                    ? "顾问已入席，等待开始诊断"
+                    ? "点下方开始"
                     : roundLabel(deliberationRound)}
               </p>
             </div>
@@ -305,7 +444,7 @@ export function MeetingRoom({
                 type="button"
                 disabled={deliberating}
                 onClick={onAdvanceRound}
-                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-[14px] bg-[#181817] px-4 text-[13px] font-semibold text-white disabled:opacity-60"
+                className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-[14px] bg-[#181817] px-4 text-[14px] font-semibold text-white touch-manipulation disabled:opacity-60 sm:w-auto"
               >
                 {deliberating ? "分析中…" : advanceLabel(deliberationRound)}
               </button>
@@ -333,7 +472,9 @@ export function MeetingRoom({
                     </span>
                   </div>
                   {analyzing && !latest ? (
-                    <p className="mt-2 text-[13px] leading-6 text-[#9a968e]">正在从{expert.duty}视角审查议题…</p>
+                    <p className="mt-2 text-[13px] leading-6 text-[#9a968e]">
+                      从{expert.duty}看…
+                    </p>
                   ) : null}
                 </div>
               );
@@ -341,10 +482,10 @@ export function MeetingRoom({
           </div>
 
           <div className="mt-5 space-y-3">
-            <p className="text-[12px] tracking-[0.08em] text-[#66735E]">专家观点</p>
+            <p className="text-[12px] tracking-[0.08em] text-[#66735E]">发言</p>
             {visibleStatements.length === 0 ? (
               <p className="rounded-[16px] bg-[#F8F7F3] px-4 py-3 text-[14px] text-[#6f747b]">
-                还不会立刻给答案。点击「开始独立判断」，观看顾问逐一发言。
+                点「开始独立判断」后，顾问会依次表态。
               </p>
             ) : (
               visibleStatements.map((item) => (
@@ -352,13 +493,73 @@ export function MeetingRoom({
                   key={item.id}
                   className="rounded-[16px] border border-[rgba(24,24,23,0.08)] bg-white px-4 py-4 shadow-[0_8px_20px_rgba(24,24,23,0.03)]"
                 >
-                  <p className="text-[14px] font-semibold text-[#202124]">{item.displayName}</p>
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-[14px] font-semibold text-[#202124]">
+                        {item.displayName}
+                      </p>
+                      {item.claim.includes("【启发式】") ? (
+                        <span className="border border-[rgba(180,124,92,0.35)] bg-[rgba(180,124,92,0.1)] px-1.5 py-0.5 text-[11px] font-medium text-[#B47C5C]">
+                          启发式
+                        </span>
+                      ) : item.claim.includes("【真实引擎】") ? (
+                        <span className="border border-[rgba(102,115,94,0.35)] bg-[rgba(102,115,94,0.1)] px-1.5 py-0.5 text-[11px] font-medium text-[#66735E]">
+                          真实引擎
+                        </span>
+                      ) : null}
+                    </div>
+                    {typeof item.confidence === "number" ? (
+                      <p className="text-[12px] text-[#66735E]">
+                        置信度 {Math.round(item.confidence * 100)}%
+                      </p>
+                    ) : null}
+                  </div>
                   <p className="mt-3 text-[12px] tracking-[0.06em] text-[#6f747b]">
-                    {item.round === 1 ? "我的初步判断" : item.round === 2 ? "我要挑战的一点" : "我支持的共识"}
+                    {item.round === 1
+                      ? "判断"
+                      : item.round === 2
+                        ? "质疑"
+                        : "提案立场"}
                   </p>
                   <p className="mt-1 text-[16px] leading-[1.65] text-[#202124]">{item.claim}</p>
-                  {item.reasons[0] ? (
+                  {item.round === 2 && item.challengeTo ? (
+                    <p className="mt-2 text-[12px] text-[#B47C5C]">
+                      挑战对象：{item.challengeTo.replace("founder.", "")}
+                      {item.challengeEvidenceId ? ` · 证据 ${item.challengeEvidenceId}` : ""}
+                    </p>
+                  ) : null}
+                  {item.evidence && item.evidence.length > 0 ? (
+                    <div className="mt-4 rounded-[14px] bg-[#F8F7F3] px-3 py-3">
+                      <p className="text-[12px] tracking-[0.06em] text-[#66735E]">为什么这样判断？</p>
+                      <p className="mt-1 text-[13px] font-medium text-[#202124]">会议依据</p>
+                      <ul className="mt-2 space-y-1.5">
+                        {item.evidence.slice(0, 4).map((ev) => (
+                          <li key={ev.evidenceId} className="text-[13px] leading-6 text-[#5f655d]">
+                            ✓ {ev.statement}
+                            <span className="ml-1 text-[11px] text-[#9a968e]">
+                              ({ev.evidenceId}
+                              {ev.sourceLabel ? ` · ${ev.sourceLabel}` : ""})
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                      {item.evidence.length > 4 ? (
+                        <p className="mt-2 text-[12px] font-medium text-[#66735E]">
+                          还有 {item.evidence.length - 4} 条依据
+                        </p>
+                      ) : null}
+                      {item.evidenceSufficient === false ? (
+                        <p className="mt-2 text-[12px] leading-5 text-[#B47C5C]">
+                          仍需验证：
+                          {(item.evidenceGap && item.evidenceGap[0]) || "关键假设尚缺外部事实支撑"}
+                        </p>
+                      ) : null}
+                    </div>
+                  ) : item.reasons[0] ? (
                     <p className="mt-3 text-[14px] leading-7 text-[#5f655d]">{item.reasons[0]}</p>
+                  ) : null}
+                  {item.validation ? (
+                    <p className="mt-3 text-[13px] leading-6 text-[#66735E]">验证：{item.validation}</p>
                   ) : null}
                 </article>
               ))
@@ -370,16 +571,151 @@ export function MeetingRoom({
       {showDebate && conflict ? (
         <section className="rounded-[22px] border border-[rgba(180,124,92,0.22)] bg-[linear-gradient(180deg,#fffdfb_0%,#fbf6f1_100%)] p-4 md:p-5">
           <p className="text-[12px] tracking-[0.08em] text-[#B47C5C]">当前最大争议</p>
-          <div className="mt-4 grid grid-cols-[1fr_auto_1fr] items-center gap-3 text-center">
+          <div className="mt-4 grid grid-cols-1 items-center gap-2 text-center sm:grid-cols-[1fr_auto_1fr] sm:gap-3">
             <p className="text-[16px] font-semibold leading-snug text-[#202124] md:text-[18px]">
               {conflict.positionA}
             </p>
-            <p className="text-[13px] font-medium tracking-[0.12em] text-[#B47C5C]">VS</p>
+            <p className="text-[12px] font-medium tracking-[0.12em] text-[#B47C5C] sm:text-[13px]">
+              VS
+            </p>
             <p className="text-[16px] font-semibold leading-snug text-[#202124] md:text-[18px]">
               {conflict.positionB}
             </p>
           </div>
           <p className="mt-4 text-center text-[13px] text-[#6f747b]">{conflict.conflictLabel}</p>
+          {conflictMatrix?.primary?.question ? (
+            <p className="mt-3 text-center text-[13px] leading-6 text-[#5f655d]">
+              {conflictMatrix.primary.question}
+            </p>
+          ) : null}
+
+          {conflictMatrix && conflictMatrix.rows.length > 0 ? (
+            <div className="mt-5 border border-[rgba(24,24,23,0.08)] bg-white">
+              <p className="border-b border-[rgba(24,24,23,0.06)] px-3 py-2 text-[12px] tracking-[0.06em] text-[#66735E]">
+                冲突矩阵
+              </p>
+              {/* 手机：卡片列表；桌面：表格 */}
+              <ul className="divide-y divide-[rgba(24,24,23,0.06)] md:hidden">
+                {conflictMatrix.rows
+                  .slice(0, expandConflictRows ? undefined : 5)
+                  .map((row) => (
+                  <li key={row.topic} className="px-3 py-3">
+                    <p className="text-[13px] font-medium text-[#202124]">{row.topic}</p>
+                    <div className="mt-2 grid grid-cols-2 gap-1.5 text-[12px] text-[#5f655d]">
+                      {(
+                        [
+                          ["M-MKT", "市场"],
+                          ["M-PNT", "品牌"],
+                          ["M-BIZ", "商业"],
+                          ["M-ED", "组织"],
+                        ] as const
+                      ).map(([agent, label]) => (
+                        <span key={agent}>
+                          {label}{" "}
+                          <span className="font-semibold text-[#202124]">
+                            {row.cells[agent] || "0"}
+                          </span>
+                        </span>
+                      ))}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+              <div className="hidden overflow-x-auto md:block">
+                <table className="min-w-full text-left text-[12px]">
+                  <thead>
+                    <tr className="border-b border-[rgba(24,24,23,0.06)] text-[#6f747b]">
+                      <th className="px-3 py-2 font-medium">议题</th>
+                      <th className="px-2 py-2 font-medium">市场</th>
+                      <th className="px-2 py-2 font-medium">品牌</th>
+                      <th className="px-2 py-2 font-medium">商业</th>
+                      <th className="px-2 py-2 font-medium">组织</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {conflictMatrix.rows
+                      .slice(0, expandConflictRows ? undefined : 5)
+                      .map((row) => (
+                      <tr
+                        key={row.topic}
+                        className="border-b border-[rgba(24,24,23,0.04)] last:border-0"
+                      >
+                        <td className="px-3 py-2 text-[#202124]">{row.topic}</td>
+                        {(["M-MKT", "M-PNT", "M-BIZ", "M-ED"] as const).map((agent) => (
+                          <td key={agent} className="px-2 py-2 font-semibold text-[#202124]">
+                            {row.cells[agent] || "0"}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {conflictMatrix.rows.length > 5 ? (
+                <button
+                  type="button"
+                  onClick={() => setExpandConflictRows((v) => !v)}
+                  className="flex min-h-11 w-full items-center justify-center border-t border-[rgba(24,24,23,0.06)] text-[13px] font-medium text-[#66735E] touch-manipulation"
+                >
+                  {expandConflictRows
+                    ? "收起矩阵"
+                    : `还有 ${conflictMatrix.rows.length - 5} 条议题`}
+                </button>
+              ) : null}
+              {conflictMatrix.primary?.drivingEvidenceIds &&
+              conflictMatrix.primary.drivingEvidenceIds.length > 0 ? (
+                <p className="border-t border-[rgba(24,24,23,0.06)] px-3 py-2 text-[11px] text-[#9a968e]">
+                  驱动证据：{conflictMatrix.primary.drivingEvidenceIds.join(" · ")}
+                </p>
+              ) : null}
+            </div>
+          ) : null}
+
+          {debateSession && debateSession.challenges.length > 0 && deliberationRound >= 2 ? (
+            <div className="mt-5 space-y-2">
+              <p className="text-[12px] tracking-[0.06em] text-[#B47C5C]">专业质疑</p>
+              {debateSession.challenges
+                .slice(0, expandChallenges ? undefined : 4)
+                .map((ch, idx) => (
+                <div
+                  key={`${ch.fromCommitteeLabel}-${idx}`}
+                  className="rounded-[14px] border border-[rgba(180,124,92,0.18)] bg-white px-3 py-3"
+                >
+                  <p className="text-[12px] text-[#B47C5C]">
+                    {ch.challengeTypeLabel} · {ch.fromCommitteeLabel} → {ch.targetCommitteeLabel}
+                  </p>
+                  <p className="mt-1 text-[14px] leading-6 text-[#202124]">{ch.statement}</p>
+                </div>
+              ))}
+              {debateSession.challenges.length > 4 ? (
+                <button
+                  type="button"
+                  onClick={() => setExpandChallenges((v) => !v)}
+                  className="inline-flex min-h-11 items-center text-[13px] font-medium text-[#B47C5C] touch-manipulation"
+                >
+                  {expandChallenges
+                    ? "收起质疑"
+                    : `还有 ${debateSession.challenges.length - 4} 条质疑`}
+                </button>
+              ) : null}
+            </div>
+          ) : null}
+
+          {debateSession && debateSession.conflicts.length > 0 ? (
+            <div className="mt-4 rounded-[14px] bg-white/80 px-3 py-3">
+              <p className="text-[12px] tracking-[0.06em] text-[#66735E]">当前冲突</p>
+              {debateSession.conflicts.slice(0, 2).map((c) => (
+                <p key={c.topic} className="mt-2 text-[14px] leading-6 text-[#202124]">
+                  {c.topic}
+                  <span className="text-[#6f747b]">
+                    {" "}
+                    ·{" "}
+                    {c.committees.map((id) => COMMITTEE_DISPLAY[id] || id).join(" / ")}
+                  </span>
+                </p>
+              ))}
+            </div>
+          ) : null}
 
           <div className="mt-5">
             <p className="text-[13px] text-[#5f655d]">你更关注：</p>
@@ -389,7 +725,7 @@ export function MeetingRoom({
                   key={opt.id}
                   type="button"
                   onClick={() => onChooseFocus(opt.id)}
-                  className={`min-h-11 rounded-[14px] border px-3 text-[13px] font-medium transition ${
+                  className={`min-h-12 border px-3 text-[14px] font-medium transition touch-manipulation active:scale-[0.99] sm:min-h-11 sm:text-[13px] ${
                     focusChoice === opt.id
                       ? "border-[#181817] bg-[#181817] text-white"
                       : "border-[rgba(24,24,23,0.08)] bg-white text-[#202124]"
@@ -413,7 +749,7 @@ export function MeetingRoom({
                 key={opt.id}
                 type="button"
                 onClick={() => onSelectOption?.(opt.id)}
-                className={`w-full rounded-[16px] border px-4 py-3 text-left transition ${
+                className={`min-h-14 w-full border px-4 py-3.5 text-left transition touch-manipulation active:scale-[0.99] ${
                   selectedOptionId === opt.id
                     ? "border-[#181817] bg-[#181817] text-white"
                     : "border-[rgba(24,24,23,0.08)] bg-[#FBFAF7] text-[#202124]"
@@ -440,14 +776,157 @@ export function MeetingRoom({
         </section>
       ) : null}
 
+      {showDecide && debateSession?.proposal ? (
+        <section className="rounded-[22px] border border-[rgba(24,24,23,0.08)] bg-[linear-gradient(180deg,#fbfaf7_0%,#f3f1eb_100%)] p-4 md:p-5">
+          <p className="text-[12px] tracking-[0.08em] text-[#66735E]">决策提案 · 解决冲突</p>
+          <p className="mt-3 text-[20px] leading-[1.4] tracking-[-0.02em] text-[#202124] md:text-[24px]">
+            {debateSession.proposal.decision}
+          </p>
+          <p className="mt-3 text-[14px] leading-7 text-[#5f655d]">{debateSession.proposal.whyNow}</p>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <div className="rounded-[14px] bg-white px-3 py-3">
+              <p className="text-[12px] text-[#66735E]">取舍</p>
+              <ul className="mt-2 space-y-1 text-[13px] leading-6 text-[#202124]">
+                {debateSession.proposal.tradeoffs.slice(0, 3).map((t) => (
+                  <li key={t}>· {t}</li>
+                ))}
+              </ul>
+            </div>
+            <div className="rounded-[14px] bg-white px-3 py-3">
+              <p className="text-[12px] text-[#66735E]">条件 / 接受风险</p>
+              <ul className="mt-2 space-y-1 text-[13px] leading-6 text-[#202124]">
+                {debateSession.proposal.conditions.slice(0, 2).map((c) => (
+                  <li key={c}>· {c}</li>
+                ))}
+                {debateSession.proposal.risksAccepted.slice(0, 2).map((r) => (
+                  <li key={r} className="text-[#B47C5C]">
+                    · 接受：{r}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+          <p className="mt-3 text-[13px] leading-6 text-[#66735E]">
+            验证计划：{debateSession.proposal.validationPlan}
+          </p>
+        </section>
+      ) : null}
+
+      {showDecide && debateSession && debateSession.scenarioTests.length > 0 ? (
+        <section className="rounded-[22px] border border-[rgba(180,124,92,0.2)] bg-white p-4 md:p-5">
+          <p className="text-[12px] tracking-[0.08em] text-[#B47C5C]">如果错了呢</p>
+          <p className="mt-2 text-[14px] text-[#5f655d]">最坏情况与最小损失。</p>
+          <div className="mt-4 space-y-3">
+            {debateSession.scenarioTests.slice(0, 3).map((sc) => (
+              <div
+                key={sc.scenario}
+                className="rounded-[14px] border border-[rgba(24,24,23,0.06)] bg-[#FBFAF7] px-3 py-3"
+              >
+                <p className="text-[14px] font-semibold text-[#202124]">{sc.scenario}</p>
+                <p className="mt-2 text-[13px] leading-6 text-[#5f655d]">触发：{sc.trigger}</p>
+                <p className="mt-1 text-[13px] leading-6 text-[#5f655d]">后果：{sc.impact}</p>
+                <p className="mt-1 text-[13px] leading-6 text-[#66735E]">最小损失：{sc.mitigation}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
       {showDecide && consensus ? (
         <section className="rounded-[22px] bg-[#202124] p-4 text-white md:p-5">
-          <p className="text-[12px] tracking-[0.08em] text-white/65">当前共识</p>
-          <p className="mt-2 text-[20px] leading-[1.4] tracking-[-0.02em] md:text-[24px]">
-            {consensus.summary}
+          <p className="text-[12px] tracking-[0.08em] text-white/65">
+            {decisionContract ? "待你确认" : "当前共识"}
           </p>
-          {consensus.validationPlan ? (
+          {decisionContract ? (
+            <div className="mt-2 space-y-2">
+              <p className="text-[13px] text-white/65">
+                {decisionContract.intentLabel} · {decisionContract.statusLabel} · 置信度{" "}
+                {Math.round(decisionContract.confidence * 100)}%
+              </p>
+              <p className="text-[20px] leading-[1.4] tracking-[-0.02em] md:text-[24px]">
+                {decisionContract.memo?.decision || decisionContract.decision}
+              </p>
+              <p className="text-[13px] text-white/70">{decisionContract.gateReason}</p>
+            </div>
+          ) : (
+            <p className="mt-2 text-[20px] leading-[1.4] tracking-[-0.02em] md:text-[24px]">
+              {consensus.summary}
+            </p>
+          )}
+          {consensus.validationPlan && !decisionContract ? (
             <p className="mt-3 text-[14px] text-white/75">验证：{consensus.validationPlan}</p>
+          ) : null}
+          {decisionContract?.memo ? (
+            <div className="mt-4 rounded-[14px] bg-white/10 px-3 py-3 text-[13px] leading-6 text-white/85">
+              <p className="text-[12px] text-white/65">{decisionContract.memo.title}</p>
+              <p className="mt-2">为什么现在：{decisionContract.memo.whyNow}</p>
+              {decisionContract.memo.tradeoffs.length > 0 ? (
+                <p className="mt-1">
+                  取舍：{decisionContract.memo.tradeoffs.slice(0, 2).join("；")}
+                </p>
+              ) : null}
+              {decisionContract.memo.conditions.length > 0 ? (
+                <p className="mt-1">
+                  条件：{decisionContract.memo.conditions.slice(0, 2).join("；")}
+                </p>
+              ) : null}
+              <p className="mt-1">验证：{decisionContract.memo.validation}</p>
+              <p className="mt-1">停止线：{decisionContract.memo.stopLine}</p>
+              <p className="mt-1 text-white/70">退出：{decisionContract.memo.killCriteria}</p>
+            </div>
+          ) : null}
+
+          {decisionContract?.validationPlan ? (
+            <div className="mt-3 rounded-[14px] bg-white/10 px-3 py-3 text-[13px] leading-6 text-white/85">
+              <p>验证目标：{decisionContract.validationPlan.goal}</p>
+              <p>假设：{decisionContract.validationPlan.hypothesis}</p>
+              <p>指标：{decisionContract.validationPlan.metrics.join(" · ")}</p>
+              <p>
+                成功：{decisionContract.validationPlan.successCriteria}
+                {decisionContract.validationPlan.killCriteria
+                  ? ` · 停止：${decisionContract.validationPlan.killCriteria}`
+                  : ""}
+              </p>
+            </div>
+          ) : null}
+
+          {decisionContract && decisionContract.tensions.length > 0 ? (
+            <div className="mt-4 rounded-[14px] bg-white/10 px-3 py-3">
+              <p className="text-[12px] text-white/65">会议分歧</p>
+              {decisionContract.tensions.slice(0, 2).map((tension) => (
+                <div key={tension.topic} className="mt-2">
+                  <p className="text-[14px] font-medium text-white">关于{tension.topic}</p>
+                  <p className="mt-1 text-[13px] text-white/80">
+                    支持：{tension.supporters.join(" / ") || "—"} · 反对：
+                    {tension.opponents.join(" / ") || "—"}
+                  </p>
+                  {tension.criticalEvidence.length > 0 ? (
+                    <p className="mt-1 text-[12px] text-white/60">
+                      关键证据：{tension.criticalEvidence.join(" · ")}
+                    </p>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+          ) : null}
+
+          {decisionContract && decisionContract.committeeViews.length > 0 ? (
+            <div className="mt-3 grid gap-2 sm:grid-cols-2">
+              {decisionContract.committeeViews.map((view) => (
+                <div key={view.committee} className="rounded-[12px] bg-white/10 px-3 py-2">
+                  <p className="text-[12px] text-white/65">
+                    {view.committeeLabel} · {view.position}
+                  </p>
+                  <p className="mt-1 text-[13px] leading-5 text-white/90">{view.reason}</p>
+                </div>
+              ))}
+            </div>
+          ) : null}
+
+          {statements.some((s) => s.evidenceSufficient === false) ? (
+            <p className="mt-2 text-[13px] text-[#F0C9A8]">
+              证据还不够，确认后会按「假设」写入；先别放大执行。
+            </p>
           ) : null}
 
           {decisionCard &&
@@ -460,6 +939,30 @@ export function MeetingRoom({
               <p className="text-[15px] leading-7">
                 状态：验证中 · {decisionCard.validationDays}天
               </p>
+              {validationTask ? (
+                <div className="mt-4 rounded-[14px] bg-white/10 px-3 py-3">
+                  <p className="text-[12px] text-white/65">验证任务</p>
+                  <p className="mt-1 text-[14px] font-medium text-white">
+                    {validationTask.id} · {validationTask.title}
+                  </p>
+                  <p className="mt-1 text-[13px] leading-6 text-white/80">
+                    目标：{validationTask.objective}
+                  </p>
+                  <p className="mt-1 text-[12px] text-white/65">
+                    负责人：{validationTask.owner} · 周期：{validationTask.horizonDays} 天
+                  </p>
+                  {validationTask.metrics.length > 0 ? (
+                    <ul className="mt-2 space-y-1 text-[12px] leading-5 text-white/75">
+                      {validationTask.metrics.slice(0, 4).map((metric) => (
+                        <li key={metric.id}>
+                          {metric.label}
+                          {metric.target ? ` · ${metric.target}` : ""}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </div>
+              ) : null}
               {growthPlan ? (
                 <div className="mt-4 rounded-[14px] bg-white/10 px-3 py-3">
                   <p className="text-[12px] text-white/65">90天成长计划</p>
@@ -475,44 +978,48 @@ export function MeetingRoom({
                   <Link
                     href={`/projects/${projectId}/decisions`}
                     prefetch={false}
-                    className="inline-flex min-h-10 items-center gap-2 rounded-full bg-white px-4 text-[13px] font-medium text-[#202124] no-underline"
+                    className="inline-flex min-h-11 items-center gap-2 rounded-full bg-white px-4 text-[13px] font-medium text-[#202124] no-underline touch-manipulation"
                   >
-                    查看决策档案
+                    去跟进
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                   <Link
                     href="/dashboard"
                     prefetch={false}
-                    className="inline-flex min-h-10 items-center gap-2 rounded-full border border-white/30 px-4 text-[13px] font-medium text-white no-underline"
+                    className="inline-flex min-h-11 items-center gap-2 rounded-full border border-white/30 px-4 text-[13px] font-medium text-white no-underline touch-manipulation"
                   >
-                    回到今日简报
+                    回今日
                   </Link>
                 </div>
               ) : null}
             </div>
           ) : (
             <div className="mt-5">
-              <p className="text-[14px] text-white/80">下一步：是否接受该方案？</p>
+              <p className="text-[14px] text-white/80">接受这个方案吗？</p>
               <div className="mt-3 grid gap-2 sm:grid-cols-3">
                 <button
                   type="button"
                   disabled={accepting}
                   onClick={onAccept}
-                  className="inline-flex min-h-11 items-center justify-center rounded-[14px] bg-white px-4 text-[14px] font-semibold text-[#202124] disabled:opacity-60"
+                  className="inline-flex min-h-12 items-center justify-center bg-white px-4 text-[14px] font-semibold text-[#202124] touch-manipulation active:scale-[0.98] disabled:opacity-60 sm:min-h-11"
                 >
-                  {accepting ? "写入中…" : "接受"}
+                  {accepting
+                    ? "写入中…"
+                    : statements.some((s) => s.evidenceSufficient === false)
+                      ? "仅存假设"
+                      : "接受"}
                 </button>
                 <button
                   type="button"
                   onClick={onModify}
-                  className="inline-flex min-h-11 items-center justify-center rounded-[14px] border border-white/25 bg-white/10 px-4 text-[14px] font-medium text-white"
+                  className="inline-flex min-h-12 items-center justify-center border border-white/25 bg-white/10 px-4 text-[14px] font-medium text-white touch-manipulation sm:min-h-11"
                 >
                   修改
                 </button>
                 <button
                   type="button"
                   onClick={onContinueDiscuss}
-                  className="inline-flex min-h-11 items-center justify-center rounded-[14px] border border-white/25 bg-white/10 px-4 text-[14px] font-medium text-white"
+                  className="inline-flex min-h-12 items-center justify-center border border-white/25 bg-white/10 px-4 text-[14px] font-medium text-white touch-manipulation sm:min-h-11"
                 >
                   继续讨论
                 </button>
@@ -526,7 +1033,7 @@ export function MeetingRoom({
         <button
           type="button"
           onClick={onToggleTranscript}
-          className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-[14px] border border-[rgba(24,24,23,0.08)] bg-white px-4 text-[13px] font-medium text-[#66735E]"
+          className="inline-flex min-h-11 w-full items-center justify-center gap-2 border border-[rgba(24,24,23,0.08)] bg-white px-4 text-[13px] font-medium text-[#66735E] touch-manipulation"
         >
           <MessageSquare className="h-4 w-4" />
           {showTranscript ? "收起补充记录" : "补充观点 / 会议记录"}

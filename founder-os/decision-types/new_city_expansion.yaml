@@ -1,0 +1,21 @@
+decision_type: "new_city_expansion"
+name: "新城市扩张"
+level: 3
+pass_requirement: "6/7 + 创始人确认"
+weights:
+  CSO: 5
+  CMO: 4
+  CBO: 3
+  BMO: 5
+  CFO: 5
+  COO: 5
+  CRO: 4
+veto_roles:
+  - "CFO"
+  - "COO"
+  - "CRO"
+default_required_agents:
+  - "M-MKT"
+  - "M-PNT"
+  - "M-BIZ"
+  - "M-ED"

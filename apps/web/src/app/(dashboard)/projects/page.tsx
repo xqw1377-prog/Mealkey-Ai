@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowRight } from "lucide-react";
+import { PageContent } from "@/components/operating/PageContent";
 import { PageErrorState, PageLoadingState } from "@/components/operating/PageState";
 import { trpc } from "@/lib/trpc";
 import type { ProjectProfile } from "@/types/operating";
@@ -23,90 +24,108 @@ export default function ProjectsPage() {
   if (isLoading) {
     return (
       <PageLoadingState
-        eyebrow="企业世界"
-        title="正在读取你的企业"
-        description="AI 对企业的长期记忆。"
+        eyebrow="企业"
+        title="正在打开…"
+        description="读取你的企业。"
       />
     );
   }
 
   if (error) {
     return (
-      <div className="space-y-5 pb-2 pt-6 md:pt-8">
+      <PageContent width="narrow" inset="shell">
         <PageErrorState
-          eyebrow="企业世界"
-          title="暂时不可用"
-          description="先回今日判断。"
-          primaryAction={{ href: "/dashboard", label: "今日判断" }}
-          secondaryAction={{ href: "/profile", label: "AI认知" }}
+          eyebrow="企业"
+          title="暂时打不开"
+          description="先回今日。"
+          primaryAction={{ href: "/dashboard", label: "回今日" }}
+          secondaryAction={{ href: "/profile", label: "成长" }}
         />
-      </div>
+      </PageContent>
     );
   }
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6 pb-8 pt-6 md:pt-10">
+    <PageContent width="narrow" inset="shell" className="space-y-8">
       <header className="space-y-2">
-        <p className="text-[13px] tracking-[0.08em] text-[#66735E]">企业世界</p>
-        <h1 className="font-display text-[32px] font-semibold leading-none tracking-[-0.04em] text-[#202124]">
+        <p className="text-[11px] tracking-[0.14em] text-[#66735E]">企业</p>
+        <h1 className="font-display text-[30px] font-semibold leading-none tracking-[-0.04em] text-[#202124] md:text-[34px]">
           我的企业
         </h1>
         <p className="text-[14px] leading-6 text-[#6f747b]">
-          AI 对企业的长期记忆。不是 CRM。
+          选一家进入今日与会议。
         </p>
       </header>
 
       {items.length === 0 ? (
         <section className="space-y-4 border-y border-[rgba(24,24,23,0.08)] py-6">
-          <p className="text-[18px] text-[#202124]">还没有企业世界</p>
-          <p className="text-[14px] leading-6 text-[#6f747b]">先建立，我才能开始判断。</p>
+          <p className="text-[18px] font-semibold text-[#202124]">还没有企业</p>
+          <p className="text-[14px] leading-6 text-[#6f747b]">
+            先创建，才能开始用。
+          </p>
           <button
             type="button"
             onClick={() => createProjectMutation.mutate({ name: "我的企业" })}
             disabled={createProjectMutation.isPending}
-            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[16px] bg-[#181817] px-5 text-[15px] font-semibold text-white disabled:opacity-60"
+            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[16px] bg-[#181817] px-5 text-[15px] font-semibold text-white touch-manipulation active:scale-[0.98] disabled:opacity-60"
           >
-            {createProjectMutation.isPending ? "创建中…" : "建立企业"}
+            {createProjectMutation.isPending ? "创建中…" : "创建企业"}
             <ArrowRight className="h-4 w-4" />
           </button>
         </section>
       ) : (
-        <div className="space-y-4">
+        <div className="divide-y divide-[rgba(24,24,23,0.08)] border-y border-[rgba(24,24,23,0.08)]">
           {items.map((item) => {
             const profile = (item.profile || {}) as ProjectProfile;
             const issue = String(
               profile.currentProblemTitle ||
                 profile.biggestRisk ||
-                "当前议题待识别",
+                "议题待识别",
             );
-            const aiState = String(profile.biggestRisk || item.stage || "理解中");
             return (
               <Link
                 key={item.id}
                 href={`/projects/${item.id}`}
                 prefetch={false}
-                className="block rounded-[20px] border border-[rgba(24,24,23,0.08)] bg-white p-5 no-underline transition hover:-translate-y-0.5"
+                className="block py-5 no-underline touch-manipulation active:bg-[rgba(24,24,23,0.03)]"
               >
                 <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <h2 className="text-[20px] font-semibold tracking-[-0.02em] text-[#202124]">
+                  <div className="min-w-0">
+                    <h2 className="font-display text-[20px] font-semibold tracking-[-0.02em] text-[#202124]">
                       {item.name}
                     </h2>
                     <p className="mt-1 text-[13px] text-[#6f747b]">
-                      {[item.category, item.stage].filter(Boolean).join(" · ")}
+                      {[item.category, item.stage].filter(Boolean).join(" · ") ||
+                        "餐饮"}
                     </p>
                   </div>
-                  <span className="text-[13px] text-[#66735E]">进入 ›</span>
+                  <span className="inline-flex shrink-0 items-center gap-0.5 pt-1 text-[13px] font-medium text-[#66735E]">
+                    进入
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </span>
                 </div>
-                <p className="mt-4 text-[12px] tracking-[0.06em] text-[#6f747b]">AI状态</p>
-                <p className="mt-1 text-[14px] leading-6 text-[#202124]">{aiState}</p>
-                <p className="mt-3 text-[12px] tracking-[0.06em] text-[#6f747b]">当前议题</p>
-                <p className="mt-1 text-[15px] leading-6 text-[#202124]">{issue}</p>
+                <p className="mt-3 text-[11px] tracking-[0.1em] text-[#6f747b]">
+                  当前议题
+                </p>
+                <p className="mt-1 text-[15px] leading-6 text-[#202124]">
+                  {issue}
+                </p>
               </Link>
             );
           })}
         </div>
       )}
-    </div>
+
+      {items.length > 0 ? (
+        <button
+          type="button"
+          onClick={() => createProjectMutation.mutate({ name: "新企业" })}
+          disabled={createProjectMutation.isPending}
+          className="inline-flex min-h-11 items-center justify-center gap-1 text-[14px] font-medium text-[#66735E] underline-offset-4 touch-manipulation hover:underline disabled:opacity-60"
+        >
+          {createProjectMutation.isPending ? "创建中…" : "再创建一家"}
+        </button>
+      ) : null}
+    </PageContent>
   );
 }

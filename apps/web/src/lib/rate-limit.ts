@@ -1,8 +1,6 @@
 /**
- * 限流实现
- *
- * - 单实例 / 开发环境：内存 Map
- * - 生产多实例 / Serverless：设置 UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN 自动切换 Redis
+ * 限流：生产优先 Upstash（原子 INCR+EXPIRE）；未配置时 fail-closed。
+ * 非生产可回退内存桶。
  */
 
 type Bucket = {
@@ -11,20 +9,50 @@ type Bucket = {
 };
 
 const buckets = new Map<string, Bucket>();
+const MAX_BUCKETS = 5_000;
+
+const INCR_EXPIRE_LUA = `
+local current = redis.call("INCR", KEYS[1])
+if current == 1 then
+  redis.call("EXPIRE", KEYS[1], ARGV[1])
+end
+local ttl = redis.call("TTL", KEYS[1])
+return {current, ttl}
+`.trim();
+
+function pruneBuckets(now: number) {
+  for (const [key, bucket] of buckets) {
+    if (bucket.resetAt <= now) buckets.delete(key);
+  }
+  if (buckets.size <= MAX_BUCKETS) return;
+  const sorted = [...buckets.entries()].sort(
+    (a, b) => a[1].resetAt - b[1].resetAt,
+  );
+  const overflow = buckets.size - MAX_BUCKETS;
+  for (let i = 0; i < overflow; i += 1) {
+    const key = sorted[i]?.[0];
+    if (key) buckets.delete(key);
+  }
+}
 
 export type RateLimitResult = {
   ok: boolean;
   remaining: number;
   resetAt: number;
+  backend?: "redis" | "memory" | "fail-closed";
 };
 
-// ─── Redis (Upstash) ───
-
-function redisConfig(): { url: string; token: string } | null {
-  const url = process.env.UPSTASH_REDIS_REST_URL;
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+export function redisConfig(): { url: string; token: string } | null {
+  const url = process.env.UPSTASH_REDIS_REST_URL?.trim();
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN?.trim();
   if (!url || !token) return null;
-  return { url, token };
+  return { url: url.replace(/\/$/, ""), token };
+}
+
+/** 生产默认要求分布式限流；显式放行方可用内存桶 */
+export function allowMemoryRateLimitFallback(): boolean {
+  if (process.env.NODE_ENV !== "production") return true;
+  return process.env.RATE_LIMIT_ALLOW_MEMORY === "1";
 }
 
 async function redisRateLimit(
@@ -36,41 +64,54 @@ async function redisRateLimit(
   if (!cfg) return null;
 
   const redisKey = `rl:${key}`;
-  const windowSec = Math.ceil(windowMs / 1000);
+  const windowSec = Math.max(1, Math.ceil(windowMs / 1000));
 
   try {
-    // INCR + EXPIRE pipeline
-    const incrRes = await fetch(`${cfg.url}/incr/${redisKey}`, {
-      headers: { Authorization: `Bearer ${cfg.token}` },
+    // Upstash REST：EVAL 保证首击设 TTL，避免永不过期键
+    const res = await fetch(`${cfg.url}`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${cfg.token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify([
+        "EVAL",
+        INCR_EXPIRE_LUA,
+        "1",
+        redisKey,
+        String(windowSec),
+      ]),
     });
-    if (!incrRes.ok) return null;
-    const { result: count } = (await incrRes.json()) as { result: number };
+    if (!res.ok) return null;
 
-    if (count === 1) {
-      // First request in window — set TTL
-      await fetch(`${cfg.url}/expire/${redisKey}/${windowSec}`, {
-        headers: { Authorization: `Bearer ${cfg.token}` },
-      });
+    const payload = (await res.json()) as { result?: unknown };
+    const tuple = payload.result;
+    let count = 0;
+    let ttl = windowSec;
+    if (Array.isArray(tuple) && tuple.length >= 1) {
+      count = Number(tuple[0]) || 0;
+      ttl = Number(tuple[1]);
+      if (!Number.isFinite(ttl) || ttl < 0) ttl = windowSec;
+    } else if (typeof tuple === "number") {
+      count = tuple;
+    } else {
+      return null;
     }
 
-    const ttlRes = await fetch(`${cfg.url}/ttl/${redisKey}`, {
-      headers: { Authorization: `Bearer ${cfg.token}` },
-    });
-    const { result: ttl } = (await ttlRes.json()) as { result: number };
     const resetAt = Date.now() + (ttl > 0 ? ttl * 1000 : windowMs);
-
     if (count > limit) {
-      return { ok: false, remaining: 0, resetAt };
+      return { ok: false, remaining: 0, resetAt, backend: "redis" };
     }
-
-    return { ok: true, remaining: Math.max(0, limit - count), resetAt };
+    return {
+      ok: true,
+      remaining: Math.max(0, limit - count),
+      resetAt,
+      backend: "redis",
+    };
   } catch {
-    // Redis 不可用时降级到内存限流
     return null;
   }
 }
-
-// ─── 内存限流（fallback）───
 
 function memoryRateLimit(
   key: string,
@@ -78,16 +119,22 @@ function memoryRateLimit(
   windowMs: number,
 ): RateLimitResult {
   const now = Date.now();
+  pruneBuckets(now);
   const existing = buckets.get(key);
 
   if (!existing || existing.resetAt <= now) {
     const resetAt = now + windowMs;
     buckets.set(key, { count: 1, resetAt });
-    return { ok: true, remaining: limit - 1, resetAt };
+    return { ok: true, remaining: limit - 1, resetAt, backend: "memory" };
   }
 
   if (existing.count >= limit) {
-    return { ok: false, remaining: 0, resetAt: existing.resetAt };
+    return {
+      ok: false,
+      remaining: 0,
+      resetAt: existing.resetAt,
+      backend: "memory",
+    };
   }
 
   existing.count += 1;
@@ -96,16 +143,10 @@ function memoryRateLimit(
     ok: true,
     remaining: Math.max(0, limit - existing.count),
     resetAt: existing.resetAt,
+    backend: "memory",
   };
 }
 
-// ─── 公开接口 ───
-
-/**
- * @param key 限流键（如 ip:register / userId:agent）
- * @param limit 窗口内最大次数
- * @param windowMs 窗口毫秒
- */
 export async function rateLimit(
   key: string,
   limit: number,
@@ -113,6 +154,17 @@ export async function rateLimit(
 ): Promise<RateLimitResult> {
   const redisResult = await redisRateLimit(key, limit, windowMs);
   if (redisResult) return redisResult;
+
+  if (!allowMemoryRateLimitFallback()) {
+    // 生产未配 / Redis 失败：拒绝请求，避免多实例限流失效被打穿
+    return {
+      ok: false,
+      remaining: 0,
+      resetAt: Date.now() + windowMs,
+      backend: "fail-closed",
+    };
+  }
+
   return memoryRateLimit(key, limit, windowMs);
 }
 
@@ -122,4 +174,14 @@ export function clientIpFromRequest(request: Request): string {
     return forwarded.split(",")[0]?.trim() || "unknown";
   }
   return request.headers.get("x-real-ip") || "unknown";
+}
+
+/** 测试 / 运维：当前桶数量 */
+export function memoryRateLimitSize(): number {
+  return buckets.size;
+}
+
+/** 测试用：清空内存桶 */
+export function resetMemoryRateLimitForTests(): void {
+  buckets.clear();
 }

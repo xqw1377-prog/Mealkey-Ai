@@ -1,0 +1,23 @@
+version: "1.0.0"
+name: "经营场景矩阵"
+product_form: "AI Founder Operating System"
+cadence:
+  daily: "Today Decision"
+  weekly: "经营会议（三个关键问题）"
+  monthly: "战略复盘六维"
+  quarterly: "董事会模拟"
+scenarios:
+  - startup_launch
+  - expansion
+  - brand_upgrade
+  - new_product
+  - ops_anomaly
+  - fundraising_equity
+value:
+  - "看清问题"
+  - "做对选择"
+  - "持续进化"
+not:
+  - "AI 聊天咨询（低频）"
+  - "餐饮 ERP（执行系统）"
+next: "Chief of Staff Agent V1.0"

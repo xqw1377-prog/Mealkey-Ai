@@ -1,0 +1,45 @@
+levels:
+  level_1:
+    name: "日常决策"
+    examples:
+      - "新品"
+      - "单项营销动作"
+    pass_requirement: "4/7"
+  level_2:
+    name: "经营决策"
+    examples:
+      - "开新店"
+      - "区域扩张"
+    pass_requirement: "5/7"
+  level_3:
+    name: "战略决策"
+    examples:
+      - "新城市"
+      - "第二品牌"
+    pass_requirement: "6/7 + 创始人确认"
+  level_4:
+    name: "生死决策"
+    examples:
+      - "大量融资"
+      - "关闭业务"
+      - "组织重组"
+    pass_requirement: "7/7 + 创始人确认"
+minority_report_gate:
+  - "反对票数 >= 2"
+  - "任一高权重常委反对"
+  - "任一 veto 意见出现"
+  - "条件支持 >= 2"
+  - "仍存在关键未知项"
+required_resolution_fields:
+  - "recommended_action"
+  - "weighted_result"
+  - "majority_view"
+  - "minority_report"
+  - "unresolved_questions"
+  - "required_conditions"
+  - "veto_flags"
+  - "execution_bet"
+output_compression:
+  - "最大共识"
+  - "最大风险"
+  - "可执行条件"

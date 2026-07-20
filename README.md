@@ -58,23 +58,20 @@
 | 6 | Mission | `Mission` | `protocols.ts` |
 | 7 | Agent Run | `AgentRun` | `protocols.ts` |
 
-## Agent 执行路径（单一路径）
+## Agent 执行路径
 
-> ⚠️ **历史更新**: 2025-01 已将 LaunchAgent 工作流路径合并到 ChiefAgent。
-> 所有请求现在统一走 ChiefAgent 的 LLM 驱动判断链。
+> **产品主路径（老板六步咨询）**：见 [`docs/AUTHORITY.md`](docs/AUTHORITY.md) 与 Consulting-OS（M-PNT / M-MKT / M-BIZ / M-ED）。  
+> 下方为顾问 SSE / ChiefAgent 编排路径，**不是**唯一产品入口。
 
 ```
-用户消息 → ChiefAgent
-  1. Problem Understanding (LLM 分析真实意图)
-  2. LLM Judgment Chain (5步: 观察→诊断→评估→策略→行动)
-     ↓ LLM 失败时降级
-     规则判断链 (DefaultJudgmentChain) — 50+ 经营规则打分
-  3. Risk Analysis (DefaultRiskAnalyzer — 规则引擎)
-  4. Tool Execution (知识搜索 / 经营诊断)
-  5. MKDecision 生成 (Protocol 2)
-  6. Challenge Engine (反方挑战 — 高风险时自动激活)
-  7. Memory Update (记忆更新 + 学习引擎)
-  8. AgentRun Tracking (执行记录)
+用户消息 → POST /api/agent/stream（forceAgent 优先）
+  ├─ m-pnt / m-mkt / m-biz / m-ed 产品流
+  └─ chief → ChiefAgent
+       1. Problem Understanding
+       2. LLM Judgment Chain（失败 → 规则链）
+       3. Risk Analysis + Tools
+       4. MKDecision + Challenge
+       5. Memory Update + AgentRun
 ```
 
 ## 快速开始
@@ -102,6 +99,32 @@ npm run dev
 - [docs/POSTGRES.md](docs/POSTGRES.md) — SQLite → PostgreSQL
 - [docs/BLOB_STORAGE.md](docs/BLOB_STORAGE.md) — 本地 / S3 / MinIO
 - CI：`.github/workflows/ci.yml`（typecheck · lint · test · build · postgres smoke）
+
+### 支付巡检 Cron
+
+Vercel 每 2 小时调用 `/api/cron/reconcile-payments`（见根目录 `vercel.json`）。
+
+```bash
+# 生产必须配置
+CRON_SECRET="至少16位随机串"
+
+# 预检（不写库）
+curl -H "Authorization: Bearer $CRON_SECRET" \
+  "$NEXT_PUBLIC_APP_URL/api/cron/reconcile-payments?dryRun=1"
+```
+
+语义：对超过 2 小时仍 `pending` 的订单**查微信/支付宝**：
+- 渠道已付 → `markOrderPaid`（补履约）
+- 未付/渠道已关 → 本地 `closed`
+- 查单失败 → 跳过（不误关）
+
+生产未配支付渠道时不会落 sandbox；沙箱确认需 `PAYMENT_ALLOW_SANDBOX=1`。
+
+### 分布式限流
+
+生产必须配置 Upstash（`UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN`）。  
+未配置时限流 **fail-closed**（拒绝请求），避免多实例下内存桶失效被打穿。  
+仅应急可设 `RATE_LIMIT_ALLOW_MEMORY=1`（不推荐长期使用）。
 
 ```bash
 # Postgres 一键（需 Docker Desktop）

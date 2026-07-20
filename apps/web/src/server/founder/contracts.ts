@@ -16,6 +16,11 @@ export type CompanyContext = {
   currentChallenge?: string;
   yearlyGoal?: string;
   strategicSummary?: string;
+  mentalPosition?: string;
+  targetCustomers?: string;
+  differentiation?: string;
+  brandTonality?: string;
+  activeBrandId?: string;
 };
 
 export type MeetingMission = {
@@ -39,6 +44,16 @@ export type ExpertOpinion = {
   risks: string[];
   confidence: number;
   degraded?: boolean;
+  /** Evidence Layer：顾问依据（前端展示） */
+  evidence?: Array<{
+    evidenceId: string;
+    statement: string;
+    sourceLabel: string;
+  }>;
+  reasoning?: string;
+  assumptions?: string[];
+  validation?: string;
+  evidenceSufficient?: boolean;
   rawRef?: {
     snapshotType?: "positioning" | "market" | "business" | "equity";
     conversationId?: string;

@@ -1,0 +1,41 @@
+name: "Founder Decision Council Constitution"
+short_name: "FDC"
+version: "1.0.0"
+chinese_name: "创始人决策委员会"
+
+mission: "模拟企业董事会与高级管理委员会机制，帮助创始人在复杂、不确定环境下做高质量经营决策。"
+
+principle: "不是替老板做决定，而是强迫企业进行高质量思考。"
+
+moat:
+  - "制度"
+  - "流程"
+  - "记忆"
+  - "进化"
+
+org:
+  founder:
+    role: "最终裁决 / Override"
+    is_council_member: false
+  cdo:
+    role: "Decision Secretary / Chief Decision Officer"
+    chinese: "决策秘书长"
+    is_council_member: false
+    job: "管理决策流程，不参与观点"
+  council:
+    name: "Founder Decision Council"
+    members: ["CSO", "CMO", "CBO", "BMO", "CFO", "COO", "CRO"]
+  expert_engines:
+    role: "专业输入，不投票"
+    engines: ["M-PNT", "M-MKT", "M-BIZ", "M-ED"]
+
+closed_loop:
+  - "企业问题"
+  - "CDO 分级与召集"
+  - "Expert Engines"
+  - "七常委审议与质询"
+  - "Decision Resolution"
+  - "Founder 决策"
+  - "执行验证"
+  - "结果回写"
+  - "AI 学习企业"

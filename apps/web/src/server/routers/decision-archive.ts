@@ -13,6 +13,48 @@ import { prisma } from "@/lib/prisma";
 import { validateProfile } from "@/lib/profile-schema";
 import { createDecision } from "@/server/services/agent-os.service";
 import { buildGrowthPlan } from "@/lib/onboarding-interview";
+import {
+  createValidationPlanFromDecision,
+  upsertValidationTask,
+} from "@/server/founder-layer/validation";
+import type { ValidationTask } from "@/server/founder-layer/contracts/validation";
+import {
+  buildPreferenceMemoryWrite,
+  persistFounderMemoryWrites,
+} from "@/server/founder-layer/memory";
+import { approveDecisionContract } from "@/server/founder-layer/decision/contract-v2";
+import {
+  STATUS_LABEL,
+  type FounderDecisionContract,
+} from "@/server/founder-layer/contracts/decision-v2";
+import { assertMeetingConfirmEvidence } from "@/server/founder-layer/evidence";
+import { resolveActiveBrand } from "@/lib/brand-registry";
+import {
+  findConflictingOpenDecision,
+  parseDecisionOutcome,
+  problemFingerprint,
+} from "@/server/founder-layer/decision/problem-fingerprint";
+import {
+  toProfileConflictTRPC,
+  updateProjectProfile,
+} from "@/server/services/project-profile";
+import { buildTodayActionsFromMeetingConfirm } from "@/lib/meeting-today-actions";
+import {
+  emitDecisionRuntimeEvent,
+  mergeMkStatusIntoOutcome,
+} from "@/server/founder-layer/capability/decision/registry";
+import { seedDecisionArtifactsFromMeeting } from "@/server/founder-layer/capability/decision/seed-from-meeting";
+
+function asTaskArray(raw: unknown): ValidationTask[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.filter((item) => item && typeof item === "object" && "id" in item) as ValidationTask[];
+}
+
+function clipJudgement(text: string, max = 140): string {
+  const t = text.replace(/\s+/g, " ").trim();
+  if (!t) return "已确认决策";
+  return t.length > max ? `${t.slice(0, max - 1)}…` : t;
+}
 
 export const decisionArchiveRouter = router({
   /** 会议「接受方案」→ 写入 Decision Memory（决策卡） */
@@ -26,20 +68,120 @@ export const decisionArchiveRouter = router({
         observation: z.string().max(2000).optional(),
         strategy: z.string().max(2000).optional(),
         action: z.string().max(2000).optional(),
+        /** 会议共识的下一步动作列表（优先写入今日三动作） */
+        nextActions: z.array(z.string().max(200)).max(6).optional(),
         confidence: z.number().min(0).max(1).default(0.72),
         validationPlan: z.string().max(500).optional(),
         supportClaims: z.array(z.string()).max(8).optional(),
         opposeClaims: z.array(z.string()).max(8).optional(),
+        /** 四席意见（有则优先生成 DecisionOpinion） */
+        expertOpinions: z
+          .array(
+            z.object({
+              expert: z.enum(["M-PNT", "M-MKT", "M-BIZ", "M-ED"]),
+              position: z.enum(["support", "oppose", "neutral"]),
+              reason: z.string().min(1).max(400),
+              confidence: z.number().min(0).max(1).optional(),
+            }),
+          )
+          .max(8)
+          .optional(),
         focusChoice: z.string().max(80).optional(),
         meetingTitle: z.string().max(120).optional(),
+        parentEvidenceIds: z.array(z.string()).max(24).optional(),
+        /** 调用方声明证据是否充分（与 parentEvidenceIds 二选一或并用） */
+        evidenceSufficient: z.boolean().optional(),
+        /** 证据不足时仍归档为「假设推进」 */
+        allowInsufficientEvidence: z.boolean().optional(),
+        /** 同题冲突时须显式指定被修订的旧决策 ID */
+        supersedesDecisionId: z.string().optional(),
+        /** Decision Contract V2 快照（可选；有则落库） */
+        decisionContract: z.record(z.unknown()).optional(),
+        /** 七常委 Decision Trace / Insight 摘要（写入 outcome） */
+        councilTrace: z
+          .object({
+            caseId: z.string().optional(),
+            sessionId: z.string().optional(),
+            insightCount: z.number().int().nonnegative().optional(),
+            recommendedAction: z.string().optional(),
+            founderChoice: z
+              .enum(["接受委员会", "修改方案", "推翻委员会"])
+              .optional(),
+            decisionTrace: z.unknown().optional(),
+          })
+          .optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      let confirmGate: { mode: "formal" | "hypothesis"; evidenceIds: string[] };
+      try {
+        confirmGate = assertMeetingConfirmEvidence({
+          parentEvidenceIds: input.parentEvidenceIds,
+          evidenceSufficient: input.evidenceSufficient,
+          allowInsufficientEvidence: input.allowInsufficientEvidence,
+        });
+      } catch (error) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: error instanceof Error ? error.message : "证据门禁未通过",
+        });
+      }
+
       const project = await prisma.project.findFirst({
         where: { id: input.projectId, owner: { userId: ctx.userId! } },
         include: { owner: { select: { id: true } } },
       });
       if (!project) throw new TRPCError({ code: "FORBIDDEN", message: "项目不存在或无权限" });
+
+      const profile = validateProfile(project.profile) as Record<string, unknown>;
+      const brand = resolveActiveBrand(profile, project.name);
+      const fingerprint = problemFingerprint(brand.id, input.problem);
+
+      const recentDecisions = await prisma.decision.findMany({
+        where: { projectId: project.id },
+        orderBy: { createdAt: "desc" },
+        take: 40,
+        select: {
+          id: true,
+          problem: true,
+          judgement: true,
+          outcome: true,
+        },
+      });
+
+      const conflict = findConflictingOpenDecision({
+        candidates: recentDecisions.map((d) => ({
+          id: d.id,
+          problem: d.problem,
+          judgement: d.judgement,
+          outcome: d.outcome,
+        })),
+        brandId: brand.id,
+        problem: input.problem,
+        judgement: input.judgement,
+      });
+
+      if (conflict) {
+        if (
+          !input.supersedesDecisionId ||
+          input.supersedesDecisionId !== conflict.id
+        ) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: `同题存在未归档旧判断，禁止悄悄漂移。请以修订案确认：supersedesDecisionId=${conflict.id}（旧判断：${conflict.judgement.slice(0, 60)}）`,
+          });
+        }
+      }
+
+      if (
+        input.supersedesDecisionId &&
+        !recentDecisions.some((d) => d.id === input.supersedesDecisionId)
+      ) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "supersedesDecisionId 无效或不属于本项目",
+        });
+      }
 
       const support = input.supportClaims ?? [];
       const oppose = input.opposeClaims ?? [];
@@ -56,6 +198,11 @@ export const decisionArchiveRouter = router({
         })),
       ];
 
+      const gatedConfidence =
+        confirmGate.mode === "hypothesis"
+          ? Math.min(input.confidence, 0.55)
+          : input.confidence;
+
       const record = await createDecision(prisma, {
         ownerId: project.owner.id,
         projectId: project.id,
@@ -66,9 +213,27 @@ export const decisionArchiveRouter = router({
         judgement: input.judgement,
         strategy: input.strategy || input.judgement,
         action: input.action || input.validationPlan || "按验证计划推进",
-        confidence: input.confidence,
+        confidence: gatedConfidence,
         evidence,
       });
+
+      if (input.supersedesDecisionId) {
+        const old = recentDecisions.find((d) => d.id === input.supersedesDecisionId);
+        if (old) {
+          const oldOutcome = parseDecisionOutcome(old.outcome) || {};
+          await prisma.decision.update({
+            where: { id: old.id },
+            data: {
+              outcome: JSON.stringify({
+                ...oldOutcome,
+                status: "superseded",
+                supersededBy: record.id,
+                supersededAt: new Date().toISOString(),
+              }),
+            },
+          });
+        }
+      }
 
       const growthPlan = buildGrowthPlan({
         judgement: input.judgement,
@@ -76,39 +241,228 @@ export const decisionArchiveRouter = router({
         problem: input.problem,
       });
 
+      const contractHypothesis =
+        input.decisionContract &&
+        typeof input.decisionContract === "object" &&
+        (input.decisionContract as { validationPlan?: { hypothesis?: string; metrics?: string[]; period?: string } })
+          .validationPlan?.hypothesis;
+
+      const contractMetrics =
+        input.decisionContract &&
+        typeof input.decisionContract === "object"
+          ? (input.decisionContract as { validationPlan?: { metrics?: string[] } }).validationPlan
+              ?.metrics
+          : undefined;
+
+      const planBundle = createValidationPlanFromDecision({
+        projectId: project.id,
+        decisionId: record.id,
+        problem: input.problem,
+        judgement: input.judgement,
+        validationPlan: input.validationPlan,
+        hypothesisStatement: contractHypothesis || input.validationPlan,
+        action: input.action,
+        parentEvidenceIds: confirmGate.evidenceIds.length
+          ? confirmGate.evidenceIds
+          : input.parentEvidenceIds,
+        growthPlan,
+        confidence: gatedConfidence,
+        metricNames: contractMetrics,
+      });
+      const validationTask = planBundle.task;
+
+      let decisionContract: FounderDecisionContract | null = null;
+      if (input.decisionContract && typeof input.decisionContract === "object") {
+        const raw = input.decisionContract as unknown as FounderDecisionContract;
+        if (raw.decisionId && raw.intent && raw.validationPlan) {
+          decisionContract = approveDecisionContract(
+            {
+              ...raw,
+              decisionId: raw.decisionId,
+              projectId: project.id,
+            },
+            validationTask.id,
+          );
+          decisionContract = {
+            ...decisionContract,
+            validationPlan: {
+              ...decisionContract.validationPlan,
+              hypothesis:
+                decisionContract.validationPlan.hypothesis ||
+                planBundle.hypothesis.statement,
+              taskId: validationTask.id,
+            },
+          };
+        }
+      }
+
+      const legacyStatus =
+        confirmGate.mode === "hypothesis"
+          ? "hypothesis"
+          : decisionContract?.status === "APPROVED"
+            ? "executing"
+            : "validating";
+      const outcomePayload = {
+        status: legacyStatus,
+        confirmMode: confirmGate.mode,
+        evidenceIds: confirmGate.evidenceIds,
+        evidenceSufficient: confirmGate.mode === "formal",
+        problemFingerprint: fingerprint,
+        brandId: brand.id,
+        supersedes: input.supersedesDecisionId || null,
+        validationPlan: input.validationPlan || planBundle.period,
+        focusChoice: input.focusChoice || null,
+        meetingTitle: input.meetingTitle || "咨询会议",
+        supportCount: support.length,
+        opposeCount: oppose.length,
+        confirmedAt: new Date().toISOString(),
+        growthPlan,
+        validationTask,
+        validationHypothesis: planBundle.hypothesis,
+        hypothesis: planBundle.hypothesis.statement,
+        validationPlanBundle: {
+          period: planBundle.period,
+          hypothesisId: planBundle.hypothesis.hypothesisId,
+          metrics: planBundle.metrics.map((m) => m.name),
+        },
+        decisionContract,
+        decisionStatusLabel: decisionContract
+          ? STATUS_LABEL[decisionContract.status]
+          : undefined,
+        actionPlanId: `ap_meeting_${record.id}`,
+        councilTrace: input.councilTrace || null,
+        councilSource:
+          input.meetingTitle?.includes("七常委") ||
+          (input.decisionContract as { source?: string } | undefined)?.source ===
+            "decision_council"
+            ? "decision_council"
+            : null,
+      };
+      // Decision Runtime：主状态 APPROVED + 90 天复盘窗口（legacy status 仍保留）
+      const outcomeWithMk = mergeMkStatusIntoOutcome(outcomePayload, "APPROVED");
+
       await prisma.decision.update({
         where: { id: record.id },
-        data: {
-          outcome: JSON.stringify({
-            status: "validating",
-            validationPlan: input.validationPlan || "90天验证",
-            focusChoice: input.focusChoice || null,
-            meetingTitle: input.meetingTitle || "咨询会议",
-            supportCount: support.length,
-            opposeCount: oppose.length,
-            confirmedAt: new Date().toISOString(),
-            growthPlan,
-          }),
+        data: { outcome: outcomeWithMk },
+      });
+
+      await emitDecisionRuntimeEvent(prisma, {
+        decisionId: record.id,
+        eventType: "DecisionApproved",
+        sourceEventId: `DecisionApproved:${record.id}`,
+        payload: {
+          mkStatus: "APPROVED",
+          confirmMode: confirmGate.mode,
+          hypothesis: planBundle.hypothesis.statement,
+          projectId: project.id,
         },
       });
 
-      {
-        const prefs = validateProfile(project.profile);
-        const { activeMeeting: _cleared, ...restPrefs } = prefs as Record<string, unknown>;
-        const nextProfile = {
-          ...restPrefs,
-          ...(input.focusChoice ? { founderPreference: input.focusChoice } : {}),
-          lastMeetingDecisionId: record.id,
-          lastMeetingAt: new Date().toISOString(),
-          growthPlan,
-        };
-        await prisma.project.update({
-          where: { id: project.id },
-          data: { profile: JSON.stringify(nextProfile) },
+      // Decision Runtime：会议意见/证据落入 MKDecision（Execution 仍由本流程写 lastActionPlan）
+      let seeded = { opinionCount: 0, evidenceCount: 0 };
+      try {
+        seeded = await seedDecisionArtifactsFromMeeting(prisma, {
+          decisionId: record.id,
+          projectId: project.id,
+          supportClaims: support,
+          opposeClaims: oppose,
+          expertOpinions: input.expertOpinions,
         });
+      } catch (error) {
+        console.warn("seedDecisionArtifactsFromMeeting failed:", error);
       }
 
-      return { decisionId: record.id, growthPlan };
+      try {
+        await updateProjectProfile(project.id, (prefs) => {
+          const { activeMeeting: _cleared, ...restPrefs } = prefs;
+          const existingTasks = asTaskArray(restPrefs.validationTasks);
+          const todayActions = buildTodayActionsFromMeetingConfirm({
+            nextActions: input.nextActions,
+            action: input.action,
+            validationPlan: input.validationPlan,
+            judgement: input.judgement,
+          });
+          const { suggestedNextMeeting: _clearedRedeision, ...restWithoutRedeision } =
+            restPrefs;
+          return {
+            ...restWithoutRedeision,
+            ...(input.focusChoice ? { founderPreference: input.focusChoice } : {}),
+            lastMeetingDecisionId: record.id,
+            lastMeetingAt: new Date().toISOString(),
+            growthPlan,
+            validationTasks: upsertValidationTask(existingTasks, validationTask),
+            activeValidationTaskId: validationTask.id,
+            lastDecisionContract: decisionContract,
+            lastValidationHypothesis: planBundle.hypothesis,
+            lastProblemFingerprint: fingerprint,
+            /** 覆盖开会前草稿，今日 Brief 直接读本周三动作 */
+            lastActionPlan: {
+              planId: `ap_meeting_${record.id}`,
+              summary: clipJudgement(input.judgement),
+              goals: [
+                {
+                  goalId: `g_week_${record.id}`,
+                  title: clipJudgement(input.judgement, 80),
+                  horizonDays: 7,
+                },
+              ],
+              actions: todayActions,
+              alignmentNotes: input.focusChoice
+                ? [`创始人关注：${input.focusChoice}`]
+                : [],
+              validationTaskId: validationTask.id,
+            },
+          };
+        });
+      } catch (error) {
+        const conflict = toProfileConflictTRPC(error);
+        if (conflict) throw conflict;
+        throw error;
+      }
+
+      const memoryWrites = [
+        ...(input.focusChoice
+          ? [
+              buildPreferenceMemoryWrite({
+                projectId: project.id,
+                label: "创始人关注",
+                value: input.focusChoice,
+                confidence: 0.88,
+              }),
+            ]
+          : []),
+        {
+          writeId:
+            typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+              ? crypto.randomUUID()
+              : `confirm-${Date.now()}`,
+          projectId: project.id,
+          type: "decision" as const,
+          domain: "mixed" as const,
+          summary: clipJudgement(input.judgement),
+          payload: {
+            decisionId: record.id,
+            problem: input.problem,
+            judgement: input.judgement,
+            validationTaskId: validationTask.id,
+            hypothesisId: planBundle.hypothesis.hypothesisId,
+            confirmed: true,
+          },
+          source: "user_feedback" as const,
+          createdAt: new Date().toISOString(),
+        },
+      ];
+      await persistFounderMemoryWrites(prisma, project.owner.id, memoryWrites);
+
+      return {
+        decisionId: record.id,
+        growthPlan,
+        validationTask,
+        validationHypothesis: planBundle.hypothesis,
+        decisionContract,
+        seededOpinions: seeded.opinionCount,
+        seededEvidence: seeded.evidenceCount,
+      };
     }),
 
   /** 获取项目的决策历史列表 */
@@ -252,14 +606,20 @@ export const decisionArchiveRouter = router({
         input.result ||
         (input.helpful ? "aligned" : "off");
       const helpful = result === "off" ? false : input.helpful || result === "aligned" || result === "partial";
+      // 主观反馈 ≠ 验证完成；不得写入 validated_outcome / 不得冒充 L4 证据
       const status =
-        result === "aligned" ? "validated" : result === "partial" ? "adjusted" : "revisiting";
+        result === "aligned"
+          ? "feedback_positive"
+          : result === "partial"
+            ? "feedback_partial"
+            : "feedback_negative";
 
       const outcomeValue = {
         ...(existingOutcome ?? {}),
         helpful,
         result,
         status,
+        evidenceGrade: "user_feedback" as const,
         comment: input.comment ?? existingOutcome?.comment ?? null,
         progressNote: input.progressNote ?? null,
         feedbackAt: new Date().toISOString(),
@@ -275,10 +635,10 @@ export const decisionArchiveRouter = router({
               : "negative_feedback",
         summary:
           result === "aligned"
-            ? `验证通过：${decision.judgement}`
+            ? `用户反馈偏正面（非验证结果）：${decision.judgement}`
             : result === "partial"
-              ? `部分成立，需调整路径：${decision.problem}`
-              : `验证偏离，建议召开跟进会议：${decision.problem}`,
+              ? `用户反馈部分成立（非验证结果）：${decision.problem}`
+              : `用户反馈偏离（非验证结果）：${decision.problem}`,
         comment: input.comment ?? null,
         progressNote: input.progressNote ?? null,
         decisionId: input.decisionId,
@@ -287,6 +647,7 @@ export const decisionArchiveRouter = router({
         confidence: decision.confidence,
         score,
         result,
+        evidenceGrade: "user_feedback",
       };
 
       await prisma.decision.update({
@@ -298,13 +659,8 @@ export const decisionArchiveRouter = router({
       });
 
       if (decision.projectId) {
-        const project = await prisma.project.findUnique({
-          where: { id: decision.projectId },
-          select: { profile: true },
-        });
-        if (project) {
-          const prefs = validateProfile(project.profile);
-          const nextProfile = {
+        try {
+          await updateProjectProfile(decision.projectId, (prefs) => ({
             ...prefs,
             lastValidationFeedback: {
               decisionId: decision.id,
@@ -320,11 +676,11 @@ export const decisionArchiveRouter = router({
                   },
                 }
               : {}),
-          };
-          await prisma.project.update({
-            where: { id: decision.projectId },
-            data: { profile: JSON.stringify(nextProfile) },
-          });
+          }));
+        } catch (error) {
+          const conflict = toProfileConflictTRPC(error);
+          if (conflict) throw conflict;
+          throw error;
         }
       }
 
@@ -454,24 +810,34 @@ export const decisionArchiveRouter = router({
       await prisma.$transaction(async (tx) => {
         const project = await tx.project.findFirst({
           where: { id: input.projectId, owner: { userId: ctx.userId! } },
+          select: { id: true, ownerId: true },
         });
         if (!project) throw new TRPCError({ code: "FORBIDDEN", message: "项目不存在或无权限" });
 
-        const profile = validateProfile(project.profile);
-        const queue = Array.isArray(profile.positioningReviewQueue)
-          ? profile.positioningReviewQueue
-          : [];
-        const nextQueue = queue.map((item) =>
-          item.decisionId === input.decisionId
-            ? { ...item, status: input.status, resolvedAt: new Date().toISOString() }
-            : item,
-        );
-        profile.positioningReviewQueue = nextQueue;
-
-        await tx.project.update({
-          where: { id: project.id },
-          data: { profile: JSON.stringify(profile) },
-        });
+        try {
+          await updateProjectProfile(
+            project.id,
+            (profile) => {
+              const queue = Array.isArray(profile.positioningReviewQueue)
+                ? (profile.positioningReviewQueue as Array<Record<string, unknown>>)
+                : [];
+              const nextQueue = queue.map((item) =>
+                item.decisionId === input.decisionId
+                  ? { ...item, status: input.status, resolvedAt: new Date().toISOString() }
+                  : item,
+              );
+              return {
+                ...profile,
+                positioningReviewQueue: nextQueue,
+              };
+            },
+            { ownerId: project.ownerId, prisma: tx },
+          );
+        } catch (error) {
+          const conflict = toProfileConflictTRPC(error);
+          if (conflict) throw conflict;
+          throw error;
+        }
 
         const decision = await tx.decision.findFirst({
           where: {

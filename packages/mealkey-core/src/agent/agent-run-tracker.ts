@@ -9,6 +9,7 @@ export interface AgentRunCreateInput {
   agentId: string;
   userId: string;
   projectId?: string;
+  missionId?: string;
   conversationId?: string;
   input?: unknown;
 }
@@ -85,6 +86,7 @@ export class PrismaAgentRunStorage implements AgentRunStorage {
         agentId: input.agentId,
         userId: input.userId,
         projectId: input.projectId,
+        missionId: input.missionId,
         conversationId: input.conversationId,
         input: input.input ? JSON.stringify(input.input) : null,
         status: "running",

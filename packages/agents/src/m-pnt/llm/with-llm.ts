@@ -123,7 +123,12 @@ export function defaultCapPrompt(
 ): string {
   const p = context.project;
   const o = context.owner;
+  const brain = context.restaurantContext?.priorBlock?.trim();
+
   return `## 能力任务：${capName}
+
+### 餐厅经营大脑（长期认知）
+${brain || "暂无（未知处不得编造）"}
 
 ### 项目
 - 名称: ${p.name || "-"}

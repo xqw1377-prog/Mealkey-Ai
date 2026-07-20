@@ -57,5 +57,5 @@ describe("founder-layer projection", () => {
     expect(payload.synthesis.validationPlan.length).toBeGreaterThan(0);
     expect(payload.forceAgents).toHaveLength(4);
     expect(payload.runtime.finalDecision.chosen.length).toBeGreaterThan(0);
-  }, PROJECTION_TIMEOUT);
+  }, 45000);
 });

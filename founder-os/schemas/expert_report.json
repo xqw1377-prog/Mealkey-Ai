@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Expert Report",
+  "type": "object",
+  "required": ["engineId", "caseId", "headline", "sections"],
+  "properties": {
+    "engineId": {
+      "type": "string",
+      "enum": ["M-PNT", "M-MKT", "M-BIZ", "M-ED"]
+    },
+    "caseId": { "type": "string" },
+    "headline": { "type": "string" },
+    "stanceHint": {
+      "type": "string",
+      "enum": ["favorable", "cautious", "unfavorable", "insufficient_data"],
+      "description": "专业倾向提示，不是企业决策"
+    },
+    "sections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "content"],
+        "properties": {
+          "id": { "type": "string" },
+          "title": { "type": "string" },
+          "content": { "type": "string" },
+          "evidenceIds": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    },
+    "opportunities": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "risks": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "conditions": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "unknowns": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Founder Decision Note",
+  "description": "创始人不是第八常委；Override 必须留下可学习记录。",
+  "type": "object",
+  "required": ["caseId", "councilRecommendation", "founderAction", "whyDisagree"],
+  "properties": {
+    "caseId": { "type": "string" },
+    "councilRecommendation": {
+      "type": "string",
+      "enum": ["执行", "暂缓", "推翻"]
+    },
+    "founderAction": {
+      "type": "string",
+      "enum": ["执行", "暂缓", "推翻"]
+    },
+    "overrode": { "type": "boolean" },
+    "whyDisagree": {
+      "type": "array",
+      "items": { "type": "string" },
+      "minItems": 1
+    },
+    "coreJudgment": { "type": "string" },
+    "acceptedRisks": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "validationMethod": { "type": "string" },
+    "personalThesis": { "type": "string" },
+    "timestamp": { "type": "string" }
+  }
+}

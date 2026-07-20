@@ -1,19 +1,29 @@
 import { NextResponse } from "next/server";
 
 import { requirePlatformAdmin } from "@/lib/auth-helpers";
-import { platformAdminErrorResponse } from "@/lib/platform-admin-route";
+import { enforcePlatformAdminWriteRateLimit, platformAdminErrorResponse } from "@/lib/platform-admin-route";
 import { prisma } from "@/lib/prisma";
 import {
   createPlatformListing,
-  getPlatformAdminOverview,
+  getPlatformAdminMarketplaceDomain,
+  parsePlatformAdminPaginationFromUrl,
   updatePlatformListing,
 } from "@/server/services/platform-admin.service";
+import { recordPlatformAdminAudit } from "@/server/services/admin-audit.service";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     await requirePlatformAdmin();
-    const overview = await getPlatformAdminOverview(prisma);
-    return NextResponse.json({ ok: true, listings: overview.listings, summary: overview.summary });
+    const pagination = parsePlatformAdminPaginationFromUrl(new URL(request.url));
+    const domain = await getPlatformAdminMarketplaceDomain(prisma, pagination);
+    return NextResponse.json({
+      ok: true,
+      marketplace: domain.marketplace,
+      objectsListings: domain.objectsListings,
+      listings: domain.listings,
+      summary: domain.summary,
+      pagination: domain.pagination,
+    });
   } catch (error) {
     return platformAdminErrorResponse(error);
   }
@@ -21,10 +31,12 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    await requirePlatformAdmin();
+    const user = await requirePlatformAdmin();
     const body = (await request.json()) as Record<string, unknown>;
 
     if (body.action === "update_listing") {
+      const limited = await enforcePlatformAdminWriteRateLimit(request, user.id, "marketplace.update");
+      if (limited) return limited;
       const id = typeof body.id === "string" ? body.id : "";
       const status = typeof body.status === "string" ? body.status : "";
       const visibility = typeof body.visibility === "string" ? body.visibility : undefined;
@@ -41,8 +53,30 @@ export async function POST(request: Request) {
         priceCents,
       });
 
+      await recordPlatformAdminAudit(prisma, user, {
+        route: "/api/platform/admin/marketplace",
+        action: "listing.update",
+        targetType: "listing",
+        targetId: listing.id,
+        input: {
+          id,
+          status,
+          visibility: visibility ?? null,
+          priceCents: priceCents ?? null,
+        },
+        result: {
+          id: listing.id,
+          status,
+          visibility: visibility ?? null,
+          priceCents: priceCents ?? null,
+        },
+      });
+
       return NextResponse.json({ ok: true, listing });
     }
+
+    const limited = await enforcePlatformAdminWriteRateLimit(request, user.id, "marketplace.create");
+    if (limited) return limited;
 
     const name = typeof body.name === "string" ? body.name.trim() : "";
     const slug = typeof body.slug === "string" ? body.slug : undefined;
@@ -60,6 +94,24 @@ export async function POST(request: Request) {
       priceCents,
       currency,
       pricingModel,
+    });
+
+    await recordPlatformAdminAudit(prisma, user, {
+      route: "/api/platform/admin/marketplace",
+      action: "listing.create",
+      targetType: "listing",
+      targetId: listing.id,
+      input: {
+        name,
+        slug: slug ?? null,
+        priceCents: priceCents ?? null,
+        currency: currency ?? null,
+        pricingModel: pricingModel ?? null,
+      },
+      result: {
+        id: listing.id,
+        slug: listing.slug,
+      },
     });
 
     return NextResponse.json({ ok: true, listing });

@@ -13,6 +13,22 @@ export const ExpertStatementDraftSchema = z.object({
   claim: z.string().max(400),
   reasons: z.array(z.string().max(400)).max(6),
   challengeTo: z.string().max(80).optional(),
+  challengeEvidenceId: z.string().max(80).optional(),
+  evidence: z
+    .array(
+      z.object({
+        evidenceId: z.string(),
+        statement: z.string().max(400),
+        sourceLabel: z.string().max(80).optional(),
+      }),
+    )
+    .max(6)
+    .optional(),
+  confidence: z.number().min(0).max(1).optional(),
+  reasoning: z.string().max(500).optional(),
+  validation: z.string().max(300).optional(),
+  evidenceSufficient: z.boolean().optional(),
+  evidenceGap: z.array(z.string().max(300)).max(4).optional(),
 });
 
 export const MeetingConflictDraftSchema = z.object({
@@ -50,6 +66,7 @@ export const MeetingRuntimeDraftSchema = z.object({
           sideB: z.string(),
           dimension: z.string(),
           agents: z.array(z.string()),
+          drivingEvidenceIds: z.array(z.string()).max(8).optional(),
         }),
       )
       .max(8),
@@ -64,12 +81,107 @@ export const MeetingRuntimeDraftSchema = z.object({
                 agent: z.string(),
                 summary: z.string(),
                 stance: z.string().optional(),
+                challengeTo: z.string().optional(),
+                challengeEvidenceId: z.string().optional(),
               }),
             )
             .max(8),
         }),
       )
       .max(6),
+    conflictMatrix: z
+      .object({
+        rows: z
+          .array(
+            z.object({
+              topic: z.string(),
+              cells: z.record(z.string()),
+              summary: z.string(),
+              drivingEvidenceIds: z.array(z.string()).max(8).optional(),
+            }),
+          )
+          .max(6),
+        primary: z
+          .object({
+            topic: z.string(),
+            sideA: z.object({
+              agents: z.array(z.string()),
+              claim: z.string(),
+            }),
+            sideB: z.object({
+              agents: z.array(z.string()),
+              claim: z.string(),
+            }),
+            drivingEvidenceIds: z.array(z.string()).max(8).optional(),
+            question: z.string().optional(),
+          })
+          .nullable()
+          .optional(),
+        tradeoffs: z
+          .array(
+            z.object({
+              keep: z.string(),
+              giveUp: z.string(),
+              why: z.string(),
+            }),
+          )
+          .max(4)
+          .optional(),
+      })
+      .optional(),
+    debateSession: z
+      .object({
+        debateId: z.string(),
+        status: z.string(),
+        conflicts: z
+          .array(
+            z.object({
+              conflictId: z.string(),
+              topic: z.string(),
+              severity: z.enum(["low", "medium", "high"]),
+              committees: z.array(z.string()).max(4),
+              evidenceRefs: z.array(z.string()).max(8),
+              summary: z.string(),
+            }),
+          )
+          .max(8),
+        challenges: z
+          .array(
+            z.object({
+              challengeId: z.string(),
+              fromCommittee: z.string(),
+              fromAgent: z.string(),
+              targetCommittee: z.string(),
+              targetAgent: z.string(),
+              challengeType: z.enum(["evidence", "logic", "assumption", "risk"]),
+              statement: z.string(),
+              evidenceRefs: z.array(z.string()).max(4).optional(),
+            }),
+          )
+          .max(8),
+        proposal: z
+          .object({
+            decision: z.string(),
+            whyNow: z.string(),
+            tradeoffs: z.array(z.string()).max(6),
+            conditions: z.array(z.string()).max(6),
+            risksAccepted: z.array(z.string()).max(6),
+            validationPlan: z.string(),
+          })
+          .optional(),
+        scenarioTests: z
+          .array(
+            z.object({
+              scenarioId: z.string(),
+              scenario: z.string(),
+              trigger: z.string(),
+              impact: z.string(),
+              mitigation: z.string(),
+            }),
+          )
+          .max(4),
+      })
+      .optional(),
   }),
   decisions: z
     .array(
@@ -80,6 +192,22 @@ export const MeetingRuntimeDraftSchema = z.object({
         stance: z.string().optional(),
         risks: z.array(z.string()).max(6),
         nextSteps: z.array(z.string()).max(6),
+        evidence: z
+          .array(
+            z.object({
+              evidenceId: z.string().optional(),
+              label: z.string(),
+              content: z.string(),
+              source: z.string().optional(),
+            }),
+          )
+          .max(6)
+          .optional(),
+        reasoning: z.string().optional(),
+        validation: z.string().optional(),
+        evidenceSufficient: z.boolean().optional(),
+        evidenceGap: z.array(z.string()).max(4).optional(),
+        confidence: z.number().optional(),
       }),
     )
     .max(8),
@@ -88,6 +216,7 @@ export const MeetingRuntimeDraftSchema = z.object({
     problem: z.string(),
     reason: z.array(z.string()).max(8),
     validationPlan: z.array(z.string()).max(8),
+    evidenceStatus: z.enum(["sufficient", "insufficient"]).optional(),
   }),
 });
 

@@ -1,0 +1,19 @@
+decision_type: "new_brand"
+name: "第二品牌 / 新品牌"
+level: 3
+pass_requirement: "6/7 + 创始人确认"
+weights:
+  CSO: 4
+  CMO: 4
+  CBO: 5
+  BMO: 4
+  CFO: 3
+  COO: 3
+  CRO: 3
+veto_roles:
+  - "CBO"
+  - "CFO"
+default_required_agents:
+  - "M-PNT"
+  - "M-MKT"
+  - "M-BIZ"

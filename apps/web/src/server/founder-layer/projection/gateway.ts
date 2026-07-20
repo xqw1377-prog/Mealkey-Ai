@@ -55,19 +55,38 @@ export function projectDecisionToOpinion(input: {
       ? input.decision.evidence.map((item) => `${item.label}：${item.content}`).slice(0, 3)
       : input.decision.nextSteps.slice(0, 2);
 
+  const provider = input.decision.metadata?.provider;
+  const judgement = input.decision.judgement || "";
+  /** 以 provider 为准；高置信启发式不得冒充真引擎 */
+  const degraded =
+    provider === "heuristic" ||
+    judgement.includes("【启发式】") ||
+    judgement.includes("本席暂时降级") ||
+    input.decision.confidence < 0.45;
+
   return {
     opinionId: input.decision.decisionId,
     meetingId: input.meetingId,
     agentId,
     seatLabel: seat.seatLabel,
     stance: input.decision.stance ?? "neutral",
-    claim: clip(input.decision.judgement),
+    claim: clip(judgement),
     reasons,
     risks: input.decision.risks.slice(0, 3),
     confidence: input.decision.confidence,
-    degraded:
-      input.decision.judgement.includes("本席暂时降级") ||
-      input.decision.confidence < 0.45,
+    degraded,
+    evidence: input.decision.evidence
+      .filter((item) => item.evidenceId && item.content)
+      .slice(0, 4)
+      .map((item) => ({
+        evidenceId: item.evidenceId!,
+        statement: item.content,
+        sourceLabel: item.source || item.label || "依据",
+      })),
+    reasoning: input.decision.reasoning,
+    assumptions: input.decision.assumptions ?? input.decision.evidenceGap,
+    validation: input.decision.validation,
+    evidenceSufficient: input.decision.evidenceSufficient,
     createdAt: input.decision.metadata?.producedAt ?? new Date().toISOString(),
   };
 }

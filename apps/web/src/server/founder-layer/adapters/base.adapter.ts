@@ -34,4 +34,10 @@ export abstract class BaseFounderAgentAdapter implements FounderAgentAdapter {
   protected buildNowIso() {
     return new Date().toISOString();
   }
+
+  /** Memory Engine 先验块 — 注入各席 payload */
+  protected memoryPriorPayload(input: AdapterBuildInput): Record<string, string> {
+    const block = input.memory?.priorBlock?.trim();
+    return block ? { memoryPriorBlock: block } : {};
+  }
 }

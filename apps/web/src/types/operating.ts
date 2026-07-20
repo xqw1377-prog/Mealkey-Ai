@@ -1,16 +1,23 @@
-// ─── 导航 ───
+// ─── 导航（Founder OS V2）───
 
 export type NavSection =
   | "today"
-  | "world"
+  | "capability"
   | "meeting"
+  | "action"
+  | "growth"
+  /** @deprecated → capability */
+  | "world"
+  /** @deprecated → action */
   | "decision"
+  /** @deprecated → growth */
   | "brain";
 
 // ─── 项目数据（从 DB 读取的 ProjectResponse 派生） ───
 
 export interface ProjectProfile {
   ownerName?: string;
+  brandName?: string;
   ownerExperience?: string;
   locationHypothesis?: string;
   stageProgress?: number;

@@ -395,6 +395,7 @@ export async function createAgentRun(
     agentId: string;
     userId: string;
     projectId?: string;
+    missionId?: string;
     conversationId?: string;
     input?: Record<string, unknown>;
   }
@@ -407,6 +408,7 @@ export async function createAgentRun(
       agentId: data.agentId,
       ownerId,
       projectId: data.projectId,
+      missionId: data.missionId,
       conversationId: data.conversationId,
       input: data.input ? JSON.stringify(data.input) : null,
       status: "running",
@@ -535,6 +537,25 @@ export async function createDecision(
     });
   } catch (error) {
     console.warn("Persisting cognitive kernel snapshot failed:", error);
+  }
+
+  // Restaurant Brain：Decision → DecisionRecord 关联（不复制完整决策正文）
+  if (data.projectId) {
+    try {
+      const { linkDecisionToRestaurantBrain } = await import(
+        "../restaurant-brain/service"
+      );
+      await linkDecisionToRestaurantBrain(prisma, {
+        projectId: data.projectId,
+        ownerId: data.ownerId,
+        mkDecisionId: record.id,
+        type: data.type ?? "general",
+        question: data.problem,
+        judgementSummary: data.judgement,
+      });
+    } catch (error) {
+      console.warn("Restaurant Brain decision writeback failed:", error);
+    }
   }
 
   return record;

@@ -1,0 +1,35 @@
+---
+description: User Intelligence Evolution V1 — Intelligence Profile / Permission；禁止第七 Runtime 与偷学
+alwaysApply: true
+---
+
+# User Intelligence Evolution V1（冻结）
+
+权威：`docs/FOUNDER_OS_USER_INTELLIGENCE_EVOLUTION_V1_FREEZE.md` · `docs/AUTHORITY.md` §2.12  
+契约：`apps/web/src/server/founder-layer/contracts/intelligence-profile.ts`
+
+## 是什么
+
+经营者数字镜像与学习闭环的**收口层**：Intelligence Profile（读投影）+ BehaviorSignal（四类燃料）+ Memory Permission（同意）。
+
+终局叙事：每一个餐饮经营者拥有一个不断成长的 AI 经营大脑——不是一次性问答工具。
+
+## 挂载（铁律）
+
+- 加深 **Memory Runtime + Growth Runtime**
+- **不是**第七 Runtime，**不是** `M-LEARN` / `M-INTEL` 顾问席
+- 工程主线仍是 Council Runtime；U2+ 须有决策与执行燃料
+
+## 只收四类燃料
+
+决策选择 · 修改/推翻 AI 建议 · M-EXEC 执行完成率 · 预测 vs 实际误差。禁止把普通聊天当学习燃料。
+
+## Memory Permission
+
+- `saveExperience` / `useForPersonalGrowth` 默认可开
+- `contributeToIndustryModel` **默认关**；未 opt-in 禁止写 Industry / 跨租户
+- 禁止偷偷学习；企业用户须可展示、可关闭
+
+## 与常委
+
+Founder Profile 可校准常委**提醒权重**；不得替代 Founder 签字或常委治理终局。

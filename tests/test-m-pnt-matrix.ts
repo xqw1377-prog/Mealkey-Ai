@@ -74,7 +74,7 @@ async function main() {
 
   await test("getTheoryAgent 可按 id 取 Agent", () => {
     assert(
-      getTheoryAgent("ries").name.includes("里斯") ||
+      getTheoryAgent("ries").name.includes("心智") ||
         getTheoryAgent("ries").id === "ries",
       "ries",
     );
@@ -146,20 +146,19 @@ async function main() {
     }
   });
 
-  await test("三 Agent 各代表：里斯定位 / 特劳特定位 / 冲突营销", () => {
+  await test("三 Agent 各代表：心智占位 / 竞争空位 / 冲突营销", () => {
     assert(
-      riesAgent.name.includes("里斯") || riesAgent.stance.includes("里斯定位"),
-      "ries = 里斯定位",
+      riesAgent.stance.includes("心智占位") || riesAgent.name.includes("心智"),
+      "ries = 心智占位学派",
     );
     assert(
-      troutAgent.name.includes("特劳特") ||
-        troutAgent.stance.includes("特劳特定位"),
-      "trout = 特劳特定位",
+      troutAgent.stance.includes("竞争空位") || troutAgent.name.includes("空位"),
+      "trout = 竞争空位学派",
     );
     assert(
-      yeMaozhongAgent.name.includes("冲突") ||
-        yeMaozhongAgent.stance.includes("冲突营销"),
-      "ye = 叶茂中冲突营销",
+      yeMaozhongAgent.stance.includes("冲突营销") ||
+        yeMaozhongAgent.name.includes("冲突"),
+      "ye = 冲突营销学派",
     );
   });
 

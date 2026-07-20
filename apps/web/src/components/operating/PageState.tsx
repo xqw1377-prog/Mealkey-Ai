@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { AlertCircle, ArrowRight, LoaderCircle, Sparkles } from "lucide-react";
+import { AlertCircle, ArrowRight, LoaderCircle } from "lucide-react";
+import { PRODUCT_BRAND_EYEBROW } from "@/lib/product-brand";
 
 type ActionLink = {
   href: string;
@@ -23,24 +24,22 @@ function ActionButtons({
   if (!primaryAction && !secondaryAction) return null;
 
   return (
-    <div className="mt-5 grid grid-cols-2 gap-2 md:gap-3">
-      {secondaryAction ? (
-        <Link
-          href={secondaryAction.href}
-          className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-[14px] border border-[rgba(24,24,23,0.08)] bg-[#F5F3EE] px-4 text-[14px] font-semibold text-[#202124] no-underline transition hover:-translate-y-0.5 active:scale-[0.98] md:min-h-11 md:text-[15px]"
-        >
-          <span>{secondaryAction.label}</span>
-          <ArrowRight className="h-4 w-4" />
-        </Link>
-      ) : null}
+    <div className="mt-6 flex flex-col gap-2.5 sm:flex-row sm:items-center">
       {primaryAction ? (
         <Link
           href={primaryAction.href}
-          className={`inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-[14px] bg-[#181817] px-4 text-[14px] font-semibold text-white no-underline transition hover:-translate-y-0.5 active:scale-[0.98] md:min-h-11 md:text-[15px] ${
-            secondaryAction ? "" : "col-span-2"
-          }`}
+          className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[16px] bg-[#181817] px-5 text-[15px] font-semibold text-white no-underline touch-manipulation active:scale-[0.98] aria-disabled:cursor-not-allowed aria-disabled:opacity-50"
         >
           <span>{primaryAction.label}</span>
+          <ArrowRight className="h-4 w-4" />
+        </Link>
+      ) : null}
+      {secondaryAction ? (
+        <Link
+          href={secondaryAction.href}
+          className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[16px] border border-[rgba(24,24,23,0.12)] bg-white px-5 text-[15px] font-semibold text-[#181817] no-underline touch-manipulation aria-disabled:cursor-not-allowed aria-disabled:opacity-50"
+        >
+          <span>{secondaryAction.label}</span>
           <ArrowRight className="h-4 w-4" />
         </Link>
       ) : null}
@@ -48,14 +47,15 @@ function ActionButtons({
   );
 }
 
+/** 加载态 — 对齐晨间字号阶梯 */
 export function PageLoadingState({
-  eyebrow = "MealKey",
-  title = "AI 正在整理这一页",
-  description = "正在读取上下文和判断结果。",
+  eyebrow = PRODUCT_BRAND_EYEBROW,
+  title = "正在打开…",
+  description = "稍等片刻。",
   steps = [
-    { label: "读取上下文", status: "done" },
-    { label: "收束问题", status: "active" },
-    { label: "生成本页", status: "pending" },
+    { label: "读取", status: "done" },
+    { label: "整理", status: "active" },
+    { label: "就绪", status: "pending" },
   ],
 }: {
   eyebrow?: string;
@@ -64,79 +64,44 @@ export function PageLoadingState({
   steps?: StateStep[];
 }) {
   return (
-    <div className="space-y-4 pb-2 pt-[calc(env(safe-area-inset-top)+1rem)] md:space-y-5 md:pt-8">
+    <div className="mx-auto w-full max-w-xl space-y-5 px-4 pb-10 pt-6 md:px-6 md:pt-8">
       <header className="space-y-2">
-        <div className="h-4 w-20 animate-pulse rounded-full bg-[rgba(24,24,23,0.12)]" />
-        <div className="h-8 w-44 animate-pulse rounded-[14px] bg-[rgba(24,24,23,0.12)] md:h-9 md:w-48" />
-        <div className="h-4 w-64 max-w-full animate-pulse rounded-full bg-[rgba(24,24,23,0.10)] md:w-72" />
+        <p className="text-[11px] font-medium tracking-[0.14em] text-[#66735E]">
+          {eyebrow}
+        </p>
+        <h1 className="font-display text-[30px] font-semibold leading-[1.1] tracking-[-0.045em] text-[#202124] md:text-[36px]">
+          {title}
+        </h1>
+        <p className="text-[15px] leading-7 text-[#3a3d41]">{description}</p>
       </header>
 
-      <section className="rounded-[22px] border border-[rgba(24,24,23,0.08)] bg-[linear-gradient(180deg,#fbfaf7_0%,#eef1ea_100%)] p-4 shadow-[0_14px_30px_rgba(24,24,23,0.04)] md:p-4">
-        <div className="inline-flex items-center gap-2 rounded-full bg-white/75 px-3 py-1 text-[12px] font-medium leading-5 tracking-[0.01em] text-[#66735E]">
+      <section className="border-y border-[rgba(24,24,23,0.08)] py-5">
+        <p className="inline-flex items-center gap-2 text-[13px] text-[#66735E]">
           <LoaderCircle className="h-3.5 w-3.5 animate-spin" />
-          <span>{eyebrow}</span>
-        </div>
-        <p className="mt-2 text-[18px] leading-[1.25] tracking-[-0.03em] text-[#202124] md:text-[22px]">{title}</p>
-        <p className="mt-3 text-[14px] leading-[1.7] text-[#6f747b]">{description}</p>
-
-        <div className="mt-5 rounded-[18px] border border-[rgba(24,24,23,0.06)] bg-white/80 p-3 md:p-4">
-          <p className="text-[12px] leading-5 tracking-[0.01em] text-[#6f747b]">当前状态</p>
-          <div className="mt-3 space-y-3">
-            {steps.map((step) => (
-              <div
-                key={step.label}
-                className="flex items-center gap-3 rounded-[14px] border border-[rgba(24,24,23,0.05)] bg-[#FCFBF8] px-3 py-2.5 md:py-3"
+          加载中
+        </p>
+        <ul className="mt-4 space-y-3" aria-live="polite">
+          {steps.map((step, index) => (
+            <li key={step.label} className="flex items-center gap-3">
+              <span
+                className={[
+                  "inline-flex h-6 w-6 items-center justify-center rounded-[6px] text-[11px] font-semibold",
+                  step.status === "done"
+                    ? "bg-[rgba(102,115,94,0.12)] text-[#66735E]"
+                    : step.status === "active"
+                      ? "bg-[rgba(180,124,92,0.14)] text-[#B47C5C]"
+                      : "bg-[rgba(24,24,23,0.06)] text-[#6f747b]",
+                ].join(" ")}
               >
-                <div
-                  className={[
-                    "inline-flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-semibold",
-                    step.status === "done"
-                      ? "bg-[rgba(102,115,94,0.12)] text-[#66735E]"
-                      : step.status === "active"
-                        ? "bg-[rgba(180,124,92,0.14)] text-[#B47C5C]"
-                        : "bg-[rgba(24,24,23,0.06)] text-[#6f747b]",
-                  ].join(" ")}
-                >
-                  {step.status === "done" ? "01" : step.status === "active" ? "02" : "03"}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-[14px] leading-6 text-[#202124]">{step.label}</p>
-                </div>
-                <div
-                  className={[
-                    "h-2.5 w-2.5 rounded-full",
-                    step.status === "done"
-                      ? "bg-[#66735E]"
-                      : step.status === "active"
-                        ? "animate-pulse bg-[#B47C5C]"
-                        : "bg-[rgba(24,24,23,0.10)]",
-                  ].join(" ")}
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="rounded-[22px] border border-[rgba(24,24,23,0.08)] bg-white p-4 shadow-[0_14px_28px_rgba(24,24,23,0.04)] md:p-4">
-        <div className="inline-flex items-center gap-2 rounded-full bg-[rgba(102,115,94,0.08)] px-3 py-1 text-[12px] font-medium leading-5 tracking-[0.01em] text-[#66735E]">
-          <Sparkles className="h-3.5 w-3.5" />
-          <span>正在组织内容</span>
-        </div>
-        <div className="mt-4 grid gap-3">
-          <div className="rounded-[16px] bg-[rgba(24,24,23,0.04)] p-3 md:p-4">
-            <div className="h-4 w-24 animate-pulse rounded-full bg-[rgba(24,24,23,0.12)]" />
-            <div className="mt-3 h-14 animate-pulse rounded-[14px] bg-[rgba(24,24,23,0.10)]" />
-          </div>
-          <div className="rounded-[16px] bg-[rgba(24,24,23,0.04)] p-3 md:p-4">
-            <div className="h-4 w-20 animate-pulse rounded-full bg-[rgba(24,24,23,0.12)]" />
-            <div className="mt-3 h-14 animate-pulse rounded-[14px] bg-[rgba(24,24,23,0.10)]" />
-          </div>
-          <div className="hidden rounded-[16px] bg-[rgba(24,24,23,0.04)] p-3 md:block md:p-4">
-            <div className="h-4 w-28 animate-pulse rounded-full bg-[rgba(24,24,23,0.12)]" />
-            <div className="mt-3 h-14 animate-pulse rounded-[14px] bg-[rgba(24,24,23,0.10)]" />
-          </div>
-        </div>
+                {String(index + 1).padStart(2, "0")}
+              </span>
+              <span className="text-[15px] text-[#202124]">{step.label}</span>
+              {step.status === "active" ? (
+                <span className="ml-auto h-2 w-2 animate-pulse bg-[#B47C5C]" />
+              ) : null}
+            </li>
+          ))}
+        </ul>
       </section>
     </div>
   );
@@ -156,20 +121,18 @@ export function PageEmptyState({
   secondaryAction?: ActionLink;
 }) {
   return (
-    <section className="rounded-[22px] border border-[rgba(24,24,23,0.08)] bg-[linear-gradient(180deg,#fbfaf7_0%,#eef1ea_100%)] p-4 shadow-[0_14px_30px_rgba(24,24,23,0.04)] md:p-5">
-      <div className="inline-flex items-center gap-2 rounded-full bg-white/78 px-3 py-1 text-[12px] font-medium leading-5 tracking-[0.01em] text-[#66735E]">
-        <Sparkles className="h-3.5 w-3.5" />
-        <span>{eyebrow}</span>
-      </div>
-      <p className="mt-2 text-[20px] leading-[1.3] tracking-[-0.03em] text-[#202124] md:text-[24px]">{title}</p>
-      <p className="mt-3 text-[15px] leading-[1.7] text-[#6f747b]">{description}</p>
-
-      <div className="mt-5 rounded-[16px] border border-[rgba(24,24,23,0.06)] bg-white/80 px-4 py-3">
-        <p className="text-[12px] leading-5 tracking-[0.01em] text-[#6f747b]">下一步</p>
-        <p className="mt-1 text-[14px] leading-[1.7] text-[#202124]">补上下文，再回来。</p>
-      </div>
-
-      <ActionButtons primaryAction={primaryAction} secondaryAction={secondaryAction} />
+    <section className="mx-auto w-full max-w-xl border-y border-[rgba(24,24,23,0.08)] px-4 py-8 md:px-6">
+      <p className="text-[11px] font-medium tracking-[0.14em] text-[#66735E]">
+        {eyebrow}
+      </p>
+      <h1 className="mt-2 font-display text-[30px] font-semibold leading-[1.1] tracking-[-0.045em] text-[#202124] md:text-[36px]">
+        {title}
+      </h1>
+      <p className="mt-3 text-[15px] leading-7 text-[#3a3d41]">{description}</p>
+      <ActionButtons
+        primaryAction={primaryAction}
+        secondaryAction={secondaryAction}
+      />
     </section>
   );
 }
@@ -180,7 +143,7 @@ export function PageErrorState({
   description,
   primaryAction,
   secondaryAction,
-  highlights = ["先继续主链路。", "上下文恢复后，这一页会自动重建。"],
+  highlights = [],
 }: {
   eyebrow: string;
   title: string;
@@ -190,28 +153,28 @@ export function PageErrorState({
   highlights?: string[];
 }) {
   return (
-    <section className="rounded-[22px] border border-[rgba(180,124,92,0.18)] bg-[linear-gradient(180deg,#fbfaf7_0%,rgba(180,124,92,0.08)_100%)] p-4 shadow-[0_14px_30px_rgba(24,24,23,0.04)] md:p-5">
-      <div className="inline-flex items-center gap-2 rounded-full bg-white/78 px-3 py-1 text-[12px] font-medium leading-5 tracking-[0.01em] text-[#B47C5C]">
+    <section className="mx-auto w-full max-w-xl border-y border-[rgba(180,124,92,0.22)] px-4 py-8 md:px-6">
+      <p className="inline-flex items-center gap-1.5 text-[11px] font-medium tracking-[0.14em] text-[#B47C5C]">
         <AlertCircle className="h-3.5 w-3.5" />
-        <span>{eyebrow}</span>
-      </div>
-      <p className="mt-2 text-[20px] leading-[1.3] tracking-[-0.03em] text-[#202124] md:text-[24px]">{title}</p>
-      <p className="mt-3 text-[15px] leading-[1.7] text-[#6f747b]">{description}</p>
-
+        {eyebrow}
+      </p>
+      <h1 className="mt-2 font-display text-[30px] font-semibold leading-[1.1] tracking-[-0.045em] text-[#202124] md:text-[36px]">
+        {title}
+      </h1>
+      <p className="mt-3 text-[15px] leading-7 text-[#3a3d41]">{description}</p>
       {highlights.length > 0 ? (
-        <div className="mt-5 grid gap-3">
+        <ul className="mt-5 space-y-2 border-l-2 border-[#B47C5C] pl-3">
           {highlights.map((item) => (
-            <div
-              key={item}
-              className="rounded-[16px] border border-[rgba(180,124,92,0.12)] bg-white/70 px-4 py-3"
-            >
-              <p className="text-[14px] leading-[1.7] text-[#202124]">{item}</p>
-            </div>
+            <li key={item} className="text-[15px] leading-6 text-[#202124]">
+              {item}
+            </li>
           ))}
-        </div>
+        </ul>
       ) : null}
-
-      <ActionButtons primaryAction={primaryAction} secondaryAction={secondaryAction} />
+      <ActionButtons
+        primaryAction={primaryAction}
+        secondaryAction={secondaryAction}
+      />
     </section>
   );
 }

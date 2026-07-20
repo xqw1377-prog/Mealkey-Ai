@@ -23,6 +23,7 @@ export type {
   MemoryContext,
   DecisionContext,
   KnowledgeContext,
+  RestaurantBrainContextSlice,
   MKContext,
   // Protocol 2: Decision
   MKDecision,

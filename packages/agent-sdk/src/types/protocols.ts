@@ -69,6 +69,38 @@ export interface KnowledgeContext {
 }
 
 /**
+ * Restaurant Brain 注入切片（Protocol 1 扩展，可选）
+ * 完整契约在 @mealkey/restaurant-brain；此处仅 Agent 可读摘要，零业务依赖。
+ */
+export interface RestaurantBrainContextSlice {
+  restaurantId: string;
+  profile: {
+    name: string;
+    category: string;
+    stage: string;
+    storeCount: number;
+    city?: string | null;
+  };
+  capability: {
+    overall: number;
+    organization: number;
+    finance: number;
+    confidence: number;
+  };
+  recentDecisions: Array<{
+    question: string;
+    chosen?: string;
+    actual?: unknown;
+  }>;
+  learnings: Array<{
+    pattern: string;
+    insight: string;
+  }>;
+  /** prompt 短文 — Agent 应优先读此 */
+  priorBlock: string;
+}
+
+/**
  * MKContext — 所有 Agent 的统一输入
  */
 export interface MKContext {
@@ -77,6 +109,8 @@ export interface MKContext {
   memories: MemoryContext[];
   decisions: DecisionContext[];
   knowledge: KnowledgeContext;
+  /** Restaurant Intelligence Layer — 有 project 时由 Factory 注入 */
+  restaurantContext?: RestaurantBrainContextSlice | null;
 }
 
 // ═══════════════════════════════════════════════════════════════

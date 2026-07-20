@@ -12,6 +12,7 @@ import type {
   MeetingSeedInput,
 } from "./meeting";
 import { GENERAL_EXPERTS } from "./meeting";
+import { resolveNextActionsForOption } from "./meeting-today-actions";
 
 export type ForceAgentCode = "m-mkt" | "m-pnt" | "m-biz" | "m-ed" | "chief";
 
@@ -44,20 +45,20 @@ export const DEPARTMENT_AGENT: Record<MeetingDepartment, ForceAgentCode> = {
 export const BRAND_EXPERTS: ExpertSeat[] = [
   {
     roleId: "expert.ries",
-    displayName: "里斯",
+    displayName: "心智官",
     duty: "心智占位",
     focus: ["心智位置", "第一属性", "简单认知"],
   },
   {
     roleId: "expert.trout",
-    displayName: "特劳特",
-    duty: "竞争定位",
+    displayName: "空位官",
+    duty: "竞争空位",
     focus: ["竞争差异", "对手空位", "品类关系"],
   },
   {
     roleId: "expert.ye",
-    displayName: "叶茂中",
-    duty: "传播落地",
+    displayName: "冲突官",
+    duty: "冲突记忆",
     focus: ["传播锐度", "销售转化", "执行表达"],
   },
   {
@@ -512,6 +513,12 @@ export function runDeliberationRound(params: {
   ];
 
   const options = buildDecisionOptions(params.department, params.topic, focus);
+  const primaryOption = options[0] || {
+    id: "A",
+    label: "方案A",
+    summary: proposed,
+    tradeoff: "能力与窗口仍需对齐",
+  };
   const consensus: ConsensusDraft = {
     summary: proposed,
     proposedDecision: proposed,
@@ -520,7 +527,9 @@ export function runDeliberationRound(params: {
       statements.find((s) => s.stance === "oppose")?.claim || "主要风险仍在能力侧",
       statements.find((s) => s.stance === "support")?.claim || "外部机会仍需重视",
     ].filter(Boolean),
-    nextActions: [options[0]?.summary || "启动90天验证计划"],
+    nextActions: resolveNextActionsForOption(primaryOption, {
+      validationPlan: "90天验证",
+    }),
     validationPlan: "90天验证",
   };
 

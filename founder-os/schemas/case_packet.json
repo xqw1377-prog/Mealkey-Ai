@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Case Packet",
+  "type": "object",
+  "required": ["caseId", "question", "decisionType"],
+  "properties": {
+    "caseId": { "type": "string" },
+    "question": { "type": "string" },
+    "objective": { "type": "string" },
+    "decisionType": {
+      "type": "string",
+      "enum": [
+        "new_city_expansion",
+        "new_brand",
+        "fundraising",
+        "store_expansion",
+        "restructuring"
+      ]
+    },
+    "background": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "constraints": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "deadline": { "type": "string" },
+    "founderView": {
+      "type": "object",
+      "properties": {
+        "position": { "type": "string" },
+        "why": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "constraints": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "requiredAgents": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  },
+  "examples": [
+    {
+      "caseId": "D-001",
+      "question": "是否进入上海市场",
+      "objective": "一年建立 10 家店并完成首店模型验证",
+      "decisionType": "new_city_expansion",
+      "background": ["上海市场竞争激烈，但品牌升级窗口明显"],
+      "constraints": ["一年内必须看到模型验证", "现金流不得失控"],
+      "deadline": "2027-01",
+      "founderView": {
+        "position": "倾向支持",
+        "why": ["看好高线城市品牌溢价", "希望借上海提升全国势能"],
+        "constraints": ["不能接受现金流失控"]
+      },
+      "requiredAgents": ["M-MKT", "M-PNT", "M-BIZ", "M-ED"]
+    }
+  ]
+}

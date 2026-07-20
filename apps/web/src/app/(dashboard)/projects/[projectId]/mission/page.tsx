@@ -1,16 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { understandMissionGoal } from "@/lib/mission";
+import { PageErrorBoundary } from "@/components/operating/PageErrorBoundary";
 
-export default function MissionPage({
-  params,
-}: {
-  params: { projectId: string };
-}) {
+function MissionContent({ projectId }: { projectId: string }) {
   const searchParams = useSearchParams();
   const presetGoal = searchParams?.get("goal")?.trim() || "";
   const [goal, setGoal] = useState(presetGoal);
@@ -22,20 +19,24 @@ export default function MissionPage({
     setSubmitted(true);
   }, [presetGoal]);
 
-  const understanding = useMemo(
-    () => (submitted && goal.trim() ? understandMissionGoal(goal) : null),
-    [submitted, goal],
-  );
+  const understanding = useMemo(() => {
+    if (!submitted || !goal.trim()) return null;
+    try {
+      return understandMissionGoal(goal);
+    } catch {
+      return null;
+    }
+  }, [submitted, goal]);
 
   return (
     <div className="mx-auto max-w-2xl space-y-8 pb-10 pt-6 md:pt-10">
       <header className="space-y-2">
-        <p className="text-[13px] tracking-[0.08em] text-[#66735E]">发起商业议题</p>
+        <p className="text-[13px] tracking-[0.08em] text-[#66735E]">新议题</p>
         <h1 className="font-display text-[30px] font-semibold leading-none tracking-[-0.04em] text-[#202124]">
-          用一句话说目标
+          一句话说目标
         </h1>
         <p className="text-[15px] leading-7 text-[#6f747b]">
-          不必选顾问、不必填表单。你说目标，我组织会议。
+          说完就开会，不用填表。
         </p>
       </header>
 
@@ -55,27 +56,27 @@ export default function MissionPage({
             className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[16px] bg-[#181817] px-5 text-[15px] font-semibold text-white disabled:opacity-50"
           >
             <Sparkles className="h-4 w-4" />
-            让我理解这个目标
+            下一步
           </button>
           <Link
-            href={`/projects/${params.projectId}`}
+            href={`/projects/${projectId}`}
             prefetch={false}
             className="inline-flex text-[13px] text-[#66735E] no-underline"
           >
-            返回企业世界
+            回企业
           </Link>
         </section>
       ) : (
         <section className="space-y-6">
           <div className="space-y-2 border-y border-[rgba(24,24,23,0.08)] py-6">
-            <p className="text-[12px] tracking-[0.08em] text-[#6f747b]">我理解你的目标</p>
+            <p className="text-[12px] tracking-[0.08em] text-[#6f747b]">理解成</p>
             <h2 className="text-[22px] font-semibold leading-snug tracking-[-0.02em] text-[#202124]">
               {understanding.understoodGoal}
             </h2>
           </div>
 
           <div>
-            <p className="text-[12px] tracking-[0.08em] text-[#6f747b]">我建议先解决三个问题</p>
+            <p className="text-[12px] tracking-[0.08em] text-[#6f747b]">开会先谈</p>
             <ol className="mt-3 space-y-2">
               {understanding.questions.map((q, i) => (
                 <li key={q} className="text-[15px] leading-7 text-[#202124]">
@@ -86,7 +87,7 @@ export default function MissionPage({
           </div>
 
           <div>
-            <p className="text-[12px] tracking-[0.08em] text-[#6f747b]">我准备邀请</p>
+            <p className="text-[12px] tracking-[0.08em] text-[#6f747b]">谁会到场</p>
             <div className="mt-3 flex flex-wrap gap-2">
               {understanding.invitedExperts.map((expert) => (
                 <span
@@ -98,18 +99,15 @@ export default function MissionPage({
                 </span>
               ))}
             </div>
-            <p className="mt-3 text-[14px] leading-6 text-[#6f747b]">
-              这个问题需要一次战略评审会议。
-            </p>
           </div>
 
           <div className="flex flex-col gap-2 sm:flex-row">
             <Link
-              href={understanding.meetingHref(params.projectId)}
+              href={understanding.meetingHref(projectId)}
               prefetch={false}
               className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[16px] bg-[#181817] px-5 text-[15px] font-semibold text-white no-underline"
             >
-              开始会议
+              开始开会
               <ArrowRight className="h-4 w-4" />
             </Link>
             <button
@@ -120,11 +118,31 @@ export default function MissionPage({
               }}
               className="inline-flex min-h-11 items-center justify-center rounded-[14px] border border-[rgba(24,24,23,0.08)] bg-white px-4 text-[14px] font-medium text-[#202124]"
             >
-              调整目标
+              改目标
             </button>
           </div>
         </section>
       )}
     </div>
+  );
+}
+
+export default function MissionPage({
+  params,
+}: {
+  params: { projectId: string };
+}) {
+  return (
+    <PageErrorBoundary fallbackTitle="目标页暂时打不开">
+      <Suspense
+        fallback={
+          <div className="flex min-h-[40vh] items-center justify-center text-[14px] text-[#6f747b]">
+            正在打开目标页…
+          </div>
+        }
+      >
+        <MissionContent projectId={params.projectId} />
+      </Suspense>
+    </PageErrorBoundary>
   );
 }

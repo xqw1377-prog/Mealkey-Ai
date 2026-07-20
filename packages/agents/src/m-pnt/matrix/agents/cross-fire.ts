@@ -29,9 +29,9 @@ export async function runCrossFireAgent(
   };
 
   const prefs = [
-    { id: "ries" as TheoryAgentId, label: "里斯定位", view: ries },
-    { id: "trout" as TheoryAgentId, label: "特劳特定位", view: trout },
-    { id: "ye_maozhong" as TheoryAgentId, label: "叶茂中冲突营销", view: ye },
+    { id: "ries" as TheoryAgentId, label: "心智官", view: ries },
+    { id: "trout" as TheoryAgentId, label: "空位官", view: trout },
+    { id: "ye_maozhong" as TheoryAgentId, label: "冲突官", view: ye },
   ];
 
   const conflicts: string[] = [];
@@ -57,11 +57,11 @@ export async function runCrossFireAgent(
       `软共识：两方倾向「${majorityName}」；第三方仍持异议（禁止直接当最终共识）`,
     );
     conflicts.push(
-      `竞争分裂：Ries→${ries.preferred_direction}｜Trout→${trout.preferred_direction}｜Ye→${ye.preferred_direction}`,
+      `竞争分裂：心智官→${ries.preferred_direction}｜空位官→${trout.preferred_direction}｜冲突官→${ye.preferred_direction}`,
     );
   } else {
     conflicts.push(
-      `全面竞争：三票各推不同方向 — Ries「${ries.preferred_direction}」vs Trout「${trout.preferred_direction}」vs Ye「${ye.preferred_direction}」`,
+      `全面竞争：三票各推不同方向 — 心智官「${ries.preferred_direction}」vs 空位官「${trout.preferred_direction}」vs 冲突官「${ye.preferred_direction}」`,
     );
     irreducible.push("三方首选互斥，必须经博弈攻击与否决规则取舍，禁止和稀泥平均");
   }
@@ -232,34 +232,34 @@ function attackLine(
 ): string {
   switch (from) {
     case "ries":
-      return `【里斯定位】攻击 ${labelOf(defender.agent_id)} 的「${targetOneLiner}」：在心智第一与战略聚焦尺度下，该方向${
+      return `【心智官】攻击 ${labelOf(defender.agent_id)} 的「${targetOneLiner}」：在心智第一与战略聚焦尺度下，该方向${
         /第一|首选|心智|占位/.test(targetOneLiner)
           ? "看似有占位，但仍可能切口过窄、难成可长期强化的领导概念"
           : "聚焦不足或难称心智第一，长期占位不成立"
-      }。里斯侧主推「${attacker.preferred_direction}」。`;
+      }。心智官主推「${attacker.preferred_direction}」。`;
     case "trout":
-      return `【特劳特定位】攻击 ${labelOf(defender.agent_id)} 的「${targetOneLiner}」：在竞争空位与第一联想尺度下，该方向${
+      return `【空位官】攻击 ${labelOf(defender.agent_id)} 的「${targetOneLiner}」：在竞争空位与第一联想尺度下，该方向${
         /对立|区隔|不|只|空位/.test(targetOneLiner)
           ? "有区隔苗头，但仍可能不够锋利、易被换皮跟进"
           : "缺少可感知空位，更像「更好」而非竞争中的不同"
-      }。特劳特侧主推「${attacker.preferred_direction}」。`;
+      }。空位官主推「${attacker.preferred_direction}」。`;
     case "ye_maozhong":
-      return `【叶茂中冲突营销】攻击 ${labelOf(defender.agent_id)} 的「${targetOneLiner}」：在冲突记忆与可成交尺度下，该方向${
+      return `【冲突官】攻击 ${labelOf(defender.agent_id)} 的「${targetOneLiner}」：在冲突记忆与可成交尺度下，该方向${
         /冲突|对立|不|只|打破|而非/.test(targetOneLiner)
           ? "有冲突结构，但须证明能传播、能进店、30 天能验证"
           : "冲突点偏弱或只有正确口号，记不住也带不动成交"
-      }。冲突营销侧主推「${attacker.preferred_direction}」。`;
+      }。冲突官主推「${attacker.preferred_direction}」。`;
   }
 }
 
 function defenseLine(to: TheoryAgentId, defender: TheoryView): string {
   switch (to) {
     case "ries":
-      return `里斯防守：若能持续强化同一心智第一概念，仍可争领导占位（${defender.theory_recommend}）`;
+      return `心智官防守：若能持续强化同一心智第一概念，仍可争领导占位（${defender.theory_recommend}）`;
     case "trout":
-      return `特劳特防守：若空位/第一联想不可轻易替换，跟进成本上升（${defender.theory_recommend}）`;
+      return `空位官防守：若空位/第一联想不可轻易替换，跟进成本上升（${defender.theory_recommend}）`;
     case "ye_maozhong":
-      return `冲突营销防守：若冲突能被最小动作验证并带动成交，否决可解除（${defender.theory_recommend}）`;
+      return `冲突官防守：若冲突能被最小动作验证并带动成交，否决可解除（${defender.theory_recommend}）`;
   }
 }
 
@@ -294,7 +294,7 @@ function buildGameSummary(args: {
       : args.uniquePref === 2
         ? "竞争阶段：两方结盟、一方异议"
         : "竞争阶段：三方鼎立、互不相让";
-  const phase2 = `博弈阶段：共发出 ${args.challenges.length} 次跨理论攻击（Ries⇄Trout⇄Ye）`;
+  const phase2 = `博弈阶段：共发出 ${args.challenges.length} 次跨席攻击（心智官⇄空位官⇄冲突官）`;
   const phase3 =
     args.hard.length > 0
       ? `共识阶段：形成 ${args.hard.length} 条硬共识` +
@@ -306,17 +306,17 @@ function buildGameSummary(args: {
     args.eliminate.length > 0
       ? `；淘汰池 ${args.eliminate.length} 项`
       : "";
-  return `${phase1} → ${phase2} → ${phase3}${elim}。票面：Ries[${args.ries.theory_recommend}/${args.ries.preferred_direction}] · Trout[${args.trout.theory_recommend}/${args.trout.preferred_direction}] · Ye[${args.ye.theory_recommend}/${args.ye.preferred_direction}]`;
+  return `${phase1} → ${phase2} → ${phase3}${elim}。票面：心智官[${args.ries.theory_recommend}/${args.ries.preferred_direction}] · 空位官[${args.trout.theory_recommend}/${args.trout.preferred_direction}] · 冲突官[${args.ye.theory_recommend}/${args.ye.preferred_direction}]`;
 }
 
 function labelOf(id: TheoryAgentId): string {
   switch (id) {
     case "ries":
-      return "里斯定位";
+      return "心智官";
     case "trout":
-      return "特劳特定位";
+      return "空位官";
     case "ye_maozhong":
-      return "叶茂中冲突营销";
+      return "冲突官";
   }
 }
 

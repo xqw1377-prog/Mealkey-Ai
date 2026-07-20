@@ -55,7 +55,9 @@ export function MKScore({
             <div>
               <p className="text-xs uppercase tracking-[0.28em] text-[#A6A197]">项目状态</p>
               <div className="mt-4 flex items-end gap-3">
-                <span className="font-serif text-[#6f747b]xl leading-none md:text-[#6f747b]xl">{score}%</span>
+                <span className="font-serif text-5xl leading-none tracking-[-0.04em] text-[#F6F3ED] md:text-6xl">
+                  {score}%
+                </span>
                 <span className="mb-2 rounded-full bg-[rgba(119,128,95,0.14)] px-3 py-1 text-xs text-[#DDE2D3]">
                   {label}
                 </span>

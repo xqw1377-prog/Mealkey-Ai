@@ -1,0 +1,20 @@
+version: "1.0.0"
+name: "双轨表决机制"
+principle: "普通意见多数决定；重大风险专业否决。商业不是民主。"
+
+track_a:
+  name: "观点投票"
+  model: "一人一票"
+  positions: ["support", "oppose", "conditional"]
+  majority_rule: "support + conditional 可计入推进侧；纯 oppose 计反对侧；通过门槛仍看 issue level"
+  note: "保留每人一票，保证席位声音不被权重淹没"
+
+track_b:
+  name: "风险红线 / Red Flag"
+  model: "专业否决"
+  effect: "有效红线 → 不得直接通过，即使多数支持"
+  must_offer: "替代方案"
+
+weighted_display:
+  enabled: true
+  purpose: "展示层参考（decisionType 权重），不替代 Track A 多数与 Track B 红线"

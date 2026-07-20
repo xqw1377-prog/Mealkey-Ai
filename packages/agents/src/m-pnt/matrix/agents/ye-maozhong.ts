@@ -1,11 +1,6 @@
 /**
- * 叶茂中冲突营销 Agent — V2 + LLM hybrid
- *
- * 理论体系：叶茂中冲突营销理论
- * - LLM 传入时：hybrid 模式
- * - LLM 不传时：纯 heuristic（7维冲突评估）
+ * 冲突官 Agent — MK-CLASH（冲突营销学派）
  */
-
 import type {
   MatrixInputPackage,
   TheoryAgent,
@@ -14,10 +9,11 @@ import type {
   TheoryView,
 } from "../types";
 
-const YE_LLM_PROMPT = `你是一位精通叶茂中冲突营销理论的首席定位顾问。
+const YE_LLM_PROMPT = `你是【冲突官】（代号 MK-CLASH），精通冲突营销学派。
+禁止在输出中使用任何外部真人姓名。
 你的任务是严格按照冲突营销的7个维度，评估候选定位方向的优劣。
 
-叶茂中冲突7维评估：
+冲突营销7维评估：
 1. 冲突强度：消费者在这个痛点上的痛苦程度有多大？越痛机会越大。
 2. 冲突层次：生理冲突（饿了累了）→ 心理冲突（想吃又怕胖）→ 社会冲突（别人有我也要），越高越好。
 3. 左脑右脑：理性理由（值不值）和情感理由（想不想）是否齐备？
@@ -38,12 +34,12 @@ const YE_LLM_PROMPT = `你是一位精通叶茂中冲突营销理论的首席定
 
 export const yeMaozhongAgent: TheoryAgent = {
   id: "ye_maozhong",
-  name: "叶茂中冲突营销 Agent",
+  name: "冲突官（MK-CLASH）",
   stance:
-    "叶茂中冲突营销：找到并放大冲突（旧秩序 vs 新选择）；让消费者记住对立面；冲突必须可传播、可成交、可验证。没有冲突就没有记忆。",
+    "冲突营销学派：找到并放大冲突（旧秩序 vs 新选择）；让消费者记住对立面；冲突必须可传播、可成交、可验证。没有冲突就没有记忆。",
 
-  systemPrompt: `你是【叶茂中冲突营销 Agent】（agent_id=ye_maozhong）。
-你代表的理论体系是：叶茂中冲突营销理论。
+  systemPrompt: `你是【冲突官】（agent_id=ye_maozhong，代号 MK-CLASH）。
+你代表的理论体系是：冲突营销学派。禁止在输出中使用任何外部真人姓名。
 
 评判标准（冲突7维度）：
 1. 冲突强度：消费者在这个痛点上的痛苦程度有多大？
@@ -129,6 +125,12 @@ async function runYeLlm(
     .filter((s) => s.id !== best.id && s.theory_score < 55)
     .map((s) => ({ name: s.name, reason: `按冲突营销LLM：${s.analysis.slice(0, 60) || "冲突点不清或记不住"}` }));
 
+  const lawScore = scoreByYeLaws(
+    preferred,
+    pkg.owner.strengths,
+    Number(pkg.project.budget),
+  );
+
   return {
     agent_id: "ye_maozhong",
     agent_name: yeMaozhongAgent.name,
@@ -140,6 +142,12 @@ async function runYeLlm(
     key_mental_position: preferred.oneLiner,
     main_risks: buildYeRisks(preferred, best, pkg),
     direction_scores: mapped.map((m) => ({ name: m.name, theory_score: m.theory_score, theory_recommend: toYeRecommend(m.theory_score, preferred, pkg) })),
+    dimension_breakdown: lawScore.parts.map((p) => ({
+      name: p.name,
+      score: p.delta,
+      note: p.note,
+      pass: p.delta >= 0,
+    })),
     theory_recommend,
     recommendation_level: theory_recommend,
     confidence: Math.min(0.9, 0.5 + best.theory_score / 170),
@@ -157,7 +165,7 @@ function runYeHeuristic(pkg: MatrixInputPackage): TheoryView {
 
   const scores = candidates.map((c) => {
     const s = scoreByYeLaws(c, strengths, budget);
-    return { id: c.id, theory_score: s.total, details: s.details };
+    return { id: c.id, theory_score: s.total, details: s.details, parts: s.parts };
   });
 
   scores.sort((a, b) => b.theory_score - a.theory_score);
@@ -183,6 +191,12 @@ function runYeHeuristic(pkg: MatrixInputPackage): TheoryView {
       const c = candidates.find((x) => x.id === s.id)!;
       return { name: c.name, theory_score: s.theory_score, theory_recommend: toYeRecommend(s.theory_score, c, pkg) };
     }),
+    dimension_breakdown: best.parts.map((p) => ({
+      name: p.name,
+      score: p.delta,
+      note: p.note,
+      pass: p.delta >= 0,
+    })),
     theory_recommend,
     recommendation_level: theory_recommend,
     confidence: Math.min(0.9, 0.5 + best.theory_score / 170),
@@ -220,55 +234,104 @@ function buildYeRisks(preferred: MatrixInputPackage["candidates"][0], best: { id
   return risks;
 }
 
-function scoreByYeLaws(c: MatrixInputPackage["candidates"][0], strengths: string[], budget: number): { total: number; details: string } {
+function scoreByYeLaws(
+  c: MatrixInputPackage["candidates"][0],
+  strengths: string[],
+  budget: number,
+): {
+  total: number;
+  details: string;
+  parts: Array<{ name: string; delta: number; note: string }>;
+} {
   const text = c.oneLiner + c.name + c.focus;
-  const parts: string[] = [];
+  const parts: Array<{ name: string; delta: number; note: string }> = [];
   let score = 48;
+  const add = (name: string, delta: number, note: string) => {
+    score += delta;
+    parts.push({ name, delta, note });
+  };
 
   const hasConflict = /冲突|对立|打破|不|只|反对|颠覆|vs|VS|而非|不做|拒绝/.test(text);
   const hasPainPoint = /痛点|麻烦|烦|累|贵|难|慢|差|不够|没有/.test(text);
 
-  if (hasConflict && hasPainPoint) { score += 22; parts.push("冲突+22（既有对立结构又有真实痛点）"); }
-  else if (hasConflict) { score += 14; parts.push("冲突+14（有对立结构但缺乏痛点描述）"); }
-  else if (hasPainPoint) { score += 8; parts.push("冲突+8（有痛点但没有对立结构）"); }
-  else { score -= 10; parts.push("冲突-10（没有可感知的冲突点）"); }
+  if (hasConflict && hasPainPoint) {
+    add("冲突点", 22, "既有对立结构又有真实痛点");
+  } else if (hasConflict) {
+    add("冲突点", 14, "有对立结构但缺乏痛点描述");
+  } else if (hasPainPoint) {
+    add("冲突点", 8, "有痛点但没有对立结构");
+  } else {
+    add("冲突点", -10, "没有可感知的冲突点");
+  }
 
   const hasSocial = /面子|身份|攀比|别人|社交|圈子|朋友圈/.test(text);
   const hasPsycho = /怕|担心|焦虑|纠结|选择困难|矛盾|想吃又怕/.test(text);
-  if (hasSocial) { score += 18; parts.push("层次+18（社会冲突，传播力最强）"); }
-  else if (hasPsycho) { score += 14; parts.push("层次+14（心理冲突，纠结感强）"); }
-  else if (/场景|周末|聚餐|夜宵/.test(text)) { score += 10; parts.push("层次+10（生理/场景冲突）"); }
-  else { score -= 3; parts.push("层次-3（冲突层次不清晰）"); }
+  if (hasSocial) {
+    add("冲突层次", 18, "社会冲突，传播力最强");
+  } else if (hasPsycho) {
+    add("冲突层次", 14, "心理冲突，纠结感强");
+  } else if (/场景|周末|聚餐|夜宵/.test(text)) {
+    add("冲突层次", 10, "生理/场景冲突");
+  } else {
+    add("冲突层次", -3, "冲突层次不清晰");
+  }
 
   const hasLeft = /价格|性价比|实惠|划算|快|效率|方便|健康|品质/.test(text);
   const hasRight = /情怀|故事|文化|记忆|温暖|家|梦想|态度|潮/.test(text);
-  if (hasLeft && hasRight) { score += 15; parts.push("左右+15（左脑理性+右脑感性兼备）"); }
-  else if (hasLeft || hasRight) { score += 8; parts.push(`左右+8（仅${hasLeft ? "左脑理性" : "右脑感性"}，缺一维）`); }
-  else { score -= 5; parts.push("左右-5（既没有购买理由也没有情感共鸣）"); }
-
-  if (c.oneLiner.length < 25 && /冲突|对立|不|只|不是|而是/.test(c.oneLiner)) { score += 15; parts.push("记忆+15（一句话记住，冲突感强）"); }
-  else if (c.oneLiner.length < 30) { score += 8; parts.push("记忆+8（比较简短）"); }
-  else { score -= 5; parts.push("记忆-5（太长，记不住）"); }
-
-  if (/争议|话题|新鲜|第一次|再也不|竟然|居然|vs|VS|打脸/.test(text)) { score += 10; parts.push("传播+10（有话题性，容易引发讨论）"); }
-  else if (/不|只|打破|颠覆/.test(text)) { score += 6; parts.push("传播+6（有态度，适合传播）"); }
-  else { score -= 3; parts.push("传播-3（缺少话题性）"); }
-
-  if (/场景|周末|聚餐|夜宵|外卖|家庭|商务|一人/.test(text)) { score += 10; parts.push("成交+10（绑定了具体消费场景，容易驱动到店）"); }
-  else if (/选|来|吃|喝|去/.test(text)) { score += 5; parts.push("成交+5（有行动暗示）"); }
-  else { score -= 3; parts.push("成交-3（缺乏行动引导）"); }
-
-  const fakeness = /重新定义|颠覆行业|改变世界|品类开创/.test(text);
-  if (fakeness && !strengths.length) { score -= 10; parts.push("真实-10（冲突级别超过资源，假大空嫌疑）"); }
-  else if (fakeness && strengths.length) { score += 3; parts.push("真实+3（有资源支撑的高调冲突）"); }
-  else { score += 10; parts.push("真实+10（冲突与资源匹配，真实可落地）"); }
-
-  if (Number.isFinite(budget) && budget > 0 && budget < 40) {
-    if (/高端|精致|全国第一|重新定义/.test(text)) { score -= 15; parts.push("预算-15（预算不足40万但说要高端/全国第一，不现实）"); }
-    else if (!/高端|精致/.test(text)) { score += 5; parts.push("预算+5（预算有限但定位务实）"); }
+  if (hasLeft && hasRight) {
+    add("左右脑", 15, "左脑理性+右脑感性兼备");
+  } else if (hasLeft || hasRight) {
+    add("左右脑", 8, `仅${hasLeft ? "左脑理性" : "右脑感性"}，缺一维`);
+  } else {
+    add("左右脑", -5, "既没有购买理由也没有情感共鸣");
   }
 
-  return { total: clamp(score), details: parts.join("；") };
+  if (c.oneLiner.length < 25 && /冲突|对立|不|只|不是|而是/.test(c.oneLiner)) {
+    add("记忆点", 15, "一句话记住，冲突感强");
+  } else if (c.oneLiner.length < 30) {
+    add("记忆点", 8, "比较简短");
+  } else {
+    add("记忆点", -5, "太长，记不住");
+  }
+
+  if (/争议|话题|新鲜|第一次|再也不|竟然|居然|vs|VS|打脸/.test(text)) {
+    add("传播力", 10, "有话题性，容易引发讨论");
+  } else if (/不|只|打破|颠覆/.test(text)) {
+    add("传播力", 6, "有态度，适合传播");
+  } else {
+    add("传播力", -3, "缺少话题性");
+  }
+
+  if (/场景|周末|聚餐|夜宵|外卖|家庭|商务|一人/.test(text)) {
+    add("成交驱动", 10, "绑定了具体消费场景，容易驱动到店");
+  } else if (/选|来|吃|喝|去/.test(text)) {
+    add("成交驱动", 5, "有行动暗示");
+  } else {
+    add("成交驱动", -3, "缺乏行动引导");
+  }
+
+  const fakeness = /重新定义|颠覆行业|改变世界|品类开创/.test(text);
+  if (fakeness && !strengths.length) {
+    add("真实可落", -10, "冲突级别超过资源，假大空嫌疑");
+  } else if (fakeness && strengths.length) {
+    add("真实可落", 3, "有资源支撑的高调冲突");
+  } else {
+    add("真实可落", 10, "冲突与资源匹配，真实可落地");
+  }
+
+  if (Number.isFinite(budget) && budget > 0 && budget < 40) {
+    if (/高端|精致|全国第一|重新定义/.test(text)) {
+      add("预算匹配", -15, "预算不足却说高端/全国第一");
+    } else if (!/高端|精致/.test(text)) {
+      add("预算匹配", 5, "预算有限但定位务实");
+    }
+  }
+
+  const total = clamp(score);
+  const details = parts
+    .map((p) => `${p.name}${p.delta >= 0 ? "+" : ""}${p.delta}（${p.note}）`)
+    .join("；");
+  return { total, details, parts };
 }
 
 function toYeRecommend(score: number, c?: MatrixInputPackage["candidates"][0], pkg?: MatrixInputPackage): TheoryRecommend {

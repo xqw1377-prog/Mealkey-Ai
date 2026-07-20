@@ -102,6 +102,100 @@ export function createAlipayPagePay(input: {
   return { payUrl: `${config.gateway}?${query}` };
 }
 
+export type ChannelTradeQueryResult =
+  | { status: "paid"; tradeNo: string }
+  | { status: "unpaid" }
+  | { status: "closed" }
+  | { status: "unknown"; detail: string };
+
+/**
+ * 按商户订单号查单：alipay.trade.query
+ */
+export async function queryAlipayOrderByOutTradeNo(
+  orderNo: string,
+): Promise<ChannelTradeQueryResult> {
+  const config = getAlipayConfig();
+  if (!config) {
+    return { status: "unknown", detail: "支付宝未配置" };
+  }
+
+  const params: Record<string, string> = {
+    app_id: config.appId,
+    method: "alipay.trade.query",
+    format: "JSON",
+    charset: "utf-8",
+    sign_type: "RSA2",
+    timestamp: new Date().toISOString().replace("T", " ").slice(0, 19),
+    version: "1.0",
+    biz_content: JSON.stringify({ out_trade_no: orderNo }),
+  };
+  params.sign = signParams(params, config.privateKey);
+
+  const body = Object.entries(params)
+    .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+    .join("&");
+
+  let response: Response;
+  try {
+    response = await fetch(config.gateway, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded;charset=utf-8" },
+      body,
+    });
+  } catch (error) {
+    return {
+      status: "unknown",
+      detail: `支付宝查单网络失败：${(error as Error).message || "unknown"}`,
+    };
+  }
+
+  const text = await response.text();
+  let payload: {
+    alipay_trade_query_response?: {
+      code?: string;
+      msg?: string;
+      sub_code?: string;
+      sub_msg?: string;
+      trade_status?: string;
+      trade_no?: string;
+    };
+  } = {};
+  try {
+    payload = JSON.parse(text) as typeof payload;
+  } catch {
+    return { status: "unknown", detail: `支付宝查单响应无效：${text.slice(0, 120)}` };
+  }
+
+  const data = payload.alipay_trade_query_response;
+  if (!data) {
+    return { status: "unknown", detail: "支付宝查单缺少 response" };
+  }
+
+  if (data.sub_code === "ACQ.TRADE_NOT_EXIST") {
+    return { status: "unpaid" };
+  }
+
+  if (data.code !== "10000") {
+    return {
+      status: "unknown",
+      detail: data.sub_msg || data.msg || data.sub_code || data.code || "query_failed",
+    };
+  }
+
+  const status = (data.trade_status || "").toUpperCase();
+  if (status === "TRADE_SUCCESS" || status === "TRADE_FINISHED") {
+    return { status: "paid", tradeNo: data.trade_no || "" };
+  }
+  if (status === "TRADE_CLOSED") {
+    return { status: "closed" };
+  }
+  if (status === "WAIT_BUYER_PAY" || !status) {
+    return { status: "unpaid" };
+  }
+
+  return { status: "unknown", detail: `未识别 trade_status=${status}` };
+}
+
 export function verifyAlipayNotify(
   params: Record<string, string>,
 ): { orderNo: string; tradeNo: string; success: boolean } {

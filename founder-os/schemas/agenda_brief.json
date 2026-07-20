@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Agenda Brief",
+  "description": "CDO Stage 1 议题定义产出",
+  "type": "object",
+  "required": ["briefId", "topic", "objective", "level", "questionsToAnswer"],
+  "properties": {
+    "briefId": { "type": "string" },
+    "topic": { "type": "string" },
+    "whyNow": { "type": "string" },
+    "objective": { "type": "string" },
+    "constraints": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "questionsToAnswer": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "deadline": { "type": "string" },
+    "level": {
+      "type": "string",
+      "enum": ["L1", "L2", "L3", "L4"]
+    },
+    "decisionType": { "type": "string" },
+    "roster": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "requiredEngines": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  }
+}

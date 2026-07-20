@@ -1,0 +1,11 @@
+role_id: "CFO"
+mission: "资本效率与现金安全"
+frameworks:
+  - id: "capital-eff"
+    name: "餐饮资本效率"
+    formula: "投资额 · 回本周期 · 现金流 · 现金安全边界 · ROI"
+benchmarks:
+  - { id: "b-runway", metric: "现金跑道", reference: "建议 ≥6 个月安全垫" }
+failurePatterns:
+  - { id: "f-break", pattern: "现金流断裂", signal: "最坏情景跑道不足" }
+  - { id: "f-blind-fund", pattern: "盲目融资", signal: "为扩张而融资无用途纪律" }

@@ -23,7 +23,12 @@
 
 import type { StreamChunk } from "@mealkey/agent-sdk";
 import type { PrismaClient } from "@/generated/prisma";
-import { assertAgentQuota, type AgentCode } from "@/server/services/billing.service";
+import type { AgentCode } from "@/server/services/billing.service";
+import {
+  authorizeAgentCapability,
+  failCapabilityConsumption,
+  settleCapabilityConsumption,
+} from "@/server/services/consumption.service";
 import { getChiefAgent, buildMKContext } from "./chief-agent.factory";
 import { buildAssetContextBlock } from "./asset.service";
 import {
@@ -55,6 +60,7 @@ export interface AgentServiceOptions {
   projectId: string;
   userId: string;
   message: string;
+  missionId?: string;
   conversationId?: string;
   assetIds?: string[];
   /** 强制指定子 Agent：m-mkt | m-pnt | m-biz | m-ed | chief */
@@ -73,13 +79,30 @@ export type AgentMetaChunk = {
   agentName?: string;
 };
 
-/**
- * 流式调用 Agent，返回 SSE 友好的 StreamChunk
- */
-export async function* streamAgentResponse(
-  prisma: PrismaClient,
-  options: AgentServiceOptions
-): AsyncGenerator<
+function extractAgentRunIdFromMessageMetadata(raw: string | null | undefined) {
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    const agentRunId = parsed.agentRunId;
+    return typeof agentRunId === "string" && agentRunId.trim().length > 0 ? agentRunId.trim() : null;
+  } catch {
+    return null;
+  }
+}
+
+async function resolveConversationAgentRunId(prisma: PrismaClient, conversationId: string) {
+  const message = await prisma.message.findFirst({
+    where: {
+      conversationId,
+      role: "assistant",
+    },
+    orderBy: { createdAt: "desc" },
+    select: { metadata: true },
+  });
+  return extractAgentRunIdFromMessageMetadata(message?.metadata);
+}
+
+type AgentStreamOutput =
   | StreamChunk
   | AgentMetaChunk
   | MMktMetaChunk
@@ -89,9 +112,16 @@ export async function* streamAgentResponse(
   | MBizMetaChunk
   | MBizResultChunk
   | MEdMetaChunk
-  | MEdResultChunk
-> {
-  const { projectId, userId, message, conversationId, assetIds = [], forceAgent } = options;
+  | MEdResultChunk;
+
+/**
+ * 流式调用 Agent，返回 SSE 友好的 StreamChunk
+ */
+export async function* streamAgentResponse(
+  prisma: PrismaClient,
+  options: AgentServiceOptions
+): AsyncGenerator<AgentStreamOutput> {
+  const { projectId, userId, message, missionId, conversationId, assetIds = [], forceAgent } = options;
 
   const owner = await prisma.owner.findUnique({ where: { userId } });
   if (!owner) {
@@ -199,25 +229,110 @@ export async function* streamAgentResponse(
     });
   }
 
-  const assetContextBlock = buildAssetContextBlock(attachedAssets);
+  // 所有 Agent 路径共享：提前加载 Restaurant Brain prior（有 project 时）
+  let restaurantBrainPrior: string | null = null;
+  if (projectId) {
+    try {
+      const earlyCtx = await buildMKContext(prisma, userId, projectId);
+      restaurantBrainPrior = extractRestaurantBrainBlock(earlyCtx);
+    } catch {
+      restaurantBrainPrior = null;
+    }
+  }
+
+  const assetOnlyBlock = buildAssetContextBlock(attachedAssets);
+  const assetContextBlock = [restaurantBrainPrior, assetOnlyBlock]
+    .filter(Boolean)
+    .join("\n\n");
 
   const runWithAgentGate = async function* (
     agentCode: AgentCode,
-    runner: () => AsyncGenerator<
-      | StreamChunk
-      | AgentMetaChunk
-      | MMktMetaChunk
-      | MMktResultChunk
-      | MPntMetaChunk
-      | MPntResultChunk
-      | MBizMetaChunk
-      | MBizResultChunk
-      | MEdMetaChunk
-      | MEdResultChunk
-    >,
-  ) {
-    await assertAgentQuota(prisma, userId, { agentCode });
-    yield* runner();
+    runner: () => AsyncGenerator<AgentStreamOutput>,
+  ): AsyncGenerator<AgentStreamOutput> {
+    let authorization:
+      | Awaited<ReturnType<typeof authorizeAgentCapability>>
+      | null = null;
+    try {
+      authorization = await authorizeAgentCapability(prisma, {
+        userId,
+        agentCode,
+        reason: `${agentCode} 分析`,
+        metadata: {
+          source: "agent.stream",
+          conversationId: conversation.id,
+        },
+      });
+    } catch (error) {
+      yield {
+        type: "error" as const,
+        message: error instanceof Error ? error.message : "当前经营点不足，请前往 /billing 充值经营点",
+      };
+      return;
+    }
+
+    let hasError = false;
+    let agentRunId: string | null = null;
+    try {
+      for await (const chunk of runner()) {
+        const chunkType = (chunk as { type?: string }).type;
+        if (chunkType === "error") {
+          hasError = true;
+        }
+        if (!agentRunId && chunkType === "meta") {
+          const rawAgentRunId = (chunk as { agentRunId?: unknown }).agentRunId;
+          if (typeof rawAgentRunId === "string" && rawAgentRunId.trim().length > 0) {
+            agentRunId = rawAgentRunId.trim();
+          }
+        }
+        yield chunk;
+      }
+      if (authorization) {
+        if (!agentRunId) {
+          agentRunId = await resolveConversationAgentRunId(prisma, conversation.id);
+        }
+        if (hasError) {
+          await failCapabilityConsumption(prisma, {
+            recordId: authorization.recordId,
+            reason: `${agentCode} 分析失败，经营点已退回`,
+            metadata: {
+              source: "agent.stream",
+              conversationId: conversation.id,
+              agentCode,
+              ...(agentRunId ? { agentRunId } : {}),
+            },
+          });
+        } else {
+          await settleCapabilityConsumption(prisma, {
+            recordId: authorization.recordId,
+            actualAmount: authorization.estimatedCost,
+            runId: agentRunId,
+            metadata: {
+              source: "agent.stream",
+              conversationId: conversation.id,
+              agentCode,
+              ...(agentRunId ? { agentRunId } : {}),
+            },
+          });
+        }
+      }
+    } catch (error) {
+      if (authorization) {
+        if (!agentRunId) {
+          agentRunId = await resolveConversationAgentRunId(prisma, conversation.id);
+        }
+        await failCapabilityConsumption(prisma, {
+          recordId: authorization.recordId,
+          reason: `${agentCode} 分析失败，经营点已退回`,
+          metadata: {
+            source: "agent.stream",
+            conversationId: conversation.id,
+            agentCode,
+            ...(agentRunId ? { agentRunId } : {}),
+          },
+        });
+      }
+      throw error;
+    }
   };
 
   // ─── 产品路径 A: M-MKT 市场机会 ───
@@ -229,6 +344,7 @@ export async function* streamAgentResponse(
           projectId,
           userId,
           message,
+          missionId,
           conversationId: conversation.id,
           assetIds,
           force: forceAgent === "m-mkt",
@@ -250,6 +366,7 @@ export async function* streamAgentResponse(
           projectId,
           userId,
           message,
+          missionId,
           conversationId: conversation.id,
           assetIds,
           force: forceAgent === "m-pnt",
@@ -271,6 +388,7 @@ export async function* streamAgentResponse(
           projectId,
           userId,
           message,
+          missionId,
           conversationId: conversation.id,
           assetIds,
           force: forceAgent === "m-biz",
@@ -292,6 +410,7 @@ export async function* streamAgentResponse(
           projectId,
           userId,
           message,
+          missionId,
           conversationId: conversation.id,
           assetIds,
           force: forceAgent === "m-ed",
@@ -308,6 +427,7 @@ export async function* streamAgentResponse(
   yield* runWithAgentGate("chief", async function* () {
     const mkContext = await buildMKContext(prisma, userId, projectId);
     const positioningBlock = extractPositioningContextBlock(mkContext);
+    // restaurantBrainPrior 已并入 assetContextBlock，此处只补定位锚点
     const enrichedAssets = [assetContextBlock, positioningBlock]
       .filter(Boolean)
       .join("\n\n");
@@ -353,6 +473,14 @@ function extractPositioningContextBlock(
     .join("\n");
 }
 
+/** Restaurant Brain prior — 所有 Agent 路径共享的长期认知短文 */
+function extractRestaurantBrainBlock(
+  mkContext: Awaited<ReturnType<typeof buildMKContext>>,
+): string | null {
+  const block = mkContext.restaurantContext?.priorBlock?.trim();
+  return block || null;
+}
+
 /**
  * ChiefAgent 执行路径
  */
@@ -363,7 +491,7 @@ async function* streamChiefAgentResponse(
   conversation: { id: string },
   assetContextBlock?: string | null,
 ): AsyncGenerator<StreamChunk | AgentMetaChunk> {
-  const { projectId, userId, message, conversationId } = options;
+  const { projectId, userId, message, missionId, conversationId } = options;
   const chiefAgent = getChiefAgent(prisma);
   let fullResponse = "";
 
@@ -382,6 +510,7 @@ async function* streamChiefAgentResponse(
   for await (const rawChunk of chiefAgent.process({
     userId,
     projectId,
+    missionId,
     message: assetContextBlock ? `${message}\n\n补充资料：\n${assetContextBlock}` : message,
     context: mkContext,
     conversationId,

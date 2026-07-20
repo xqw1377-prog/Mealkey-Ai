@@ -8,7 +8,7 @@ import { getPlatformAdminOverview } from "@/server/services/platform-admin.servi
 export async function GET() {
   try {
     await requirePlatformAdmin();
-    const overview = await getPlatformAdminOverview(prisma);
+    const overview = await getPlatformAdminOverview(prisma, { mode: "summary" });
     return NextResponse.json({ ok: true, overview });
   } catch (error) {
     return platformAdminErrorResponse(error);

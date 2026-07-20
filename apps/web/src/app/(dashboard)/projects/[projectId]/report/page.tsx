@@ -36,18 +36,18 @@ export default function ReportPage({
   const { data, isLoading, error } = trpc.dashboard.getReportSnapshot.useQuery({ projectId: params.projectId });
 
   if (isLoading) {
-    return <PageLoadingState eyebrow="项目报告" title="AI 正在整理这份报告" description="正在读取结论、依据和反方挑战。" />;
+    return <PageLoadingState eyebrow="报告" title="正在整理…" description="结论、依据、反方。" />;
   }
 
   if (error) {
     return (
       <div className="space-y-5 pb-2 pt-6 md:pt-8">
         <PageErrorState
-          eyebrow="项目报告"
-          title="这份报告暂时无法生成"
-          description="项目数据还没完全同步。先进入会议继续推进。"
-          primaryAction={{ href: `/projects/${params.projectId}/advisor`, label: "进入经营会议" }}
-          secondaryAction={{ href: "/projects", label: "回到世界" }}
+          eyebrow="报告"
+          title="暂时打不开"
+          description="数据还在同步。先去开会。"
+          primaryAction={{ href: `/projects/${params.projectId}/advisor`, label: "去开会" }}
+          secondaryAction={{ href: "/projects", label: "我的企业" }}
         />
       </div>
     );
@@ -57,11 +57,11 @@ export default function ReportPage({
     return (
       <div className="space-y-5 pb-2 pt-6 md:pt-8">
         <PageEmptyState
-          eyebrow="项目报告"
-          title="这份报告当前不可用"
-          description="当前项目不可用。先回到世界重新进入。"
-          primaryAction={{ href: "/projects", label: "回到世界" }}
-          secondaryAction={{ href: "/dashboard", label: "回到今日" }}
+          eyebrow="报告"
+          title="进不了报告"
+          description="回列表再选企业。"
+          primaryAction={{ href: "/projects", label: "我的企业" }}
+          secondaryAction={{ href: "/dashboard", label: "回今日" }}
         />
       </div>
     );
@@ -77,8 +77,8 @@ export default function ReportPage({
     return (
       <div className="space-y-5 pb-2">
         <MKPageHeader
-          eyebrow="项目报告"
-          title="项目报告"
+          eyebrow="报告"
+          title="报告"
           description="结论、依据、反方一次看完。"
           badge={
             <div className="inline-flex min-h-7 items-center rounded-[12px] border border-[rgba(24,24,23,0.08)] bg-white px-3 text-[13px] leading-5 tracking-[0.01em] text-[#6f747b]">
@@ -88,12 +88,12 @@ export default function ReportPage({
         />
 
         <section className="rounded-[22px] border border-[rgba(24,24,23,0.08)] bg-[linear-gradient(180deg,#fbfaf7_0%,#eef1ea_100%)] p-5 shadow-[0_14px_30px_rgba(24,24,23,0.04)]">
-          <p className="text-[13px] leading-5 tracking-[0.01em] text-[#66735E]">暂无决策资产</p>
+          <p className="text-[13px] leading-5 tracking-[0.01em] text-[#66735E]">还没有报告</p>
           <p className="mt-2 text-[22px] leading-[1.3] tracking-[-0.03em] text-[#202124]">
-            当前项目还没有形成正式报告
+            先开一场会，留下第一次判断
           </p>
           <p className="mt-3 text-[14px] leading-[1.7] text-[#6f747b]">
-            先进入经营会议，形成第一次结构化判断。
+            拍板后，报告会出现在这里。
           </p>
 
           <div className="mt-5 grid gap-3 md:grid-cols-2">
@@ -101,14 +101,14 @@ export default function ReportPage({
               href={`/projects/${project.id}/advisor`}
               className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-[14px] bg-[#181817] px-4 text-[15px] font-semibold text-white no-underline transition hover:-translate-y-0.5 active:scale-[0.98]"
             >
-              <span>进入会议</span>
+              <span>去开会</span>
               <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
               href={`/projects/${project.id}`}
               className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-[14px] border border-[rgba(24,24,23,0.08)] bg-[#F5F3EE] px-4 text-[15px] font-semibold text-[#202124] no-underline transition hover:-translate-y-0.5 active:scale-[0.98]"
             >
-              <span>回到世界</span>
+              <span>回企业</span>
               <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
@@ -120,8 +120,8 @@ export default function ReportPage({
   return (
     <div className="space-y-5 pb-2">
       <MKPageHeader
-        eyebrow="项目报告"
-        title="项目报告"
+        eyebrow="报告"
+        title="报告"
         description="结论、依据、反方一次看完。"
         badge={
           <div className="inline-flex min-h-7 items-center rounded-[12px] border border-[rgba(24,24,23,0.08)] bg-white px-3 text-[13px] leading-5 tracking-[0.01em] text-[#6f747b]">

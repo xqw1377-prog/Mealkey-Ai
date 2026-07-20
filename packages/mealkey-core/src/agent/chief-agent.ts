@@ -41,6 +41,7 @@ export interface AgentInput {
   userId: string;
   message: string;
   projectId?: string;
+  missionId?: string;
   conversationId?: string;
   /** 由 Factory 构建的完整上下文 */
   context: MKContext;
@@ -179,6 +180,7 @@ export class ChiefAgent {
         agentId: "chief-agent",
         userId: input.userId,
         projectId: input.projectId,
+        missionId: input.missionId,
         conversationId: input.conversationId,
         input: { message: input.message },
       });
@@ -626,14 +628,22 @@ export class ChiefAgent {
       .map(d => `- 问题: ${d.problem}, 判断: ${d.judgement}`)
       .join("\n");
 
+    const restaurantBrainBlock =
+      ctx.restaurantContext?.priorBlock?.trim() ||
+      "暂无餐厅大脑上下文（未知处不得编造，应先提问）";
+
     const prompt = `你是 MealKey 餐饮经营认知系统的首席经营顾问，拥有30年餐饮经营智慧。
 
 ## 任务
 基于以下用户输入和上下文，执行完整的五步判断链。
 输出必须包含：观察 → 诊断 → 评估 → 策略 → 行动
+铁律：建议必须锚定「餐厅经营大脑」中的事实与历史；未知处先提问；禁止通用空谈。
 
 ## 用户输入
 "${input.message}"
+
+## 餐厅经营大脑（长期认知）
+${restaurantBrainBlock}
 
 ## 项目上下文
 ${projectInfo || "暂无项目信息"}

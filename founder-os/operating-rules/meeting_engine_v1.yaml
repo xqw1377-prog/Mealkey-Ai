@@ -1,0 +1,31 @@
+version: "1.0.0"
+name: "Decision Council Meeting Engine"
+pipeline:
+  - "Issue Classification"
+  - "Expert Engines"
+  - "Evidence Layer"
+  - "Round1 Independent Stance"
+  - "Round2 Cross Examination + Conflict Map"
+  - "Round3 Decision Board + Minority Report"
+  - "Founder Decision"
+  - "Validation + Memory Learning"
+rounds:
+  round_1:
+    rule: "禁止互看；独立判断"
+    output: "Stance Matrix"
+  round_2:
+    rule: "必须引用 Evidence ID 进行挑战"
+    output: "Conflict Map"
+  round_3:
+    rule: "非简单多数；保留少数意见"
+    output: "Decision Board"
+founder_board_fields:
+  - "title"
+  - "consensus"
+  - "biggestDispute"
+  - "minorityReport"
+  - "recommendedAction"
+  - "conditions"
+  - "risks"
+  - "validation"
+  - "founderChoices"

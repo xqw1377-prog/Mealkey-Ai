@@ -1,0 +1,36 @@
+version: "1.0.0"
+name: "Founder OS Knowledge System"
+layers:
+  - id: "industry"
+    name: "行业知识层"
+  - id: "assets"
+    name: "方法论 / 案例 / 数据"
+  - id: "judgment"
+    name: "判断模型层"
+  - id: "persona"
+    name: "Agent 人格层（七常委）"
+  - id: "enterprise_memory"
+    name: "企业记忆层"
+
+schema_fields:
+  - "methodology"
+  - "frameworks"
+  - "cases"
+  - "benchmarks"
+  - "questions"
+  - "failurePatterns"
+
+learning_loop:
+  - "prediction"
+  - "execution"
+  - "result"
+  - "error_analysis"
+  - "expert_calibration"
+
+flywheel:
+  - "顶级咨询知识"
+  - "专家 Agent"
+  - "企业决策"
+  - "真实结果"
+  - "企业经验"
+  - "更强专家"

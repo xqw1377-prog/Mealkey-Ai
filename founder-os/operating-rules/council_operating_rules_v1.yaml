@@ -1,0 +1,39 @@
+version: "1.0.0"
+name: "Founder OS 七常委运行规则总表"
+status: "frozen_v1"
+constitution_ref: "constitution/fdc_constitution.yaml"
+includes:
+  - "cdo.yaml"
+  - "issue_levels.yaml"
+  - "meeting_stages.yaml"
+  - "dual_track_voting.yaml"
+  - "red_flag_protocol.yaml"
+
+convening:
+  who_can_call: ["Founder", "CDO"]
+  triggers:
+    - "issue level ≥ L2"
+    - "Expert Engine 标红 / insufficient_data"
+    - "Founder 强制召开"
+  not_triggers:
+    - "纯信息问答"
+    - "验证期内重复议题（复用 Decision Memory）"
+
+expert_participation:
+  principle: "Expert 研究；Council 选择；禁止二次分析"
+
+founder:
+  final_decision: true
+  override_required_fields:
+    - "why_disagree"
+    - "core_judgment"
+    - "accepted_risks"
+    - "validation_method"
+
+memory:
+  unit: "Decision Memory"
+  forms: "Decision Intelligence Database"
+  forbid_transcript_only: true
+
+learning:
+  fields: ["outcomeStatus", "whoWasRight", "lesson"]

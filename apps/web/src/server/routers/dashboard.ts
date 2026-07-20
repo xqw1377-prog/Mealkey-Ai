@@ -21,6 +21,24 @@ import {
   buildProjectKnowledge,
   buildOwnerPortrait,
 } from "../services/dashboard.service";
+import { toDailyScanV1 } from "@/server/founder-layer/capability/decision-center/daily-scan";
+import { createRestaurantBrainService } from "@/server/restaurant-brain/service";
+import { extractConsultingMeetingFacts } from "../services/consulting-meeting-facts";
+import {
+  toProfileConflictTRPC,
+  updateProjectProfile,
+} from "../services/project-profile";
+import {
+  assertActionTransition,
+  nextToggleActionStatus,
+} from "@/server/founder-layer/capability";
+import {
+  buildExecutionFollowthroughSignal,
+  estimateActionPlanCompletion,
+  ingestSignalsAndEvolve,
+} from "@/server/founder-layer/intelligence";
+import type { DecisionHorizonV1 } from "@/server/founder-layer/contracts/business-identity";
+import { TRPCError } from "@trpc/server";
 
 // 兼容旧 REST 路由的 re-export
 export {
@@ -34,33 +52,114 @@ export {
   buildOwnerPortrait,
 } from "../services/dashboard.service";
 
+/**
+ * 合并 getHome 和 getDailyScan 的共享逻辑
+ */
+export async function resolveHomeData(
+  ctx: { userId?: string; ownerId?: string },
+  projectId?: string,
+  includeDailyScan: boolean = true,
+) {
+  const projects = await listProjects(prisma, ctx.userId!);
+  if (projects.length === 0) {
+    return { currentProject: null, home: null, dailyScan: null };
+  }
+
+  const currentProject =
+    projects.find((p) => p.id === projectId) ?? projects[0];
+  const bundle = await getProjectInsightBundle(prisma, ctx.userId!, currentProject.id);
+  if (!bundle) {
+    return { currentProject: null, home: null, dailyScan: null };
+  }
+
+  const home = buildDashboardHome(bundle);
+  let understandingScore: number | undefined;
+  let dataCompleteness: number | undefined;
+
+  if (includeDailyScan) {
+    try {
+      if (ctx.ownerId) {
+        const brain = createRestaurantBrainService(prisma);
+        const snap = await brain.ensureByProject({
+          projectId: currentProject.id,
+          ownerId: ctx.ownerId,
+        });
+        understandingScore = snap.evolution.understandingScore;
+        dataCompleteness = snap.evolution.dataCompleteness;
+      }
+    } catch {
+      // Brain 不可用时 Scan 仍可投影
+    }
+  }
+
+  const profile =
+    typeof currentProject.profile === "string"
+      ? parseJsonField<Record<string, unknown>>(currentProject.profile)
+      : currentProject.profile && typeof currentProject.profile === "object"
+        ? (currentProject.profile as Record<string, unknown>)
+        : null;
+  const bi =
+    profile && typeof profile.businessIdentity === "object"
+      ? (profile.businessIdentity as Record<string, unknown>)
+      : null;
+
+  const decisionHorizon: DecisionHorizonV1 | null =
+    bi?.decisionHorizon === "short" ||
+    bi?.decisionHorizon === "mid" ||
+    bi?.decisionHorizon === "long"
+      ? bi.decisionHorizon
+      : null;
+
+  const scanContext = {
+    projectId: currentProject.id,
+    restaurantName: currentProject.name,
+    understandingScore,
+    dataCompleteness,
+    brandName:
+      (typeof bi?.brandName === "string" && bi.brandName) ||
+      (typeof profile?.brandName === "string" && profile.brandName) ||
+      currentProject.name,
+    city:
+      (typeof bi?.city === "string" && bi.city) || currentProject.city || null,
+    district:
+      (typeof bi?.district === "string" && bi.district) ||
+      currentProject.district ||
+      null,
+    focusProblem:
+      (typeof bi?.biggestProblem === "string" && bi.biggestProblem) ||
+      (typeof profile?.currentProblemTitle === "string" &&
+        profile.currentProblemTitle) ||
+      null,
+    decisionHorizon,
+    profile: profile || null,
+  };
+
+  return {
+    currentProject: bundle.project,
+    home: includeDailyScan ? { ...home, dailyScan: toDailyScanV1(home, scanContext) } : home,
+    dailyScan: includeDailyScan ? toDailyScanV1(home, scanContext) : null,
+  };
+}
+
 export const dashboardRouter = router({
   getHome: protectedProcedure
     .input(z.object({ projectId: z.string().optional() }).optional())
     .query(async ({ ctx, input }) => {
-      const projects = await listProjects(prisma, ctx.userId!);
-
-      if (projects.length === 0) {
-        return {
-          currentProject: null,
-          home: null,
-        };
-      }
-
-      const currentProject =
-        projects.find((project) => project.id === input?.projectId) ?? projects[0];
-      const bundle = await getProjectInsightBundle(prisma, ctx.userId!, currentProject.id);
-
-      if (!bundle) {
-        return {
-          currentProject: null,
-          home: null,
-        };
-      }
-
+      const result = await resolveHomeData(ctx, input?.projectId, true);
       return {
-        currentProject: bundle.project,
-        home: buildDashboardHome(bundle),
+        currentProject: result.currentProject,
+        home: result.home,
+      };
+    }),
+
+  /** Decision Center：每日经营扫描（与 getHome 同源，薄封装） */
+  getDailyScan: protectedProcedure
+    .input(z.object({ projectId: z.string().optional() }).optional())
+    .query(async ({ ctx, input }) => {
+      const result = await resolveHomeData(ctx, input?.projectId, true);
+      return {
+        currentProject: result.currentProject,
+        dailyScan: result.dailyScan,
       };
     }),
 
@@ -144,9 +243,16 @@ export const dashboardRouter = router({
         };
       }
 
+      const profile =
+        (bundle.project.profile as Record<string, unknown> | null) || {};
+      const consultingFacts = extractConsultingMeetingFacts(profile);
+
       return {
         currentProject: bundle.project,
-        workspace: buildAdvisorWorkspace(bundle),
+        workspace: buildAdvisorWorkspace(bundle, {
+          consultingFactLines: consultingFacts.lines,
+          storeVisitFactCount: consultingFacts.storeVisitCount,
+        }),
       };
     }),
 
@@ -209,4 +315,112 @@ export const dashboardRouter = router({
       ),
     };
   }),
+
+  /** 今日三动作勾选写回 lastActionPlan.status */
+  toggleTodayAction: protectedProcedure
+    .input(
+      z.object({
+        projectId: z.string(),
+        actionId: z.string().min(1).max(80),
+        /** 不传则在 planned ↔ done 间切换 */
+        status: z.enum(["planned", "done", "skipped"]).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const project = await prisma.project.findFirst({
+        where: { id: input.projectId, owner: { userId: ctx.userId! } },
+        include: { owner: { select: { id: true } } },
+      });
+      if (!project) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "项目不存在或无权限" });
+      }
+
+      let nextActions: Array<Record<string, unknown>> = [];
+      try {
+        await updateProjectProfile(
+          project.id,
+          (profile) => {
+            const plan = profile.lastActionPlan as
+              | Record<string, unknown>
+              | undefined;
+            if (!plan || !Array.isArray(plan.actions)) {
+              throw new TRPCError({
+                code: "NOT_FOUND",
+                message: "暂无今日动作可勾选",
+              });
+            }
+            const actions = (plan.actions as Array<Record<string, unknown>>).map(
+              (a, i) => {
+                const id = String(a.actionId || `act_${i + 1}`);
+                if (id !== input.actionId) return a;
+                const current = String(a.status || "planned");
+                const mapped =
+                  input.status === "done"
+                    ? "done"
+                    : input.status === "planned"
+                      ? "planned"
+                      : input.status === "skipped"
+                        ? "blocked"
+                        : nextToggleActionStatus(current);
+                let status: string;
+                try {
+                  status = assertActionTransition(current, mapped);
+                } catch (e) {
+                  throw new TRPCError({
+                    code: "BAD_REQUEST",
+                    message: e instanceof Error ? e.message : "动作状态非法",
+                  });
+                }
+                return { ...a, actionId: id, status };
+              },
+            );
+            if (
+              !actions.some(
+                (a, i) => String(a.actionId || `act_${i + 1}`) === input.actionId,
+              )
+            ) {
+              throw new TRPCError({
+                code: "NOT_FOUND",
+                message: "动作不存在",
+              });
+            }
+            nextActions = actions;
+            let next: Record<string, unknown> = {
+              ...profile,
+              lastActionPlan: {
+                ...plan,
+                actions,
+                updatedAt: new Date().toISOString(),
+              },
+            };
+            const completion = estimateActionPlanCompletion(next);
+            if (completion != null) {
+              next = ingestSignalsAndEvolve(next, [
+                buildExecutionFollowthroughSignal({
+                  planId: String(plan.planId || ""),
+                  completionRate: completion,
+                  windowDays: 7,
+                }),
+              ]);
+            }
+            return next;
+          },
+          { ownerId: project.owner.id },
+        );
+      } catch (error) {
+        const conflict = toProfileConflictTRPC(error);
+        if (conflict) throw conflict;
+        throw error;
+      }
+
+      return {
+        ok: true as const,
+        actions: nextActions.map((a, i) => ({
+          actionId: String(a.actionId || `act_${i + 1}`),
+          title: String(a.title || ""),
+          status: String(a.status || "planned"),
+          owner: a.owner ? String(a.owner) : undefined,
+        })),
+      };
+    }),
 });

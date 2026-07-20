@@ -5,7 +5,6 @@
 
 import type { StreamChunk } from "@mealkey/agent-sdk";
 import type { PrismaClient } from "@/generated/prisma";
-import { parseJsonField, stringifyJsonField } from "@/lib/prisma";
 import { buildBusinessSnapshotFromChat, type BusinessSnapshot } from "@/lib/business";
 import { withFounderBusinessContext } from "@/lib/founder-decision-snapshot";
 import {
@@ -54,6 +53,7 @@ export interface MBizServiceOptions {
   projectId: string;
   userId: string;
   message: string;
+  missionId?: string;
   conversationId?: string;
   assetIds?: string[];
   force?: boolean;
@@ -183,38 +183,47 @@ async function persistBizProfile(
   });
   if (!project) return null;
 
-  const profile = (parseJsonField(project.profile) as Record<string, unknown> | null) || {};
-  const current = profile.mBiz && typeof profile.mBiz === "object" ? profile.mBiz : null;
-  const history = Array.isArray(profile.mBizHistory) ? (profile.mBizHistory as unknown[]) : [];
-  const nextProfileBase: Record<string, unknown> = {
-    ...profile,
-    mBiz: {
-      ...snapshot,
-      updatedAt: new Date().toISOString(),
-    },
-    mBizPrevious: current || profile.mBizPrevious || null,
-    mBizHistory: [current, ...history].filter(Boolean).slice(0, 6),
-  };
-  const nextProfile = withFounderBusinessContext(
-    nextProfileBase,
-    {
-      decisionId: snapshot.sessionId,
-      modelHealthScore: deriveBizHealthScore(snapshot.pageOutput),
-      finalJudgement: snapshot.oneLiner,
-      handoffPayload: {
-        sessionId: snapshot.sessionId,
-        currentLayer: snapshot.pageOutput.currentLayer,
-      },
-    },
+  const { updateProjectProfile } = await import("@/server/services/project-profile");
+  let previous: BusinessSnapshot | null = null;
+  await updateProjectProfile(
     project.id,
+    (profile) => {
+      const current =
+        profile.mBiz && typeof profile.mBiz === "object" ? profile.mBiz : null;
+      previous =
+        current && typeof current === "object"
+          ? (current as BusinessSnapshot)
+          : null;
+      const history = Array.isArray(profile.mBizHistory)
+        ? (profile.mBizHistory as unknown[])
+        : [];
+      const nextProfileBase: Record<string, unknown> = {
+        ...profile,
+        mBiz: {
+          ...snapshot,
+          updatedAt: new Date().toISOString(),
+        },
+        mBizPrevious: current || profile.mBizPrevious || null,
+        mBizHistory: [current, ...history].filter(Boolean).slice(0, 6),
+      };
+      return withFounderBusinessContext(
+        nextProfileBase,
+        {
+          decisionId: snapshot.sessionId,
+          modelHealthScore: deriveBizHealthScore(snapshot.pageOutput),
+          finalJudgement: snapshot.oneLiner,
+          handoffPayload: {
+            sessionId: snapshot.sessionId,
+            currentLayer: snapshot.pageOutput.currentLayer,
+          },
+        },
+        project.id,
+      );
+    },
+    { ownerId, prisma },
   );
 
-  await prisma.project.update({
-    where: { id: project.id },
-    data: { profile: stringifyJsonField(nextProfile) },
-  });
-
-  return current && typeof current === "object" ? (current as BusinessSnapshot) : null;
+  return previous;
 }
 
 export async function* streamMBizProduct(
@@ -245,6 +254,7 @@ export async function* streamMBizProduct(
     agentId: "m-biz",
     userId,
     projectId,
+    missionId: options.missionId,
     conversationId: conversation.id,
     input: { message, assetIds, agent: "m-biz" },
   });

@@ -1,0 +1,19 @@
+decision_type: "fundraising"
+name: "融资决策"
+level: 4
+pass_requirement: "7/7 + 创始人确认"
+weights:
+  CSO: 5
+  CMO: 2
+  CBO: 2
+  BMO: 4
+  CFO: 5
+  COO: 3
+  CRO: 5
+veto_roles:
+  - "CFO"
+  - "CRO"
+default_required_agents:
+  - "M-ED"
+  - "M-BIZ"
+  - "M-MKT"

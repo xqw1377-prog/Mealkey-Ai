@@ -21,37 +21,37 @@ export const DEPARTMENT_BOARDS: Record<DepartmentBoardKey, DepartmentBoardConfig
   brand: {
     key: "brand",
     department: "brand",
-    label: "品牌定位部",
-    title: "品牌定位委员会",
-    subtitle: "回答：在用户心智里，你应该成为谁。",
-    meetingCta: "进入品牌战略会议",
+    label: "品牌",
+    title: "品牌定位",
+    subtitle: "在顾客心里，你应该是谁。",
+    meetingCta: "开会谈品牌",
     pathSegment: "positioning",
   },
   market: {
     key: "market",
     department: "market",
-    label: "市场研究部",
-    title: "市场机会评估",
-    subtitle: "回答：这个市场值不值得做、窗口在哪里。",
-    meetingCta: "进入市场分析会",
+    label: "市场",
+    title: "市场机会",
+    subtitle: "值不值得做，窗口在哪。",
+    meetingCta: "开会谈市场",
     pathSegment: "market",
   },
   business: {
     key: "business",
     department: "business",
-    label: "商业战略部",
-    title: "商业模式评审",
-    subtitle: "回答：怎么赚钱、哪里最危险、先验证什么。",
-    meetingCta: "进入商业战略会议",
+    label: "商业",
+    title: "商业模式",
+    subtitle: "怎么赚钱，先验证什么。",
+    meetingCta: "开会谈生意",
     pathSegment: "business",
   },
   org: {
     key: "org",
     department: "org",
-    label: "组织设计部",
-    title: "组织与股权设计",
-    subtitle: "回答：控制权、激励与治理如何支撑扩张。",
-    meetingCta: "进入组织设计会议",
+    label: "组织",
+    title: "组织与股权",
+    subtitle: "谁说了算，怎么激励。",
+    meetingCta: "开会谈组织",
     pathSegment: "equity",
   },
 };
@@ -85,12 +85,12 @@ export function getDepartmentAgentCode(key: DepartmentBoardKey) {
 /** 把内部产品代号换成用户可读部门名 */
 export function stripAgentProductNames(text: string): string {
   return text
-    .replace(/\bM-PNT\b/g, "品牌定位部")
-    .replace(/\bM-MKT\b/g, "市场研究部")
-    .replace(/\bM-BIZ\b/g, "商业战略部")
-    .replace(/\bM-ED\b/g, "组织设计部")
-    .replace(/m-pnt/gi, "品牌定位")
-    .replace(/m-mkt/gi, "市场研究")
-    .replace(/m-biz/gi, "商业模式")
-    .replace(/m-ed/gi, "组织股权");
+    .replace(/\bM-PNT\b/g, "品牌")
+    .replace(/\bM-MKT\b/g, "市场")
+    .replace(/\bM-BIZ\b/g, "商业")
+    .replace(/\bM-ED\b/g, "组织")
+    .replace(/m-pnt/gi, "品牌")
+    .replace(/m-mkt/gi, "市场")
+    .replace(/m-biz/gi, "商业")
+    .replace(/m-ed/gi, "组织");
 }

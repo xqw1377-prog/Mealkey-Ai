@@ -1,0 +1,19 @@
+decision_type: "store_expansion"
+name: "门店扩张"
+level: 2
+pass_requirement: "5/7"
+weights:
+  CSO: 4
+  CMO: 4
+  CBO: 3
+  BMO: 5
+  CFO: 5
+  COO: 5
+  CRO: 4
+veto_roles:
+  - "CFO"
+  - "COO"
+default_required_agents:
+  - "M-BIZ"
+  - "M-MKT"
+  - "M-PNT"

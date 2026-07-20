@@ -1,9 +1,7 @@
 /**
- * 里斯定位 Agent — V2 深度优化 + LLM hybrid
- *
- * 理论体系：里斯（Al Ries）定位理论
- * - LLM 传入时：hybrid 模式（LLM 优先，解析失败降级到 heuristic）
- * - LLM 不传时：纯 heuristic（V2 10条商规打分）
+ * 心智官 Agent — MK-MIND（心智占位学派）
+ * - LLM hybrid / heuristic 商规打分
+ * - 对外禁止使用外部真人姓名
  */
 
 import type {
@@ -14,10 +12,11 @@ import type {
   TheoryView,
 } from "../types";
 
-const RIES_LLM_PROMPT = `你是一位精通里斯（Al Ries）定位理论的首席定位顾问。
-你的任务是严格按照里斯定位理论的10条商规，评估候选定位方向的优劣。
+const RIES_LLM_PROMPT = `你是【心智官】（代号 MK-MIND），精通心智占位学派。
+禁止在输出中使用任何外部真人姓名。
+你的任务是严格按照心智占位商规，评估候选定位方向的优劣。
 
-里斯定位10条商规：
+心智占位10条商规：
 1. 领先定律：该方向能否在目标心智中成为"第一"？
 2. 品类定律：该方向是否代表一个新品类/子品类？还是只是在现有品类中竞争？
 3. 聚焦定律：该方向是否聚焦在"一个词/一个概念"？说清楚了吗？
@@ -42,12 +41,12 @@ const RIES_LLM_PROMPT = `你是一位精通里斯（Al Ries）定位理论的首
 
 export const riesAgent: TheoryAgent = {
   id: "ries",
-  name: "里斯定位 Agent",
+  name: "心智官（MK-MIND）",
   stance:
-    "里斯定位理论：在顾客心智中抢占第一位置；聚焦单一概念；建立可长期强化的领导资产。用10条商规检验每个方向。",
+    "心智占位学派：在顾客心智中抢占第一位置；聚焦单一概念；建立可长期强化的领导资产。用商规检验每个方向。",
 
-  systemPrompt: `你是【里斯定位 Agent】（agent_id=ries）。
-你代表的理论体系是：里斯（Al Ries）定位理论。
+  systemPrompt: `你是【心智官】（agent_id=ries，代号 MK-MIND）。
+你代表的理论体系是：心智占位学派。禁止在输出中使用任何外部真人姓名。
 
 评判标准（10条商规）：
 1. 领先定律：该方向能否在目标心智中成为"第一"？
@@ -165,6 +164,14 @@ async function runRiesLlm(
       reason: `按里斯定位LLM评估：${s.analysis.slice(0, 60) || "聚焦不足或无法占据心智第一"}`,
     }));
 
+  const lawScore = scoreByRiesLaws(
+    preferred,
+    pkg.project.category || "餐饮",
+    pkg.project.city || "目标城市",
+    pkg.owner.strengths,
+    pkg.owner.experience || "",
+  );
+
   return {
     agent_id: "ries",
     agent_name: riesAgent.name,
@@ -179,6 +186,12 @@ async function runRiesLlm(
       name: m.name,
       theory_score: m.theory_score,
       theory_recommend: toRecommend(m.theory_score),
+    })),
+    dimension_breakdown: lawScore.parts.map((p) => ({
+      name: p.name,
+      score: p.delta,
+      note: p.note,
+      pass: p.delta >= 0,
     })),
     theory_recommend,
     recommendation_level: theory_recommend,
@@ -199,7 +212,7 @@ function runRiesHeuristic(pkg: MatrixInputPackage): TheoryView {
 
   const scores = candidates.map((c) => {
     const s = scoreByRiesLaws(c, category, city, strengths, experience);
-    return { id: c.id, theory_score: s.total, details: s.details };
+    return { id: c.id, theory_score: s.total, details: s.details, parts: s.parts };
   });
 
   scores.sort((a, b) => b.theory_score - a.theory_score);
@@ -211,10 +224,9 @@ function runRiesHeuristic(pkg: MatrixInputPackage): TheoryView {
     .filter((s) => s.id !== best.id && s.theory_score < 55)
     .map((s) => {
       const c = candidates.find((x) => x.id === s.id)!;
-      const detail = best.details || "";
       return {
         name: c.name,
-        reason: `按里斯定位：${detail.includes("聚焦") ? "聚焦不足，无法占据单一概念" : "在心智阶梯上位置不清晰，难成第一"}`,
+        reason: `按里斯定位：${s.details.includes("聚焦") ? "聚焦不足，无法占据单一概念" : "在心智阶梯上位置不清晰，难成第一"}`,
       };
     });
 
@@ -232,6 +244,12 @@ function runRiesHeuristic(pkg: MatrixInputPackage): TheoryView {
       const c = candidates.find((x) => x.id === s.id)!;
       return { name: c.name, theory_score: s.theory_score, theory_recommend: toRecommend(s.theory_score) };
     }),
+    dimension_breakdown: best.parts.map((p) => ({
+      name: p.name,
+      score: p.delta,
+      note: p.note,
+      pass: p.delta >= 0,
+    })),
     theory_recommend,
     recommendation_level: theory_recommend,
     confidence: Math.min(0.92, 0.55 + best.theory_score / 200),
@@ -305,105 +323,117 @@ function scoreByRiesLaws(
   city: string,
   strengths: string[],
   experience: string,
-): { total: number; details: string } {
+): {
+  total: number;
+  details: string;
+  parts: Array<{ name: string; delta: number; note: string }>;
+} {
   const text = c.oneLiner + c.name + c.focus;
-  const parts: string[] = [];
+  const parts: Array<{ name: string; delta: number; note: string }> = [];
   let score = 50;
 
+  const add = (name: string, delta: number, note: string) => {
+    score += delta;
+    parts.push({ name, delta, note });
+  };
+
   if (/第一|首选|开创|首家|领先|开创者|第一个/.test(text)) {
-    score += 15; parts.push("领先+15（有第一潜力）");
+    add("领先定律", 15, "有第一潜力");
   } else if (/唯一|只此/.test(text)) {
-    score += 10; parts.push("领先+10（有唯一性）");
+    add("领先定律", 10, "有唯一性");
   } else if (/更好|更优/.test(text)) {
-    score -= 8; parts.push("领先-8(更好是陷阱,不能替代第一)");
+    add("领先定律", -8, "更好是陷阱，不能替代第一");
   } else {
-    score -= 5; parts.push("领先-5（没有第一潜力）");
+    add("领先定律", -5, "没有第一潜力");
   }
 
   if (/品类|新|开创|分化|细分|子品类/.test(text)) {
-    score += 12; parts.push("品类+12（有新品类感）");
+    add("品类定律", 12, "有新品类感");
   } else if (c.type.includes("进攻") || c.focus.includes("竞争")) {
-    score += 5; parts.push("品类+5（有竞争角度，但新品类不足）");
+    add("品类定律", 5, "有竞争角度，但新品类不足");
   } else {
-    score -= 3; parts.push("品类-3（缺乏新品类定义）");
+    add("品类定律", -3, "缺乏新品类定义");
   }
 
   const focusWords = c.oneLiner.split(/[，,。.、]/).length;
   if (focusWords <= 1 && c.oneLiner.length < 20) {
-    score += 15; parts.push("聚焦+15（一句话说清，极度聚焦）");
+    add("聚焦定律", 15, "一句话说清，极度聚焦");
   } else if (focusWords <= 2) {
-    score += 8; parts.push("聚焦+8（比较聚焦）");
+    add("聚焦定律", 8, "比较聚焦");
   } else {
-    score -= 10; parts.push("聚焦-10（一句话说了太多东西）");
+    add("聚焦定律", -10, "一句话说了太多东西");
   }
   if (/大而全|所有人|全能|又.*又|不仅|而且/.test(text)) {
-    score -= 12; parts.push("聚焦-12（大而全，犯了聚焦大忌）");
+    add("聚焦定律", -12, "大而全，犯了聚焦大忌");
   }
 
   if (/不|只|拒绝|不做|反对/.test(text)) {
-    score += 10; parts.push("专有+10(不/只暗示了专有空间)");
+    add("专有定律", 10, "不/只暗示了专有空间");
   } else if (/独特|专属|自有的/.test(text)) {
-    score += 5; parts.push("专有+5（有专有性）");
+    add("专有定律", 5, "有专有性");
   } else {
-    parts.push("专有0（需要确认这个词是否已被占据）");
+    add("专有定律", 0, "需确认这个词是否已被占据");
   }
 
   if (/对立|反面|不同|不是.*而是|vs|VS|而非|打破/.test(text)) {
-    score += 10; parts.push("对立+10（有明确的对立结构）");
+    add("对立定律", 10, "有明确的对立结构");
   } else if (c.focus.includes("竞争") || c.type.includes("进攻")) {
-    score += 6; parts.push("对立+6（有竞争意识但对立不够锋利）");
+    add("对立定律", 6, "有竞争意识但对立不够锋利");
   } else {
-    score -= 5; parts.push("对立-5（没有对立方向，可能被淹没）");
+    add("对立定律", -5, "没有对立方向，可能被淹没");
   }
 
   if (/只|专|聚焦|不做|拒绝|放弃|单一/.test(text)) {
-    score += 10; parts.push("牺牲+10（明确了放弃什么）");
+    add("牺牲定律", 10, "明确了放弃什么");
   } else if (/场景|特定|某一/.test(text)) {
-    score += 5; parts.push("牺牲+5（有场景聚焦但牺牲不够极端）");
+    add("牺牲定律", 5, "有场景聚焦但牺牲不够极端");
   } else {
-    score -= 5; parts.push("牺牲-5（什么都要=什么都得不到）");
-  }
-
-  if (/场景|画面感|记得|一句话/.test(text) || c.oneLiner.length < 25) {
-    score += 10; parts.push("心智+10（容易进入心智，好记）");
-  } else if (c.oneLiner.length < 40) {
-    score += 5; parts.push("心智+5（比较简洁）");
-  } else {
-    score -= 3; parts.push("心智-3（太复杂，心智不接受）");
-  }
-
-  if (/第一|首选|领导/.test(text)) {
-    score += 8; parts.push("阶梯+8（瞄准第一阶梯）");
-  } else if (/第二|挑战/.test(text)) {
-    score += 4; parts.push("阶梯+4（瞄准第二阶梯）");
-  } else {
-    parts.push("阶梯0（阶梯位置不明确）");
-  }
-
-  if (/二元|两极|两大/.test(text) || (c.focus.includes("竞争") && score > 60)) {
-    score += 5; parts.push("二元+5（有二元竞争意识）");
-  } else {
-    parts.push("二元0");
+    add("牺牲定律", -5, "什么都要=什么都得不到");
   }
 
   if (/又.*又|不仅|综合|全面|多元/.test(text)) {
-    score -= 5; parts.push("延伸-5（有品牌延伸风险）");
+    add("延伸定律", -5, "有品牌延伸风险");
   } else if (/只|专|聚焦/.test(text)) {
-    score += 5; parts.push("延伸+5（聚焦单一，避免延伸）");
+    add("延伸定律", 5, "聚焦单一，避免延伸");
   } else {
-    parts.push("延伸0");
+    add("延伸定律", 0, "延伸风险未明");
+  }
+
+  if (/场景|画面感|记得|一句话/.test(text) || c.oneLiner.length < 25) {
+    add("心智定律", 10, "容易进入心智，好记");
+  } else if (c.oneLiner.length < 40) {
+    add("心智定律", 5, "比较简洁");
+  } else {
+    add("心智定律", -3, "太复杂，心智不接受");
+  }
+
+  if (/第一|首选|领导/.test(text)) {
+    add("阶梯定律", 8, "瞄准第一阶梯");
+  } else if (/第二|挑战/.test(text)) {
+    add("阶梯定律", 4, "瞄准第二阶梯");
+  } else {
+    add("阶梯定律", 0, "阶梯位置不明确");
+  }
+
+  if (/二元|两极|两大/.test(text) || (c.focus.includes("竞争") && score > 60)) {
+    add("二元定律", 5, "有二元竞争意识");
+  } else {
+    add("二元定律", 0, "二元结构未强调");
   }
 
   if (/餐饮|连锁|品牌|门店/.test(experience)) {
-    score += 5; parts.push("资源+5（经营者有餐饮经验）");
+    add("资源匹配", 5, "经营者有餐饮经验");
   }
   if (strengths.some((s) => /品牌|营销|战略/.test(s))) {
-    score += 3; parts.push("资源+3（经营者有品牌能力）");
+    add("资源匹配", 3, "经营者有品牌能力");
   }
 
+  void category;
+  void city;
+
   const total = clamp(score);
-  const details = parts.join("；");
-  return { total, details };
+  const details = parts.map((p) => `${p.name}${p.delta >= 0 ? "+" : ""}${p.delta}（${p.note}）`).join("；");
+  return { total, details, parts };
 }
 
 function toRecommend(score: number): TheoryRecommend {

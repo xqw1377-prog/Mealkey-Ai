@@ -12,6 +12,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import type { PositioningSnapshot } from "@/lib/positioning";
+import { PRODUCT_BRAND_TITLE } from "@/lib/product-brand";
 import { cn } from "@/lib/utils";
 
 type PositioningResultCardProps = {
@@ -62,7 +63,7 @@ export function PositioningResultCard({
           <Target className="h-3.5 w-3.5" />
           <span>品牌定位结论</span>
           <span className="rounded-full bg-[rgba(255,255,255,0.08)] px-2 py-0.5 normal-case tracking-normal text-[11px]">
-            MealKey 定位能力
+            {PRODUCT_BRAND_TITLE}
           </span>
           {recommend && (
             <span className="rounded-full bg-[rgba(255,255,255,0.08)] px-2 py-0.5 normal-case tracking-normal text-[11px]">
@@ -354,9 +355,9 @@ function formatTheoryEntries(
   theoryVoteSummary: PositioningSnapshot["theoryVoteSummary"],
 ) {
   const labels: Record<string, string> = {
-    ries: "里斯定位",
-    trout: "特劳特定位",
-    ye_maozhong: "叶茂中冲突",
+    ries: "心智占位",
+    trout: "竞争空位",
+    ye_maozhong: "冲突记忆",
   };
 
   const recommendLabels: Record<string, string> = {

@@ -1,17 +1,13 @@
 /**
- * M-PNT 三理论 Agent 矩阵
+ * M-PNT 三席思维矩阵（对外去真名）
  *
- * 每一个理论体系 = 一个 Agent，相互竞争、相互博弈，最后形成共识/取舍：
+ *   | Agent            | 席位代号        | 学派标签         |
+ *   |------------------|-----------------|------------------|
+ *   | riesAgent        | MK-MIND 心智官  | 心智第一 · 聚焦  |
+ *   | troutAgent       | MK-RIVAL 空位官 | 竞争空位 · 区隔  |
+ *   | yeMaozhongAgent  | MK-CLASH 冲突官 | 冲突记忆 · 成交  |
  *
- *   | Agent            | 理论体系                         |
- *   |------------------|----------------------------------|
- *   | riesAgent        | Ries 定位理论（第一/聚焦/领导）   |
- *   | troutAgent       | Trout 区隔理论（竞争/第一联想）   |
- *   | yeMaozhongAgent  | 叶茂中场景落地理论（场景/可验证） |
- *
- * 流程：
- *   并行竞争出三票 → Cross-Fire 相互攻击（博弈）
- *   → 硬/软共识与淘汰 → Synthesis 最终取舍（非简单过半数）
+ * 咨询主路径：matrix/thinking 三席引擎造策 → Cross-Fire → Synthesis
  */
 
 export type {
@@ -44,3 +40,27 @@ export {
   runSynthesisAgent,
 } from "./agents";
 export { runTheoryMatrix, runSingleTheoryAgent } from "./run-matrix";
+export {
+  runThreeSeatThinkingEngines,
+  buildThinkingFactPack,
+  SEAT_PUBLIC,
+} from "./thinking";
+export type {
+  ThinkingFactPack,
+  SeatVerdict,
+  ThinkingEngineResult,
+} from "./thinking/protocol";
+
+export {
+  KNOWLEDGE_STATS,
+  getTheoryKnowledge,
+  getRules,
+  getCases,
+  matchRulesToText,
+  rulesToLawChecks,
+  riesRules,
+  troutRules,
+  yeRules,
+  caseAssets,
+} from "./knowledge";
+export type { TheoryRule, CaseAsset, TheorySource } from "./knowledge";

@@ -131,6 +131,16 @@ exports.Prisma.UserScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.PasswordResetTokenScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  tokenHash: 'tokenHash',
+  expiresAt: 'expiresAt',
+  usedAt: 'usedAt',
+  createdAt: 'createdAt',
+  requestedFrom: 'requestedFrom'
+};
+
 exports.Prisma.OwnerScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
@@ -167,6 +177,149 @@ exports.Prisma.ProjectScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.RestaurantScalarFieldEnum = {
+  id: 'id',
+  projectId: 'projectId',
+  ownerId: 'ownerId',
+  name: 'name',
+  status: 'status',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.RestaurantProfileScalarFieldEnum = {
+  id: 'id',
+  restaurantId: 'restaurantId',
+  category: 'category',
+  stage: 'stage',
+  city: 'city',
+  storeCount: 'storeCount',
+  priceRange: 'priceRange',
+  description: 'description',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.BrandProfileScalarFieldEnum = {
+  id: 'id',
+  restaurantId: 'restaurantId',
+  positioning: 'positioning',
+  targetCustomer: 'targetCustomer',
+  consumptionScene: 'consumptionScene',
+  brandPromise: 'brandPromise',
+  competitiveAdvantage: 'competitiveAdvantage',
+  brandRisk: 'brandRisk',
+  confidence: 'confidence',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.BusinessProfileScalarFieldEnum = {
+  id: 'id',
+  restaurantId: 'restaurantId',
+  monthlyRevenue: 'monthlyRevenue',
+  grossMargin: 'grossMargin',
+  netMargin: 'netMargin',
+  averageTicket: 'averageTicket',
+  dailyOrders: 'dailyOrders',
+  laborRatio: 'laborRatio',
+  rentRatio: 'rentRatio',
+  businessModel: 'businessModel',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.CapabilityProfileScalarFieldEnum = {
+  id: 'id',
+  restaurantId: 'restaurantId',
+  strategyScore: 'strategyScore',
+  marketScore: 'marketScore',
+  productScore: 'productScore',
+  financeScore: 'financeScore',
+  operationScore: 'operationScore',
+  organizationScore: 'organizationScore',
+  overallScore: 'overallScore',
+  confidence: 'confidence',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.FounderProfileScalarFieldEnum = {
+  id: 'id',
+  restaurantId: 'restaurantId',
+  experience: 'experience',
+  decisionStyle: 'decisionStyle',
+  riskPreference: 'riskPreference',
+  strengthsJson: 'strengthsJson',
+  weaknessesJson: 'weaknessesJson',
+  blindSpotsJson: 'blindSpotsJson',
+  growthTrendJson: 'growthTrendJson',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.DecisionRecordScalarFieldEnum = {
+  id: 'id',
+  restaurantId: 'restaurantId',
+  mkDecisionId: 'mkDecisionId',
+  type: 'type',
+  question: 'question',
+  contextJson: 'contextJson',
+  optionsJson: 'optionsJson',
+  chosenOption: 'chosenOption',
+  aiAssessmentJson: 'aiAssessmentJson',
+  councilResultJson: 'councilResultJson',
+  expectedOutcomeJson: 'expectedOutcomeJson',
+  actualOutcomeJson: 'actualOutcomeJson',
+  learningGenerated: 'learningGenerated',
+  status: 'status',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.ActionRecordScalarFieldEnum = {
+  id: 'id',
+  restaurantId: 'restaurantId',
+  decisionId: 'decisionId',
+  action: 'action',
+  owner: 'owner',
+  deadline: 'deadline',
+  status: 'status',
+  resultJson: 'resultJson',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.BrainLearningScalarFieldEnum = {
+  id: 'id',
+  restaurantId: 'restaurantId',
+  sourceType: 'sourceType',
+  sourceId: 'sourceId',
+  pattern: 'pattern',
+  insight: 'insight',
+  confidence: 'confidence',
+  appliedCount: 'appliedCount',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.BrainEventScalarFieldEnum = {
+  id: 'id',
+  restaurantId: 'restaurantId',
+  type: 'type',
+  payloadJson: 'payloadJson',
+  source: 'source',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.EvolutionStateScalarFieldEnum = {
+  id: 'id',
+  restaurantId: 'restaurantId',
+  understandingScore: 'understandingScore',
+  dataCompleteness: 'dataCompleteness',
+  decisionCount: 'decisionCount',
+  learningCount: 'learningCount',
+  actionCount: 'actionCount',
+  lastEvolutionAt: 'lastEvolutionAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.MemoryScalarFieldEnum = {
   id: 'id',
   ownerId: 'ownerId',
@@ -176,6 +329,22 @@ exports.Prisma.MemoryScalarFieldEnum = {
   content: 'content',
   importance: 'importance',
   source: 'source',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.IndustryInsightScalarFieldEnum = {
+  id: 'id',
+  category: 'category',
+  rule: 'rule',
+  outcome: 'outcome',
+  confidence: 'confidence',
+  evidenceLevel: 'evidenceLevel',
+  sourceKind: 'sourceKind',
+  anonymizedJson: 'anonymizedJson',
+  contributorHash: 'contributorHash',
+  fingerprint: 'fingerprint',
+  supportCount: 'supportCount',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -559,6 +728,72 @@ exports.Prisma.PaymentOrderScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.UserWalletScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  balance: 'balance',
+  totalPurchased: 'totalPurchased',
+  totalConsumed: 'totalConsumed',
+  frozenAmount: 'frozenAmount',
+  status: 'status',
+  metadata: 'metadata',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.WalletLedgerScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  walletId: 'walletId',
+  amount: 'amount',
+  balanceAfter: 'balanceAfter',
+  type: 'type',
+  reason: 'reason',
+  referenceId: 'referenceId',
+  metadata: 'metadata',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.CapabilityPriceScalarFieldEnum = {
+  id: 'id',
+  capability: 'capability',
+  baseCost: 'baseCost',
+  depthMultipliers: 'depthMultipliers',
+  complexityMultipliers: 'complexityMultipliers',
+  modelMultipliers: 'modelMultipliers',
+  dataMultipliers: 'dataMultipliers',
+  agentMultipliers: 'agentMultipliers',
+  active: 'active',
+  metadata: 'metadata',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.ConsumptionRecordScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  walletId: 'walletId',
+  capability: 'capability',
+  agentCodes: 'agentCodes',
+  requestedAmount: 'requestedAmount',
+  actualAmount: 'actualAmount',
+  status: 'status',
+  reason: 'reason',
+  pricingSnapshot: 'pricingSnapshot',
+  runId: 'runId',
+  tokenInput: 'tokenInput',
+  tokenOutput: 'tokenOutput',
+  tokenCached: 'tokenCached',
+  tokenReasoning: 'tokenReasoning',
+  tokenTotal: 'tokenTotal',
+  model: 'model',
+  provider: 'provider',
+  costCents: 'costCents',
+  metadata: 'metadata',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.AgentEntitlementScalarFieldEnum = {
   id: 'id',
   billingAccountId: 'billingAccountId',
@@ -768,9 +1003,22 @@ exports.Prisma.NullsOrder = {
 
 exports.Prisma.ModelName = {
   User: 'User',
+  PasswordResetToken: 'PasswordResetToken',
   Owner: 'Owner',
   Project: 'Project',
+  Restaurant: 'Restaurant',
+  RestaurantProfile: 'RestaurantProfile',
+  BrandProfile: 'BrandProfile',
+  BusinessProfile: 'BusinessProfile',
+  CapabilityProfile: 'CapabilityProfile',
+  FounderProfile: 'FounderProfile',
+  DecisionRecord: 'DecisionRecord',
+  ActionRecord: 'ActionRecord',
+  BrainLearning: 'BrainLearning',
+  BrainEvent: 'BrainEvent',
+  EvolutionState: 'EvolutionState',
   Memory: 'Memory',
+  IndustryInsight: 'IndustryInsight',
   Decision: 'Decision',
   DecisionEvent: 'DecisionEvent',
   CognitiveSession: 'CognitiveSession',
@@ -795,6 +1043,10 @@ exports.Prisma.ModelName = {
   CreditLedger: 'CreditLedger',
   Invoice: 'Invoice',
   PaymentOrder: 'PaymentOrder',
+  UserWallet: 'UserWallet',
+  WalletLedger: 'WalletLedger',
+  CapabilityPrice: 'CapabilityPrice',
+  ConsumptionRecord: 'ConsumptionRecord',
   AgentEntitlement: 'AgentEntitlement',
   AgentListing: 'AgentListing',
   RevenueShare: 'RevenueShare',

@@ -40,17 +40,22 @@ export class MEdFounderAdapter extends BaseFounderAgentAdapter {
         scale: input.companyContext.business?.scale,
         goals: input.companyContext.goals,
         assetContextBlock: input.assetContextBlock,
+        ...this.memoryPriorPayload(input),
       },
-      timeoutMs: 8000,
+      timeoutMs: 20000,
     };
   }
 
   async invoke(request: AdapterRequest): Promise<AdapterRawResponse> {
     const startedAt = Date.now();
     const raw = await previewMEdSnapshot({
-      message:
+      message: [
         String(request.payload.question ?? "").trim() ||
-        "当前组织与股权结构是否支撑下一阶段",
+          "当前组织与股权结构是否支撑下一阶段",
+        typeof request.payload.memoryPriorBlock === "string" && request.payload.memoryPriorBlock
+          ? `\n\n【企业记忆先验】\n${request.payload.memoryPriorBlock}`
+          : "",
+      ].join(""),
       companyContext: {
         companyId: String(request.payload.companyId ?? "founder-company"),
         basicInfo: {
@@ -85,12 +90,26 @@ export class MEdFounderAdapter extends BaseFounderAgentAdapter {
     context: AdapterNormalizeContext,
   ): FounderDecision {
     const raw = response.raw as Awaited<ReturnType<typeof previewMEdSnapshot>>;
+    const structured = raw.structured as
+      | { provider?: string }
+      | undefined;
+    const providerFromStructured =
+      structured?.provider === "external" || structured?.provider === "heuristic"
+        ? structured.provider
+        : undefined;
+    const provider =
+      providerFromStructured ||
+      (/【真实引擎】/.test(raw.oneLiner) ? "external" : "heuristic");
+    const founders = raw.pageOutput.profile.founders;
+    const judgementBase = raw.oneLiner.replace(/^【真实引擎】|^【启发式】/, "");
+    const judgement =
+      provider === "external" ? `【真实引擎】${judgementBase}` : `【启发式】${judgementBase}`;
 
     return {
       decisionId: this.buildDecisionId(),
       sourceAgent: this.agent,
       question: inferOrgQuestion(context.mission),
-      judgement: raw.oneLiner,
+      judgement,
       confidence: raw.confidence,
       evidence: [
         {
@@ -101,19 +120,28 @@ export class MEdFounderAdapter extends BaseFounderAgentAdapter {
         {
           label: "当前结构",
           content:
-            raw.pageOutput.profile.founders.length > 0
-              ? `${raw.pageOutput.profile.founders.length} 位核心成员已进入治理视图`
+            founders.length > 0
+              ? `${founders.length} 位核心成员已进入治理视图`
               : "当前治理结构仍待补充",
+          confidence: raw.confidence,
+        },
+        {
+          label: "组织风险",
+          content:
+            raw.pageOutput.finalDecision.risks[0] ||
+            "融资稀释与控制权边界仍需持续监控",
           confidence: raw.confidence,
         },
       ],
       risks: raw.pageOutput.finalDecision.risks.slice(0, 3),
       nextSteps: raw.pageOutput.finalDecision.actions.slice(0, 3),
       stance: raw.pageOutput.health.control >= 75 ? "conditional" : "oppose",
+      validation: raw.pageOutput.finalDecision.actions[0],
       metadata: {
         missionId: context.mission.missionId,
         producedAt: this.buildNowIso(),
         latencyMs: response.latencyMs,
+        provider,
       },
     };
   }

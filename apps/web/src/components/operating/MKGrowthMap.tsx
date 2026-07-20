@@ -35,7 +35,7 @@ export function MKGrowthMap({
   recommendation,
   actionLabel,
   actionHref = "/knowledge",
-  actionText = "进入经营智慧",
+  actionText = "去成长",
 }: MKGrowthMapProps) {
   return (
     <section className="rounded-[22px] border border-[rgba(24,24,23,0.08)] bg-white p-3 shadow-[0_14px_28px_rgba(24,24,23,0.04)] md:p-4">

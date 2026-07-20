@@ -1,0 +1,38 @@
+# Founder OS 四席真实引擎编排
+# 用法：在仓库根目录 docker compose -f docker-compose.agents.yml up -d
+# 或本机分别启动（推荐开发态）
+
+services:
+  m-biz:
+    build: ./agents/m-biz/bmjm-agent
+    ports:
+      # 本机若 8000 已被占用，可改为 "8010:8000" 并设 MBIZ_API_BASE_URL
+      - "8000:8000"
+    environment:
+      BMJM_API_TOKEN: ${MBIZ_API_TOKEN:-mbiz-dev-token-2026}
+      BMJM_HOST: 0.0.0.0
+      BMJM_PORT: 8000
+
+  m-ed:
+    image: python:3.12-slim
+    working_dir: /app
+    volumes:
+      - ./agents/m-ed:/app
+    command: >
+      bash -c "pip install -r requirements.txt &&
+      uvicorn agent.main:app --host 0.0.0.0 --port 8001"
+    ports:
+      - "8001:8001"
+    environment:
+      MED_API_KEY: ${MED_API_KEY:-}
+
+  m-mkt:
+    image: python:3.12-slim
+    working_dir: /app
+    volumes:
+      - ./agents/m-mkt:/app
+    command: >
+      bash -c "pip install -r requirements-server.txt &&
+      PYTHONPATH=src uvicorn server.main:app --host 0.0.0.0 --port 8002"
+    ports:
+      - "8002:8002"

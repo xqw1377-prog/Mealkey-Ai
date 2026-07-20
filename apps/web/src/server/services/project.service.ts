@@ -8,6 +8,7 @@
  */
 import type { PrismaClient, Prisma } from "@/generated/prisma";
 import { parseJsonField } from "@/lib/prisma";
+import { resolveActiveBrand } from "@/lib/brand-registry";
 
 const projectInclude = {
   reports: {
@@ -26,6 +27,8 @@ type ProjectRecord = Prisma.ProjectGetPayload<{
 export type ProjectResponse = {
   id: string;
   name: string;
+  /** 当前激活品牌名（模块展示优先用这个） */
+  brandName: string;
   status: string;
   stage: string | null;
   city: string | null;
@@ -50,9 +53,14 @@ export type ProjectResponse = {
 };
 
 function toProjectResponse(project: ProjectRecord): ProjectResponse {
+  const profile = parseJsonField(project.profile) as Record<string, unknown> | null;
+  const active = profile
+    ? resolveActiveBrand(profile, project.name)
+    : { brandName: project.name };
   return {
     id: project.id,
     name: project.name,
+    brandName: active.brandName || project.name,
     status: project.status,
     stage: project.stage,
     city: project.city,
@@ -60,7 +68,7 @@ function toProjectResponse(project: ProjectRecord): ProjectResponse {
     category: project.category,
     target: project.target,
     budget: project.budget,
-    profile: parseJsonField(project.profile),
+    profile,
     healthScore: project.healthScore,
     confidence: project.confidence,
     ownerName: project.owner?.name ?? null,
@@ -191,7 +199,27 @@ export async function updateProject(
   if (data.target !== undefined) updateData.target = data.target;
   if (data.budget !== undefined) updateData.budget = data.budget;
   if (data.status !== undefined) updateData.status = data.status;
-  if (data.profile !== undefined) updateData.profile = JSON.stringify(data.profile);
+
+  if (data.profile !== undefined) {
+    const { updateProjectProfile } = await import("@/server/services/project-profile");
+    await updateProjectProfile(
+      projectId,
+      (current) => ({
+        ...current,
+        ...data.profile,
+      }),
+      {
+        ownerId: owner.id,
+        prisma,
+        extraData: () => updateData,
+      },
+    );
+    const project = await prisma.project.findFirst({
+      where: { id: projectId, ownerId: owner.id },
+      include: projectInclude,
+    });
+    return project ? toProjectResponse(project) : null;
+  }
 
   const project = await prisma.project.update({
     where: { id: projectId },

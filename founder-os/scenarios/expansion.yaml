@@ -1,0 +1,35 @@
+id: "expansion"
+name: "扩张决策"
+founder_prompt_example: "第一家店成功，要不要复制？"
+value: "餐饮最危险场景"
+frequency: "medium"
+default_level: "L3"
+decision_type: "store_expansion"
+council_name: "Expansion Council"
+engines: ["M-MKT", "M-PNT", "M-BIZ", "M-ED"]
+council: true
+intake_fields:
+  - "revenue"
+  - "gross_margin"
+  - "repurchase"
+  - "reviews"
+  - "labor"
+  - "rent"
+council_lenses:
+  CSO: "市场窗口是否存在"
+  CMO: "第二城市/第二店是否适合"
+  CBO: "复制是否损害品牌"
+  BMO: "模型是否成立"
+  CFO: "现金是否安全"
+  COO: "团队能不能复制"
+  CRO: "扩张风险"
+resolution_shape:
+  not: "开 or 不开"
+  example: "开5家验证；条件：单店利润>15%；店长体系完成"
+triggers:
+  - "扩张"
+  - "复制"
+  - "第二家"
+  - "开第二"
+  - "新城市"
+  - "要不要开"

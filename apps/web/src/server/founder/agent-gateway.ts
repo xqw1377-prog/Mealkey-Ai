@@ -136,8 +136,9 @@ export function buildExpansionMission(input: {
 }
 
 /**
- * 并行召集顾问（MVP：先全部降级席位，保证会议可开；
- * 真实 stream 由前端/编排层按 seat.forceAgent 补齐后替换）。
+ * 召集顾问席位意见。
+ * - 有 textByAgent 时投影为正式意见
+ * - 否则标记 degraded=true（调用方必须对老板明示降级，禁止当引擎完成）
  */
 export async function conveneExperts(input: {
   meetingId: string;
@@ -149,7 +150,7 @@ export async function conveneExperts(input: {
     ? input.mission.requiredAgents
     : EXPANSION_AGENTS;
 
-  return agents.map((agentId) => {
+  const opinions = agents.map((agentId) => {
     const text = input.textByAgent?.[agentId];
     if (text && text.trim()) {
       return opinionFromText({
@@ -165,6 +166,8 @@ export async function conveneExperts(input: {
       reason: "awaiting_live_agent",
     });
   });
+
+  return opinions;
 }
 
 export function synthesizeDecisionFromOpinions(input: {

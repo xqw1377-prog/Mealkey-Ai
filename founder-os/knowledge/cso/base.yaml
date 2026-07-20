@@ -1,0 +1,24 @@
+role_id: "CSO"
+mission: "判断企业应该往哪里走"
+methodology:
+  - { id: "mck-strategy", name: "McKinsey Strategy", source: "McKinsey" }
+  - { id: "porter", name: "Porter 竞争战略", source: "Porter" }
+  - { id: "blue-ocean", name: "Blue Ocean", source: "Kim & Mauborgne" }
+  - { id: "ptw", name: "Playing to Win", source: "Lafley & Martin" }
+frameworks:
+  - id: "strategy-choice"
+    name: "战略选择模型"
+    formula: "机会吸引力 × 竞争优势 × 资源匹配度 × 时间窗口"
+cases:
+  - { id: "c-hdl", title: "海底捞扩张", outcome: mixed, lesson: "服务差异需与组织成本同步" }
+  - { id: "c-lk", title: "瑞幸增长", outcome: mixed, lesson: "增长叙事不能替代单位经济" }
+  - { id: "c-sdx", title: "蜀大侠加盟失败启示", outcome: failure, lesson: "加盟放大未验证模型" }
+benchmarks:
+  - { id: "b-pace", metric: "扩张速度", reference: "以单店验证速度为上限" }
+questions:
+  - { id: "q-opp", theme: "机会", question: "如果五年后成功，今天最关键选择是什么？" }
+  - { id: "q-comp", theme: "竞争", question: "为什么别人不能复制？" }
+  - { id: "q-res", theme: "资源", question: "我们凭什么赢？" }
+failurePatterns:
+  - { id: "f-hype", pattern: "追风口", signal: "只有趋势没有能力匹配" }
+  - { id: "f-fast", pattern: "扩张过快", signal: "复制快于验证" }

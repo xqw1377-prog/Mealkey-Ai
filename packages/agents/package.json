@@ -21,6 +21,11 @@
       "types": "./dist/m-pnt/index.d.ts",
       "import": "./dist/m-pnt/index.js",
       "default": "./dist/m-pnt/index.js"
+    },
+    "./founder-os": {
+      "types": "./dist/founder-os/index.d.ts",
+      "import": "./dist/founder-os/index.js",
+      "default": "./dist/founder-os/index.js"
     }
   },
   "scripts": {

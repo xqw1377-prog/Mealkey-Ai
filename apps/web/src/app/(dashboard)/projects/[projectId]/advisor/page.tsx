@@ -3,10 +3,36 @@
 import { useEffect, useRef, useState, useCallback, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { ArrowRight, CheckCircle2, ChevronDown, ChevronUp, LoaderCircle, Mic, Paperclip, Plus, Send, Square, Trash2, Video, FileText, ImageIcon, History, ThumbsUp, ThumbsDown, Target } from "lucide-react";
-import { MeetingRoom, type MKAgentStage } from "@/components/operating";
+import { ArrowLeft, ArrowRight, History, ThumbsUp, ThumbsDown, Target } from "lucide-react";
+import { LightMarkdown, MeetingRoom, type MKAgentStage } from "@/components/operating";
+import { EngineDegradationBanner } from "@/components/operating/EngineDegradationBanner";
+import { CouncilProblemPicker } from "@/components/operating/CouncilProblemPicker";
+import { AdvisorComposer } from "@/components/operating/advisor/AdvisorComposer";
+import { FounderLoopPreviewPanel } from "@/components/operating/meeting/FounderLoopPreviewPanel";
+import type { FounderLoopRuntime } from "@/components/operating/meeting/FounderLoopPreviewPanel";
+import { MeetingDraftBanners } from "@/components/operating/meeting/MeetingDraftBanners";
+import { MeetingHistoryPanel } from "@/components/operating/meeting/MeetingHistoryPanel";
+import { MeetingHub } from "@/components/operating/meeting/MeetingHub";
+import { PositioningReviewBanner } from "@/components/operating/meeting/PositioningReviewBanner";
+import { MemoryRuntimePanel } from "@/components/operating/runtime";
+import { PageErrorBoundary } from "@/components/operating/PageErrorBoundary";
+import { ConfirmDialog } from "@/components/operating/ConfirmDialog";
+import {
+  SpendConfirmPanel,
+  SpendReceiptNotice,
+  SpendRefundNotice,
+} from "@/components/operating/SpendConfirmPanel";
 import { PageEmptyState, PageErrorState, PageLoadingState } from "@/components/operating/PageState";
+import { useBusinessWallet } from "@/hooks/useBusinessWallet";
+import {
+  spendOfferForDepartment,
+  spendOfferForKind,
+  type SpendKind,
+} from "@/lib/business-wallet";
+import { shouldGuideOpenInBrowserForWechatPay } from "@/lib/wechat-browser";
 import { trpc } from "@/lib/trpc";
+
+const MAX_VOICE_SECONDS = 60;
 import { useProjectStore } from "@/stores/projectStore";
 import type { StreamChunk } from "@mealkey/agent-sdk";
 import type { PositioningSnapshot } from "@/lib/positioning";
@@ -18,7 +44,6 @@ import {
   detectConflict,
   buildConsensusDraft,
   toDecisionCard,
-  lifecycleLabel,
   type MeetingLifecycle,
   type MeetingDepartment,
   type ExpertStatement,
@@ -35,6 +60,9 @@ import {
   type ForceAgentCode,
 } from "@/lib/meeting-deliberation";
 import { statementFromAgentStream } from "@/lib/meeting-stream";
+import { readSseJsonLines } from "@/lib/sse-line-reader";
+import { saveAdvisorLocalAction } from "@/lib/advisor-local-actions";
+import { resolveNextActionsForOption } from "@/lib/meeting-today-actions";
 import type { ActiveMeetingDraft } from "@/lib/meeting-session";
 
 interface ChatMessage {
@@ -49,6 +77,7 @@ type AdvisorAsset = {
   title: string;
   kind: "audio" | "image" | "video" | "document";
   summary: string | null;
+  transcript?: string | null;
   publicUrl: string;
   category: {
     id: string;
@@ -101,8 +130,18 @@ export default function AdvisorPage({
   params: { projectId: string };
 }) {
   return (
-    <Suspense fallback={<div className="flex min-h-[50vh] items-center justify-center text-[14px] text-[#6f747b]">正在加载会议页...</div>}>
-      <AdvisorPageContent params={params} />
+    <Suspense
+      fallback={
+        <PageLoadingState
+          eyebrow="会议"
+          title="正在打开…"
+          description="读取议题与上下文。"
+        />
+      }
+    >
+      <PageErrorBoundary fallbackTitle="会议页暂时无法打开">
+        <AdvisorPageContent params={params} />
+      </PageErrorBoundary>
     </Suspense>
   );
 }
@@ -113,7 +152,48 @@ function AdvisorPageContent({
   params: { projectId: string };
 }) {
   const searchParams = useSearchParams();
+  const { wallet, reload: reloadWallet } = useBusinessWallet();
+  const [spendConfirmOpen, setSpendConfirmOpen] = useState(false);
+  const [spendConfirmOfferKind, setSpendConfirmOfferKind] = useState<SpendKind | null>(null);
+  const [spendError, setSpendError] = useState<string | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmTitle, setConfirmTitle] = useState("");
+  const [confirmDescription, setConfirmDescription] = useState<
+    string | undefined
+  >();
+  const confirmResolver = useRef<((ok: boolean) => void) | null>(null);
+
+  function requestConfirm(opts: {
+    title: string;
+    description?: string;
+  }): Promise<boolean> {
+    setConfirmTitle(opts.title);
+    setConfirmDescription(opts.description);
+    setConfirmOpen(true);
+    return new Promise((resolve) => {
+      confirmResolver.current = resolve;
+    });
+  }
+
+  function settleConfirm(ok: boolean) {
+    setConfirmOpen(false);
+    const resolve = confirmResolver.current;
+    confirmResolver.current = null;
+    resolve?.(ok);
+  }
+  const [meetingEngineNote, setMeetingEngineNote] = useState<string | null>(
+    null,
+  );
+  const [refundPoints, setRefundPoints] = useState<number | null>(null);
+  const [spendReceipt, setSpendReceipt] = useState<{
+    spent: number;
+    balanceAfter: number;
+  } | null>(null);
   const { data, isLoading, error } = trpc.dashboard.getAdvisorWorkspace.useQuery({ projectId: params.projectId });
+  const { data: brands } = trpc.project.listBrands.useQuery(
+    { projectId: params.projectId },
+    { enabled: Boolean(params.projectId) },
+  );
   const { data: assetCategories = [] } = trpc.asset.categories.useQuery();
   const { data: assetLibrary = [] } = trpc.asset.list.useQuery({
     projectId: params.projectId,
@@ -154,11 +234,8 @@ function AdvisorPageContent({
   const [uploading, setUploading] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
-  const [pendingDeleteAssetId, setPendingDeleteAssetId] = useState<string | null>(null);
   const [recording, setRecording] = useState(false);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
-  const [showAssetLibrary, setShowAssetLibrary] = useState(false);
-  const [showMobileComposerTools, setShowMobileComposerTools] = useState(false);
   const [liveMarketSnapshot, setLiveMarketSnapshot] = useState<MarketSnapshot | null>(null);
   const [liveEquitySnapshot, setLiveEquitySnapshot] = useState<EquitySnapshot | null>(null);
   const [livePositioningSnapshot, setLivePositioningSnapshot] = useState<PositioningSnapshot | null>(null);
@@ -174,6 +251,15 @@ function AdvisorPageContent({
     startedAt: string;
     decisionSummary: string;
     horizonDays: number;
+  } | null>(null);
+  const [acceptedValidationTask, setAcceptedValidationTask] = useState<{
+    id: string;
+    title: string;
+    objective: string;
+    owner: string;
+    horizonDays: number;
+    metrics: Array<{ id: string; label: string; target?: string | number }>;
+    status?: string;
   } | null>(null);
   const [meetingTopic, setMeetingTopic] = useState<string | null>(null);
   const [deliberationRound, setDeliberationRound] = useState<DeliberationRound | 0>(0);
@@ -197,12 +283,72 @@ function AdvisorPageContent({
         sideB: string;
         dimension: string;
         agents: string[];
+        drivingEvidenceIds?: string[];
       }>;
       rounds: Array<{
         round: number;
         title: string;
-        items: Array<{ agent: string; summary: string; stance?: string }>;
+        items: Array<{
+          agent: string;
+          summary: string;
+          stance?: string;
+          challengeTo?: string;
+          challengeEvidenceId?: string;
+        }>;
       }>;
+      conflictMatrix?: {
+        rows: Array<{
+          topic: string;
+          cells: Record<string, string>;
+          summary: string;
+          drivingEvidenceIds?: string[];
+        }>;
+        primary?: {
+          topic: string;
+          sideA: { agents: string[]; claim: string };
+          sideB: { agents: string[]; claim: string };
+          drivingEvidenceIds?: string[];
+          question?: string;
+        } | null;
+        tradeoffs?: Array<{ keep: string; giveUp: string; why: string }>;
+      };
+      debateSession?: {
+        debateId: string;
+        status: string;
+        conflicts: Array<{
+          conflictId: string;
+          topic: string;
+          severity: "low" | "medium" | "high";
+          committees: string[];
+          evidenceRefs: string[];
+          summary: string;
+        }>;
+        challenges: Array<{
+          challengeId: string;
+          fromCommittee: string;
+          fromAgent: string;
+          targetCommittee: string;
+          targetAgent: string;
+          challengeType: "evidence" | "logic" | "assumption" | "risk";
+          statement: string;
+          evidenceRefs?: string[];
+        }>;
+        proposal?: {
+          decision: string;
+          whyNow: string;
+          tradeoffs: string[];
+          conditions: string[];
+          risksAccepted: string[];
+          validationPlan: string;
+        };
+        scenarioTests: Array<{
+          scenarioId: string;
+          scenario: string;
+          trigger: string;
+          impact: string;
+          mitigation: string;
+        }>;
+      };
     };
     decisions: Array<{
       decisionId: string;
@@ -211,12 +357,25 @@ function AdvisorPageContent({
       stance?: string;
       risks: string[];
       nextSteps: string[];
+      evidence?: Array<{
+        evidenceId?: string;
+        label: string;
+        content: string;
+        source?: string;
+      }>;
+      reasoning?: string;
+      validation?: string;
+      evidenceSufficient?: boolean;
+      evidenceGap?: string[];
+      confidence?: number;
     }>;
     finalDecision: {
       chosen: string;
       problem: string;
       reason: string[];
       validationPlan: string[];
+      evidenceStatus?: "sufficient" | "insufficient";
+      contract?: Record<string, unknown>;
     };
   } | null>(null);
   const [extraFacts, setExtraFacts] = useState<string[]>([]);
@@ -227,27 +386,103 @@ function AdvisorPageContent({
     incomingTopic: string;
   } | null>(null);
   const [showMeetingHistory, setShowMeetingHistory] = useState(false);
-  const [historyPreview, setHistoryPreview] = useState<{
-    topic: string;
-    summary: string;
-    recommendation?: string;
-    createdAt: string;
-  } | null>(null);
+  /** hub = 会议大厅；consulting = 四席咨询会议选题 */
+  const [meetingLane, setMeetingLane] = useState<"hub" | "consulting">("hub");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const topicConfirmedRef = useRef(false);
   const deliberationRoundRef = useRef<DeliberationRound | 0>(0);
   const autoStartTriggeredRef = useRef(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const recorderChunksRef = useRef<Blob[]>([]);
   const recognitionRef = useRef<BrowserSpeechRecognition | null>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+  const streamAbortRef = useRef<AbortController | null>(null);
+  const lifecycleTimersRef = useRef<number[]>([]);
   const finalizedTranscriptRef = useRef("");
   const inputBeforeRecordingRef = useRef("");
+  const recordingTimerRef = useRef<number | null>(null);
+  const recordingStartedAtRef = useRef(0);
+  /** 按住说话意图：松手后即使 getUserMedia 还在进行也要取消 */
+  const holdActiveRef = useRef(false);
   const [recordingTranscript, setRecordingTranscript] = useState("");
+  const [recordingSeconds, setRecordingSeconds] = useState(0);
+  const [voiceTip, setVoiceTip] = useState<string | null>(null);
+
+  const clearLifecycleTimers = useCallback(() => {
+    for (const id of lifecycleTimersRef.current) {
+      window.clearTimeout(id);
+    }
+    lifecycleTimersRef.current = [];
+  }, []);
+
+  const clearRecordingTimer = useCallback(() => {
+    if (recordingTimerRef.current != null) {
+      window.clearInterval(recordingTimerRef.current);
+      recordingTimerRef.current = null;
+    }
+  }, []);
+
+  const stopMediaCapture = useCallback(() => {
+    clearRecordingTimer();
+    try {
+      recognitionRef.current?.stop();
+    } catch {
+      /* ignore */
+    }
+    recognitionRef.current = null;
+    try {
+      if (recorderRef.current && recorderRef.current.state !== "inactive") {
+        recorderRef.current.stop();
+      }
+    } catch {
+      /* ignore */
+    }
+    recorderRef.current = null;
+    mediaStreamRef.current?.getTracks().forEach((t) => t.stop());
+    mediaStreamRef.current = null;
+  }, [clearRecordingTimer]);
+
+  // 卸载时清理录音 / 语音识别 / SSE / 定时器
+  useEffect(() => {
+    return () => {
+      stopMediaCapture();
+      streamAbortRef.current?.abort();
+      streamAbortRef.current = null;
+      clearLifecycleTimers();
+    };
+  }, [stopMediaCapture, clearLifecycleTimers]);
 
   useEffect(() => {
     if (data?.currentProject) setCurrentProject(data.currentProject);
   }, [data?.currentProject, setCurrentProject]);
+
+  useEffect(() => {
+    if (shouldGuideOpenInBrowserForWechatPay()) {
+      setVoiceTip(
+        "微信里说话容易不稳。点右上角 ··· → 在浏览器打开，再按住说话更准。",
+      );
+    }
+  }, []);
+
+  /** 键盘弹出时用 visualViewport 高度，避免输入区被顶出可视区 */
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const sync = () => {
+      document.documentElement.style.setProperty(
+        "--advisor-vvh",
+        `${Math.round(vv.height)}px`,
+      );
+    };
+    sync();
+    vv.addEventListener("resize", sync);
+    vv.addEventListener("scroll", sync);
+    return () => {
+      vv.removeEventListener("resize", sync);
+      vv.removeEventListener("scroll", sync);
+      document.documentElement.style.removeProperty("--advisor-vvh");
+    };
+  }, []);
 
   useEffect(() => {
     topicConfirmedRef.current = topicConfirmed;
@@ -258,8 +493,16 @@ function AdvisorPageContent({
   }, [deliberationRound]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, streamingText]);
+    // 流式输出节流滚动，避免每个 token 强制回流
+    const delay = streamingText ? 120 : 0;
+    const t = window.setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({
+        behavior: streamingText ? "auto" : "smooth",
+        block: "end",
+      });
+    }, delay);
+    return () => window.clearTimeout(t);
+  }, [messages.length, streamingText ? Math.floor(streamingText.length / 80) : 0]);
 
   // 刷新恢复：从 profile.activeMeeting 还原会议桌
   const applySavedDraft = useCallback((draft: ActiveMeetingDraft) => {
@@ -421,8 +664,6 @@ function AdvisorPageContent({
     }
   }, [assetCategories, selectedCategoryId]);
 
-  const selectedAssets = assetLibrary.filter((asset) => selectedAssetIds.includes(asset.id)) as AdvisorAsset[];
-
   const uploadAsset = useCallback(
     async (file: File, overrides?: { title?: string; categoryId?: string; transcriptHint?: string }) => {
       setUploading(true);
@@ -467,12 +708,29 @@ function AdvisorPageContent({
         setSelectedAssetIds((prev) => (prev.includes(payload.asset!.id) ? prev : [...prev, payload.asset!.id]));
         setAgentReferences((prev) => (prev.includes("上传资料") ? prev : [...prev, "上传资料"].slice(-4)));
         const isVoice = Boolean(overrides?.title?.includes("语音"));
-        setUploadSuccess(
-          isVoice
-            ? "语音已转写，并已选入本次会议资料（可在下方取消勾选）"
-            : "资料已上传并选入本次会议",
-        );
-        setTimeout(() => setUploadSuccess(null), 4000);
+        const transcript = (payload.asset.transcript || "").trim();
+        if (isVoice) {
+          if (transcript) {
+            setInput((prev) => {
+              const base = inputBeforeRecordingRef.current || prev.trim();
+              if (base.includes(transcript)) return prev;
+              return [base, transcript].filter(Boolean).join("\n");
+            });
+            setUploadSuccess(
+              `已听成字：${transcript.slice(0, 36)}${transcript.length > 36 ? "…" : ""}（可改再发）`,
+            );
+          } else {
+            setUploadSuccess(null);
+            setUploadError(
+              overrides?.transcriptHint?.trim()
+                ? "云端转写没成功，浏览器听写也不完整。请再按住说清楚，或直接打字。检查通义/DashScope Key。"
+                : "录音保存了，但没转成文字。请再按住说清楚一点，或直接打字。",
+            );
+          }
+        } else {
+          setUploadSuccess("资料已上传并选入本次会议");
+        }
+        setTimeout(() => setUploadSuccess(null), 5000);
       } catch (err) {
         const msg = err instanceof Error ? err.message : "上传失败，请检查网络后重试";
         setUploadError(msg);
@@ -484,35 +742,86 @@ function AdvisorPageContent({
   );
 
   const handleFileChange = useCallback(
-    async (event: React.ChangeEvent<HTMLInputElement>) => {
-      const files = Array.from(event.target.files ?? []);
-      if (files.length === 0) return;
-
-      try {
-        for (const file of files) {
-          await uploadAsset(file);
-        }
-      } finally {
-        event.target.value = "";
+    async (files: FileList | null) => {
+      const list = Array.from(files ?? []);
+      if (list.length === 0) return;
+      for (const file of list) {
+        await uploadAsset(file);
       }
     },
     [uploadAsset],
   );
 
-  const handleToggleRecording = useCallback(async () => {
-    if (recording) {
+  const handleStopRecording = useCallback(() => {
+    holdActiveRef.current = false;
+    if (!recording && !recorderRef.current) {
+      // 按住太短：getUserMedia 还没回来，靠 holdActiveRef 取消
+      return;
+    }
+    clearRecordingTimer();
+    setRecordingSeconds(0);
+    try {
       recognitionRef.current?.stop();
-      recorderRef.current?.stop();
+    } catch {
+      /* ignore */
+    }
+    recognitionRef.current = null;
+    try {
+      if (recorderRef.current && recorderRef.current.state !== "inactive") {
+        recorderRef.current.stop();
+      } else {
+        setRecording(false);
+      }
+    } catch {
+      setRecording(false);
+    }
+  }, [clearRecordingTimer, recording]);
+
+  const handleStartRecording = useCallback(async () => {
+    if (recording || uploading || streaming) return;
+    holdActiveRef.current = true;
+
+    if (shouldGuideOpenInBrowserForWechatPay()) {
+      setVoiceTip(
+        "微信里说话容易不稳。点右上角 ··· → 在浏览器打开，再按住说话更准。",
+      );
+    }
+
+    setUploadError(null);
+    let stream: MediaStream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch {
+      holdActiveRef.current = false;
+      setUploadError(
+        shouldGuideOpenInBrowserForWechatPay()
+          ? "打不开麦克风。请允许权限，或点 ··· 用系统浏览器打开后再说。"
+          : "打不开麦克风。请允许麦克风权限后，再按住说话。",
+      );
       return;
     }
 
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    const recorder = new MediaRecorder(stream);
+    if (!holdActiveRef.current) {
+      stream.getTracks().forEach((track) => track.stop());
+      return;
+    }
+
+    mediaStreamRef.current = stream;
+    const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+      ? "audio/webm;codecs=opus"
+      : MediaRecorder.isTypeSupported("audio/mp4")
+        ? "audio/mp4"
+        : "";
+    const recorder = mimeType
+      ? new MediaRecorder(stream, { mimeType })
+      : new MediaRecorder(stream);
     recorderChunksRef.current = [];
     recorderRef.current = recorder;
     finalizedTranscriptRef.current = "";
     inputBeforeRecordingRef.current = input.trim();
     setRecordingTranscript("");
+    setRecordingSeconds(0);
+    recordingStartedAtRef.current = Date.now();
 
     const SpeechRecognitionCtor =
       typeof window !== "undefined"
@@ -545,11 +854,17 @@ function AdvisorPageContent({
         }
         const combinedTranscript = `${finalizedTranscriptRef.current} ${interim}`.trim();
         setRecordingTranscript(combinedTranscript);
-        setInput([inputBeforeRecordingRef.current, combinedTranscript].filter(Boolean).join("\n"));
+        setInput(
+          [inputBeforeRecordingRef.current, combinedTranscript]
+            .filter(Boolean)
+            .join("\n"),
+        );
       };
-      recognition.onerror = () => {
+      recognition.onerror = (event) => {
+        if (event.error === "not-allowed") {
+          setUploadError("请允许麦克风权限后再按住说话。");
+        }
         setRecordingTranscript(finalizedTranscriptRef.current);
-        setInput([inputBeforeRecordingRef.current, finalizedTranscriptRef.current].filter(Boolean).join("\n"));
       };
       recognition.onend = () => {
         recognitionRef.current = null;
@@ -569,27 +884,67 @@ function AdvisorPageContent({
     };
 
     recorder.onstop = async () => {
+      clearRecordingTimer();
       setRecording(false);
-      stream.getTracks().forEach((track) => track.stop());
-      const audioBlob = new Blob(recorderChunksRef.current, { type: recorder.mimeType || "audio/webm" });
-      const extension = recorder.mimeType.includes("mp4") ? "m4a" : "webm";
-      const audioFile = new File([audioBlob], `advisor-voice-${Date.now()}.${extension}`, {
+      setRecordingSeconds(0);
+      mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
+      mediaStreamRef.current = null;
+      const audioBlob = new Blob(recorderChunksRef.current, {
         type: recorder.mimeType || "audio/webm",
       });
       const transcriptHint = finalizedTranscriptRef.current.trim();
       if (transcriptHint) {
-        setInput([inputBeforeRecordingRef.current, transcriptHint].filter(Boolean).join("\n"));
+        setInput(
+          [inputBeforeRecordingRef.current, transcriptHint]
+            .filter(Boolean)
+            .join("\n"),
+        );
       }
       setRecordingTranscript("");
+
+      // 按太短 / 几乎无声音
+      if (audioBlob.size < 800 && !transcriptHint) {
+        setUploadError("没听清。请按住多说两句，再说完松手。");
+        return;
+      }
+
+      const extension = (recorder.mimeType || "").includes("mp4") ? "m4a" : "webm";
+      const audioFile = new File(
+        [audioBlob],
+        `advisor-voice-${Date.now()}.${extension}`,
+        { type: recorder.mimeType || "audio/webm" },
+      );
       await uploadAsset(audioFile, {
         title: "语音会议输入",
         transcriptHint: transcriptHint || undefined,
       });
     };
 
-    recorder.start();
+    recorder.start(250);
     setRecording(true);
-  }, [input, recording, uploadAsset]);
+    clearRecordingTimer();
+    recordingTimerRef.current = window.setInterval(() => {
+      const elapsed = Math.floor(
+        (Date.now() - recordingStartedAtRef.current) / 1000,
+      );
+      setRecordingSeconds(elapsed);
+      if (elapsed >= MAX_VOICE_SECONDS) {
+        handleStopRecording();
+      }
+    }, 250);
+
+    // 松手发生在 getUserMedia 之后、start 之前的竞态
+    if (!holdActiveRef.current) {
+      handleStopRecording();
+    }
+  }, [
+    clearRecordingTimer,
+    handleStopRecording,
+    recording,
+    streaming,
+    uploadAsset,
+    uploading,
+  ]);
 
   const handleSend = useCallback(async (overrideText?: string) => {
     if (streaming) return;
@@ -605,11 +960,14 @@ function AdvisorPageContent({
     }
     const isReview =
       reviewIntent === "positioning_review" || userText.includes("【定位变更复审】");
+    const attachedAssets = (assetLibrary as AdvisorAsset[]).filter((asset) =>
+      selectedAssetIds.includes(asset.id),
+    );
     const userMsg: ChatMessage = {
       id: Date.now().toString(),
       role: "user",
       content: hasAssets
-        ? `${userText}\n\n已附资料：${selectedAssets.map((item) => item.title).join("、")}`
+        ? `${userText}\n\n已附资料：${attachedAssets.map((item) => item.title).join("、")}`
         : userText,
     };
     setMessages((prev) => [...prev, userMsg]);
@@ -645,9 +1003,15 @@ function AdvisorPageContent({
       let resolvedForceAgent: ForceAgentCode = forceAgent;
 
       // 调用 Agent 流式 API（部门会议路由到对应 Agent）
+      streamAbortRef.current?.abort();
+      const abort = new AbortController();
+      streamAbortRef.current = abort;
+      const streamTimeout = window.setTimeout(() => abort.abort(), 180_000);
+
       const response = await fetch("/api/agent/stream", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        signal: abort.signal,
         body: JSON.stringify({
           conversationId,
           message: userText,
@@ -662,29 +1026,30 @@ function AdvisorPageContent({
       const reader = response.body?.getReader();
       if (!reader) throw new Error("No reader");
 
-      const decoder = new TextDecoder();
       let accumulated = "";
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        const text = decoder.decode(value, { stream: true });
-        const lines = text.split("\n");
-
-        for (const line of lines) {
-          if (line.startsWith("data: ")) {
+      try {
+        await readSseJsonLines(
+          reader,
+          async (payload) => {
+            let data:
+              | StreamChunk
+              | RuntimeMeta
+              | { type: "market_result"; data: MarketSnapshot }
+              | { type: "equity_result"; data: EquitySnapshot; previous?: EquitySnapshot | null }
+              | {
+                  type: "positioning_result";
+                  data: PositioningSnapshot;
+                  previous?: PositioningSnapshot | null;
+                };
             try {
-              const data = JSON.parse(line.slice(6)) as
-                | StreamChunk
-                | RuntimeMeta
-                | { type: "market_result"; data: MarketSnapshot }
-                | { type: "equity_result"; data: EquitySnapshot; previous?: EquitySnapshot | null }
-                | {
-                    type: "positioning_result";
-                    data: PositioningSnapshot;
-                    previous?: PositioningSnapshot | null;
-                  };
+              data = JSON.parse(payload) as typeof data;
+            } catch {
+              if (process.env.NODE_ENV !== "production") {
+                console.warn("[advisor/stream] skip malformed JSON line");
+              }
+              return;
+            }
               if (data.type === "meta") {
                 setRuntimeMeta(data);
                 setConversationId(data.conversationId);
@@ -739,11 +1104,15 @@ function AdvisorPageContent({
               if (data.type === "positioning_result" && data.data) {
                 setLivePositioningSnapshot(data.data);
               }
-
-            } catch {
-              // skip non-JSON lines
-            }
-          }
+          },
+          { signal: abort.signal },
+        );
+      } finally {
+        window.clearTimeout(streamTimeout);
+        try {
+          reader.releaseLock();
+        } catch {
+          /* ignore */
         }
       }
 
@@ -780,27 +1149,21 @@ function AdvisorPageContent({
       }
       setSelectedAssetIds([]);
 
-      // 刷新项目数据（Agent 可能更新了 score/risk 等）
+      // 刷新关键数据（收敛无效化，避免级联风暴）
       await Promise.all([
         utils.project.getById.invalidate({ id: params.projectId }),
-        utils.project.list.invalidate(),
-        utils.report.list.invalidate({ projectId: params.projectId }),
         utils.dashboard.getAdvisorWorkspace.invalidate({ projectId: params.projectId }),
-        utils.dashboard.getProjectOverview.invalidate({ projectId: params.projectId }),
-        utils.dashboard.getScorecard.invalidate({ projectId: params.projectId }),
-        utils.dashboard.getReportSnapshot.invalidate({ projectId: params.projectId }),
-        utils.dashboard.getProjectKnowledge.invalidate({ projectId: params.projectId }),
-        utils.dashboard.getKnowledgeCenter.invalidate({ projectId: params.projectId }),
         utils.dashboard.getHome.invalidate(),
         utils.asset.list.invalidate({ projectId: params.projectId, limit: 12 }),
         utils.agent.latestPositioning.invalidate({ projectId: params.projectId }),
-        utils.agent.positioningContext.invalidate({ projectId: params.projectId }),
         utils.agent.latestMarket.invalidate({ projectId: params.projectId }),
-        utils.agent.marketContext.invalidate({ projectId: params.projectId }),
         utils.agent.latestEquity.invalidate({ projectId: params.projectId }),
-        utils.agent.equityContext.invalidate({ projectId: params.projectId }),
       ]);
     } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") {
+        setAgentState("completed");
+        setAgentStateDescription("已取消本轮分析");
+      } else {
       setAgentState("completed");
       setAgentStateDescription("这次分析被中断，你可以继续补充问题让我重新判断");
       setMessages((prev) => [
@@ -811,7 +1174,11 @@ function AdvisorPageContent({
           content: `出错了: ${error instanceof Error ? error.message : "未知错误"}`,
         },
       ]);
+      }
     } finally {
+      if (streamAbortRef.current?.signal.aborted === false) {
+        /* keep controller until next send */
+      }
       setStreaming(false);
       setStreamingText("");
     }
@@ -823,7 +1190,7 @@ function AdvisorPageContent({
     data?.workspace?.currentProblem,
     params.projectId,
     selectedAssetIds,
-    selectedAssets,
+    assetLibrary,
     utils,
     reviewIntent,
     meetingTopic,
@@ -896,22 +1263,41 @@ function AdvisorPageContent({
     onSuccess: (result) => {
       setAcceptedDecisionId(result.decisionId);
       setAcceptedGrowthPlan(result.growthPlan ?? null);
+      setAcceptedValidationTask(
+        result.validationTask
+          ? {
+              id: result.validationTask.id,
+              title: result.validationTask.title,
+              objective: result.validationTask.objective,
+              owner: result.validationTask.owner,
+              horizonDays: result.validationTask.horizonDays,
+              metrics: (result.validationTask.metrics ?? []).map((m) => ({
+                id: m.id,
+                label: m.label,
+                target: m.target,
+              })),
+              status: result.validationTask.status,
+            }
+          : null,
+      );
       setMeetingLifecycle("DECISION");
-      window.setTimeout(() => setMeetingLifecycle("VALIDATE"), 450);
-      window.setTimeout(() => setMeetingLifecycle("MEMORY_UPDATE"), 1100);
+      clearLifecycleTimers();
+      lifecycleTimersRef.current.push(
+        window.setTimeout(() => setMeetingLifecycle("VALIDATE"), 450),
+        window.setTimeout(() => setMeetingLifecycle("MEMORY_UPDATE"), 1100),
+      );
       clearMeetingSession.mutate({ projectId: params.projectId });
       void utils.decisionArchive.list.invalidate({ projectId: params.projectId });
       void utils.decisionArchive.stats.invalidate({ projectId: params.projectId });
       void utils.dashboard.getHome.invalidate();
       void utils.dashboard.getAdvisorWorkspace.invalidate({ projectId: params.projectId });
       void utils.meetingSession.get.invalidate({ projectId: params.projectId });
+      void utils.validationOs.listActive.invalidate({ projectId: params.projectId });
     },
   });
 
   const startFounderMeeting = trpc.founder.startMeeting.useMutation();
-  const runFounderLoop = trpc.founder.runLoop.useMutation();
   const advanceFounderRound = trpc.founder.advanceRound.useMutation();
-  type FounderLoopRuntime = NonNullable<typeof runFounderLoop.data>;
 
   const deleteAsset = trpc.asset.delete.useMutation({
     onSuccess: () => {
@@ -969,6 +1355,19 @@ function AdvisorPageContent({
             decision.evidence.length > 0
               ? decision.evidence.map((item) => `${item.label}：${item.content}`).slice(0, 3)
               : decision.nextSteps.slice(0, 2),
+          evidence: decision.evidence
+            .filter((item) => item.evidenceId && item.content)
+            .slice(0, 4)
+            .map((item) => ({
+              evidenceId: item.evidenceId!,
+              statement: item.content,
+              sourceLabel: item.source || item.label,
+            })),
+          confidence: decision.confidence,
+          reasoning: decision.reasoning,
+          validation: decision.validation || decision.nextSteps[0],
+          evidenceSufficient: decision.evidenceSufficient,
+          evidenceGap: decision.evidenceGap,
         };
       });
 
@@ -1006,6 +1405,7 @@ function AdvisorPageContent({
       setFocusChoice(null);
       setAcceptedDecisionId(null);
       setAcceptedGrowthPlan(null);
+      setAcceptedValidationTask(null);
       setServerSynthesis(synthesis);
       setMeetingRuntime({
         meeting: {
@@ -1017,6 +1417,7 @@ function AdvisorPageContent({
             sideB: c.sideB,
             dimension: c.dimension,
             agents: [...c.agents],
+            drivingEvidenceIds: c.drivingEvidenceIds,
           })),
           rounds: input.runtime.meeting.rounds.map((r) => ({
             round: r.round,
@@ -1025,8 +1426,85 @@ function AdvisorPageContent({
               agent: item.agent,
               summary: item.summary,
               stance: item.stance,
+              challengeTo: item.challengeTo,
+              challengeEvidenceId: item.challengeEvidenceId,
             })),
           })),
+          conflictMatrix: input.runtime.meeting.conflictMatrix
+            ? {
+                rows: input.runtime.meeting.conflictMatrix.rows.map((row) => ({
+                  topic: row.topic,
+                  cells: row.cells as Record<string, string>,
+                  summary: row.summary,
+                  drivingEvidenceIds: row.drivingEvidenceIds,
+                })),
+                primary: input.runtime.meeting.conflictMatrix.primary
+                  ? {
+                      topic: input.runtime.meeting.conflictMatrix.primary.topic,
+                      sideA: {
+                        agents: [
+                          ...input.runtime.meeting.conflictMatrix.primary.sideA.agents,
+                        ],
+                        claim: input.runtime.meeting.conflictMatrix.primary.sideA.claim,
+                      },
+                      sideB: {
+                        agents: [
+                          ...input.runtime.meeting.conflictMatrix.primary.sideB.agents,
+                        ],
+                        claim: input.runtime.meeting.conflictMatrix.primary.sideB.claim,
+                      },
+                      drivingEvidenceIds:
+                        input.runtime.meeting.conflictMatrix.primary.drivingEvidenceIds,
+                      question: input.runtime.meeting.conflictMatrix.primary.question,
+                    }
+                  : null,
+                tradeoffs: input.runtime.meeting.conflictMatrix.tradeoffs,
+              }
+            : undefined,
+          debateSession: input.runtime.meeting.debateSession
+            ? {
+                debateId: input.runtime.meeting.debateSession.debateId,
+                status: input.runtime.meeting.debateSession.status,
+                conflicts: input.runtime.meeting.debateSession.conflicts.map((c) => ({
+                  conflictId: c.conflictId,
+                  topic: c.topic,
+                  severity: c.severity,
+                  committees: [...c.committees],
+                  evidenceRefs: [...c.evidenceRefs],
+                  summary: c.summary,
+                })),
+                challenges: input.runtime.meeting.debateSession.challenges.map((ch) => ({
+                  challengeId: ch.challengeId,
+                  fromCommittee: ch.fromCommittee,
+                  fromAgent: ch.fromAgent,
+                  targetCommittee: ch.targetCommittee,
+                  targetAgent: ch.targetAgent,
+                  challengeType: ch.challengeType,
+                  statement: ch.statement,
+                  evidenceRefs: ch.evidenceRefs,
+                })),
+                proposal: input.runtime.meeting.debateSession.proposal
+                  ? {
+                      decision: input.runtime.meeting.debateSession.proposal.decision,
+                      whyNow: input.runtime.meeting.debateSession.proposal.whyNow,
+                      tradeoffs: [...input.runtime.meeting.debateSession.proposal.tradeoffs],
+                      conditions: [...input.runtime.meeting.debateSession.proposal.conditions],
+                      risksAccepted: [
+                        ...input.runtime.meeting.debateSession.proposal.risksAccepted,
+                      ],
+                      validationPlan:
+                        input.runtime.meeting.debateSession.proposal.validationPlan,
+                    }
+                  : undefined,
+                scenarioTests: input.runtime.meeting.debateSession.scenarioTests.map((sc) => ({
+                  scenarioId: sc.scenarioId,
+                  scenario: sc.scenario,
+                  trigger: sc.trigger,
+                  impact: sc.impact,
+                  mitigation: sc.mitigation,
+                })),
+              }
+            : undefined,
         },
         decisions: input.runtime.decisions.map((d) => ({
           decisionId: d.decisionId,
@@ -1035,12 +1513,27 @@ function AdvisorPageContent({
           stance: d.stance,
           risks: d.risks,
           nextSteps: d.nextSteps,
+          evidence: d.evidence.map((item) => ({
+            evidenceId: item.evidenceId,
+            label: item.label,
+            content: item.content,
+            source: item.source,
+          })),
+          reasoning: d.reasoning,
+          validation: d.validation,
+          evidenceSufficient: d.evidenceSufficient,
+          evidenceGap: d.evidenceGap,
+          confidence: d.confidence,
         })),
         finalDecision: {
           chosen: input.runtime.finalDecision.chosen,
           problem: input.runtime.finalDecision.problem,
           reason: input.runtime.finalDecision.reason,
           validationPlan: input.runtime.finalDecision.validationPlan,
+          evidenceStatus: input.runtime.finalDecision.evidenceStatus,
+          contract: input.runtime.finalDecision.contract
+            ? (input.runtime.finalDecision.contract as unknown as Record<string, unknown>)
+            : undefined,
         },
       });
       setDeliberating(false);
@@ -1056,7 +1549,11 @@ function AdvisorPageContent({
   };
 
   const launchFounderMeeting = useCallback(
-    (inputTopic: string) => {
+    (inputTopic: string, spendCost?: number, spendKind?: SpendKind) => {
+      setSpendConfirmOpen(false);
+      setSpendError(null);
+      setMeetingEngineNote(null);
+      setSpendReceipt(null);
       setMeetingTopic(inputTopic);
       setTopicConfirmed(true);
       setMeetingLifecycle("PREPARE");
@@ -1070,12 +1567,19 @@ function AdvisorPageContent({
       setMeetingRuntime(null);
       setDeliberating(true);
 
+      const kind =
+        spendKind ||
+        spendConfirmOfferKind ||
+        (searchParams?.get("spend") as SpendKind | null) ||
+        "council";
+
       startFounderMeeting.mutate(
         {
           projectId: params.projectId,
           question: inputTopic,
           topic: inputTopic,
           assetIds: selectedAssetIds,
+          spendKind: kind,
         },
         {
           onSuccess: (payload) => {
@@ -1083,10 +1587,48 @@ function AdvisorPageContent({
               runtime: payload.runtime,
               synthesis: payload.synthesis,
             });
+            const gate = (
+              payload as {
+                engineGate?: {
+                  note?: string | null;
+                  degradedSeats?: number;
+                  ok?: boolean;
+                };
+              }
+            ).engineGate;
+            if (gate?.note) {
+              setMeetingEngineNote(gate.note);
+            } else if (gate && gate.degradedSeats && gate.degradedSeats > 0) {
+              setMeetingEngineNote(
+                `本场有 ${gate.degradedSeats} 个席位降级，不能当作引擎已完成。`,
+              );
+            } else {
+              setMeetingEngineNote(null);
+            }
+            if (payload.billing?.spent != null && payload.billing.balanceAfter != null) {
+              setSpendReceipt({
+                spent: payload.billing.spent,
+                balanceAfter: payload.billing.balanceAfter,
+              });
+            }
+            void reloadWallet();
           },
-          onError: () => {
+          onError: (err) => {
             setMeetingLifecycle("OPEN");
+            setTopicConfirmed(false);
             setDeliberating(false);
+            setSpendConfirmOpen(true);
+            setMeetingEngineNote(null);
+            const msg = err?.message || "启动失败";
+            setSpendError(msg);
+            if (
+              typeof spendCost === "number" &&
+              spendCost > 0 &&
+              !msg.includes("经营点不足")
+            ) {
+              setRefundPoints(spendCost);
+            }
+            void reloadWallet();
           },
         },
       );
@@ -1094,17 +1636,20 @@ function AdvisorPageContent({
     [
       activateFounderMeetingFromRuntime,
       params.projectId,
+      reloadWallet,
+      searchParams,
       selectedAssetIds,
+      spendConfirmOfferKind,
       startFounderMeeting,
     ],
   );
 
   useEffect(() => {
     const topic = searchParams?.get("topic")?.trim();
-    const dept = searchParams?.get("dept");
-    if (!dept || searchParams?.get("autoStart") !== "1" || !topic) return;
+    const wantsConfirm =
+      searchParams?.get("confirm") === "1" || searchParams?.get("autoStart") === "1";
+    if (!topic || !wantsConfirm) return;
     if (autoStartTriggeredRef.current) return;
-    // 有冲突或已恢复进行中会议时，不自动开新会
     if (draftConflict) return;
     if (topicConfirmed && deliberationRound > 0) return;
     if (
@@ -1115,17 +1660,11 @@ function AdvisorPageContent({
     }
 
     autoStartTriggeredRef.current = true;
-    setAgentState("reasoning");
-    setAgentStateDescription("正在自动发起 Founder 会议并邀请顾问席");
-    setAgentReferences(["部门上下文", "项目记忆", "历史判断", "Founder Loop"]);
-
-    const timer = window.setTimeout(() => {
-      launchFounderMeeting(topic);
-    }, 900);
-
-    return () => window.clearTimeout(timer);
+    setMeetingTopic(topic);
+    const spendParam = searchParams?.get("spend") as SpendKind | null;
+    if (spendParam) setSpendConfirmOfferKind(spendParam);
+    setSpendConfirmOpen(true);
   }, [
-    launchFounderMeeting,
     searchParams,
     draftConflict,
     topicConfirmed,
@@ -1134,18 +1673,24 @@ function AdvisorPageContent({
   ]);
 
   if (isLoading) {
-    return <PageLoadingState eyebrow="咨询会议" title="AI 正在准备这场经营会议" description="正在读取上下文、证据和议题。" />;
+    return (
+      <PageLoadingState
+        eyebrow="会议"
+        title="正在准备…"
+        description="读取议题与证据。"
+      />
+    );
   }
 
   if (error) {
     return (
       <div className="space-y-5 pb-2 pt-6 md:pt-8">
         <PageErrorState
-          eyebrow="咨询会议"
-          title="这场会议暂时无法完整打开"
-          description="会议上下文还在同步。先回经营世界或今日。"
-          primaryAction={{ href: "/projects", label: "返回经营世界" }}
-          secondaryAction={{ href: "/dashboard", label: "回到今日" }}
+          eyebrow="会议"
+          title="会议暂时打不开"
+          description="上下文还在同步，稍后再试。"
+          primaryAction={{ href: "/dashboard", label: "回今日" }}
+          secondaryAction={{ href: `/projects/${params.projectId}/capability`, label: "能力" }}
         />
       </div>
     );
@@ -1155,11 +1700,11 @@ function AdvisorPageContent({
     return (
       <div className="space-y-5 pb-2 pt-6 md:pt-8">
         <PageEmptyState
-          eyebrow="咨询会议"
-          title="这场会议暂时无法打开"
-          description="当前会议不可用。先回到经营世界重新进入。"
-          primaryAction={{ href: "/projects", label: "返回经营世界" }}
-          secondaryAction={{ href: "/dashboard", label: "回到今日" }}
+          eyebrow="会议"
+          title="还进不了这场会"
+          description="先回今日，再从会议入口进入。"
+          primaryAction={{ href: "/dashboard", label: "回今日" }}
+          secondaryAction={{ href: "/projects", label: "企业" }}
         />
       </div>
     );
@@ -1171,6 +1716,32 @@ function AdvisorPageContent({
   const meetingDecision = workspace.meetingDecision;
   const decisionNextStep = workspace.decisionNextStep;
   const knownFacts = workspace.knownFacts ?? [];
+  const brandFacts = brands?.activeBrand
+    ? [
+        `品牌：${brands.activeBrand.brandName}`,
+        brands.activeBrand.category
+          ? `品类：${brands.activeBrand.category}`
+          : null,
+        brands.activeBrand.mentalPosition
+          ? `心智定位：${brands.activeBrand.mentalPosition}`
+          : null,
+      ].filter(Boolean) as string[]
+    : [];
+  /** 用当前品牌覆盖工作区里可能过期的「品类/品牌」事实行；店访一手事实始终置顶 */
+  const syncedKnownFacts = (() => {
+    const isVisit = (f: string) => f.includes("【店访") || f.startsWith("【一手");
+    const visitFacts = knownFacts.filter(isVisit);
+    const withoutVisit = knownFacts.filter((f) => !isVisit(f));
+    if (!brandFacts.length) return [...visitFacts, ...withoutVisit];
+    const stripped = withoutVisit.filter(
+      (f) => !f.startsWith("品牌：") && !f.startsWith("品类：") && !f.startsWith("心智定位："),
+    );
+    const rest = stripped.filter(
+      (f) => f.startsWith("项目：") || f.startsWith("阶段：") || f.startsWith("城市：") || f.startsWith("历史决策：") || f.startsWith("经营挑战：") || f.startsWith("年度目标："),
+    );
+    const other = stripped.filter((f) => !rest.includes(f));
+    return [...visitFacts, ...brandFacts, ...rest, ...other];
+  })();
   const challenge = workspace.challenge ?? consultantJudgements[0] ?? "这次判断仍需要更多反方验证。";
   const kickoffQuestions = workspace.kickoffQuestions ?? [];
   const finalizeDecisionPrompt =
@@ -1190,7 +1761,7 @@ function AdvisorPageContent({
   const experts = meetingRuntime
     ? getFounderSeatsForAgents(meetingRuntime.decisions.map((d) => d.sourceAgent))
     : getExpertsForDepartment(department);
-  const mergedFacts = [...knownFacts, ...extraFacts];
+  const mergedFacts = [...syncedKnownFacts, ...extraFacts];
   const unknownGaps = (
     kickoffQuestions.length > 0
       ? kickoffQuestions.slice(0, 4)
@@ -1225,8 +1796,13 @@ function AdvisorPageContent({
       : null;
 
   const handleConfirmTopic = () => {
-    launchFounderMeeting(topic);
+    setSpendError(null);
+    setSpendConfirmOpen(true);
   };
+
+  const activeSpendOffer =
+    (spendConfirmOfferKind ? spendOfferForKind(spendConfirmOfferKind) : null) ||
+    spendOfferForDepartment(department);
 
   const handleAdvanceRound = () => {
     // Round1 已由 Founder Gateway 写入时，直接进入挑战回合
@@ -1254,7 +1830,9 @@ function AdvisorPageContent({
       if (nextRound === 2) setMeetingLifecycle("DEBATE");
       if (nextRound === 3) {
         setMeetingLifecycle("SYNTHESIS");
-        window.setTimeout(() => setMeetingLifecycle("USER_CONFIRM"), 400);
+        lifecycleTimersRef.current.push(
+          window.setTimeout(() => setMeetingLifecycle("USER_CONFIRM"), 400),
+        );
       }
       setDeliberating(false);
     };
@@ -1288,7 +1866,8 @@ function AdvisorPageContent({
       return;
     }
 
-    window.setTimeout(() => {
+    lifecycleTimersRef.current.push(
+      window.setTimeout(() => {
       applyResult(
         runDeliberationRound({
           round: nextRound,
@@ -1300,7 +1879,8 @@ function AdvisorPageContent({
           seed: seedInput,
         }),
       );
-    }, 450);
+    }, 450),
+    );
   };
 
   const handleEditTopic = () => {
@@ -1355,7 +1935,8 @@ function AdvisorPageContent({
         );
         return;
       }
-      window.setTimeout(() => {
+      lifecycleTimersRef.current.push(
+        window.setTimeout(() => {
         const result = runDeliberationRound({
           round: 3,
           department,
@@ -1372,7 +1953,8 @@ function AdvisorPageContent({
         if (result.options.length) setLiveOptions(result.options);
         setMeetingLifecycle("USER_CONFIRM");
         setDeliberating(false);
-      }, 400);
+      }, 450),
+      );
       return;
     }
     setMeetingLifecycle("SYNTHESIS");
@@ -1386,7 +1968,10 @@ function AdvisorPageContent({
         ...liveConsensus,
         summary: opt.summary,
         proposedDecision: opt.summary,
-        nextActions: [opt.summary],
+        nextActions: resolveNextActionsForOption(opt, {
+          nextActions: liveConsensus.nextActions,
+          validationPlan: liveConsensus.validationPlan,
+        }),
       });
     }
   };
@@ -1412,15 +1997,46 @@ function AdvisorPageContent({
   const handleAccept = () => {
     const draft = consensus || liveConsensus;
     if (!draft) return;
+    void (async () => {
     const selected = liveOptions.find((o) => o.id === selectedOptionId);
-    confirmFromMeeting.mutate({
+    const parentEvidenceIds = [
+      ...new Set(
+        statements
+          .flatMap((s) => s.evidence ?? [])
+          .map((e) => e.evidenceId)
+          .filter(Boolean),
+      ),
+    ].slice(0, 24);
+    const evidenceOk =
+      meetingRuntime?.finalDecision?.evidenceStatus === "sufficient" ||
+      parentEvidenceIds.length >= 2;
+    let allowInsufficientEvidence = false;
+    if (!evidenceOk) {
+      const ok = await requestConfirm({
+        title: "证据不足，只能假设推进",
+        description:
+          "当前证据不足 2 条，不能当作正式拍板。确认后将以「假设推进」归档。",
+      });
+      if (!ok) return;
+      allowInsufficientEvidence = true;
+    }
+    const nextActions = (
+      draft.nextActions?.length
+        ? draft.nextActions
+        : [decisionNextStep || "按验证计划推进"]
+    )
+      .map((a) => a.trim())
+      .filter(Boolean)
+      .slice(0, 4);
+    const payload = {
       projectId: params.projectId,
       problem: topic,
       judgement: selected?.summary || draft.proposedDecision,
       diagnosis: challenge,
       observation: `会议议题：${topic}`,
       strategy: draft.summary,
-      action: draft.nextActions[0] || decisionNextStep || "按验证计划推进",
+      action: nextActions[0] || "按验证计划推进",
+      nextActions,
       validationPlan:
         draft.validationPlan ||
         serverSynthesis?.validationPlan ||
@@ -1429,9 +2045,68 @@ function AdvisorPageContent({
         .filter((s) => s.stance === "support" || s.stance === "conditional")
         .map((s) => s.claim),
       opposeClaims: statements.filter((s) => s.stance === "oppose").map((s) => s.claim),
+      expertOpinions: (meetingRuntime?.decisions || [])
+        .map((d) => {
+          const expert =
+            d.sourceAgent === "M-PNT" ||
+            d.sourceAgent === "M-MKT" ||
+            d.sourceAgent === "M-BIZ" ||
+            d.sourceAgent === "M-ED"
+              ? d.sourceAgent
+              : null;
+          if (!expert) return null;
+          const position =
+            d.stance === "support"
+              ? ("support" as const)
+              : d.stance === "oppose"
+                ? ("oppose" as const)
+                : ("neutral" as const);
+          return {
+            expert,
+            position,
+            reason: (d.judgement || "").slice(0, 400),
+            confidence:
+              typeof d.confidence === "number" ? d.confidence : 0.7,
+          };
+        })
+        .filter(
+          (
+            x,
+          ): x is {
+            expert: "M-PNT" | "M-MKT" | "M-BIZ" | "M-ED";
+            position: "support" | "oppose" | "neutral";
+            reason: string;
+            confidence: number;
+          } => Boolean(x && x.reason),
+        )
+        .slice(0, 8),
       focusChoice: focusChoice ?? undefined,
       meetingTitle,
-    });
+      parentEvidenceIds,
+      evidenceSufficient: evidenceOk,
+      allowInsufficientEvidence,
+      decisionContract: meetingRuntime?.finalDecision.contract,
+    };
+      try {
+        await confirmFromMeeting.mutateAsync(payload);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        const match = msg.match(/supersedesDecisionId=([a-zA-Z0-9_-]+)/);
+        if (match?.[1]) {
+          const ok = await requestConfirm({
+            title: "以修订案覆盖旧判断？",
+            description: `同题已有未归档旧判断（${match[1]}）。确认后将覆盖旧案并归档新判断。`,
+          });
+          if (!ok) return;
+          await confirmFromMeeting.mutateAsync({
+            ...payload,
+            supersedesDecisionId: match[1],
+          });
+          return;
+        }
+        throw err;
+      }
+    })();
   };
 
   const allMessages = [
@@ -1444,7 +2119,7 @@ function AdvisorPageContent({
       : []),
   ];
   const meetingRecordSection = (
-    <section className="rounded-[22px] border border-[rgba(24,24,23,0.08)] bg-white p-3 md:p-4 shadow-[0_14px_28px_rgba(24,24,23,0.04)]">
+    <section className="rounded-[12px] border border-[rgba(24,24,23,0.08)] bg-white p-3 md:p-4">
       <div className="flex items-center justify-between gap-3">
         <div>
           <p className="text-[13px] leading-5 tracking-[0.01em] text-[#66735E]">记录</p>
@@ -1473,41 +2148,56 @@ function AdvisorPageContent({
       </div>
 
       {allMessages.length === 0 ? (
-        <div className="mt-4 min-h-[40dvh] rounded-[18px] border border-dashed border-[rgba(24,24,23,0.12)] bg-[#FBFAF7] px-4 py-8 text-center md:mt-5 md:min-h-[48vh] md:py-10">
-          <p className="text-[16px] leading-7 text-[#202124]">会议还没有进入正式讨论</p>
-          <p className="mt-2 text-[14px] leading-6 text-[#6f747b]">先补充，再继续。</p>
+        <div className="mt-4 min-h-[40dvh] rounded-[12px] border border-dashed border-[rgba(24,24,23,0.12)] bg-[#FBFAF7] px-4 py-8 text-center md:mt-5 md:min-h-[48vh] md:py-10">
+          <p className="font-display text-[18px] font-semibold leading-7 text-[#202124]">
+            会议还没有进入正式讨论
+          </p>
+          <p className="mt-2 text-[15px] leading-7 text-[#3a3d41]">先补充，再继续。</p>
         </div>
       ) : (
-        <div className="mt-4 min-h-[40dvh] overscroll-contain space-y-2 md:min-h-[48vh] md:space-y-3">
+        <div
+          className="mt-4 min-h-[40dvh] overscroll-contain space-y-2 md:min-h-[48vh] md:space-y-3"
+          role="log"
+          aria-live="polite"
+          aria-relevant="additions"
+          aria-label="会议记录消息"
+        >
           {allMessages.map((msg) => (
             <div key={msg.id} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
               <div className="w-full max-w-[92%] md:max-w-[90%]">
                 <div
-                  className={`rounded-[18px] px-4 py-3 whitespace-pre-wrap text-[14px] leading-[1.72] ${
+                  className={`rounded-[16px] px-4 py-3 text-[15px] leading-7 ${
                     msg.role === "user"
                       ? "border border-[rgba(24,24,23,0.08)] bg-[#181817] text-white"
                       : "border border-[rgba(24,24,23,0.08)] bg-[#FBFAF7] text-[#202124]"
                   }`}
                 >
                   <p
-                    className={`text-[11px] tracking-[0.01em] ${
+                    className={`text-[11px] tracking-[0.08em] ${
                       msg.role === "user" ? "text-white/70" : "text-[#6f747b]"
                     }`}
                   >
                     {msg.role === "user" ? "你" : "AI"}
                   </p>
-                  <div className="mt-2">{msg.content}</div>
+                  {msg.role === "assistant" ? (
+                    <LightMarkdown
+                      text={msg.content}
+                      className="mt-2 space-y-2 text-[15px] leading-7 text-[#202124]"
+                    />
+                  ) : (
+                    <div className="mt-2 whitespace-pre-wrap">{msg.content}</div>
+                  )}
                 </div>
                 {msg.role === "assistant" && msg.id !== "welcome" && msg.id !== "loading" && msg.id !== "streaming" ? (
                   <div className="mt-1 space-y-1 px-2">
                     <div className="flex items-center gap-2">
                       {miniFeedbackState[msg.id] === "sent" ? (
-                        <span className="text-[11px] text-green-600">感谢反馈 ✓</span>
+                        <span className="text-[13px] text-[#66735E]">感谢反馈 ✓</span>
                       ) : (
                         <>
                           <button
                             onClick={() => handleMiniFeedback(msg.id, true)}
-                            className="inline-flex min-h-10 items-center gap-1 rounded-full px-3 py-2 text-[12px] text-[#6f747b] transition active:scale-[0.98] hover:bg-[#F5F3EE] hover:text-green-600"
+                            className="inline-flex min-h-11 items-center gap-1 rounded-[12px] px-3 py-2 text-[13px] text-[#6f747b] transition active:scale-[0.98] hover:bg-[#F5F3EE] hover:text-[#66735E]"
                             title="这个分析有帮助"
                             aria-label="这个分析有帮助"
                           >
@@ -1516,7 +2206,7 @@ function AdvisorPageContent({
                           </button>
                           <button
                             onClick={() => handleMiniFeedback(msg.id, false)}
-                            className="inline-flex min-h-10 items-center gap-1 rounded-full px-3 py-2 text-[12px] text-[#6f747b] transition active:scale-[0.98] hover:bg-[#F5F3EE] hover:text-red-500"
+                            className="inline-flex min-h-11 items-center gap-1 rounded-[12px] px-3 py-2 text-[13px] text-[#6f747b] transition active:scale-[0.98] hover:bg-[#F5F3EE] hover:text-[#B47C5C]"
                             title="这个分析不准确"
                             aria-label="这个分析不准确"
                           >
@@ -1527,12 +2217,7 @@ function AdvisorPageContent({
                             onClick={() => {
                               const actionLines = msg.content.split('\n').filter(l => l.trim() && !l.startsWith('##') && !l.startsWith('---'));
                               const lastAction = actionLines[actionLines.length - 1] || msg.content.slice(0, 100);
-                              localStorage.setItem(`action_from_advisor_${msg.id}`, JSON.stringify({
-                                action: lastAction,
-                                createdAt: new Date().toISOString(),
-                                source: 'advisor_commit',
-                                ephemeral: true,
-                              }));
+                              saveAdvisorLocalAction(msg.id, lastAction);
                               setMiniFeedbackState(prev => ({ ...prev, [`action_${msg.id}`]: "sent" as "sent" | "error" }));
                               setTimeout(() => setMiniFeedbackState(prev => {
                                 const next = { ...prev };
@@ -1540,7 +2225,7 @@ function AdvisorPageContent({
                                 return next;
                               }), 4000);
                             }}
-                            className="inline-flex min-h-10 items-center gap-1 rounded-full px-3 py-2 text-[12px] text-[#66735E] transition active:scale-[0.98] hover:bg-[#EEF1EA] hover:text-[#202124]"
+                            className="inline-flex min-h-11 items-center gap-1 rounded-[12px] px-3 py-2 text-[13px] text-[#66735E] transition active:scale-[0.98] hover:bg-[#EEF1EA] hover:text-[#202124]"
                             title="先记在本机（临时，不会同步到云端）"
                             aria-label="把这个建议先记在本机"
                           >
@@ -1568,327 +2253,217 @@ function AdvisorPageContent({
     </section>
   );
 
-  const founderLoopPreview = runFounderLoop.data;
-
   return (
-    <div className="mx-auto flex h-[100dvh] max-h-[100dvh] max-w-4xl flex-col md:h-[calc(100dvh-5.5rem)] md:max-h-[calc(100dvh-5.5rem)] md:max-w-5xl">
+    <div className="mx-auto flex h-[var(--advisor-vvh,100dvh)] max-h-[var(--advisor-vvh,100dvh)] max-w-4xl flex-col md:max-w-5xl">
+      <ConfirmDialog
+        open={confirmOpen}
+        title={confirmTitle}
+        description={confirmDescription}
+        confirmLabel="确认继续"
+        danger
+        busy={confirmFromMeeting.isPending}
+        onCancel={() => settleConfirm(false)}
+        onConfirm={() => settleConfirm(true)}
+      />
+      <div className="flex shrink-0 items-center gap-2 border-b border-[rgba(24,24,23,0.08)] bg-[rgba(250,249,246,0.98)] px-3 py-2 pt-[calc(env(safe-area-inset-top)+0.5rem)] md:px-4">
+        <Link
+          href="/dashboard"
+          prefetch={false}
+          className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-[12px] border border-[rgba(24,24,23,0.12)] bg-white text-[#6f747b] no-underline touch-manipulation"
+          aria-label="退出会议"
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </Link>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-[15px] font-medium text-[#202124]">会议</p>
+          <p className="truncate text-[11px] tracking-[0.08em] text-[#6f747b]">退出回到今日</p>
+        </div>
+        <Link
+          href="/dashboard"
+          prefetch={false}
+          className="inline-flex min-h-11 items-center rounded-[12px] px-3 text-[13px] font-medium text-[#66735E] no-underline touch-manipulation"
+        >
+          退出
+        </Link>
+      </div>
       <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3 md:px-6 md:py-6">
         <div className="space-y-4 md:space-y-5">
-          {draftConflict ? (
-            <section className="rounded-[18px] border border-[rgba(180,124,92,0.28)] bg-[rgba(180,124,92,0.08)] p-4">
-              <p className="text-[12px] tracking-[0.08em] text-[#B47C5C]">发现未完成会议</p>
-              <p className="mt-2 text-[15px] leading-7 text-[#202124]">
-                上次议题：「{draftConflict.draft.topic}」仍在
-                {lifecycleLabel(draftConflict.draft.lifecycle)}。
-                当前入口议题是「{draftConflict.incomingTopic}」。
-              </p>
-              <p className="mt-1 text-[13px] leading-6 text-[#6f747b]">
-                审议进度可恢复；聊天记录未保存。
-              </p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() => applySavedDraft(draftConflict.draft)}
-                  className="inline-flex min-h-10 items-center justify-center rounded-full bg-[#181817] px-4 text-[13px] font-semibold text-white"
-                >
-                  继续上次会议
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    clearMeetingSession.mutate(
-                      { projectId: params.projectId },
-                      {
-                        onSuccess: () => {
-                          setDraftConflict(null);
-                          setShowDraftBanner(false);
-                          setMeetingTopic(draftConflict.incomingTopic);
-                          setTopicConfirmed(false);
-                          setMeetingLifecycle("PREPARE");
-                          setDeliberationRound(0);
-                          setLiveStatements([]);
-                          setLiveConflict(null);
-                          setLiveConsensus(null);
-                          setLiveOptions([]);
-                          setMeetingRuntime(null);
-                          void utils.meetingSession.get.invalidate({ projectId: params.projectId });
-                          void utils.dashboard.getHome.invalidate();
-                        },
-                      },
-                    );
-                  }}
-                  className="inline-flex min-h-10 items-center justify-center rounded-full border border-[rgba(24,24,23,0.1)] bg-white px-4 text-[13px] font-medium text-[#202124]"
-                >
-                  改用新议题
-                </button>
-              </div>
-            </section>
+          {refundPoints !== null ? (
+            <SpendRefundNotice
+              points={refundPoints}
+              onClose={() => setRefundPoints(null)}
+            />
           ) : null}
 
-          {showDraftBanner && topicConfirmed && !draftConflict ? (
-            <section className="rounded-[18px] border border-[rgba(102,115,94,0.28)] bg-[#EEF1EA] p-4">
-              <p className="text-[12px] tracking-[0.08em] text-[#66735E]">继续未完成会议</p>
-              <p className="mt-2 text-[15px] leading-7 text-[#202124]">
-                {meetingTopic} · {lifecycleLabel(meetingLifecycle)}
-                {deliberationRound > 0 ? ` · 第 ${deliberationRound} 轮` : ""}
-              </p>
-              <p className="mt-1 text-[13px] leading-6 text-[#5f6368]">
-                审议进度已恢复；聊天记录未保存。
-              </p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() => setShowDraftBanner(false)}
-                  className="inline-flex min-h-10 items-center justify-center rounded-full bg-[#181817] px-4 text-[13px] font-semibold text-white"
-                >
-                  继续会议
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    clearMeetingSession.mutate(
-                      { projectId: params.projectId },
-                      {
-                        onSuccess: () => {
-                          setShowDraftBanner(false);
-                          setTopicConfirmed(false);
-                          setMeetingLifecycle("PREPARE");
-                          setDeliberationRound(0);
-                          setLiveStatements([]);
-                          setLiveConflict(null);
-                          setLiveConsensus(null);
-                          setLiveOptions([]);
-                          setMeetingRuntime(null);
-                          setServerSynthesis(null);
-                          void utils.meetingSession.get.invalidate({ projectId: params.projectId });
-                          void utils.dashboard.getHome.invalidate();
-                        },
-                      },
-                    );
-                  }}
-                  className="inline-flex min-h-10 items-center justify-center rounded-full border border-[rgba(24,24,23,0.1)] bg-white px-4 text-[13px] font-medium text-[#202124]"
-                >
-                  放弃并重新开始
-                </button>
-              </div>
-            </section>
+          {meetingEngineNote ? (
+            <EngineDegradationBanner
+              mode="heuristic"
+              note={meetingEngineNote}
+              blockConfirm
+            />
           ) : null}
+
+          {spendReceipt ? (
+            <SpendReceiptNotice
+              spent={spendReceipt.spent}
+              balanceAfter={spendReceipt.balanceAfter}
+              onClose={() => setSpendReceipt(null)}
+            />
+          ) : null}
+
+          {spendConfirmOpen && !topicConfirmed ? (
+            <SpendConfirmPanel
+              offer={activeSpendOffer}
+              balance={wallet.balance}
+              loading={startFounderMeeting.isPending || deliberating}
+              error={spendError}
+              confirmLabel="开始分析"
+              onCancel={() => {
+                setSpendConfirmOpen(false);
+                setSpendError(null);
+              }}
+              onConfirm={() => {
+                const nextTopic =
+                  meetingTopic ||
+                  searchParams?.get("topic")?.trim() ||
+                  topic;
+                if (!nextTopic) return;
+                launchFounderMeeting(nextTopic, activeSpendOffer.cost, activeSpendOffer.kind);
+              }}
+            />
+          ) : null}
+
+          {!topicConfirmed && !spendConfirmOpen && !searchParams?.get("topic")?.trim() ? (
+            meetingLane === "hub" ? (
+              <MeetingHub
+                projectId={params.projectId}
+                onChooseConsulting={() => setMeetingLane("consulting")}
+              />
+            ) : (
+              <div className="space-y-3">
+                <button
+                  type="button"
+                  onClick={() => setMeetingLane("hub")}
+                  className="inline-flex min-h-11 items-center px-1 text-[13px] text-[#6f747b] touch-manipulation"
+                >
+                  ← 返回会议大厅
+                </button>
+                <CouncilProblemPicker
+                  projectId={params.projectId}
+                  onSelect={({ topic: nextTopic, spendKind }) => {
+                    setMeetingTopic(nextTopic);
+                    setSpendConfirmOfferKind(spendKind);
+                    setSpendError(null);
+                    setSpendConfirmOpen(true);
+                  }}
+                />
+              </div>
+            )
+          ) : null}
+
+          {!(spendConfirmOpen && !topicConfirmed) ? (
+          <>
+          <MeetingDraftBanners
+            draftConflict={draftConflict}
+            showResumeBanner={showDraftBanner && topicConfirmed}
+            resumeTopic={meetingTopic || ""}
+            resumeLifecycle={meetingLifecycle}
+            resumeRound={deliberationRound}
+            clearing={clearMeetingSession.isPending}
+            onContinueDraft={applySavedDraft}
+            onReplaceWithIncoming={() => {
+              if (!draftConflict) return;
+              const incoming = draftConflict.incomingTopic;
+              clearMeetingSession.mutate(
+                { projectId: params.projectId },
+                {
+                  onSuccess: () => {
+                    setDraftConflict(null);
+                    setShowDraftBanner(false);
+                    setMeetingTopic(incoming);
+                    setTopicConfirmed(false);
+                    setMeetingLifecycle("PREPARE");
+                    setDeliberationRound(0);
+                    setLiveStatements([]);
+                    setLiveConflict(null);
+                    setLiveConsensus(null);
+                    setLiveOptions([]);
+                    setMeetingRuntime(null);
+                    void utils.meetingSession.get.invalidate({
+                      projectId: params.projectId,
+                    });
+                    void utils.dashboard.getHome.invalidate();
+                  },
+                },
+              );
+            }}
+            onDismissResume={() => setShowDraftBanner(false)}
+            onAbandonResume={() => {
+              clearMeetingSession.mutate(
+                { projectId: params.projectId },
+                {
+                  onSuccess: () => {
+                    setShowDraftBanner(false);
+                    setTopicConfirmed(false);
+                    setMeetingLifecycle("PREPARE");
+                    setDeliberationRound(0);
+                    setLiveStatements([]);
+                    setLiveConflict(null);
+                    setLiveConsensus(null);
+                    setLiveOptions([]);
+                    setMeetingRuntime(null);
+                    setServerSynthesis(null);
+                    void utils.meetingSession.get.invalidate({
+                      projectId: params.projectId,
+                    });
+                    void utils.dashboard.getHome.invalidate();
+                  },
+                },
+              );
+            }}
+          />
 
           {showMeetingHistory ? (
-            <section className="rounded-[18px] border border-[rgba(24,24,23,0.08)] bg-white p-4 shadow-[0_14px_28px_rgba(24,24,23,0.04)]">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-[12px] tracking-[0.08em] text-[#66735E]">会议历史</p>
-                  <h2 className="mt-1 text-[18px] font-semibold text-[#202124]">近期 Founder 会议</h2>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowMeetingHistory(false);
-                    setHistoryPreview(null);
-                  }}
-                  className="text-[13px] text-[#6f747b]"
-                >
-                  收起
-                </button>
-              </div>
-              {meetingHistory.length === 0 ? (
-                <p className="mt-3 text-[14px] leading-6 text-[#6f747b]">
-                  暂无已落库的会议摘要。完成一轮独立判断后会出现在这里。
-                </p>
-              ) : (
-                <ul className="mt-3 space-y-2">
-                  {meetingHistory.map((item) => (
-                    <li key={item.id}>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setHistoryPreview({
-                            topic: item.topic,
-                            summary: item.summary,
-                            recommendation: item.recommendation,
-                            createdAt: item.createdAt,
-                          })
-                        }
-                        className="w-full rounded-[14px] border border-[rgba(24,24,23,0.06)] bg-[#FBFAF7] px-3 py-3 text-left transition hover:bg-[#F5F3EE]"
-                      >
-                        <p className="text-[14px] font-medium text-[#202124]">{item.topic}</p>
-                        <p className="mt-1 line-clamp-2 text-[12px] leading-5 text-[#6f747b]">
-                          {item.summary}
-                        </p>
-                        <p className="mt-1 text-[11px] text-[#9aa0a6]">
-                          {new Date(item.createdAt).toLocaleString("zh-CN")}
-                        </p>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-              {historyPreview ? (
-                <div className="mt-3 rounded-[14px] border border-[rgba(24,24,23,0.08)] bg-[#EEF1EA] p-3">
-                  <p className="text-[13px] font-semibold text-[#202124]">{historyPreview.topic}</p>
-                  <p className="mt-2 text-[13px] leading-6 text-[#5f6368]">{historyPreview.summary}</p>
-                  {historyPreview.recommendation ? (
-                    <p className="mt-2 text-[13px] leading-6 text-[#202124]">
-                      建议：{historyPreview.recommendation}
-                    </p>
-                  ) : null}
-                </div>
-              ) : null}
-              <Link
-                href={`/projects/${project.id}/decisions`}
-                prefetch={false}
-                className="mt-3 inline-flex items-center gap-2 text-[13px] font-medium text-[#202124] no-underline"
-              >
-                打开决策档案
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </section>
+            <MeetingHistoryPanel
+              projectId={project.id}
+              items={meetingHistory}
+              onClose={() => setShowMeetingHistory(false)}
+            />
           ) : null}
 
           {reviewIntent === "positioning_review" && reviewDecisionId ? (
-            <section className="rounded-[18px] border border-[rgba(180,124,92,0.25)] bg-[rgba(180,124,92,0.08)] p-4">
-              <p className="text-[12px] font-medium text-[#B47C5C]">定位变更复审模式</p>
-              <p className="mt-2 text-[14px] leading-6 text-[#202124]">已预填复审议题。</p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  disabled={resolveReview.isPending}
-                  onClick={() =>
-                    resolveReview.mutate({
-                      projectId: params.projectId,
-                      decisionId: reviewDecisionId,
-                      status: "reviewed",
-                    })
-                  }
-                  className="inline-flex min-h-10 items-center justify-center rounded-full bg-[#181817] px-3 py-1.5 text-[12px] text-white disabled:opacity-50"
-                >
-                  {resolveReview.isSuccess ? "已标记复审 ✓" : "标记为已复审"}
-                </button>
-                <Link
-                  href={`/projects/${params.projectId}/decisions#decision-${reviewDecisionId}`}
-                  className="inline-flex min-h-10 items-center justify-center rounded-full border border-[rgba(24,24,23,0.08)] bg-white px-3 py-1.5 text-[12px] text-[#202124] no-underline"
-                >
-                  回到决策档案
-                </Link>
-              </div>
-            </section>
+            <PositioningReviewBanner
+              projectId={params.projectId}
+              decisionId={reviewDecisionId}
+              resolving={resolveReview.isPending}
+              resolved={resolveReview.isSuccess}
+              onMarkReviewed={() =>
+                resolveReview.mutate({
+                  projectId: params.projectId,
+                  decisionId: reviewDecisionId,
+                  status: "reviewed",
+                })
+              }
+            />
           ) : null}
 
-          <section className="rounded-[18px] border border-[rgba(24,24,23,0.08)] bg-white p-4 shadow-[0_14px_28px_rgba(24,24,23,0.04)]">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <p className="text-[12px] tracking-[0.08em] text-[#66735E]">Founder Layer</p>
-                <h2 className="mt-1 text-[18px] font-semibold leading-[1.25] tracking-[-0.02em] text-[#202124]">
-                  协同闭环预览
-                </h2>
-                <p className="mt-2 text-[13px] leading-6 text-[#6f747b]">
-                  先预跑 Founder 协同闭环，再把结果一键接入会议桌。记忆写入会在服务端同步落库，不只停在前台预览。
-                </p>
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  disabled={runFounderLoop.isPending}
-                  onClick={() =>
-                    runFounderLoop.mutate({
-                      projectId: params.projectId,
-                      message: topic,
-                    })
-                  }
-                  className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-[rgba(24,24,23,0.08)] bg-[#181817] px-4 py-2 text-[13px] font-medium text-white disabled:opacity-50"
-                >
-                  {runFounderLoop.isPending ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <ArrowRight className="h-4 w-4" />}
-                  运行 Founder Loop
-                </button>
-                {founderLoopPreview ? (
-                  <button
-                    type="button"
-                    onClick={() =>
-                      activateFounderMeetingFromRuntime({
-                        runtime: founderLoopPreview,
-                      })
-                    }
-                    className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-[rgba(24,24,23,0.08)] bg-[#F5F3EE] px-4 py-2 text-[13px] font-medium text-[#202124]"
-                  >
-                    接入会议桌
-                  </button>
-                ) : null}
-              </div>
+          <FounderLoopPreviewPanel
+            projectId={params.projectId}
+            topic={topic}
+            onActivate={(runtime) =>
+              activateFounderMeetingFromRuntime({ runtime })
+            }
+          />
+
+          {topicConfirmed && topic ? (
+            <div className="mb-4">
+              <MemoryRuntimePanel
+                projectId={params.projectId}
+                topic={topic}
+                compact
+              />
             </div>
-
-            {runFounderLoop.error ? (
-              <div className="mt-4 rounded-[14px] bg-[rgba(180,124,92,0.10)] px-4 py-3 text-[13px] leading-6 text-[#B47C5C]">
-                运行失败：{runFounderLoop.error.message}
-              </div>
-            ) : null}
-
-            {founderLoopPreview ? (
-              <div className="mt-4 space-y-4">
-                <div className="grid gap-3 md:grid-cols-4">
-                  <div className="rounded-[16px] bg-[#F8F7F3] px-3 py-3">
-                    <p className="text-[12px] tracking-[0.08em] text-[#66735E]">Mission</p>
-                    <p className="mt-2 text-[13px] leading-6 text-[#202124]">{founderLoopPreview.mission.mission}</p>
-                  </div>
-                  <div className="rounded-[16px] bg-[#F8F7F3] px-3 py-3">
-                    <p className="text-[12px] tracking-[0.08em] text-[#66735E]">席位</p>
-                    <p className="mt-2 text-[13px] leading-6 text-[#202124]">{founderLoopPreview.mission.requiredAgents.join(" / ")}</p>
-                  </div>
-                  <div className="rounded-[16px] bg-[#F8F7F3] px-3 py-3">
-                    <p className="text-[12px] tracking-[0.08em] text-[#66735E]">会议冲突</p>
-                    <p className="mt-2 text-[13px] leading-6 text-[#202124]">{founderLoopPreview.meeting.conflicts.length} 个</p>
-                  </div>
-                  <div className="rounded-[16px] bg-[#F8F7F3] px-3 py-3">
-                    <p className="text-[12px] tracking-[0.08em] text-[#66735E]">记忆写入</p>
-                    <p className="mt-2 text-[13px] leading-6 text-[#202124]">{founderLoopPreview.memoryWrites.length} 条</p>
-                  </div>
-                </div>
-
-                <div className="rounded-[16px] border border-[rgba(24,24,23,0.08)] bg-[#FBFAF7] px-4 py-4">
-                  <p className="text-[12px] tracking-[0.08em] text-[#66735E]">Final Decision</p>
-                  <p className="mt-2 text-[15px] font-medium leading-7 text-[#202124]">{founderLoopPreview.finalDecision.chosen}</p>
-                  <div className="mt-2 space-y-2">
-                    {founderLoopPreview.finalDecision.reason.map((item) => (
-                      <p key={item} className="text-[13px] leading-6 text-[#5f655d]">
-                        {item}
-                      </p>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="grid gap-3 md:grid-cols-2">
-                  <div className="rounded-[16px] border border-[rgba(24,24,23,0.08)] bg-white px-4 py-4">
-                    <p className="text-[12px] tracking-[0.08em] text-[#66735E]">四席判断</p>
-                    <div className="mt-3 space-y-3">
-                      {founderLoopPreview.decisions.map((decision) => (
-                        <div key={decision.decisionId} className="rounded-[14px] bg-[#F8F7F3] px-3 py-3">
-                          <div className="flex items-center justify-between gap-3">
-                            <p className="text-[13px] font-medium text-[#202124]">{decision.sourceAgent}</p>
-                            <p className="text-[12px] text-[#66735E]">{Math.round(decision.confidence * 100)}%</p>
-                          </div>
-                          <p className="mt-2 text-[13px] leading-6 text-[#5f655d]">{decision.judgement}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="rounded-[16px] border border-[rgba(24,24,23,0.08)] bg-white px-4 py-4">
-                    <p className="text-[12px] tracking-[0.08em] text-[#66735E]">Memory Writes</p>
-                    <div className="mt-3 space-y-3">
-                      {founderLoopPreview.memoryWrites.map((item) => (
-                        <div key={item.writeId} className="rounded-[14px] bg-[#F8F7F3] px-3 py-3">
-                          <p className="text-[13px] font-medium text-[#202124]">
-                            {item.type} / {item.source}
-                          </p>
-                          <p className="mt-2 text-[13px] leading-6 text-[#5f655d]">{item.summary}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ) : null}
-          </section>
+          ) : null}
 
           <MeetingRoom
             projectId={project.id}
@@ -1897,10 +2472,54 @@ function AdvisorPageContent({
             lifecycle={meetingLifecycle}
             preparing={!topicConfirmed || meetingLifecycle === "PREPARE"}
             knownFacts={mergedFacts}
+            storeVisitFactCount={
+              typeof workspace.storeVisitFactCount === "number"
+                ? workspace.storeVisitFactCount
+                : mergedFacts.filter((f) => f.includes("【店访")).length
+            }
             unknownGaps={unknownGaps}
             experts={experts}
             statements={statements}
             conflict={conflict}
+            conflictMatrix={meetingRuntime?.meeting.conflictMatrix ?? null}
+            debateSession={(() => {
+              const ds = meetingRuntime?.meeting.debateSession;
+              if (!ds) return null;
+              const committeeLabel: Record<string, string> = {
+                market: "市场",
+                brand: "品牌",
+                business: "商业",
+                capital: "组织",
+              };
+              const typeLabel: Record<string, string> = {
+                evidence: "证据挑战",
+                logic: "逻辑挑战",
+                assumption: "假设挑战",
+                risk: "风险挑战",
+              };
+              return {
+                conflicts: ds.conflicts.map((c) => ({
+                  topic: c.topic,
+                  severity: c.severity,
+                  summary: c.summary,
+                  committees: c.committees,
+                })),
+                challenges: ds.challenges.map((ch) => ({
+                  challengeType: ch.challengeType,
+                  challengeTypeLabel: typeLabel[ch.challengeType] || ch.challengeType,
+                  fromCommitteeLabel: committeeLabel[ch.fromCommittee] || ch.fromCommittee,
+                  targetCommitteeLabel: committeeLabel[ch.targetCommittee] || ch.targetCommittee,
+                  statement: ch.statement,
+                })),
+                proposal: ds.proposal,
+                scenarioTests: ds.scenarioTests.map((sc) => ({
+                  scenario: sc.scenario,
+                  trigger: sc.trigger,
+                  impact: sc.impact,
+                  mitigation: sc.mitigation,
+                })),
+              };
+            })()}
             consensus={consensus}
             decisionCard={decisionCard}
             options={liveOptions}
@@ -1921,280 +2540,138 @@ function AdvisorPageContent({
             accepting={confirmFromMeeting.isPending}
             acceptedDecisionId={acceptedDecisionId}
             growthPlan={acceptedGrowthPlan}
+            validationTask={acceptedValidationTask}
+            decisionContract={(() => {
+              const raw = meetingRuntime?.finalDecision.contract as
+                | {
+                    decisionId?: string;
+                    intent?: string;
+                    decision?: string;
+                    status?: string;
+                    confidence?: number;
+                    gate?: { reason?: string };
+                    tensions?: Array<{
+                      topic: string;
+                      supporters: string[];
+                      opponents: string[];
+                      criticalEvidence: string[];
+                    }>;
+                    committeeViews?: Array<{
+                      committee: string;
+                      position: string;
+                      reason: string;
+                    }>;
+                    validationPlan?: {
+                      goal: string;
+                      hypothesis: string;
+                      metrics: string[];
+                      period: string;
+                      successCriteria: string;
+                      killCriteria?: string;
+                    };
+                    claimRefs?: string[];
+                    memo?: {
+                      title: string;
+                      decision: string;
+                      whyNow: string;
+                      tradeoffs: string[];
+                      conditions: string[];
+                      validation: string;
+                      killCriteria: string;
+                      stopLine: string;
+                      evidenceIds: string[];
+                    };
+                  }
+                | undefined;
+              if (!raw?.decisionId || !raw.intent || !raw.decision || !raw.validationPlan) return null;
+              const intentLabel: Record<string, string> = {
+                ENTER_MARKET: "进入市场",
+                POSITION_BRAND: "品牌定位",
+                BUILD_MODEL: "商业模型",
+                RAISE_CAPITAL: "融资",
+                EXPAND: "扩张",
+                OPTIMIZE: "优化",
+                STOP: "停止",
+              };
+              const statusLabel: Record<string, string> = {
+                DRAFT: "草稿",
+                DEBATING: "四席讨论中",
+                READY_FOR_APPROVAL: "待你确认",
+                VALIDATION_REQUIRED: "证据不足，需先验证",
+                APPROVED: "已批准",
+                EXECUTING: "执行中",
+                VALIDATED: "验证成功",
+                FAILED: "失败",
+                REVISED: "已修订",
+              };
+              const committeeLabel: Record<string, string> = {
+                market: "市场",
+                brand: "品牌",
+                business: "商业",
+                capital: "组织",
+              };
+              return {
+                decisionId: raw.decisionId,
+                intent: raw.intent,
+                intentLabel: intentLabel[raw.intent] || raw.intent,
+                decision: raw.decision,
+                status: String(raw.status || "READY_FOR_APPROVAL"),
+                statusLabel: statusLabel[String(raw.status)] || String(raw.status),
+                confidence: Number(raw.confidence || 0.6),
+                gateReason: raw.gate?.reason || "",
+                tensions: raw.tensions || [],
+                committeeViews: (raw.committeeViews || []).map((view) => ({
+                  committee: view.committee,
+                  committeeLabel: committeeLabel[view.committee] || view.committee,
+                  position: view.position,
+                  reason: view.reason,
+                })),
+                validationPlan: raw.validationPlan,
+                claimRefs: raw.claimRefs || [],
+                memo: raw.memo,
+              };
+            })()}
             showTranscript={showTranscript}
             onToggleTranscript={() => setShowTranscript((v) => !v)}
             transcriptSlot={meetingRecordSection}
           />
-        </div>
-      </div>
-
-      <div className="sticky bottom-0 z-20 border-t border-[rgba(24,24,23,0.08)] bg-[rgba(255,255,255,0.96)] px-4 py-2 pb-[calc(env(safe-area-inset-bottom)+8px)] backdrop-blur-xl md:px-6 md:py-3">
-        <div className="mb-2 md:hidden">
-          <button
-            type="button"
-            onClick={() => setShowMobileComposerTools((value) => !value)}
-            className="inline-flex min-h-9 w-full items-center justify-between gap-2 rounded-full border border-[rgba(24,24,23,0.08)] bg-[#FBFAF7] px-3.5 text-[12px] font-medium text-[#202124]"
-          >
-            <span>更多工具</span>
-            {showMobileComposerTools ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-          </button>
-        </div>
-
-        <div
-          className={`mb-2 rounded-[18px] border border-[rgba(24,24,23,0.08)] bg-[#FBFAF7] p-2 md:mb-3 md:block md:p-3 ${
-            showMobileComposerTools ? "block" : "hidden"
-          }`}
-        >
-          <div className="grid grid-cols-2 gap-2 md:flex md:flex-wrap">
-            <button
-              type="button"
-              onClick={() => {
-                setInput(finalizeDecisionPrompt);
-                setShowMobileComposerTools(false);
-              }}
-              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-[14px] bg-[#181817] px-3.5 text-[13px] font-semibold text-white transition hover:-translate-y-0.5 active:scale-[0.98]"
-            >
-              形成经营决策
-              <ArrowRight className="h-4 w-4" />
-            </button>
-            <Link
-              href={`/projects/${project.id}/decisions`}
-              prefetch={false}
-              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-[14px] border border-[rgba(24,24,23,0.08)] bg-white px-3.5 text-[13px] font-semibold text-[#202124]"
-            >
-               决策档案
-              <History className="h-4 w-4" />
-            </Link>
-            <button
-              type="button"
-              onClick={() => {
-                setShowMeetingHistory(true);
-                setShowMobileComposerTools(false);
-              }}
-              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-[14px] border border-[rgba(24,24,23,0.08)] bg-white px-3.5 text-[13px] font-semibold text-[#202124] md:hidden"
-            >
-              会议历史
-              <History className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
-
-        <input
-          ref={fileInputRef}
-          type="file"
-          multiple
-          accept="audio/*,image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.md,.csv,.json"
-          className="hidden"
-          onChange={handleFileChange}
-        />
-
-        <div className="mb-2 hidden flex-wrap items-center gap-2 md:mb-3 md:flex">
-          {primaryComposerPrompts.map((item: { label: string; prompt: string }) => (
-            <button
-              key={`composer-${item.label}`}
-              type="button"
-              onClick={() => setInput(item.prompt)}
-              className="inline-flex min-h-10 items-center gap-2 rounded-full border border-[rgba(24,24,23,0.08)] bg-white px-3 text-[12px] font-medium text-[#202124]"
-            >
-              {item.label}
-            </button>
-          ))}
-          {uploading || selectedAssetIds.length > 0 ? (
-            <div className="rounded-full bg-[rgba(102,115,94,0.08)] px-3 py-1.5 text-[12px] text-[#66735E]">
-              {uploading ? "资料处理中..." : `已选资料 ${selectedAssetIds.length} 份`}
-            </div>
+          </>
           ) : null}
         </div>
-
-        {selectedAssets.length > 0 ? (
-          <div className="mb-2 flex flex-wrap gap-2 md:mb-3">
-            {selectedAssets.map((asset) => (
-              <button
-                key={asset.id}
-                type="button"
-                onClick={() => setSelectedAssetIds((prev) => prev.filter((id) => id !== asset.id))}
-                className="inline-flex items-center gap-2 rounded-full border border-[rgba(24,24,23,0.08)] bg-[#EEF1EA] px-3 py-1.5 text-[12px] text-[#202124]"
-              >
-                <span>{asset.title}</span>
-                <span className="text-[#66735E]">移除</span>
-              </button>
-            ))}
-          </div>
-        ) : null}
-
-        {showAssetLibrary ? (
-          <div className="mb-3 rounded-[18px] border border-[rgba(24,24,23,0.08)] bg-[#FBFAF7] p-3">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-[13px] leading-5 tracking-[0.01em] text-[#66735E]">资料</p>
-                <p className="text-[12px] leading-5 text-[#6f747b]">只选这次要用的证据。</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <select
-                  value={selectedCategoryId}
-                  onChange={(event) => setSelectedCategoryId(event.target.value)}
-                  className="min-h-10 rounded-full border border-[rgba(24,24,23,0.08)] bg-white px-3 text-[12px] text-[#202124] focus:outline-none"
-                >
-                  {assetCategories.map((category) => (
-                    <option key={category.id} value={category.id}>
-                      {category.name}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={uploading || streaming}
-                  className="inline-flex min-h-10 items-center gap-2 rounded-full border border-[rgba(24,24,23,0.08)] bg-white px-3 text-[12px] font-medium text-[#202124] disabled:opacity-50"
-                >
-                  <Paperclip className="h-4 w-4" />
-                  {uploading ? "上传中..." : "上传"}
-                </button>
-              </div>
-            </div>
-
-            {uploading ? (
-              <div className="mt-3 flex items-center gap-2 rounded-[14px] bg-[rgba(102,115,94,0.08)] px-4 py-3 text-[13px] text-[#66735E]">
-                <LoaderCircle className="h-4 w-4 animate-spin" />
-                <span>资料处理中，语音/图片可能需要几秒...</span>
-              </div>
-            ) : uploadError ? (
-              <div className="mt-3 flex items-center justify-between gap-2 rounded-[14px] bg-[rgba(180,124,92,0.10)] px-4 py-3 text-[13px] text-[#B47C5C]">
-                <span>{uploadError}</span>
-                <button type="button" onClick={() => setUploadError(null)} className="shrink-0 text-[12px] underline">关闭</button>
-              </div>
-            ) : uploadSuccess ? (
-              <div className="mt-3 flex items-center gap-2 rounded-[14px] bg-[rgba(102,115,94,0.12)] px-4 py-3 text-[13px] text-[#66735E]">
-                <CheckCircle2 className="h-4 w-4 shrink-0" />
-                <span>{uploadSuccess}</span>
-              </div>
-            ) : null}
-
-            <div className="mt-3 grid gap-2">
-              {assetLibrary.slice(0, 4).map((asset) => (
-                <div
-                  key={asset.id}
-                  className={`flex items-center gap-2 rounded-[14px] border px-3 py-2.5 transition ${
-                    selectedAssetIds.includes(asset.id)
-                      ? "border-[#66735E] bg-[rgba(102,115,94,0.08)]"
-                      : "border-[rgba(24,24,23,0.08)] bg-white"
-                  }`}
-                >
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setSelectedAssetIds((prev) =>
-                        prev.includes(asset.id) ? prev.filter((id) => id !== asset.id) : [...prev, asset.id],
-                      )
-                    }
-                    className="min-w-0 flex-1 text-left"
-                  >
-                    <p className="truncate text-[13px] font-medium leading-6 text-[#202124]">{asset.title}</p>
-                    <p className="truncate text-[12px] leading-5 text-[#6f747b]">
-                      {asset.category?.name ?? "未分类"} · {asset.summary ?? "已导入资料"}
-                    </p>
-                  </button>
-                  <div className="shrink-0 text-[#6f747b]">
-                    {asset.kind === "audio" ? <Mic className="h-4 w-4" /> : null}
-                    {asset.kind === "image" ? <ImageIcon className="h-4 w-4" /> : null}
-                    {asset.kind === "video" ? <Video className="h-4 w-4" /> : null}
-                    {asset.kind === "document" ? <FileText className="h-4 w-4" /> : null}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setPendingDeleteAssetId(asset.id)}
-                    disabled={deleteAsset.isPending}
-                    className="shrink-0 rounded-full p-1.5 text-[#8b877f] transition hover:bg-[rgba(180,124,92,0.10)] hover:text-[#B47C5C] disabled:opacity-50"
-                    aria-label="删除资料"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
-              ))}
-              {pendingDeleteAssetId ? (
-                <div className="rounded-[14px] border border-[rgba(180,124,92,0.22)] bg-[rgba(180,124,92,0.08)] px-3 py-3">
-                  <p className="text-[13px] text-[#8A4F31]">确认删除这份资料？删除后不可恢复。</p>
-                  <div className="mt-2 flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        deleteAsset.mutate({ assetId: pendingDeleteAssetId });
-                        setPendingDeleteAssetId(null);
-                      }}
-                      className="inline-flex min-h-9 items-center rounded-full bg-[#181817] px-3 text-[12px] font-medium text-white"
-                    >
-                      确认删除
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setPendingDeleteAssetId(null)}
-                      className="inline-flex min-h-9 items-center rounded-full border border-[rgba(24,24,23,0.08)] bg-white px-3 text-[12px] font-medium text-[#202124]"
-                    >
-                      取消
-                    </button>
-                  </div>
-                </div>
-              ) : null}
-              {assetLibrary.length === 0 ? (
-                <div className="rounded-[14px] border border-dashed border-[rgba(24,24,23,0.10)] bg-white px-3 py-4 text-[12px] leading-5 text-[#6f747b]">
-                  还没有资料，先上传再纳入本次判断。
-                </div>
-              ) : null}
-            </div>
-          </div>
-        ) : null}
-
-        <div className="w-full rounded-[26px] border border-[rgba(24,24,23,0.08)] bg-[#FBFAF7] px-2 py-2 shadow-[0_8px_18px_rgba(24,24,23,0.03)]">
-          <p className="px-3 pt-1 text-[11px] leading-4 text-[#6f747b]">次要入口 · 补充观点</p>
-          <div className="flex items-end gap-1.5">
-            <button
-              type="button"
-              onClick={() => setShowAssetLibrary((value) => !value)}
-              disabled={uploading || streaming}
-              className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-full text-[#202124] disabled:opacity-50"
-              aria-label={showAssetLibrary ? "收起资料面板" : "打开资料面板"}
-            >
-              {uploading ? <LoaderCircle className="h-5 w-5 animate-spin text-[#66735E]" /> : <Plus className="h-5 w-5" />}
-            </button>
-            <div className="min-w-0 flex-1">
-              <textarea
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="补充观点…"
-                rows={2}
-                className="block min-h-[52px] w-full resize-none rounded-[20px] border-0 bg-transparent px-2 py-2 text-[16px] text-[#202124] placeholder:text-[#6f747b] focus:outline-none focus:ring-0 md:min-h-[60px] md:text-sm"
-                disabled={streaming || uploading}
-              />
-            </div>
-            <button
-              type="button"
-              onClick={recording ? handleToggleRecording : input.trim() || selectedAssetIds.length > 0 ? () => void handleSend() : handleToggleRecording}
-              disabled={uploading || streaming}
-              className={`inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-full transition disabled:opacity-50 ${
-                recording || input.trim() || selectedAssetIds.length > 0
-                  ? "bg-[#8E8E8E] text-white"
-                  : "text-[#202124]"
-              }`}
-              aria-label={
-                recording
-                  ? "停止语音输入"
-                  : input.trim() || selectedAssetIds.length > 0
-                    ? "发送判断"
-                    : "开始语音输入"
-              }
-            >
-              {recording ? (
-                <Square className="h-4 w-4" />
-              ) : input.trim() || selectedAssetIds.length > 0 ? (
-                <Send className="h-4 w-4" />
-              ) : (
-                <Mic className="h-4 w-4" />
-              )}
-            </button>
-          </div>
-        </div>
       </div>
+
+      <AdvisorComposer
+        projectId={project.id}
+        input={input}
+        onInputChange={setInput}
+        onKeyDown={handleKeyDown}
+        onSend={() => void handleSend()}
+        onStartRecording={() => void handleStartRecording()}
+        onStopRecording={() => handleStopRecording()}
+        onFileChange={(files) => void handleFileChange(files)}
+        onDeleteAsset={(assetId) => deleteAsset.mutate({ assetId })}
+        onShowHistory={() => setShowMeetingHistory(true)}
+        selectedAssetIds={selectedAssetIds}
+        onSelectedAssetIdsChange={setSelectedAssetIds}
+        assetLibrary={assetLibrary as AdvisorAsset[]}
+        assetCategories={assetCategories}
+        selectedCategoryId={selectedCategoryId}
+        onSelectedCategoryIdChange={setSelectedCategoryId}
+        primaryComposerPrompts={primaryComposerPrompts}
+        finalizeDecisionPrompt={finalizeDecisionPrompt}
+        uploading={uploading}
+        uploadError={uploadError}
+        uploadSuccess={uploadSuccess}
+        onClearUploadError={() => setUploadError(null)}
+        recording={recording}
+        recordingSeconds={recordingSeconds}
+        maxRecordingSeconds={MAX_VOICE_SECONDS}
+        recordingTranscript={recordingTranscript}
+        voiceTip={voiceTip}
+        onDismissVoiceTip={() => setVoiceTip(null)}
+        streaming={streaming}
+        deletingAsset={deleteAsset.isPending}
+      />
     </div>
   );
 }

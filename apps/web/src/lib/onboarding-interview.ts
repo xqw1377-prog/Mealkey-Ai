@@ -1,21 +1,279 @@
 /**
- * 建企 AI 四问访谈 + 初步理解 + 90 天计划（前端启发式，MVP）
+ * Business Identity 登录速写（Decision Experience V1）
+ * 权威：docs/MEALKEY_DECISION_EXPERIENCE_V1.md
  */
 
+import {
+  FOCUS_LABEL,
+  HORIZON_LABEL,
+  SCOPE_LABEL,
+  identityExternalReady,
+  parseLocationLine,
+  storeCountFromBand,
+  type BusinessIdentityV1,
+  type BusinessScopeKind,
+  type DecisionFocusKind,
+  type DecisionHorizonV1,
+} from "@/server/founder-layer/contracts/business-identity";
+
 export type InterviewAnswers = {
+  scope: BusinessScopeKind | "";
+  objectName: string;
   brandName: string;
-  businessType: string;
-  storeCount: string;
+  location: string;
+  storeCountBand: "1" | "2-5" | "5+" | "";
+  focus: DecisionFocusKind | "";
+  decisionHorizon: DecisionHorizonV1 | "";
   biggestProblem: string;
 };
 
-export type EnterpriseUnderstanding = {
+export type IdentityUnderstanding = {
+  objectName: string;
   brandName: string;
-  oneLiner: string;
+  locationLine: string;
   stageLabel: string;
+  focusLabel: string;
+  watchLines: string[];
+  oneLiner: string;
+  externalIntelReady: boolean;
+};
+
+export type EnterpriseUnderstanding = IdentityUnderstanding & {
+  brandName: string;
   judgement: string;
   confirmQuestions: string[];
 };
+
+type ChoiceOption = { value: string; label: string };
+
+export type InterviewQuestion =
+  | {
+      id: keyof InterviewAnswers;
+      prompt: string;
+      kind: "text";
+      placeholder: string;
+    }
+  | {
+      id: keyof InterviewAnswers;
+      prompt: string;
+      kind: "choice";
+      options: ChoiceOption[];
+    };
+
+export const INTERVIEW_QUESTIONS: InterviewQuestion[] = [
+  {
+    id: "scope",
+    prompt: "你的经营对象？",
+    kind: "choice",
+    options: [
+      { value: "store", label: SCOPE_LABEL.store },
+      { value: "brand", label: SCOPE_LABEL.brand },
+      { value: "multi_brand", label: SCOPE_LABEL.multi_brand },
+      { value: "region", label: SCOPE_LABEL.region },
+    ],
+  },
+  {
+    id: "objectName",
+    prompt: "叫什么？",
+    kind: "text",
+    placeholder: "例如：南门小馆 / 最湘宴",
+  },
+  {
+    id: "brandName",
+    prompt: "品牌名称？（若上面已是品牌名，可再确认一次）",
+    kind: "text",
+    placeholder: "例如：最湘宴",
+  },
+  {
+    id: "location",
+    prompt: "主要在哪个城市 / 区域？或门店地址",
+    kind: "text",
+    placeholder: "例如：长沙 · 岳麓区 或 长沙市雨花区xx路",
+  },
+  {
+    id: "storeCountBand",
+    prompt: "现在规模？",
+    kind: "choice",
+    options: [
+      { value: "1", label: "1 家" },
+      { value: "2-5", label: "2–5 家" },
+      { value: "5+", label: "5 家以上" },
+    ],
+  },
+  {
+    id: "focus",
+    prompt: "你最关注什么？",
+    kind: "choice",
+    options: [
+      { value: "growth", label: FOCUS_LABEL.growth },
+      { value: "profit", label: FOCUS_LABEL.profit },
+      { value: "org", label: FOCUS_LABEL.org },
+      { value: "product", label: FOCUS_LABEL.product },
+      { value: "expansion", label: FOCUS_LABEL.expansion },
+    ],
+  },
+  {
+    id: "decisionHorizon",
+    prompt: "做经营决定时，你通常看多远？",
+    kind: "choice",
+    options: [
+      { value: "short", label: HORIZON_LABEL.short },
+      { value: "mid", label: HORIZON_LABEL.mid },
+      { value: "long", label: HORIZON_LABEL.long },
+    ],
+  },
+  {
+    id: "biggestProblem",
+    prompt: "现在最困扰你的事情？",
+    kind: "text",
+    placeholder: "例如：要不要开第二家 / 人效吃掉利润",
+  },
+];
+
+export const EMPTY_INTERVIEW_ANSWERS: InterviewAnswers = {
+  scope: "",
+  objectName: "",
+  brandName: "",
+  location: "",
+  storeCountBand: "",
+  focus: "",
+  decisionHorizon: "",
+  biggestProblem: "",
+};
+
+export function answerDisplayLabel(
+  id: keyof InterviewAnswers,
+  value: string,
+): string {
+  if (id === "scope" && value in SCOPE_LABEL) {
+    return SCOPE_LABEL[value as BusinessScopeKind];
+  }
+  if (id === "focus" && value in FOCUS_LABEL) {
+    return FOCUS_LABEL[value as DecisionFocusKind];
+  }
+  if (id === "storeCountBand") {
+    if (value === "1") return "1 家";
+    if (value === "2-5") return "2–5 家";
+    if (value === "5+") return "5 家以上";
+  }
+  if (id === "decisionHorizon" && value in HORIZON_LABEL) {
+    return HORIZON_LABEL[value as DecisionHorizonV1];
+  }
+  return value;
+}
+
+export function buildBusinessIdentity(
+  answers: InterviewAnswers,
+  now = new Date(),
+): BusinessIdentityV1 {
+  const loc = parseLocationLine(answers.location);
+  const band =
+    answers.storeCountBand === "2-5" || answers.storeCountBand === "5+"
+      ? answers.storeCountBand
+      : "1";
+  const brand =
+    answers.brandName.trim() || answers.objectName.trim() || "未命名品牌";
+  const objectName = answers.objectName.trim() || brand;
+  const draft: BusinessIdentityV1 = {
+    schemaVersion: 1,
+    scope: (answers.scope || "store") as BusinessScopeKind,
+    objectName,
+    brandName: brand,
+    city: loc.city,
+    district: loc.district,
+    address: loc.address,
+    storeCountBand: band,
+    storeCountApprox: storeCountFromBand(band),
+    focus: (answers.focus || "growth") as DecisionFocusKind,
+    decisionHorizon:
+      answers.decisionHorizon === "short" ||
+      answers.decisionHorizon === "long"
+        ? answers.decisionHorizon
+        : "mid",
+    biggestProblem: answers.biggestProblem.trim(),
+    externalIntelReady: false,
+    completedAt: now.toISOString(),
+    source: "identity_intake_v1",
+  };
+  draft.externalIntelReady = identityExternalReady(draft);
+  return draft;
+}
+
+export function buildIdentityUnderstanding(
+  answers: InterviewAnswers,
+): IdentityUnderstanding {
+  const id = buildBusinessIdentity(answers);
+  const stores = id.storeCountApprox;
+  const problem = id.biggestProblem;
+  const expanding =
+    id.focus === "expansion" ||
+    /第二|扩张|开店|加盟|复制|连锁/.test(problem);
+
+  const stageLabel =
+    stores <= 1
+      ? expanding
+        ? "单店 · 扩张酝酿期"
+        : "单店增长期"
+      : stores <= 5
+        ? expanding
+          ? "多店 · 复制准备期"
+          : "多店打磨期"
+        : "区域规模化期";
+
+  const focusLabel = FOCUS_LABEL[id.focus];
+  const watchLines: string[] = [];
+  if (id.focus === "profit" || /利润|成本|亏损/.test(problem)) {
+    watchLines.push("利润风险");
+  } else {
+    watchLines.push("增长机会");
+  }
+  if (id.focus === "profit" || id.focus === "growth") {
+    watchLines.push(id.focus === "profit" ? "增长机会" : "利润风险");
+  }
+  if (expanding || id.focus === "expansion" || id.focus === "org") {
+    watchLines.push("扩张条件");
+  }
+  if (watchLines.length < 2) watchLines.push("组织能力");
+
+  const locationLine = [id.city, id.district || id.address]
+    .filter(Boolean)
+    .join(" · ");
+
+  return {
+    objectName: id.objectName,
+    brandName: id.brandName,
+    locationLine: locationLine || "位置待补",
+    stageLabel,
+    focusLabel,
+    watchLines: [...new Set(watchLines)].slice(0, 3),
+    oneLiner: `我会按「${SCOPE_LABEL[id.scope]}」帮你盯 ${id.objectName}。`,
+    externalIntelReady: id.externalIntelReady,
+  };
+}
+
+/** @deprecated 兼容旧名 */
+export function buildEnterpriseUnderstanding(
+  answers: InterviewAnswers,
+): EnterpriseUnderstanding {
+  const u = buildIdentityUnderstanding(answers);
+  const problem = answers.biggestProblem.trim();
+  const judgement =
+    /扩张|第二|开店/.test(problem)
+      ? "你的核心挑战不是开店速度，而是模型与组织是否支持第二增长曲线。"
+      : /利润|成本|亏损/.test(problem)
+        ? "你的核心挑战更像单店是否真正赚钱，而不是扩张口号。"
+        : `当前重点在「${u.focusLabel}」——我们会先帮你盯住今日该关注的事。`;
+
+  return {
+    ...u,
+    judgement,
+    confirmQuestions: [
+      "品牌与地理信息是否准确？",
+      "当前最困扰的事是否仍是第一优先？",
+      "有没有刚发生的经营变化需要马上告诉系统？",
+    ],
+  };
+}
 
 export type GrowthPlan = {
   day30: string;
@@ -26,100 +284,17 @@ export type GrowthPlan = {
   horizonDays: number;
 };
 
-export const INTERVIEW_QUESTIONS = [
-  {
-    id: "brandName" as const,
-    prompt: "你的企业叫什么？",
-    placeholder: "例如：湘宴",
-  },
-  {
-    id: "businessType" as const,
-    prompt: "你主要经营什么？",
-    placeholder: "例如：高端湘菜",
-  },
-  {
-    id: "storeCount" as const,
-    prompt: "目前有多少家店？",
-    placeholder: "例如：3家",
-  },
-  {
-    id: "biggestProblem" as const,
-    prompt: "你现在最想解决的问题是什么？",
-    placeholder: "例如：怎么做到100家店",
-  },
-];
-
-function parseStoreCount(raw: string): number {
-  const match = raw.replace(/,/g, "").match(/(\d+)/);
-  return match ? Number(match[1]) : 1;
-}
-
-export function buildEnterpriseUnderstanding(answers: InterviewAnswers): EnterpriseUnderstanding {
-  const stores = parseStoreCount(answers.storeCount);
-  const problem = answers.biggestProblem.trim();
-  const category = answers.businessType.trim() || "餐饮品牌";
-  const brand = answers.brandName.trim() || "你的品牌";
-
-  const expanding = /100|连锁|扩张|加盟|复制|开店|规模/.test(problem);
-  const stageLabel =
-    stores <= 1
-      ? "单店验证期"
-      : stores <= 5
-        ? expanding
-          ? "复制增长期"
-          : "多店打磨期"
-        : expanding
-          ? "连锁扩张准备期"
-          : "区域连锁期";
-
-  const oneLiner =
-    stores <= 1
-      ? `一家仍在打磨单店模型的${category}品牌。`
-      : stores <= 5
-        ? `一家正在从单店经营进入连锁阶段的${category}品牌。`
-        : `一家已有区域基础、正思考规模化路径的${category}品牌。`;
-
-  const judgement = expanding
-    ? "你的核心挑战不是开店速度，而是品牌和组织是否支持规模化。"
-    : /定位|品牌|年轻|心智/.test(problem)
-      ? "你的核心挑战更像品牌资产是否清晰，而不是短期流量技巧。"
-      : /利润|成本|亏损|现金流/.test(problem)
-        ? "你的核心挑战更像单店模型是否真正赚钱，而不是扩张口号。"
-        : "你的核心挑战需要先被重新定义成一个可验证的经营判断。";
-
-  const confirmQuestions = expanding
-    ? ["消费者为什么选择你？", "目前店长是否可以复制？", "单店模型是否稳定？"]
-    : /定位|品牌/.test(problem)
-      ? ["用户现在如何记住你？", "品类差异是否可被一句话说清？", "定位能否支撑增长？"]
-      : ["这件事为什么现在必须解决？", "不做会损失什么？", "什么证据能证明方向对了？"];
-
-  return {
-    brandName: brand,
-    oneLiner,
-    stageLabel,
-    judgement,
-    confirmQuestions,
-  };
-}
-
 export function buildGrowthPlan(input: {
   judgement: string;
   action?: string;
   problem?: string;
 }): GrowthPlan {
   const text = `${input.judgement} ${input.action || ""} ${input.problem || ""}`;
-  const expanding = /扩张|加盟|复制|连锁|开店|100/.test(text);
-  const brandWeak = /品牌|心智|定位/.test(text);
-  const orgWeak = /组织|店长|培训|复制/.test(text);
-
+  const expanding = /扩张|加盟|复制|连锁|开店|第二/.test(text);
   return {
-    day30: orgWeak || expanding ? "完成培训体系关键节点" : "完成验证所需的关键标准动作",
-    day60: expanding
-      ? brandWeak
-        ? "完成品牌标准与供应链关键动作"
-        : "完成供应链与单店标准固化"
-      : "完成中期验证数据复盘",
-    day90: expanding ? "重新评估是否启动加盟 / 加速扩张" : "复盘验证结果并决定下一步战略",
+    day30: expanding ? "完成店长/组织关键观察清单" : "完成验证所需的关键标准动作",
+    day60: expanding ? "完成单店利润与现金缓冲复核" : "完成中期验证数据复盘",
+    day90: expanding ? "重新评估是否启动第二店" : "复盘验证结果并决定下一步",
     startedAt: new Date().toISOString(),
     decisionSummary: input.judgement.slice(0, 120),
     horizonDays: 90,
@@ -131,4 +306,17 @@ export function daysRemainingInPlan(plan: GrowthPlan, now = new Date()): number 
   if (Number.isNaN(started)) return plan.horizonDays;
   const elapsed = Math.floor((now.getTime() - started) / (24 * 60 * 60 * 1000));
   return Math.max(0, plan.horizonDays - elapsed);
+}
+
+/** 从 project.profile 读取经营身份 */
+export function readBusinessIdentityFromProfile(
+  profile: unknown,
+): BusinessIdentityV1 | null {
+  if (!profile || typeof profile !== "object") return null;
+  const bi = (profile as Record<string, unknown>).businessIdentity;
+  if (!bi || typeof bi !== "object") return null;
+  const o = bi as Record<string, unknown>;
+  if (o.schemaVersion !== 1) return null;
+  if (typeof o.brandName !== "string" || typeof o.city !== "string") return null;
+  return bi as BusinessIdentityV1;
 }

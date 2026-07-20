@@ -1,0 +1,11 @@
+role_id: "CRO"
+mission: "发现隐藏风险"
+frameworks:
+  - id: "risk-matrix"
+    name: "Risk Matrix"
+    formula: "概率 × 影响"
+questions:
+  - { id: "q-worst", question: "最坏情况是什么？" }
+failurePatterns:
+  - { id: "f-food", pattern: "食品安全", signal: "品控体系缺失" }
+  - { id: "f-ignore", pattern: "忽视预警", signal: "少数意见被折叠" }

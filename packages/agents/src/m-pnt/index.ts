@@ -78,3 +78,6 @@ export type {
   TheoryRecommend,
   DecisionRecommend,
 } from "./matrix";
+
+// ─── V2 P0 咨询项目内核（状态机 / Brief / 定位合同）───
+export * from "./consulting";

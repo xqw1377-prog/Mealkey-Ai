@@ -2,6 +2,24 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { router, protectedProcedure } from "../trpc";
 import { prisma, parseJsonField, stringifyJsonField } from "@/lib/prisma";
+import {
+  toProfileConflictTRPC,
+  updateProjectProfile,
+} from "@/server/services/project-profile";
+import {
+  identityExternalReady,
+  storeCountFromBand,
+  type BusinessIdentityV1,
+} from "@/server/founder-layer/contracts/business-identity";
+import { syncBrandFactsToRestaurantBrain } from "@/server/restaurant-brain/sync-brand-facts";
+import { createRestaurantBrainService } from "@/server/restaurant-brain/service";
+import {
+  generateIdentityOnlyRip,
+  needsRipConfirmGate,
+  readRipStore,
+  ripPagePath,
+} from "@/server/founder-layer/capability/restaurant-intelligence/profile-service";
+import { validateProfile } from "@/lib/profile-schema";
 
 export const userRouter = router({
   // 获取用户信息
@@ -47,10 +65,21 @@ export const userRouter = router({
         currentChallenge: z.string().min(1).max(300),
         yearlyGoal: z.string().min(1).max(300),
         storeCount: z.string().min(1).max(40).optional(),
-      })
+        objectName: z.string().min(1).max(80).optional(),
+        scope: z
+          .enum(["store", "brand", "multi_brand", "region"])
+          .optional(),
+        city: z.string().min(1).max(80).optional(),
+        district: z.string().max(80).optional(),
+        address: z.string().max(160).optional(),
+        storeCountBand: z.enum(["1", "2-5", "5+"]).optional(),
+        focus: z
+          .enum(["growth", "profit", "org", "product", "expansion"])
+          .optional(),
+        decisionHorizon: z.enum(["short", "mid", "long"]).optional(),
+      }),
     )
     .mutation(async ({ ctx, input }) => {
-
       const user = await prisma.user.findUnique({
         where: { id: ctx.userId! },
         select: {
@@ -81,14 +110,43 @@ export const userRouter = router({
         },
       });
 
-      const existingPreferences = parseJsonField<Record<string, unknown>>(user.preferences) ?? {};
+      const band = input.storeCountBand || "1";
+      const objectName = input.objectName?.trim() || input.brandName;
+      const city = input.city?.trim() || "";
+      const businessIdentity: BusinessIdentityV1 = {
+        schemaVersion: 1,
+        scope: input.scope || "store",
+        objectName,
+        brandName: input.brandName.trim(),
+        city,
+        district: input.district?.trim() || undefined,
+        address: input.address?.trim() || undefined,
+        storeCountBand: band,
+        storeCountApprox: storeCountFromBand(band),
+        focus: input.focus || "growth",
+        decisionHorizon: input.decisionHorizon || "mid",
+        biggestProblem: input.currentChallenge.trim(),
+        externalIntelReady: false,
+        completedAt: new Date().toISOString(),
+        source: "identity_intake_v1",
+      };
+      businessIdentity.externalIntelReady =
+        identityExternalReady(businessIdentity);
+
+      const existingPreferences =
+        parseJsonField<Record<string, unknown>>(user.preferences) ?? {};
       const onboardingProfile = {
         brandName: input.brandName,
         businessType: input.businessType,
         currentChallenge: input.currentChallenge,
         yearlyGoal: input.yearlyGoal,
-        storeCount: input.storeCount || null,
+        storeCount: input.storeCount || String(businessIdentity.storeCountApprox),
+        city: businessIdentity.city || null,
+        district: businessIdentity.district || null,
+        scope: businessIdentity.scope,
+        focus: businessIdentity.focus,
         completedAt: new Date().toISOString(),
+        source: "identity_intake_v1",
       };
 
       await prisma.user.update({
@@ -112,46 +170,71 @@ export const userRouter = router({
         },
       });
 
-      const storeHint = input.storeCount ? `当前门店：${input.storeCount}。` : "";
+      const storeHint = `当前门店约 ${businessIdentity.storeCountApprox} 家。`;
+      const locHint = businessIdentity.city
+        ? `主战场：${[businessIdentity.city, businessIdentity.district]
+            .filter(Boolean)
+            .join(" · ")}。`
+        : "";
       const mergedProfile = {
-        brandName: input.brandName,
+        brandName: businessIdentity.brandName,
+        objectName: businessIdentity.objectName,
         businessType: input.businessType,
         category: input.businessType,
-        storeCount: input.storeCount || null,
-        strategicSummary: `${input.brandName} 是一家${input.businessType}品牌。${storeHint}眼下最想解决的是“${input.currentChallenge}”。`,
-        suggestedAction: "进入第一次战略评审会议，把目标压成可验证决策。",
+        storeCount: String(businessIdentity.storeCountApprox),
+        city: businessIdentity.city || null,
+        district: businessIdentity.district || null,
+        address: businessIdentity.address || null,
+        businessIdentity,
+        strategicSummary: `${businessIdentity.objectName}（品牌 ${businessIdentity.brandName}）是一家${input.businessType}生意。${storeHint}${locHint}眼下最想解决的是“${input.currentChallenge}”。`,
+        suggestedAction: "进入今日经营驾驶舱，先看今天该关注什么。",
         currentProblemTitle: input.currentChallenge,
         currentProblemImpact: `战略目标：${input.yearlyGoal}`,
-        onboardingSource: "ai_interview_v1",
+        onboardingSource: "identity_intake_v1",
         onboardingCompletedAt: new Date().toISOString(),
         firstBriefReady: true,
-        nextSuggestedRoute: "/mission",
+        nextSuggestedRoute: "/dashboard",
       };
 
       let projectId = existingProject?.id;
 
       if (existingProject) {
-        const existingProfile = parseJsonField<Record<string, unknown>>(existingProject.profile) ?? {};
-        await prisma.project.update({
-          where: { id: existingProject.id },
-          data: {
-            ...(existingProject.name === "我的经营世界" ? { name: input.brandName } : {}),
-            category: input.businessType,
-            currentGoal: input.yearlyGoal,
-            profile: stringifyJsonField({
+        try {
+          await updateProjectProfile(
+            existingProject.id,
+            (existingProfile) => ({
               ...existingProfile,
               ...mergedProfile,
             }),
-          },
-        });
+            {
+              ownerId: owner.id,
+              extraData: () => ({
+                name:
+                  existingProject.name === "我的经营世界"
+                    ? businessIdentity.objectName
+                    : existingProject.name,
+                category: input.businessType,
+                currentGoal: input.yearlyGoal,
+                city: businessIdentity.city || undefined,
+                district: businessIdentity.district || undefined,
+              }),
+            },
+          );
+        } catch (error) {
+          const conflict = toProfileConflictTRPC(error);
+          if (conflict) throw conflict;
+          throw error;
+        }
       } else {
         const project = await prisma.project.create({
           data: {
             ownerId: owner.id,
-            name: input.brandName,
+            name: businessIdentity.objectName,
             stage: "idea",
             category: input.businessType,
             currentGoal: input.yearlyGoal,
+            city: businessIdentity.city || null,
+            district: businessIdentity.district || null,
             profile: stringifyJsonField(mergedProfile),
           },
           select: {
@@ -161,12 +244,55 @@ export const userRouter = router({
         projectId = project.id;
       }
 
-      const goalParam = encodeURIComponent(input.yearlyGoal || input.currentChallenge);
+      if (projectId) {
+        try {
+          await syncBrandFactsToRestaurantBrain(prisma, {
+            projectId,
+            ownerId: owner.id,
+            source: "onboarding",
+            confidence: 0.75,
+            brandName: businessIdentity.brandName,
+            category: input.businessType,
+          });
+          const brain = createRestaurantBrainService(prisma);
+          const snap = await brain.ensureByProject({
+            projectId,
+            ownerId: owner.id,
+          });
+          const locationLine = [
+            businessIdentity.city,
+            businessIdentity.district,
+          ]
+            .filter(Boolean)
+            .join(" · ");
+          if (locationLine || businessIdentity.storeCountApprox) {
+            await prisma.restaurantProfile.update({
+              where: { restaurantId: snap.restaurant.id },
+              data: {
+                ...(locationLine ? { city: locationLine.slice(0, 80) } : {}),
+                storeCount: businessIdentity.storeCountApprox,
+              },
+            });
+          }
+        } catch {
+          // Brain 同步失败不阻断开户
+        }
+
+        try {
+          await generateIdentityOnlyRip({
+            projectId,
+            ownerId: owner.id,
+            identity: businessIdentity,
+            category: input.businessType,
+          });
+        } catch {
+          // 画像生成失败不阻断开户；页面可再触发生成
+        }
+      }
+
       return {
         projectId,
-        redirectTo: projectId
-          ? `/projects/${projectId}/mission?goal=${goalParam}`
-          : "/dashboard",
+        redirectTo: projectId ? ripPagePath(projectId) : "/dashboard",
       };
     }),
 
@@ -190,17 +316,17 @@ export const userRouter = router({
     });
 
     if (!owner) {
-      throw new TRPCError({ code: "NOT_FOUND", message: "当前账号下还没有经营世界" });
+      throw new TRPCError({ code: "NOT_FOUND", message: "当前账号下还没有企业" });
     }
 
     const project = await prisma.project.findFirst({
       where: { ownerId: owner.id, status: "active" },
       orderBy: { updatedAt: "desc" },
-      select: { id: true },
+      select: { id: true, profile: true },
     });
 
     if (!project) {
-      throw new TRPCError({ code: "NOT_FOUND", message: "当前账号下还没有可恢复的经营世界" });
+      throw new TRPCError({ code: "NOT_FOUND", message: "当前账号下还没有可恢复的企业" });
     }
 
     const existingPreferences = parseJsonField<Record<string, unknown>>(user.preferences) ?? {};
@@ -223,9 +349,12 @@ export const userRouter = router({
       },
     });
 
+    const profile = validateProfile(project.profile) as Record<string, unknown>;
+    const needsRip = needsRipConfirmGate(readRipStore(profile));
+
     return {
       projectId: project.id,
-      redirectTo: "/dashboard",
+      redirectTo: needsRip ? ripPagePath(project.id) : "/dashboard",
     };
   }),
 });

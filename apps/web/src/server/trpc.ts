@@ -6,13 +6,21 @@ import { prisma } from "@/lib/prisma";
 /**
  * tRPC 上下文类型
  *
- * ownerId 由 protectedProcedure 中间件自动注入，
- * 下游路由无需重复查询 prisma.owner.findUnique。
+ * ownerId 优先由 createContext（HTTP 请求入口）解析；
+ * protectedProcedure 仅在缺失时回查，避免每个 procedure 重复打 DB。
  */
 export interface TRPCContext {
   userId?: string;
   ownerId?: string;
   headers: Headers;
+}
+
+async function resolveOwnerId(userId: string): Promise<string | null> {
+  const owner = await prisma.owner.findUnique({
+    where: { userId },
+    select: { id: true },
+  });
+  return owner?.id ?? null;
 }
 
 /**
@@ -41,17 +49,19 @@ export const protectedProcedure = t.procedure.use(async (opts) => {
     });
   }
 
-  // 自动注入 ownerId，避免每个端点重复查询
-  const owner = await prisma.owner.findUnique({
-    where: { userId: ctx.userId },
-    select: { id: true },
-  });
+  const ownerId = ctx.ownerId ?? (await resolveOwnerId(ctx.userId));
+  if (!ownerId) {
+    throw new TRPCError({
+      code: "NOT_FOUND",
+      message: "经营者信息不存在，请先完成企业建档",
+    });
+  }
 
   return opts.next({
     ctx: {
       ...ctx,
       userId: ctx.userId,
-      ownerId: owner?.id,
+      ownerId,
     },
   });
 });
@@ -72,11 +82,8 @@ export const protectedProjectProcedure = t.procedure
       });
     }
 
-    const owner = await prisma.owner.findUnique({
-      where: { userId: ctx.userId },
-      select: { id: true },
-    });
-    if (!owner) {
+    const ownerId = ctx.ownerId ?? (await resolveOwnerId(ctx.userId));
+    if (!ownerId) {
       throw new TRPCError({
         code: "NOT_FOUND",
         message: "经营者信息不存在",
@@ -84,7 +91,7 @@ export const protectedProjectProcedure = t.procedure
     }
 
     const project = await prisma.project.findFirst({
-      where: { id: input.projectId, ownerId: owner.id },
+      where: { id: input.projectId, ownerId },
       select: { id: true, name: true },
     });
     if (!project) {
@@ -98,7 +105,7 @@ export const protectedProjectProcedure = t.procedure
       ctx: {
         ...ctx,
         userId: ctx.userId,
-        ownerId: owner.id,
+        ownerId,
         project,
       },
     });

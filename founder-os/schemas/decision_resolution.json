@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Decision Resolution",
+  "type": "object",
+  "required": [
+    "recommended_action",
+    "weighted_result",
+    "majority_view",
+    "minority_report",
+    "required_conditions"
+  ],
+  "properties": {
+    "recommended_action": {
+      "type": "string",
+      "enum": ["执行", "暂缓", "推翻"]
+    },
+    "weighted_result": {
+      "type": "object",
+      "properties": {
+        "support_score": { "type": "number" },
+        "oppose_score": { "type": "number" },
+        "conditional_score": { "type": "number" }
+      }
+    },
+    "majority_view": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "minority_report": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "unresolved_questions": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "required_conditions": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "veto_flags": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "execution_bet": {
+      "type": "object",
+      "properties": {
+        "expected_upside": { "type": "string" },
+        "worst_case": { "type": "string" },
+        "kill_metric": { "type": "string" },
+        "validation_cycle": { "type": "string" }
+      }
+    }
+  }
+}

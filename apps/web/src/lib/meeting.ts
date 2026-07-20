@@ -34,6 +34,19 @@ export type ExpertStatement = {
   reasons: string[];
   /** Round2：被挑战的席位 roleId 或 agent 名 */
   challengeTo?: string;
+  /** Round2：被挑战的证据 ID */
+  challengeEvidenceId?: string;
+  /** Evidence Layer：顾问依据 */
+  evidence?: Array<{
+    evidenceId: string;
+    statement: string;
+    sourceLabel?: string;
+  }>;
+  confidence?: number;
+  reasoning?: string;
+  validation?: string;
+  evidenceSufficient?: boolean;
+  evidenceGap?: string[];
 };
 
 export type MeetingConflict = {
@@ -211,12 +224,25 @@ export function buildMeetingHref(
   projectId: string,
   topic?: string | null,
   department?: MeetingDepartment,
-  options?: { autoStart?: boolean; autoSend?: boolean },
+  options?: {
+    autoStart?: boolean;
+    autoSend?: boolean;
+    /** 先进入消耗确认，再开会 */
+    confirmSpend?: boolean;
+    spendKind?: string;
+  },
 ): string {
   const params = new URLSearchParams();
   if (topic) params.set("topic", topic);
   if (department && department !== "general") params.set("dept", department);
-  if (options?.autoStart) params.set("autoStart", "1");
+  if (options?.confirmSpend) {
+    params.set("confirm", "1");
+    if (options.spendKind) params.set("spend", options.spendKind);
+  } else if (options?.autoStart) {
+    // 默认走消耗确认，避免直接 autoStart 跳过「购买一次专业判断」心智
+    params.set("confirm", "1");
+    if (options.spendKind) params.set("spend", options.spendKind);
+  }
   if (options?.autoSend) params.set("autoSend", "1");
   const q = params.toString();
   return q ? `/projects/${projectId}/advisor?${q}` : `/projects/${projectId}/advisor`;

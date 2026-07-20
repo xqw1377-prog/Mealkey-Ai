@@ -40,15 +40,21 @@ export class MMktFounderAdapter extends BaseFounderAgentAdapter {
         scale: input.companyContext.business?.scale,
         goals: input.companyContext.goals,
         assetContextBlock: input.assetContextBlock,
+        ...this.memoryPriorPayload(input),
       },
-      timeoutMs: 8000,
+      timeoutMs: 15000,
     };
   }
 
   async invoke(request: AdapterRequest): Promise<AdapterRawResponse> {
     const startedAt = Date.now();
     const raw = await previewMMktSnapshot({
-      message: String(request.payload.question ?? "").trim() || "当前市场是否值得进入",
+      message: [
+        String(request.payload.question ?? "").trim() || "当前市场是否值得进入",
+        typeof request.payload.memoryPriorBlock === "string" && request.payload.memoryPriorBlock
+          ? `\n\n【企业记忆先验】\n${request.payload.memoryPriorBlock}`
+          : "",
+      ].join(""),
       companyContext: {
         companyId: String(request.payload.companyId ?? "founder-company"),
         basicInfo: {
@@ -83,18 +89,45 @@ export class MMktFounderAdapter extends BaseFounderAgentAdapter {
     context: AdapterNormalizeContext,
   ): FounderDecision {
     const raw = response.raw as Awaited<ReturnType<typeof previewMMktSnapshot>>;
+    const structured = raw.structured as
+      | { provider?: string; pageOutput?: typeof raw.pageOutput }
+      | undefined;
+    const providerFromStructured =
+      structured?.provider === "external" || structured?.provider === "heuristic"
+        ? structured.provider
+        : undefined;
+    const provider =
+      providerFromStructured ||
+      (/【真实引擎】/.test(raw.oneLiner) ? "external" : "heuristic");
+    const gaps = raw.pageOutput.gaps.slice(0, 3).map((item) => ({
+      label: item.title || "市场缺口",
+      content: item.summary,
+      confidence: item.confidence,
+    }));
+    const healthEvidence = {
+      label: "机会判断",
+      content: `进入判断：${raw.pageOutput.health.judgement}；机会评分相关置信 ${Math.round(raw.confidence * 100)}%`,
+      confidence: raw.confidence,
+    };
+    const actionEvidence = (raw.pageOutput.finalDecision.actions ?? [])
+      .slice(0, 1)
+      .map((item) => ({
+        label: "验证动作",
+        content: item,
+        confidence: raw.confidence,
+      }));
+
+    const judgementBase = raw.oneLiner.replace(/^【真实引擎】|^【启发式】/, "");
+    const judgement =
+      provider === "external" ? `【真实引擎】${judgementBase}` : `【启发式】${judgementBase}`;
 
     return {
       decisionId: this.buildDecisionId(),
       sourceAgent: this.agent,
       question: inferMarketQuestion(context.mission),
-      judgement: raw.oneLiner,
+      judgement,
       confidence: raw.confidence,
-      evidence: raw.pageOutput.gaps.slice(0, 2).map((item) => ({
-        label: item.title,
-        content: item.summary,
-        confidence: item.confidence,
-      })),
+      evidence: [...gaps, healthEvidence, ...actionEvidence].slice(0, 4),
       risks: raw.pageOutput.finalDecision.risks.slice(0, 3),
       nextSteps: raw.pageOutput.finalDecision.actions.slice(0, 3),
       stance:
@@ -103,10 +136,12 @@ export class MMktFounderAdapter extends BaseFounderAgentAdapter {
           : raw.pageOutput.health.judgement === "kill"
             ? "oppose"
             : "conditional",
+      validation: raw.pageOutput.finalDecision.actions[0],
       metadata: {
         missionId: context.mission.missionId,
         producedAt: this.buildNowIso(),
         latencyMs: response.latencyMs,
+        provider,
       },
     };
   }

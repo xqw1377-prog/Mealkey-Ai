@@ -18,6 +18,21 @@ export const BrandPositioningSchema = z.object({
   brandTonality: z.string().optional(),
 }).passthrough();
 
+/** 企业多品牌条目 */
+export const BrandRecordSchema = z.object({
+  id: z.string(),
+  brandName: z.string().min(1),
+  category: z.string().optional(),
+  mentalPosition: z.string().optional(),
+  targetCustomers: z.string().optional(),
+  priceRange: z.string().optional(),
+  differentiation: z.string().optional(),
+  brandTonality: z.string().optional(),
+  oneLiner: z.string().optional(),
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional(),
+}).passthrough();
+
 export const MPntSnapshotSchema = z.object({
   oneLiner: z.string().optional(),
   brandPositioning: BrandPositioningSchema.optional(),
@@ -93,6 +108,10 @@ export const ProjectProfileSchema = z.object({
   priceRange: z.string().optional(),
   differentiation: z.string().optional(),
   brandTonality: z.string().optional(),
+  /** 多品牌注册表 */
+  brands: z.array(BrandRecordSchema).optional(),
+  activeBrandId: z.string().optional(),
+  brandSwitchedAt: z.string().optional(),
   goal: z.string().optional(),
   yearlyGoal: z.string().optional(),
   currentProblemTitle: z.string().optional(),
@@ -134,6 +153,18 @@ export const ProjectProfileSchema = z.object({
     flaggedAt: z.string().optional(),
     resolvedAt: z.string().optional(),
   }).passthrough()).optional(),
+
+  /** Founder 证据账本（会议投影 + Validation OS 结果；形态见 evidence/persist） */
+  evidenceLedger: z.array(z.record(z.unknown())).optional(),
+  lastEvidencePack: z
+    .object({
+      missionId: z.string().optional(),
+      nodeCount: z.number().optional(),
+      relationCount: z.number().optional(),
+      projectedAt: z.string().optional(),
+    })
+    .passthrough()
+    .optional(),
 }).passthrough();
 
 export type ProjectProfile = z.infer<typeof ProjectProfileSchema>;

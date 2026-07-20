@@ -10,22 +10,34 @@ export async function POST(request: Request) {
     const body = (await request.json()) as {
       planId?: string;
       channel?: string;
+      preferWechatH5?: boolean;
+      clientIp?: string;
     };
 
     const planId = typeof body.planId === "string" ? body.planId.trim() : "";
     const channel = body.channel === "wechat" || body.channel === "alipay" ? body.channel : null;
 
     if (!planId) {
-      return NextResponse.json({ ok: false, error: "请选择套餐" }, { status: 400 });
+      return NextResponse.json({ ok: false, error: "请选择经营点包" }, { status: 400 });
     }
     if (!channel) {
       return NextResponse.json({ ok: false, error: "请选择支付渠道：wechat 或 alipay" }, { status: 400 });
     }
 
+    const forwarded =
+      request.headers.get("x-forwarded-for") ||
+      request.headers.get("x-real-ip");
+    const clientIp =
+      (typeof body.clientIp === "string" && body.clientIp.trim()) ||
+      forwarded?.split(",")[0]?.trim() ||
+      undefined;
+
     const result = await createCheckout(prisma, {
       userId: authUser.id,
       planId,
       channel,
+      preferWechatH5: Boolean(body.preferWechatH5),
+      clientIp,
     });
 
     return NextResponse.json({

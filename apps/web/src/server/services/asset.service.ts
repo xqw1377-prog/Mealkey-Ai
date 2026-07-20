@@ -308,12 +308,16 @@ export async function createAssetFromUpload(
     mimeType: input.file.type || "application/octet-stream",
   });
 
+  const assetTitle = input.title?.trim() || stripExtension(sanitizedFileName);
   const extracted = await extractAssetInsights(
     input.file,
     detectedKind,
     buffer,
-    input.title?.trim() || stripExtension(sanitizedFileName),
+    assetTitle,
     input.transcriptHint ?? null,
+    {
+      requireCloudAsr: requiresCloudAsr(assetTitle, input.categorySlug),
+    },
   );
   const summary = extracted.summary ?? buildAssetSummary({
     kind: detectedKind,
@@ -426,15 +430,27 @@ function stripExtension(fileName: string) {
   return fileName.replace(/\.[^.]+$/, "");
 }
 
+function requiresCloudAsr(title: string, categorySlug?: string | null) {
+  // 店访/市场证据：禁止用浏览器 hint 冒充一手录音转写
+  if (/店访|现场录音|一手录音/.test(title)) return true;
+  if (categorySlug === "market-research" && /录音|语音|audio/i.test(title)) {
+    return true;
+  }
+  return false;
+}
+
 async function extractAssetInsights(
   file: File,
   kind: "audio" | "image" | "video" | "document",
   buffer: Buffer,
   title: string,
   transcriptHint: string | null,
+  options?: { requireCloudAsr?: boolean },
 ): Promise<AssetInsights> {
   if (kind === "audio") {
-    const transcript = await transcribeAudio(file, buffer, transcriptHint);
+    const transcript = await transcribeAudio(file, buffer, transcriptHint, {
+      requireCloudAsr: options?.requireCloudAsr,
+    });
     return {
       transcript,
       extractedText: transcript,
@@ -445,7 +461,9 @@ async function extractAssetInsights(
             extractedText: transcript,
             fallback: `语音资料已转写，可用于会议判断：${transcript.slice(0, 160)}`,
           })
-        : `语音资料已导入：${stripExtension(file.name)}。语音转写未成功，请检查 DashScope 配置或重试。`,
+        : options?.requireCloudAsr
+          ? `店访录音已保存，但转写未成功。请配置通义 Key 后重试，或手填证据句——浏览器听写不能当店访事实。`
+          : `语音资料已导入：${stripExtension(file.name)}。语音转写未成功，请检查 DashScope 配置或重试。`,
     };
   }
 
@@ -480,13 +498,10 @@ async function extractAssetInsights(
   return { transcript: null, extractedText: null, summary: null };
 }
 
-async function transcribeAudio(file: File, buffer: Buffer, transcriptHint: string | null): Promise<string | null> {
-  // 1. 优先用前端浏览器实时识别的 transcriptHint（省 API 调用）
-  if (transcriptHint && transcriptHint.trim().length > 0) {
-    return transcriptHint.trim();
-  }
-
-  // 2. 调用阿里云百炼 qwen-omni-turbo 多模态语音转写
+async function transcribeWithCloudAsr(
+  file: File,
+  buffer: Buffer,
+): Promise<string | null> {
   const apiKey = process.env.QWEN_API_KEY ?? process.env.DASHSCOPE_API_KEY;
   if (!apiKey) return null;
 
@@ -511,14 +526,15 @@ async function transcribeAudio(file: File, buffer: Buffer, transcriptHint: strin
             messages: [
               {
                 role: "system",
-                content: [{ text: "你是语音转写助手。用户会发来音频，你必须且只能输出音频中听到的文字内容。如果音频没有语音，输出\"[无语音内容]\"。不要加任何解释、问候或额外文字。" }],
+                content: [
+                  {
+                    text: '你是语音转写助手。用户会发来音频，你必须且只能输出音频中听到的文字内容。如果音频没有语音，输出"[无语音内容]"。不要加任何解释、问候或额外文字。',
+                  },
+                ],
               },
               {
                 role: "user",
-                content: [
-                  { audio: dataUrl },
-                  { text: "请转写这段音频" },
-                ],
+                content: [{ audio: dataUrl }, { text: "请转写这段音频" }],
               },
             ],
           },
@@ -528,14 +544,21 @@ async function transcribeAudio(file: File, buffer: Buffer, transcriptHint: strin
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("[asset] qwen-omni asr failed", response.status, errorText.slice(0, 500));
+      console.error(
+        "[asset] qwen-omni asr failed",
+        response.status,
+        errorText.slice(0, 500),
+      );
       return null;
     }
 
     const payload = (await response.json()) as {
-      output?: { choices?: Array<{ message?: { content?: Array<{ text?: string }> | string } }> };
+      output?: {
+        choices?: Array<{
+          message?: { content?: Array<{ text?: string }> | string };
+        }>;
+      };
     };
-    // qwen-omni 返回格式：output.choices[0].message.content 可能是数组或字符串
     const content = payload.output?.choices?.[0]?.message?.content;
     let text = "";
     if (Array.isArray(content)) {
@@ -543,13 +566,32 @@ async function transcribeAudio(file: File, buffer: Buffer, transcriptHint: strin
     } else if (typeof content === "string") {
       text = content.trim();
     }
-    // 模型对无语音音频返回 [无语音内容]，视为转写失败
     if (!text || text === "[无语音内容]") return null;
     return text;
   } catch (error) {
     console.error("[asset] qwen-omni asr exception", error);
     return null;
   }
+}
+
+async function transcribeAudio(
+  file: File,
+  buffer: Buffer,
+  transcriptHint: string | null,
+  options?: { requireCloudAsr?: boolean },
+): Promise<string | null> {
+  // 1. 云端 ASR 优先（微信内无 Web Speech，且店访禁止假 hint）
+  const cloudText = await transcribeWithCloudAsr(file, buffer);
+  if (cloudText) return cloudText;
+
+  if (options?.requireCloudAsr) {
+    return null;
+  }
+
+  // 2. 仅非店访场景：云端失败时回退浏览器实时识别 hint
+  const hint = transcriptHint?.trim();
+  if (hint) return hint;
+  return null;
 }
 
 /** 从 MIME / 文件名推断音频格式（保留供未来 ASR 端点使用） */

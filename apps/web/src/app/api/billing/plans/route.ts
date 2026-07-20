@@ -8,6 +8,7 @@ import {
   getBillingSnapshot,
   getPlanCommercialMeta,
 } from "@/server/services/billing.service";
+import { getWalletSnapshot, listRecentPointSpend } from "@/server/services/business-points.service";
 import { getPaymentMode } from "@/server/services/payment.service";
 
 export async function GET() {
@@ -15,17 +16,23 @@ export async function GET() {
     const authUser = await requireAuth();
     await ensureDefaultPlans(prisma);
 
-    const [plans, snapshot] = await Promise.all([
+    const [plans, snapshot, wallet, recentLedger] = await Promise.all([
       prisma.plan.findMany({
         where: { status: "active" },
         orderBy: { priceCents: "asc" },
       }),
       getBillingSnapshot(prisma, authUser.id),
+      getWalletSnapshot(prisma, authUser.id),
+      listRecentPointSpend(prisma, authUser.id, 20),
     ]);
 
     const categorized = {
       platform: plans.filter((plan) => getPlanCommercialMeta(plan).kind === "platform"),
-      agentAddons: plans.filter((plan) => getPlanCommercialMeta(plan).kind === "agent_addon"),
+      specialtyPacks: plans.filter(
+        (plan) =>
+          getPlanCommercialMeta(plan).kind === "specialty_pack" ||
+          getPlanCommercialMeta(plan).kind === "agent_addon",
+      ),
       creditPacks: plans.filter((plan) => getPlanCommercialMeta(plan).kind === "credit_pack"),
     };
 
@@ -34,7 +41,26 @@ export async function GET() {
       mode: getPaymentMode(),
       agentCatalog: AGENT_CATALOG,
       plans,
-      categorized,
+      categorized: {
+        ...categorized,
+        agentAddons: categorized.specialtyPacks,
+      },
+      wallet: {
+        businessPoints: wallet.businessPoints,
+        monthAnalyses: wallet.monthAnalyses,
+        hoursSaved: wallet.hoursSaved,
+        estimateDeep: wallet.estimateDeep,
+        estimateConsult: wallet.estimateConsult,
+        valueArchive: wallet.valueArchive,
+        recentLedger: recentLedger.map((row) => ({
+          id: row.id,
+          entryType: row.entryType,
+          amount: row.amount,
+          description: row.description,
+          sourceId: row.sourceId,
+          createdAt: row.createdAt,
+        })),
+      },
       snapshot: {
         plan: snapshot.plan,
         planMeta: snapshot.planMeta,
@@ -45,6 +71,7 @@ export async function GET() {
         overageRunCents: snapshot.overageRunCents,
         hybrid: snapshot.hybrid,
         usageByAgent: snapshot.usageByAgent,
+        businessPoints: wallet.businessPoints,
         entitlements: snapshot.entitlements.map((item) => ({
           agentCode: item.agentCode,
           status: item.status,
@@ -69,7 +96,7 @@ export async function GET() {
       return unauthorizedResponse();
     }
     return NextResponse.json(
-      { ok: false, error: (error as Error).message || "获取套餐失败" },
+      { ok: false, error: (error as Error).message || "获取经营点失败" },
       { status: 400 },
     );
   }

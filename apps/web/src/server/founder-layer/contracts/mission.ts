@@ -54,10 +54,23 @@ export interface MemoryPreference {
   confidence?: number;
 }
 
+/** 成功/失败模式 — Memory Engine V1 */
+export interface MemoryPattern {
+  patternId: string;
+  kind: "success" | "failure" | "partial";
+  summary: string;
+  committee?: string;
+  evidenceId?: string;
+  createdAt?: string;
+}
+
 export interface FounderMemorySnapshot {
   facts: MemoryFact[];
   decisions: MemoryDecisionSummary[];
   preferences: MemoryPreference[];
+  patterns: MemoryPattern[];
+  /** 预格式化先验块，供 Adapter / 会议注入 */
+  priorBlock: string;
 }
 
 export interface FounderMissionRequest {

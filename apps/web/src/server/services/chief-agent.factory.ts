@@ -21,6 +21,7 @@ import {
 import type { AgentRunStorage, ChiefAgentDeps } from "@mealkey/core";
 import { createLLMAdapter } from "@mealkey/agent-runtime";
 import { createDecision } from "./agent-os.service";
+import { loadRestaurantBrainSlice } from "../restaurant-brain/service";
 
 let cachedChief: ChiefAgent | null = null;
 
@@ -176,12 +177,36 @@ async function buildMKContextFromOwner(
       .map(n => ({ id: n.id, name: n.title, formula: n.content })),
   };
 
+  // Restaurant Brain — 餐厅事实认知层（有 project 时注入）
+  const restaurantContext =
+    projectId && project
+      ? await loadRestaurantBrainSlice(prisma, {
+          projectId: project.id,
+          ownerId,
+        })
+      : null;
+
+  const memoriesWithBrain = restaurantContext?.priorBlock
+    ? [
+        {
+          type: "PROJECT" as const,
+          content: restaurantContext.priorBlock,
+          key: "restaurant_brain_prior",
+          importance: 1,
+          source: "restaurant-brain",
+          updatedAt: new Date(),
+        },
+        ...memoryCtx,
+      ]
+    : memoryCtx;
+
   return {
     owner: ownerCtx,
     project: projectCtx,
-    memories: memoryCtx,
+    memories: memoriesWithBrain,
     decisions: decisionCtx,
     knowledge: knowledgeCtx,
+    restaurantContext,
   };
 }
 
@@ -312,6 +337,7 @@ function createPrismaAgentRunStorage(prisma: PrismaClient): AgentRunStorage {
           agentId: input.agentId,
           ownerId: owner.id,
           projectId: input.projectId ?? null,
+          missionId: input.missionId ?? null,
           conversationId: input.conversationId ?? null,
           input: input.input ? JSON.stringify(input.input) : null,
           status: "running",

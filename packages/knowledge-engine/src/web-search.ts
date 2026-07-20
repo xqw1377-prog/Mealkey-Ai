@@ -1,15 +1,9 @@
 /**
  * Web Search — 联网搜索模块
  *
- * 为 MealKey 添加联网获取最新市场数据的能力。
- * 支持 Multiple 搜索引擎（SearXNG 优先 / SerpAPI 备选 / DuckDuckGo 免费降级）。
- *
- * 使用方式：
- * - 配置 SEARCH_API_URL / SEARCH_API_KEY 环境变量
- * - 默认可选 DuckDuckGo（零配置，免费但有限制）
+ * 优先级：SearXNG > SerpAPI > DuckDuckGo HTML > Bing HTML
+ * 说明：DuckDuckGo Instant Answer API 对中文市场查询几乎恒为空，不能当主检索。
  */
-
-// ─── 搜索结果类型 ───
 
 export interface WebSearchResult {
   title: string;
@@ -21,9 +15,9 @@ export interface WebSearchResult {
 export interface WebSearchOptions {
   query: string;
   limit?: number;
-  region?: string;        // 搜索结果地域
-  language?: string;       // 搜索语言
-  timeRange?: string;      // d=天, w=周, m=月, y=年
+  region?: string;
+  language?: string;
+  timeRange?: string;
 }
 
 interface SearchProvider {
@@ -31,70 +25,146 @@ interface SearchProvider {
   search(options: WebSearchOptions): Promise<WebSearchResult[]>;
 }
 
-// ═══════════════════════════════════════════════════════════════
-// Provider 1: DuckDuckGo（零配置免费方案）
-// ═══════════════════════════════════════════════════════════════
+function stripHtml(raw: string): string {
+  return raw
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\s+/g, " ")
+    .trim();
+}
 
-class DuckDuckGoProvider implements SearchProvider {
+function unwrapDuckDuckGoUrl(href: string): string {
+  const normalized = href.startsWith("//") ? `https:${href}` : href;
+  try {
+    const u = new URL(normalized, "https://duckduckgo.com");
+    const uddg = u.searchParams.get("uddg");
+    if (uddg) return decodeURIComponent(uddg);
+  } catch {
+    // ignore
+  }
+  return normalized;
+}
+
+/** 解析 DuckDuckGo HTML 结果页（供单测） */
+export function parseDuckDuckGoHtml(
+  html: string,
+  limit = 5,
+): WebSearchResult[] {
+  const results: WebSearchResult[] = [];
+  const linkRe =
+    /class="result__a"[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi;
+  const snipRe = /class="result__snippet[^"]*"[^>]*>([\s\S]*?)<\//gi;
+  const snippets = [...html.matchAll(snipRe)].map((m) => stripHtml(m[1] || ""));
+
+  let idx = 0;
+  for (const match of html.matchAll(linkRe)) {
+    const url = unwrapDuckDuckGoUrl(match[1] || "");
+    const title = stripHtml(match[2] || "");
+    if (!title || !url || url.includes("duckduckgo.com/y.js")) continue;
+    results.push({
+      title: title.slice(0, 160),
+      url,
+      snippet: (snippets[idx] || title).slice(0, 400),
+      source: "duckduckgo",
+    });
+    idx += 1;
+    if (results.length >= limit) break;
+  }
+  return results;
+}
+
+/** 解析 Bing HTML 结果页（供单测） */
+export function parseBingHtml(html: string, limit = 5): WebSearchResult[] {
+  const results: WebSearchResult[] = [];
+  const blockRe =
+    /<li[^>]*class="b_algo"[^>]*>([\s\S]*?)<\/li>/gi;
+  for (const block of html.matchAll(blockRe)) {
+    const chunk = block[1] || "";
+    const link = chunk.match(/<h2[^>]*>\s*<a[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/i);
+    if (!link) continue;
+    const url = link[1] || "";
+    const title = stripHtml(link[2] || "");
+    const snipMatch =
+      chunk.match(/class="b_caption"[^>]*>[\s\S]*?<p[^>]*>([\s\S]*?)<\/p>/i) ||
+      chunk.match(/<p[^>]*>([\s\S]*?)<\/p>/i);
+    const snippet = stripHtml(snipMatch?.[1] || title);
+    if (!title || !url.startsWith("http")) continue;
+    results.push({
+      title: title.slice(0, 160),
+      url,
+      snippet: snippet.slice(0, 400),
+      source: "bing",
+    });
+    if (results.length >= limit) break;
+  }
+  return results;
+}
+
+class DuckDuckGoHtmlProvider implements SearchProvider {
   readonly name = "duckduckgo";
 
   async search(options: WebSearchOptions): Promise<WebSearchResult[]> {
     const { query, limit = 5 } = options;
-    const url = `https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1&skip_disambig=1`;
+    const url = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
 
     try {
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 8000);
-
+      // HTML 抓取易被墙/限流；短超时避免拖垮整次工具调研
+      const timeout = setTimeout(() => controller.abort(), 5000);
       const res = await fetch(url, {
+        method: "GET",
         signal: controller.signal,
-        headers: { "User-Agent": "MealKey/1.0 (Restaurant OS)" },
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (compatible; MealKey/1.0; +https://mealkey.local)",
+          Accept: "text/html,application/xhtml+xml",
+          "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
+        },
       });
       clearTimeout(timeout);
-
       if (!res.ok) return [];
-
-      const data = (await res.json()) as {
-        AbstractText?: string;
-        RelatedTopics?: Array<{ Text?: string; FirstURL?: string; Result?: string }>;
-      };
-
-      const results: WebSearchResult[] = [];
-
-      if (data.AbstractText) {
-        results.push({
-          title: query,
-          url: `https://duckduckgo.com/?q=${encodeURIComponent(query)}`,
-          snippet: data.AbstractText.slice(0, 500),
-          source: "duckduckgo",
-        });
-      }
-
-      if (data.RelatedTopics) {
-        for (const topic of data.RelatedTopics.slice(0, limit)) {
-          const text = topic.Text || "";
-          const firstUrl = topic.FirstURL || "";
-          if (text && firstUrl) {
-            results.push({
-              title: text.split(" - ")[0] || text.slice(0, 60),
-              url: firstUrl,
-              snippet: text,
-              source: "duckduckgo",
-            });
-          }
-        }
-      }
-
-      return results.slice(0, limit);
+      const html = await res.text();
+      return parseDuckDuckGoHtml(html, limit);
     } catch {
       return [];
     }
   }
 }
 
-// ═══════════════════════════════════════════════════════════════
-// Provider 2: SearXNG（自建，推荐）
-// ═══════════════════════════════════════════════════════════════
+class BingHtmlProvider implements SearchProvider {
+  readonly name = "bing";
+
+  async search(options: WebSearchOptions): Promise<WebSearchResult[]> {
+    const { query, limit = 5 } = options;
+    const url = `https://www.bing.com/search?q=${encodeURIComponent(query)}&setlang=zh-CN&mkt=zh-CN`;
+
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 5000);
+      const res = await fetch(url, {
+        method: "GET",
+        signal: controller.signal,
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (compatible; MealKey/1.0; +https://mealkey.local)",
+          Accept: "text/html,application/xhtml+xml",
+          "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
+        },
+      });
+      clearTimeout(timeout);
+      if (!res.ok) return [];
+      const html = await res.text();
+      return parseBingHtml(html, limit);
+    } catch {
+      return [];
+    }
+  }
+}
 
 class SearXNGProvider implements SearchProvider {
   readonly name = "searxng";
@@ -125,7 +195,7 @@ class SearXNGProvider implements SearchProvider {
         headers["Authorization"] = `Bearer ${this.apiKey}`;
       }
 
-      const res = await fetch(`${this.baseUrl}/search?${params.toString()}`, {
+      const res = await fetch(`${this.baseUrl.replace(/\/$/, "")}/search?${params}`, {
         signal: controller.signal,
         headers,
       });
@@ -153,10 +223,6 @@ class SearXNGProvider implements SearchProvider {
   }
 }
 
-// ═══════════════════════════════════════════════════════════════
-// Provider 3: SerpAPI（付费，最稳定）
-// ═══════════════════════════════════════════════════════════════
-
 class SerpAPIProvider implements SearchProvider {
   readonly name = "serpapi";
 
@@ -171,7 +237,7 @@ class SerpAPIProvider implements SearchProvider {
         api_key: this.apiKey,
         engine: "google",
         hl: language,
-        gl: region,
+        gl: region === "cn" ? "cn" : region,
         num: String(limit),
       });
 
@@ -206,48 +272,63 @@ class SerpAPIProvider implements SearchProvider {
   }
 }
 
-// ═══════════════════════════════════════════════════════════════
-// 搜索管理器
-// ═══════════════════════════════════════════════════════════════
-
 export class WebSearchManager {
   private providers: SearchProvider[] = [];
+  private lastAttempt: {
+    query: string;
+    tried: string[];
+    hitProvider: string | null;
+    at: string;
+  } | null = null;
 
   constructor() {
-    // 尝试构建可用的搜索引擎
-    const searxngUrl = typeof process !== "undefined" ? process.env.SEARXNG_URL : undefined;
-    const serpapiKey = typeof process !== "undefined" ? process.env.SERPAPI_KEY : undefined;
+    const searxngUrl =
+      typeof process !== "undefined" ? process.env.SEARXNG_URL : undefined;
+    const serpapiKey =
+      typeof process !== "undefined" ? process.env.SERPAPI_KEY : undefined;
 
-    // 优先级：SearXNG > SerpAPI > DuckDuckGo
     if (searxngUrl) {
       this.providers.push(new SearXNGProvider(searxngUrl));
     }
     if (serpapiKey) {
       this.providers.push(new SerpAPIProvider(serpapiKey));
     }
-    // DuckDuckGo 作为零配置兜底
-    this.providers.push(new DuckDuckGoProvider());
+    this.providers.push(new DuckDuckGoHtmlProvider());
+    this.providers.push(new BingHtmlProvider());
   }
 
-  /**
-   * 搜索互联网并返回结构化结果
-   */
   async search(options: WebSearchOptions): Promise<WebSearchResult[]> {
+    const tried: string[] = [];
     for (const provider of this.providers) {
+      tried.push(provider.name);
       try {
         const results = await provider.search(options);
-        if (results.length > 0) return results;
+        if (results.length > 0) {
+          this.lastAttempt = {
+            query: options.query,
+            tried,
+            hitProvider: provider.name,
+            at: new Date().toISOString(),
+          };
+          return results;
+        }
       } catch {
-        // 当前 provider 失败，尝试下一个
         continue;
       }
     }
+    this.lastAttempt = {
+      query: options.query,
+      tried,
+      hitProvider: null,
+      at: new Date().toISOString(),
+    };
     return [];
   }
 
-  /**
-   * 搜索特定餐饮市场数据
-   */
+  getLastAttempt() {
+    return this.lastAttempt;
+  }
+
   async searchMarketData(
     category: string,
     city?: string,
@@ -285,9 +366,6 @@ export class WebSearchManager {
     };
   }
 
-  /**
-   * 搜索品牌/门店评价
-   */
   async searchBrandReputation(brandName: string): Promise<WebSearchResult[]> {
     const queries = [
       `${brandName} 评价 口碑`,
@@ -311,22 +389,14 @@ export class WebSearchManager {
     return allResults;
   }
 
-  /**
-   * 检查是否有任何 provider 可用
-   */
   get isAvailable(): boolean {
     return this.providers.length > 0;
   }
 
-  /**
-   * 获取当前启用的 provider 列表
-   */
   get activeProviders(): string[] {
     return this.providers.map((p) => p.name);
   }
 }
-
-// ─── 全局单例 ───
 
 let globalWebSearch: WebSearchManager | null = null;
 

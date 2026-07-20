@@ -1,0 +1,98 @@
+# LIVE 真引擎冒烟：夜间 + 手动
+# 不起 PR 必跑；失败不阻断主 CI（continue-on-error）
+name: LIVE Agents Smoke
+
+on:
+  workflow_dispatch:
+  schedule:
+    # 每天 UTC 16:00 ≈ 北京时间 00:00
+    - cron: "0 16 * * *"
+
+concurrency:
+  group: live-agents-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  live-smoke:
+    name: Docker agents + test:live-agents
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    continue-on-error: true
+
+    env:
+      LIVE_AGENTS: "1"
+      HEURISTIC_ONLY: "false"
+      MBIZ_API_BASE_URL: "http://127.0.0.1:8000/api/v1/bmjm"
+      MBIZ_API_TOKEN: "mbiz-dev-token-2026"
+      MED_API_BASE_URL: "http://127.0.0.1:8001"
+      MMKT_API_BASE_URL: "http://127.0.0.1:8002"
+      DATABASE_URL: "file:./live-ci.db"
+      AUTH_SECRET: "ci-live-auth-secret-min-16"
+      SKIP_ENV_VALIDATION: "1"
+      BLOB_STORAGE_PROVIDER: "local"
+      NEXT_TELEMETRY_DISABLED: "1"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        working-directory: apps/web
+        run: npx prisma generate
+
+      - name: Start consulting engines
+        run: docker compose -f docker-compose.agents.yml up -d --build
+
+      - name: Wait for engine ports
+        run: |
+          set -e
+          for i in $(seq 1 60); do
+            if curl -sf "http://127.0.0.1:8000/health" >/dev/null 2>&1 \
+              || curl -sf "http://127.0.0.1:8000/" >/dev/null 2>&1; then
+              echo "m-biz port ready"
+              break
+            fi
+            echo "waiting m-biz... $i"
+            sleep 5
+          done
+          for i in $(seq 1 36); do
+            if curl -sf "http://127.0.0.1:8001/health" >/dev/null 2>&1 \
+              || curl -sf "http://127.0.0.1:8001/" >/dev/null 2>&1 \
+              || curl -sf "http://127.0.0.1:8001/docs" >/dev/null 2>&1; then
+              echo "m-ed port ready"
+              break
+            fi
+            echo "waiting m-ed... $i"
+            sleep 5
+          done
+          for i in $(seq 1 36); do
+            if curl -sf "http://127.0.0.1:8002/health" >/dev/null 2>&1 \
+              || curl -sf "http://127.0.0.1:8002/" >/dev/null 2>&1 \
+              || curl -sf "http://127.0.0.1:8002/docs" >/dev/null 2>&1; then
+              echo "m-mkt port ready"
+              break
+            fi
+            echo "waiting m-mkt... $i"
+            sleep 5
+          done
+
+      - name: Run LIVE agents smoke
+        working-directory: apps/web
+        run: npm run test:live-agents
+
+      - name: Dump engine logs on failure
+        if: failure()
+        run: docker compose -f docker-compose.agents.yml logs --tail=200
+
+      - name: Stop engines
+        if: always()
+        run: docker compose -f docker-compose.agents.yml down -v

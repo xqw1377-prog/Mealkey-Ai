@@ -1,0 +1,28 @@
+id: "new_product"
+name: "新品决策"
+founder_prompt_example: "要不要推一个新品"
+value: "高频经营决策"
+frequency: "high"
+default_level: "L1"
+decision_type: "store_expansion"
+engines: ["M-MKT", "M-PNT", "M-BIZ"]
+council: "mini"
+council_name: "Product Investment Committee"
+mini_roster: ["CMO", "CBO", "BMO", "COO"]
+four_judgments:
+  M-MKT: "用户需要吗？"
+  M-PNT: "符合品牌吗？"
+  M-BIZ: "赚钱了吗？"
+  COO: "能稳定生产吗？"
+example_resolution:
+  decision: "YES"
+  conditions:
+    - "售价49元"
+    - "毛利65%"
+    - "限定区域测试"
+triggers:
+  - "新品"
+  - "推出"
+  - "上新"
+  - "菜单加"
+  - "产品线"

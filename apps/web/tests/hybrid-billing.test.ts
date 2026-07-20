@@ -25,7 +25,8 @@ describe("hybrid billing meta", () => {
         overageRunCents: 99,
       }),
     });
-    expect(meta.kind).toBe("agent_addon");
+    // getPlanCommercialMeta normalizes agent_addon -> specialty_pack internally
+    expect(meta.kind).toBe("specialty_pack");
     expect(meta.agentCode).toBe("m-pnt");
   });
 });

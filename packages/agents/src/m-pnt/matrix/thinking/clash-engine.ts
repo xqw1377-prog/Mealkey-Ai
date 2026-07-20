@@ -51,7 +51,7 @@ function inventDirections(f: ThinkingFactPack): InventedDirection[] {
       oneLiner: `重新定义${f.category}行业，颠覆一切旧选择`,
       type: "假大空（对照否决）",
       focus: "颠覆/重新定义",
-      inventReason: `用作否决对照：冲突级别超过资源=假大空。`,
+      inventReason: "用作否决对照：冲突级别超过资源=假大空。",
     },
   ];
 }
@@ -286,6 +286,30 @@ export async function runClashEngine(
         attack: `区隔若只有对照话术、没有场合兑现，客人进店仍会觉得「说得不一样，吃起来一样」。`,
         defenseHint: "区隔菜 + 场合证明同时上",
         severity: "R2",
+      },
+      {
+        targetSeat: "huayehu",
+        attack: `符号是记忆放大器，但没有冲突的符号只是装饰。先制造「旧选择 vs 新选择」的冲突，符号才有故事可讲。`,
+        defenseHint: "符号必须承载冲突叙事",
+        severity: "R2",
+      },
+      {
+        targetSeat: "kotler",
+        attack: `STP 找到对的人，但冲突让对的人记住你——没有冲突的细分定位是无人问津的正确。`,
+        defenseHint: "细分定位必须包含冲突",
+        severity: "R2",
+      },
+      {
+        targetSeat: "growth",
+        attack: `飞轮需要客人先转第一圈——冲突就是让客人迈出第一步的原因。没有第一步，飞轮空谈。`,
+        defenseHint: "冲突是飞轮的启动引擎",
+        severity: "R2",
+      },
+      {
+        targetSeat: "culture",
+        attack: `文化战略是长期叙事，冲突是短引爆——文化官讲十年故事，冲突官让客人今天进店。两者配合最好。`,
+        defenseHint: "冲突事件沉淀为文化资产",
+        severity: "R1",
       },
     ],
   };

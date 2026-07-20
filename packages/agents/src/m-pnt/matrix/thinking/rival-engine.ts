@@ -275,6 +275,30 @@ export async function runRivalEngine(
         defenseHint: "冲突句带上对手对照",
         severity: "R2",
       },
+      {
+        targetSeat: "huayehu",
+        attack: `符号降低了识别成本，但区隔才是选择理由——没有区隔的符号只是个好看的logo。`,
+        defenseHint: "符号必须表达竞争差异",
+        severity: "R2",
+      },
+      {
+        targetSeat: "kotler",
+        attack: `STP 细分客群，但客群选不选你取决于是否比对手更「不同」。细分不回答竞争问题。`,
+        defenseHint: "细分后必须找竞争差异",
+        severity: "R1",
+      },
+      {
+        targetSeat: "growth",
+        attack: `飞轮转得再好，如果区隔不清导致客人把你和竞品划等号，增长一定撞天花板。`,
+        defenseHint: "增长飞轮之前先解决区隔问题",
+        severity: "R1",
+      },
+      {
+        targetSeat: "culture",
+        attack: `文化叙事很高级，但如果不能转化为「选我不选竞品」的理由，文化是装饰不是定位。`,
+        defenseHint: "文化必须服务竞争差异",
+        severity: "R1",
+      },
     ],
   };
 }

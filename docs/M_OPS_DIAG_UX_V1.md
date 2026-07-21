@@ -293,12 +293,9 @@ AI 认识我的生意
 
 ## 12. 下一步（冻结）
 
-**数据采集架构已冻结：** `docs/M_OPS_DIAG_DATA_COLLECTION_V1.md`  
+**已冻结：** 采集 `M_OPS_DIAG_DATA_COLLECTION_V1.md` · 模型 `M_OPS_DIAG_DIAGNOSIS_MODEL_V1.md`  
 
-**下一刀：** 《餐厅经营诊断系统 V1 诊断模型设计》  
-（六引擎推理链 · Evidence→Finding→Pattern→Signal · 反 GPT 泛建议）  
-
-模型冻结后，再按 UX 五页 + 采集架构落地前端与引擎。
+**下一刀：** 按 UX 五页落地前端 + 六引擎竖切（Customer 已有；其余骨架诚实 gaps）。
 
 ---
 

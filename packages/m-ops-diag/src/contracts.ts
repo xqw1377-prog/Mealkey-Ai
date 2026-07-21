@@ -1,6 +1,7 @@
 /**
  * m-ops-diag Contract V1 — SSOT
  * 权威：docs/M_OPS_DIAG_AGENT_V1.md
+ * 推理：docs/M_OPS_DIAG_DIAGNOSIS_MODEL_V1.md
  */
 
 export const M_OPS_DIAG_AGENT_ID = "m-ops-diag" as const;

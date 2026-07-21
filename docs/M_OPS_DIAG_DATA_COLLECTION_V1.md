@@ -5,7 +5,7 @@
 > **日期：** 2026-07-21  
 > **产品：** 餐启经营诊断（`m-ops-diag`）  
 > **权威挂载：** `docs/AUTHORITY.md` L0  
-> **配套：** `M_OPS_DIAG_AGENT_V1.md` · `M_OPS_DIAG_UX_V1.md` · `MEALKEY_M_INTEL_V1.md` · `MEALKEY_RESTAURANT_BRAIN_V1.md` · `EVIDENCE_CHAIN_PROTOCOL_V1.md` · `BUSINESS_SIGNAL_ENGINE_V1.md`  
+> **配套：** `M_OPS_DIAG_AGENT_V1.md` · `M_OPS_DIAG_UX_V1.md` · `M_OPS_DIAG_DIAGNOSIS_MODEL_V1.md` · `MEALKEY_M_INTEL_V1.md` · `MEALKEY_RESTAURANT_BRAIN_V1.md` · `EVIDENCE_CHAIN_PROTOCOL_V1.md` · `BUSINESS_SIGNAL_ENGINE_V1.md`  
 > **冲突裁决：** 采集范围与权重以本文为准；能力边界以 Architecture 为准；页面流程以 UX 为准  
 
 ---
@@ -288,22 +288,9 @@ Restaurant Brain
 
 ## 9. 下一步（冻结）
 
-采集架构已明确，下一关键问题：
+**诊断模型已冻结：** `docs/M_OPS_DIAG_DIAGNOSIS_MODEL_V1.md`  
 
-> **采完以后，AI 如何像顶级餐饮顾问一样判断？**
-
-进入：
-
-# 《餐厅经营诊断系统 V1 诊断模型设计》
-
-须覆盖：
-
-1. 六大诊断引擎推理  
-2. 诊断推理链  
-3. Evidence → Finding → Pattern → Signal 结构  
-4. 如何避免 GPT 式泛泛建议  
-
-该层决定 MealKey 与 ChatGPT 的根本区别。
+**下一刀：** 六引擎竖切加深 + UX 五页落地（有证据才 LIVE，骨架诚实 gaps）。
 
 ---
 

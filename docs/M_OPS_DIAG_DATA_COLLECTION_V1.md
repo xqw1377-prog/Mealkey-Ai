@@ -288,9 +288,9 @@ Restaurant Brain
 
 ## 9. 下一步（冻结）
 
-**诊断模型已冻结：** `docs/M_OPS_DIAG_DIAGNOSIS_MODEL_V1.md`  
+**诊断模型已冻结（V1.1）：** `docs/M_OPS_DIAG_DIAGNOSIS_MODEL_V1.md`  
 
-**下一刀：** 六引擎竖切加深 + UX 五页落地（有证据才 LIVE，骨架诚实 gaps）。
+**下一刀：** 《餐厅经营诊断系统 V1 AI 推理架构设计》 → 再落地引擎竖切与 UX 五页。
 
 ---
 

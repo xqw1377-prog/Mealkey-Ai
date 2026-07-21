@@ -8,6 +8,7 @@ export const M_OPS_DIAG_AGENT_ID = "m-ops-diag" as const;
 export const M_OPS_DIAG_PRODUCT_NAME = "餐启经营诊断" as const;
 export const M_OPS_DIAG_PRODUCT_NAME_FULL = "餐启 · 餐厅经营诊断系统" as const;
 
+/** focus 映射引擎：service→Operation；product→Product；competition→Competition；其余 overall/聚合 */
 export type DiagnosisFocus =
   | "service"
   | "product"
@@ -55,14 +56,14 @@ export type RestaurantDiagnosisRequest = {
   horizon?: DiagnosisHorizon;
 };
 
-/** Findings = 发现 / 模式 / 含义 — 不是建议、不是战略 */
+/** Findings = 发现 / 模式 / 诊断 — 不是建议、不是战略 */
 export type DiagnosisFinding = {
   id: string;
-  /** 发现 */
+  /** Finding：看见了什么 */
   observation: string;
-  /** 模式 */
+  /** Pattern：像什么问题 */
   pattern: string;
-  /** 含义 */
+  /** Diagnosis：根因方向 / 经营判断（非战略方案） */
   meaning: string;
   confidence: number;
   focus: DiagnosisFocus;

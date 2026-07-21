@@ -42,7 +42,7 @@
 | **L0 经营诊断感知器** | `docs/M_OPS_DIAG_AGENT_V1.md` · `@mealkey/m-ops-diag` | **Architecture Freeze**：观察者非决策者；证据三层；六大引擎；Finding→Pattern→Signal；P0 Cockpit / P1 Room | **否** — 禁止第五席/战略终局/V1 HTTP/假评分 |
 | **L0 经营诊断 UX** | `docs/M_OPS_DIAG_UX_V1.md` | **信任瞬间**：First Moment≤60s · 采集过程感 · 经营画像一句话 · 顾客声音墙 · 六观察面（禁假评分）· 今日扫描卡 · V1 仅 5 页 | **否** — 诊断页禁拍板/禁战略方案；无证据禁假勾 |
 | **L0 经营诊断数据采集** | `docs/M_OPS_DIAG_DATA_COLLECTION_V1.md` | **最少主动+最大外感+持续学习**；Identity/Fact/Consumer 三层；V1 必采 10 事实；Evidence Card+权重；日扫机制；Brain 落点 | **否** — 禁无源编造；AI 推测不得冒充事实 |
-| **L0 经营诊断模型** | `docs/M_OPS_DIAG_DIAGNOSIS_MODEL_V1.md` | **E→F→P→S**；六引擎推理契约；置信/严重度；反泛建议闸门 G1–G6；日扫变化优先 | **否** — 禁战略终局/假 LIVE/纯推理上首页；下一刀=引擎竖切+UX 五页落地 |
+| **L0 经营诊断模型** | `docs/M_OPS_DIAG_DIAGNOSIS_MODEL_V1.md` | **Health Model**；E→F→P→Diagnosis→S；六引擎；Impact Score；诊断卡；V1 六判断；闸门 G1–G8 | **否** — 禁战略终局/假总分/假 LIVE；下一刀=AI 推理架构设计 |
 | **L0 治理协议细节** | `docs/COUNCIL_PROTOCOL_V1_FREEZE.md` | 常委角色 / 投票 / veto / 会议对象 | 可加深实现；接口语义不回滚 |
 | **L0 Agent/Runtime 边界** | `docs/MEALKEY_AGENT_RUNTIME_BOUNDARY_V2.md` | Expert 四席 vs Runtime（执行/成长/记忆）；扩模块闸门 | **否** — 运行时不得再注册为 M-* 顾问席 |
 | **L0 Agent 生态地图** | `docs/MEALKEY_AGENT_ECOSYSTEM_MAP_V2.md` | 三层：L1 四席 / L2 Runtime / L3 工具；MKDecision 与商业化 | **否** — 工具层可扩，不得升格为 L1 或冒充战略判断 |
@@ -102,7 +102,7 @@
 13v. **M-OPS-DIAG Architecture Freeze V1.0**（2026-07-21）：能力边界与工程真源；角色=观察/发现/证据/预警/决策输入；六大引擎架构；Evidence 三层；Finding→Pattern→Signal；Cockpit/Room。真源 `M_OPS_DIAG_AGENT_V1.md`。  
 13x. **M-OPS-DIAG UX Freeze V1.0**（2026-07-21）：壁垒=「它真的懂我的店」；First Moment≤60s；采集过程感；经营画像一句话；顾客声音墙；六观察面；今日扫描卡；V1 仅 5 页。真源 `M_OPS_DIAG_UX_V1.md`。  
 13y. **M-OPS-DIAG Data Collection Freeze V1.0**（2026-07-21）：最少主动采集+最大外部感知+持续学习；Identity/Business Fact/Consumer 三层；必采 10 事实；Evidence Card 与权重表；日扫四域；Brain 落点树。真源 `M_OPS_DIAG_DATA_COLLECTION_V1.md`。  
-13z. **M-OPS-DIAG Diagnosis Model Freeze V1.0**（2026-07-21）：Evidence→Finding→Pattern→Signal；六引擎推理契约；置信/严重度；反泛建议闸门 G1–G6；日扫变化优先。真源 `M_OPS_DIAG_DIAGNOSIS_MODEL_V1.md`。**下一刀 = 六引擎竖切加深 + UX 五页落地**。  
+13z. **M-OPS-DIAG Diagnosis Model Freeze V1.1**（2026-07-21）：Restaurant Health Model；E→F→P→Diagnosis→S；Customer/Product/Competition/Operation/Brand Position/Growth；Business Impact Score；经营诊断卡；V1 仅 6 个高价值判断。真源 `M_OPS_DIAG_DIAGNOSIS_MODEL_V1.md`。**下一刀 = 《餐厅经营诊断系统 V1 AI 推理架构设计》**。  
 
 13w. **GitHub 真源 + 仓库清理**（2026-07-21）：远端 `mealkey-agent-1` 为唯一真源；禁止本地长期堆积未推送；`.vercel/` / `*.tsbuildinfo` 出库；Cursor 规则 `tool-agent-framework-v1` · `github-source-of-truth`；说明 `REPO_SYNC_AND_TOOL_AGENT_RULES_V1.md`。  
 18. **Experience Blueprint P0–P5 工程已收口（2026-07-19）**：契约 · Candidate/Inbox · Challenge/Readiness · 经营决策习惯 · M-INTEL 锚点门禁均已接线；真源 `MEALKEY_DECISION_EXPERIENCE_ENGINEERING_BLUEPRINT_V1.md`。黄金路径手测仍有效。**2026-07-21 起主线收束为 MVP 90天飞轮**（不再并行开新能力专题）。禁止 Scan 滥造 Decision、无锚点装懂外部、对外「决策人格」字样。  

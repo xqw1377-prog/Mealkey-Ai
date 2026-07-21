@@ -159,60 +159,62 @@ V1 实现诚实：有检索源则采；无源则空证据 + `gaps`，**禁止编
 
 ## 4. Diagnosis Engine（六大模块 · 架构冻结）
 
-> **推理细则真源：** `docs/M_OPS_DIAG_DIAGNOSIS_MODEL_V1.md`（E→F→P→S · 闸门 · 置信/严重度）
+> **推理细则真源：** `docs/M_OPS_DIAG_DIAGNOSIS_MODEL_V1.md`  
+> （Health Model · E→F→P→Diagnosis→S · Impact Score · 闸门）
 
-V1 **架构上冻结六大引擎**；**MVP 实现只打穿 Customer（+ Service 主题）**，其余可骨架占位，禁止假 LIVE。
+V1 **架构上冻结六大引擎**；**MVP 打穿 Customer + Operation（等待/服务主题）**，其余骨架占位，禁止假 LIVE。
 
 ### 4.1 Customer Insight Engine
 
-> 顾客到底怎么看你的店？
+> 顾客为什么来？为什么不来？
 
 输出示例：
 
 ```json
 {
-  "positiveMemory": ["环境好", "湘菜正宗"],
-  "negativeMemory": ["等待时间长", "价格偏高"]
+  "strength": "场景体验强",
+  "risk": "服务效率限制复购",
+  "confidence": 0.86
 }
 ```
 
 ### 4.2 Product Engine
 
-> 什么菜留下顾客，什么菜拖累经营？
+> 你的产品为什么赢？
 
-招牌 / 爆品 / 差评菜 / 性价比。
+招牌 / 引流 / 利润 / 记忆产品（有证据才写）。
 
-### 4.3 Service Engine
+### 4.3 Competition Engine
 
-> 服务有没有影响增长？
+> 你在竞争中的位置？
 
-等位 / 上菜速度 / 态度 / 高峰压力。
+竞争地图（价格×体验等）；无源禁空话。
 
-### 4.4 Brand Perception Engine
+### 4.4 Operation Engine
 
-> 顾客脑中有没有形成记忆？别人为什么选择你？
+> 经营机器哪里卡住？（人/货/场/客/钱；含原 Service 主题）
 
-### 4.5 Competition Engine
+### 4.5 Brand Position Engine
 
-> 你在市场里的位置？（同区域 / 同价格带 / 同品类）
+> 现在距离目标品牌差多少？（M-PNT=意图；本引擎=现实落差）
 
-### 4.6 Growth Opportunity Engine
+### 4.6 Growth Engine
 
-> 下一步增长机会在哪里？
-
-例：年轻消费者认可环境，但产品记忆弱 → 机会：打造年轻湘菜场景（**机会信号，不是战略终局**）。
+> 下一步哪里有增长空间？（新客×转化×复购×客单；机会信号非战略终局）
 
 ---
 
-## 5. Diagnosis Output（三层 · 冻结）
+## 5. Diagnosis Output（推理链 · 冻结）
 
 | Level | 名称 | 含义 | 例 |
 |-------|------|------|----|
-| **L1** | Finding | 发现 | 近30天差评中「等待」出现次数增加 42% |
-| **L2** | Pattern | 模式 | 高峰时段服务能力不足正在影响体验 |
-| **L3** | Signal | 经营信号（进 MealKey） | `severity: HIGH` · `title: 服务体验风险` |
+| **E** | Evidence | 可核验事实 | 近90天服务慢相关评论 +35% |
+| **L1** | Finding | 发现 | 服务体验相关负向提及上升 |
+| **L2** | Pattern | 模式 | 高峰期承载不足 |
+| **L2.5** | Diagnosis | 根因方向 | 瓶颈在运营能力，而非产品吸引力 |
+| **L3** | Signal | 经营信号 | `severity: HIGH` · 关注高峰服务流程 |
 
-Finding/Pattern 对应代码 `DiagnosisFinding.observation/pattern/meaning`。  
+Finding/Pattern/Diagnosis 对应 `DiagnosisFinding.observation/pattern/meaning`。  
 Signal 对齐 `@mealkey/business-signal-engine` / Host `worldChanges`。  
 决策室另经 `VerticalInsight`（P1）。
 
@@ -356,9 +358,10 @@ apps/web/src/server/routers/m-ops-diag.ts
 
 ## 13. 下一步（产品顺序 · 冻结）
 
-**已冻结：** UX · 采集 · **诊断模型** `M_OPS_DIAG_DIAGNOSIS_MODEL_V1.md`  
+**已冻结：** UX · 采集 · **诊断模型 V1.1** `M_OPS_DIAG_DIAGNOSIS_MODEL_V1.md`  
 
-**下一刀：** 六引擎竖切加深 + UX 五页落地（推理规则以 Diagnosis Model 为准）。
+**下一刀：** 《餐厅经营诊断系统 V1 AI 推理架构设计》  
+（DeepSeek/Qwen 分工 · 规则 vs 模型 · 多阶段链 · 稳定性）
 
 ---
 

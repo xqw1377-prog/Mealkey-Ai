@@ -163,7 +163,7 @@ Token 短时委托；Agent 不得持久化 MealKey refresh token 到不安全存
 
 ## 8. 官方样板
 
-**餐厅经营诊断**：体验真源 `M_OPS_DIAG_UX_V1.md`；技术接入 `MEALKEY_AGENT_EXTERNAL_INTERFACE_V1.md`；实现仓 `mealkey-agents/restaurant-diagnosis-agent`（`npm run web:dev`）。
+**餐厅经营诊断**：实现与体验文档均在外置仓 `C:\Users\xqw13\M-OPS-Agent`；MealKey 接入见 `MEALKEY_AGENT_EXTERNAL_INTERFACE_V1.md`。
 
 ---
 

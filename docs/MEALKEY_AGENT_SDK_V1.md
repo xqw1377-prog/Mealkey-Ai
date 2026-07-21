@@ -379,7 +379,7 @@ restaurant-diagnosis-agent/
 |--------|---------------------|
 | 进程内 `AgentContext` / 七协议类型 | 仍可用于 Core 内部；**外接 Agent 以 platform client 为准** |
 | `agent-runtime` 工作流 | 不作为第三方主路径 |
-| `packages/m-ops-diag` 直调 | 过渡期映射为同等 `getRestaurantContext` + `submitIngress` 语义后迁出 |
+| 原进程内诊断包 | 已外置 `M-OPS-Agent`；仅经 Gateway |
 
 ---
 

@@ -4,7 +4,8 @@
 > **状态：正式冻结（Freeze）**  
 > **日期：** 2026-07-21  
 > **权威挂载：** `docs/AUTHORITY.md` L0  
-> **配套：** `MEALKEY_AGENT_SDK_V1.md` · `MEALKEY_AGENT_EXTERNAL_INTERFACE_V1.md` · `MEALKEY_AGENT_UI_FRAMEWORK_V1.md` · 样板 `mealkey-agents/restaurant-diagnosis-agent`  
+> **配套：** `MEALKEY_AGENT_SDK_V1.md` · `MEALKEY_AGENT_EXTERNAL_INTERFACE_V1.md` · `MEALKEY_AGENT_UI_FRAMEWORK_V1.md`  
+> **官方样板仓：** `C:\Users\xqw13\M-OPS-Agent`（外置，不在 MealKey monorepo）  
 > **一句话：** 第三方拿到 SDK 后，**7 天内**做出可在 MealKey 上跑的外接 Agent（含最小 UI）。  
 
 ---
@@ -16,7 +17,7 @@
 1. 原则：Agent 外置；Core 禁增 Agent  
 2. 协议：Ports · L1–L5（默认 ≤L3）· Decision Skill  
 3. 接口：Context / Ingress / HMAC  
-4. 样板仓：`mealkey-agents/restaurant-diagnosis-agent`  
+4. 样板仓：`C:\Users\xqw13\M-OPS-Agent`  
 
 验收：能用自己的话说明「为什么不能直连 Prisma」。
 
@@ -28,13 +29,14 @@
 # 终端 A：MealKey OS
 npm run dev -w @mealkey/web
 
-# 终端 B：样板离线 Skill
-npm run test -w @mealkey-agents/restaurant-diagnosis
+# 终端 B：外置样板（C:\Users\xqw13\M-OPS-Agent）
+cd C:\Users\xqw13\M-OPS-Agent
+npm test
 
 # 终端 C：Sandbox → Gateway（需 A 已起）
 set MK_GATEWAY_URL=http://localhost:3000/api
 set MK_AGENT_SECRET=mk-sandbox-agent-secret
-npm run run:sandbox -w @mealkey-agents/restaurant-diagnosis
+npm run run:sandbox
 ```
 
 自写最小脚本：
@@ -107,7 +109,8 @@ Onboarding → Working → Portrait → Diagnosis Card → Handoff
 样板前端：
 
 ```bash
-npm run web:dev -w @mealkey-agents/restaurant-diagnosis
+cd C:\Users\xqw13\M-OPS-Agent
+npm run web:dev
 # http://localhost:5173
 ```
 
@@ -150,7 +153,7 @@ npm run web:dev -w @mealkey-agents/restaurant-diagnosis
 | Gateway | `{origin}/api` + path `/v1/gateway/*` |
 | 用户 Token（dev） | `Bearer sandbox` |
 | Agent 密钥 | `MK_AGENT_SANDBOX_SECRET` 默认 `mk-sandbox-agent-secret` |
-| 样板 UI | `npm run web:dev -w @mealkey-agents/restaurant-diagnosis` |
+| 样板 UI | `C:\Users\xqw13\M-OPS-Agent` → `npm run web:dev` |
 
 ---
 

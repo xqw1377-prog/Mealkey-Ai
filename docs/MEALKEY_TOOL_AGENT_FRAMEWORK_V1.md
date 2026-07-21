@@ -197,7 +197,7 @@ Engine **自身**不得持有 `WRITE_MEMORY`；由 Bridge 代执行。
 - 框架态：`l3.<kind>.<capability>`（例 `l3.ops.diag`）  
 - 产品族态：`m-<domain>`（例 `m-ops-diag`，与 m-pnt 族对齐，**仍不是** L1 顾问席）  
 
-首个样板冻结为产品族态：`m-ops-diag`（见 `M_OPS_DIAG_AGENT_V1.md`）。
+首个外置样板：`restaurant-diagnosis`（仓 `M-OPS-Agent`；MealKey 仅 Gateway）。
 
 ---
 

@@ -5,7 +5,7 @@
 > **日期：** 2026-07-21  
 > **权威挂载：** `docs/AUTHORITY.md` L0  
 > **产品一句：** MealKey 不是开发一堆 Agent，而是定义餐饮经营 Agent 操作系统；本协议把「能力」标准化，防止生态变成 AI 应用垃圾场。  
-> **配套：** `MEALKEY_AGENT_ARCHITECTURE_PRINCIPLE_V1.md` · `MEALKEY_AGENT_PLATFORM_ARCHITECTURE_V1.md` · `MEALKEY_TOOL_AGENT_FRAMEWORK_V1.md` · `MEALKEY_AGENT_ECOSYSTEM_MAP_V2.md` · `MEALKEY_FOUNDER_OS_PERMISSION_MODEL_V2.md` · `FOUNDER_OS_VERTICAL_AGENT_MKINSIGHT_ADAPTER_V1.md` · `BUSINESS_SIGNAL_ENGINE_V1.md` · `MEALKEY_DECISION_INTELLIGENCE_ENGINE_V1.md` · `M_OPS_DIAG_AGENT_V1.md`  
+> **配套：** `MEALKEY_AGENT_ARCHITECTURE_PRINCIPLE_V1.md` · `MEALKEY_AGENT_PLATFORM_ARCHITECTURE_V1.md` · `MEALKEY_TOOL_AGENT_FRAMEWORK_V1.md` · `MEALKEY_AGENT_ECOSYSTEM_MAP_V2.md` · `M_OPS_DIAG_EXTERNAL_POINTER_V1.md`（诊断外置指针）  
 > **代码落点（演进）：** `@mealkey/tool-agent-kit` · `@mealkey/agent-sdk` · Host Bridge  
 > **冲突裁决：** 生态规则以本文为准；L3 四件套/四 Ports 以 Tool Agent Framework 为准；战略边界以 AUTHORITY 为准  
 
@@ -43,7 +43,7 @@
 
 > **把餐饮经营领域的能力标准化。**
 
-`m-ops-diag` = 第一个协议合规样板，并验证全系统闭环。
+外置 `restaurant-diagnosis`（`M-OPS-Agent`）= 第一个协议合规样板。
 
 ---
 

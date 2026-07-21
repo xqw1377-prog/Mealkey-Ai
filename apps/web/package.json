@@ -27,7 +27,6 @@
     "@mealkey/business-signal-engine": "*",
     "@mealkey/core": "*",
     "@mealkey/knowledge-engine": "*",
-    "@mealkey/m-ops-diag": "*",
     "@mealkey/restaurant-brain": "*",
     "@mealkey/tool-agent-kit": "*",
     "@prisma/client": "^5.22.0",

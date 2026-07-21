@@ -2,28 +2,48 @@
  * 钱包服务 — UserWallet 读写
  * 经营点余额、预留、结算、充值
  */
-import type { PrismaClient } from "@/generated/prisma";
+import type { Prisma, PrismaClient } from "@/generated/prisma";
+
+type WalletPrisma = PrismaClient | Prisma.TransactionClient;
 
 export const LOCAL_TEST_WALLET_FLOOR_POINTS = 5000;
 
-function findWalletDelegate(prisma: PrismaClient) {
+function findWalletDelegate(prisma: WalletPrisma) {
   const runtimePrisma = prisma as unknown as Record<string, unknown>;
   const delegate = runtimePrisma.userWallet;
   if (!delegate || typeof delegate !== "object") return null;
-  return delegate as Record<string, unknown>;
+  const candidate = delegate as Record<string, unknown>;
+  if (
+    typeof candidate.findUnique !== "function" ||
+    typeof candidate.create !== "function" ||
+    typeof candidate.update !== "function"
+  ) {
+    return null;
+  }
+  return candidate;
 }
 
-export async function ensureUserWallet(prisma: PrismaClient, userId: string) {
-  if (!findWalletDelegate(prisma)) {
-    return {
-      id: `wallet_${userId}`,
-      userId,
-      balance: LOCAL_TEST_WALLET_FLOOR_POINTS,
-      frozenAmount: 0,
-      metadata: null,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
+function shouldUseLocalWalletFallback(prisma: WalletPrisma) {
+  return process.env.NODE_ENV !== "production" && !findWalletDelegate(prisma);
+}
+
+function localWallet(userId: string) {
+  return {
+    id: `wallet_${userId}`,
+    userId,
+    balance: LOCAL_TEST_WALLET_FLOOR_POINTS,
+    frozenAmount: 0,
+    metadata: null,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+}
+
+export async function ensureUserWallet(prisma: WalletPrisma, userId: string) {
+  const delegate = findWalletDelegate(prisma);
+  if (!delegate) {
+    if (shouldUseLocalWalletFallback(prisma)) return localWallet(userId);
+    throw new Error("经营点账户未就绪");
   }
 
   const existing = await prisma.userWallet.findUnique({ where: { userId } });
@@ -38,7 +58,7 @@ export async function ensureUserWallet(prisma: PrismaClient, userId: string) {
   });
 }
 
-export async function getUserWallet(prisma: PrismaClient, userId: string) {
+export async function getUserWallet(prisma: WalletPrisma, userId: string) {
   if (!findWalletDelegate(prisma)) {
     return null;
   }
@@ -46,7 +66,7 @@ export async function getUserWallet(prisma: PrismaClient, userId: string) {
 }
 
 export async function creditWalletPoints(
-  prisma: PrismaClient,
+  prisma: WalletPrisma,
   input: {
     userId: string;
     amount: number;
@@ -68,7 +88,7 @@ export async function creditWalletPoints(
 }
 
 export async function reserveWalletPoints(
-  prisma: PrismaClient,
+  prisma: WalletPrisma,
   input: {
     userId: string;
     amount: number;
@@ -94,7 +114,7 @@ export async function reserveWalletPoints(
 }
 
 export async function settleWalletReservation(
-  prisma: PrismaClient,
+  prisma: WalletPrisma,
   input: {
     userId: string;
     reservedAmount: number;
@@ -120,7 +140,7 @@ export async function settleWalletReservation(
 }
 
 export async function releaseWalletReservation(
-  prisma: PrismaClient,
+  prisma: WalletPrisma,
   input: {
     userId: string;
     amount: number;

@@ -24,10 +24,10 @@ import { billingRouter } from "./routers/billing";
 import { restaurantBrainRouter } from "./routers/restaurant-brain";
 import { decisionIntelligenceRouter } from "./routers/decision-intelligence";
 import { restaurantIntelligenceRouter } from "./routers/restaurant-intelligence";
-import { mOpsDiagRouter } from "./routers/m-ops-diag";
 
 /**
  * 根 Router — 合并所有子 Router
+ * 经营诊断已外置（M-OPS-Agent），经 Gateway Ingress 接入，不再注册进程内 mOpsDiag Router。
  */
 export const appRouter = router({
   user: userRouter,
@@ -56,7 +56,6 @@ export const appRouter = router({
   restaurantBrain: restaurantBrainRouter,
   decisionIntelligence: decisionIntelligenceRouter,
   restaurantIntelligence: restaurantIntelligenceRouter,
-  mOpsDiag: mOpsDiagRouter,
 });
 
 export type AppRouter = typeof appRouter;

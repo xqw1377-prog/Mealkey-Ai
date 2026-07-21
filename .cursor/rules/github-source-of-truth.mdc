@@ -13,7 +13,7 @@ alwaysApply: true
 1. **GitHub = 唯一真源。** 功能开发完成后必须 commit + push；禁止只在本地堆代码。
 2. **新能力先落仓库再扩。** 冻结文档（`docs/*`）+ 包骨架进 git 后，再接 Host/UI。
 3. **密钥永不入库。** `.env` / `.env.local` / 凭证 / `.vercel` 输出禁止 commit。
-4. **改产品路径先读** `docs/AUTHORITY.md`；L3 扩 Agent 读 Tool Agent 框架与 m-ops-diag 冻结文。
+4. **改产品路径先读** `docs/AUTHORITY.md`；垂直 Agent 只外置，读 Agent Protocol / External Interface；禁止在 Core 恢复诊断包。
 
 ## Agent / Cursor 会话约定
 

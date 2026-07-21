@@ -254,7 +254,7 @@ Mission（例：开第二家店）
 | 3 | **独立前端** | `diagnosis.mealkey.com`（或自有域） |
 | 4 | **独立商业化** | subscription / usage / enterprise |
 
-MealKey 仓内 **不得** 为新 Agent 开包；存量 `m-ops-diag` 仅过渡迁出。
+MealKey 仓内 **不得** 为新 Agent 开包；诊断样板已外置 `C:\Users\xqw13\M-OPS-Agent`。
 
 ---
 
@@ -287,9 +287,8 @@ MealKey 仓内 **不得** 为新 Agent 开包；存量 `m-ops-diag` 仅过渡迁
   → 进入决策系统（Ingress）→ 持续学习进化（Learning 审核）
 ```
 
-体验：`M_OPS_DIAG_UX_V1` + `MEALKEY_AGENT_UI_FRAMEWORK_V1`（实现外置）  
-算法：`M_OPS_DIAG_DIAGNOSIS_MODEL_V1`（外置 Engine）  
-接入：`MEALKEY_AGENT_EXTERNAL_INTERFACE_V1`
+体验/算法文档：外置仓 `M-OPS-Agent/docs/M_OPS_DIAG_*.md`  
+接入：`MEALKEY_AGENT_EXTERNAL_INTERFACE_V1` · UI 框架：`MEALKEY_AGENT_UI_FRAMEWORK_V1`
 
 ---
 
@@ -302,7 +301,7 @@ MealKey 仓内 **不得** 为新 Agent 开包；存量 `m-ops-diag` 仅过渡迁
 | Ingress | Signal/Insight/Work/Gap/Learning |
 | Registry/Lifecycle | Manifest 注册 + stage |
 | Orchestra | Mission 编排（工程后置，语义先冻） |
-| `packages/m-ops-diag` | 过渡；禁止再增兄弟包 |
+| 原 `packages/m-ops-diag` | **已删除**；能力在 `M-OPS-Agent` |
 | L1 四席 | Decision OS 内治理角色 |
 
 ---
@@ -324,15 +323,9 @@ MealKey 仓内 **不得** 为新 Agent 开包；存量 `m-ops-diag` 仅过渡迁
 ## 14. 下一步（冻结）
 
 **已冻结/落地：**  
-SDK V1 · Gateway Host P0 · 外置样板 `mealkey-agents/restaurant-diagnosis-agent` · 今日雷达消费 Ingress 侧车  
+SDK V1 · Gateway Host P0 · 外置仓 `C:\Users\xqw13\M-OPS-Agent` · 今日雷达仅消费 Ingress 侧车 · Core 已清理进程内诊断包  
 
-下一工程刀：
-
-1. 诊断 Agent 独立前端（外置仓）  
-2. 7 日开发者手册  
-3. `packages/m-ops-diag` 过渡桥逐步降权  
-
-**禁止** MealKey `packages/` 内新增 Agent。
+**禁止** MealKey `packages/` 内新增 / 恢复垂直 Agent。
 
 ---
 

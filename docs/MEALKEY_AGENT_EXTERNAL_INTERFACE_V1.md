@@ -17,7 +17,7 @@
 |------|------|
 | **禁增** | 禁止在 `mealkey-agent` / Core monorepo 新增 Agent 包、`tool-agents/<new>`、垂直 Engine、业务 Manifest |
 | **外接唯一** | 新 Agent = 独立仓 + 独立部署 + 只调本接口 |
-| **存量过渡** | 仅既有 `packages/m-ops-diag` 可维持至迁出；**不得**再加兄弟 Agent |
+| **外置唯一** | 垂直诊断在 `M-OPS-Agent`；Core 禁止恢复进程内诊断包 |
 | **Core 只做 OS** | Identity · Brain · DIE · Council · M-EXEC · Gateway · 今日/决策室宿主 |
 | **UI 规范外置** | Agent 的页面与视觉交互框架见 `MEALKEY_AGENT_UI_FRAMEWORK_V1.md`；**实现不在 MealKey 仓** |
 
@@ -305,15 +305,12 @@ MealKey **不**实现 Agent 垂直算法，**不**实现 Agent 独立前端。
 
 ---
 
-## 9. 存量 m-ops-diag 过渡
+## 9. 经营诊断外置（已完成）
 
-| 允许 | 禁止 |
-|------|------|
-| 修 bug / 对齐本接口形状 | 在 Core 新增第二个诊断/选址/招聘 Agent |
-| 逐步改为调 Gateway 等价路径 | 继续加深为「Core 内永久业务中心」 |
-| 迁出到独立仓 `M-OPS-Agent`（本地 `C:\Users\xqw13\M-OPS-Agent`） | 把新页面当 MealKey 主站新业务线堆进去 |
+独立仓：`C:\Users\xqw13\M-OPS-Agent`  
 
-迁出完成前：内部调用须能映射为 §3–§4 同等语义，以便一字不改切外接。
+Core **已删除** `packages/m-ops-diag`、进程内 bridge、monorepo 内 `mealkey-agents` 镜像。  
+禁止再把诊断引擎/UI 恢复进 MealKey。
 
 ---
 

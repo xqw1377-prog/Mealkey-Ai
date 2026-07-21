@@ -90,15 +90,13 @@ MealKey
 MealKey Core 仓库（变薄）
   packages: agent-sdk · agent-runtime · protocol · identity/brain/decision/ui sdks …
 
-mealkey-agents/（或独立 git）
-  restaurant-diagnosis-agent
-  restaurant-location-agent
+独立 Agent 仓（例）
+  C:\\Users\\xqw13\\M-OPS-Agent   # 餐厅经营诊断
   …
 ```
 
-- Core `packages/` **不再**堆大量业务 Agent  
-- 现有 `packages/m-ops-diag` = **样板过渡**：语义上已是独立 Agent；物理拆仓可在 Platform 落地阶段执行  
-- 团队：平台组 vs Agent 组（可内可外），节奏解耦  
+- Core `packages/` **不再**堆业务 Agent  
+- 诊断样板已外置；团队：平台组 vs Agent 组节奏解耦  
 
 ---
 

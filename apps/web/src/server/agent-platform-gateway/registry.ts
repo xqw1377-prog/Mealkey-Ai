@@ -25,18 +25,11 @@ export function loadAgentRegistry(): RegisteredAgentV1[] {
 
   return [
     {
-      agentId: "m-ops-diag",
-      clientSecret: secret,
-      maxInsightLevel: 3,
-      allowedScopes: DEFAULT_SCOPES,
-      stage: "pilot",
-    },
-    {
       agentId: "restaurant-diagnosis",
       clientSecret: secret,
       maxInsightLevel: 3,
       allowedScopes: DEFAULT_SCOPES,
-      stage: "sandbox",
+      stage: "live",
     },
     {
       agentId: "partner.acme.diagnosis",

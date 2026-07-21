@@ -1,259 +1,382 @@
-# M-OPS-DIAG · 餐启经营诊断系统 V1（冻结）
+# M_OPS_DIAG_AGENT V1 · 餐厅经营诊断系统
 
-> **状态：正式冻结（Freeze）**  
+# Agent Architecture Freeze Document
+
+> **版本：** V1.0  
+> **状态：正式冻结（Freeze）** — 能力边界与工程真源（非开发说明书）  
 > **日期：** 2026-07-21  
+> **归属：** MealKey Agent Ecosystem（L3 Tool Agent）  
 > **权威挂载：** `docs/AUTHORITY.md` L0  
-> **配套：** `MEALKEY_TOOL_AGENT_FRAMEWORK_V1.md` · `FOUNDER_OS_VERTICAL_AGENT_MKINSIGHT_ADAPTER_V1.md` · `BUSINESS_SIGNAL_ENGINE_V1.md` · `MEALKEY_RESTAURANT_BRAIN_V1.md`  
-> **代码真源：** `@mealkey/m-ops-diag` · `packages/m-ops-diag`  
+> **配套：** `MEALKEY_TOOL_AGENT_FRAMEWORK_V1.md` · `BUSINESS_SIGNAL_ENGINE_V1.md` · `FOUNDER_OS_VERTICAL_AGENT_MKINSIGHT_ADAPTER_V1.md` · `MEALKEY_RESTAURANT_BRAIN_V1.md` · `TODAY_RADAR_EXPERIENCE_V1.md`  
+> **代码真源：** `@mealkey/m-ops-diag` · `packages/m-ops-diag` · Host `apps/web/src/server/services/m-ops-diag-client.ts`  
 > **冲突裁决：** 与本文冲突时，以本文 + `AUTHORITY.md` 为准
 
 ---
 
-## 0. 一句话定位
+## 0. 战略定位（冻结）
 
-> **m-ops-diag 不是咨询师，而是 MealKey 的「经营感知器」。**
+### 一句话
 
-| 负责 | 不负责 |
-|------|--------|
-| 看见问题 | 判断战略 |
-| 识别异常 | 替老板决策 |
-| 提供证据 | 执行落地（M-EXEC） |
-| 生成经营洞察 | 升格第五顾问席 |
+> **餐启经营诊断系统**，是一个持续观察餐厅经营状态的 AI 能力 Agent，通过内部经营事实与外部消费者反馈，发现经营风险与增长机会，并为 MealKey 决策系统提供高质量信号。
 
-闭环语义：
+### 它解决的问题
 
-```text
-看见问题 → 识别异常 → 提供证据 → 生成经营洞察
-```
+老板每天最想知道：
 
-这样才能与 Decision Intelligence、七常委、M-PNT/M-MKT/M-BIZ/M-ED 保持边界。
+> 我的店现在发生了什么？  
+> 顾客怎么看我？  
+> 有没有问题正在发生？  
+> 什么地方值得关注？
 
-**战略价值：** 把 MealKey 从「老板主动问 AI」推向「AI 主动观察生意并提醒老板」——**每日打开理由**的第一入口。
-
----
-
-## 1. 命名冻结
+### 产品命名（冻结）
 
 | 项 | 冻结值 |
 |----|--------|
 | **Agent ID** | `m-ops-diag` |
 | **Package** | `@mealkey/m-ops-diag` |
-| **产品中文名** | 餐启 · 餐厅经营诊断系统（用户可见简称：**餐启经营诊断**） |
-| **产品英文名** | MealKey Restaurant Health Diagnosis |
-| **Tool Kind** | `ops`（L3 Tool Agent，见框架） |
-| **UI 禁显** | 不得对老板展示裸技术名 `M-OPS-DIAG` / `m-ops-diag` 作为主标题 |
+| **产品中文** | 餐启 · 餐厅经营诊断系统（简称：**餐启经营诊断**） |
+| **产品英文** | MealKey Restaurant Health Diagnosis |
+| **UI 禁显** | 主标题不得裸露 `M-OPS-DIAG` / `m-ops-diag` |
 
-能力族对齐（**注意：后四者为 L1 顾问席；m-ops-diag 为 L3 感知器，不是第五席**）：
+能力族（**m-ops-diag = L3 感知器，不是第五 L1 席**）：
 
 ```text
 m-pnt       品牌定位      （L1）
 m-mkt       市场洞察      （L1）
 m-biz       商业分析      （L1）
 m-ed        股权设计      （L1）
-m-ops-diag  经营诊断      （L3 感知器）
+m-ops-diag  经营诊断      （L3）
 ```
 
-**禁止：** 将 `m-ops-diag` 注册为 `FounderAgentName` / 底栏第五席 / Council Expert。
+### 运行时（冻结）
 
----
+- **V1 = 纯 TS Package（进程内）**，不 HTTP 服务化  
+- Host 薄 Bridge：`m-ops-diag-client`  
+- 未来独立服务须另开授权  
 
-## 2. 运行时冻结
-
-### V1：纯 TS Package（进程内）
-
-```text
-apps/web
-   │
-   m-ops-diag-client   （薄 Host Bridge，可后置）
-   │
-packages/m-ops-diag
-   │
-Diagnosis Engine
-```
-
-| 冻结 | 说明 |
-|------|------|
-| **V1 不服务化** | 不做独立 HTTP / FastAPI |
-| **模式对齐** | 与 M-PNT 进程内一致 |
-| **原因** | 数据与 Contract 仍在快迭代；调试成本最低 |
-
-**未来（未授权不得提前做）：** TS Package → Service → HTTP API（大量独立调用 / 企业版 / SaaS 时再拆）。
-
----
-
-## 3. 出口优先级冻结（不二选一）
-
-两个合法出口都做，但有顺序：
+### 出口优先级（冻结 · 不二选一）
 
 | 优先级 | 出口 | 宿主 |
 |--------|------|------|
-| **P0 第一出口** | `BusinessSignal` | 今日经营驾驶舱 / 雷达 |
-| **P1 第二出口** | `VerticalInsight` | 决策室（经 MKInsight Adapter） |
+| **P0** | BusinessSignal / worldChanges | Daily Cockpit / 今日雷达 |
+| **P1** | VerticalInsight → MKInsight | Decision Room / Council |
 
-原因：老板每天打开不是「我要决策」，而是「店今天有没有问题」。诊断必须先服务**每日打开理由**。
+---
+
+## 1. Agent 角色边界（冻结）
+
+### 它是
+
+- ✅ 经营观察者  
+- ✅ 问题发现者  
+- ✅ 证据整理者  
+- ✅ 风险预警器  
+- ✅ 决策输入提供者  
+
+### 它不是
+
+- ❌ 决策者  
+- ❌ 战略顾问  
+- ❌ 执行管理者  
+- ❌ 七常委成员  
+- ❌ M-PNT 定位专家 / 第五 `FounderAgentName`  
+
+### 系统边界
 
 ```text
-每日扫描 → m-ops-diag → 发现异常
-         → BusinessSignal → 今日驾驶舱 → 老板看见
-         →（可选）进入决策室 → VerticalInsight → Council
+M-OPS-DIAG          发现问题（感知）
+       ↓
+Decision Intelligence   判断问题
+       ↓
+Decision Room / 七常委   压力测试与拍板场
+       ↓
+M-EXEC              解决问题（执行）
 ```
 
-驾驶舱价值瞬间（产品示意，非强制文案）：
+感知语义（冻结）：
 
 ```text
-餐启经营驾驶舱
-今日发现：⚠ 服务体验风险
-过去7天：等待时间差评 +32%
-影响：可能影响复购
-[进入诊断] [进入决策会议]
+看见问题 → 识别异常 → 提供证据 → 生成经营洞察（非终局决策）
 ```
 
 ---
 
-## 4. 完整架构冻结
+## 2. Agent 标准接口（冻结）
 
-```text
-                 MealKey OS
-                      │
-              Restaurant Brain
-               （认识这家店）
-                      │
-                 M-OPS-DIAG
-               （观察这家店）
-                 /        \
-      BusinessSignal    VerticalInsight
-           │                  │
-    Daily Cockpit       Decision Room
-           │                  │
-        M-EXEC         Decision Intelligence
-                      │
-                   Learning
-                      │
-                Decision DNA
-```
+服从 MealKey Tool Agent Contract（`@mealkey/tool-agent-kit`）与本文 Contract。
 
-| 层 | 角色 |
-|----|------|
-| Brain | 认识这家店（只读上下文给诊断） |
-| m-ops-diag | 观察这家店（感知器） |
-| Signal / Cockpit | 每日提醒 |
-| Insight / Decision Room | 需要拍板时再进 |
-| M-EXEC | 决策后执行（本 Agent 不替代） |
+### Input · `RestaurantDiagnosisRequest`
 
----
-
-## 5. V1 Contract 冻结
-
-代码 SSOT：`packages/m-ops-diag/src/contracts.ts`
-
-### 5.1 Input
+工程字段（代码 SSOT：`packages/m-ops-diag/src/contracts.ts`；可演进为 `contracts/request.ts`）：
 
 ```typescript
-RestaurantDiagnosisRequest {
-  restaurantContext   // 店名/品类/城市/阶段等只读摘要
-  facts[]             // 经营事实
-  evidence[]          // 证据片段（评论、外采等）
-  focus?              // service|product|traffic|competition|cost|overall
-  horizon?            // today|7d|30d
+{
+  restaurantContext: {  // identity
+    brandName?, storeName?, category?, city?, address?, stage?, projectId?
+  },
+  facts?: Array<{ kind, claim, sourceRef?, asOf? }>,
+  evidence?: Array<{     // externalEvidence + 可核验证据
+    id?, source, claim, sentiment?, theme?, observedAt?, url?
+  }>,
+  focus?: "overall" | "service" | "product" | "traffic" | "competition" | "cost",
+  // 产品文案别名：all→overall · customer→service/product 混合 · operation→service
+  horizon?: "today" | "7d" | "30d"
 }
 ```
 
-缺证据 → 只填 `gaps[]`，禁止装懂。
+缺证据 → 只报 `gaps[]`，**禁止装懂**。
 
-### 5.2 Output
+### Output（三层 + 双出口）
 
-**Findings（不是建议、不是战略）** — 三层叙事：
-
-```text
-发现：近30天差评集中增加
-模式：80% 负面来自等待
-含义：服务能力可能成为增长瓶颈
-```
-
-**Signals（第一出口）** → 今日：
-
-```typescript
-// 语义对齐 BusinessSignal；Host 映射为 BusinessSignalV1
-severity / title / observation / meaning / impact / evidence[]
-```
-
-**Insights（第二出口）** → 决策室：
-
-```typescript
-domain / question / evidence / unknowns
-→ VerticalInsightSource (agentId: "m-ops-diag", kind: "ops")
-→ toVerticalMkInsights
-```
-
-**禁止输出：** `FounderDecisionContract` · `DecisionPack` · 老板拍板句 · ERP 工单终局。
+见 §5。禁止直出：`FounderDecisionContract` · `DecisionPack` · 老板拍板句 · ERP 工单终局。
 
 ---
 
-## 6. V1 明确不做
+## 3. Evidence Layer（核心 · 冻结）
+
+本 Agent 最大价值：**不是生成答案，而是建立餐厅经营证据库**，再由此投影 Findings / Signals。
+
+### 证据来源三层
+
+| 层 | 来源 | 示例 | 权重 |
+|----|------|------|------|
+| **L1 老板提供** | Identity / 问卷 / 自述 | 营业额、客单、店龄、店型、当前问题 | ★★★★★ |
+| **L2 经营系统** | 未来 POS / ERP / 会员 / 库存 | 实流水、翻台、复购 | ★★★★★（V1 不做实时接入） |
+| **L3 消费者反馈** | 外采与公开检索 | 点评 / 小红书 / 抖音 / 地图 | ★★★★☆ |
+
+### L3 消费者反馈（V1 重点）
+
+| 渠道 | 获取（目标能力） |
+|------|------------------|
+| **大众点评** | 星级、评论量、好/差评关键词、图片、消费场景 |
+| **小红书** | 打卡内容、用户标签、场景描述、情绪 |
+| **抖音** | 热度、视频内容、评论 |
+| **地图** | 周边竞争、门店密度、商圈变化 |
+
+V1 实现诚实：有检索源则采；无源则空证据 + `gaps`，**禁止编造星级/百分比**。
+
+---
+
+## 4. Diagnosis Engine（六大模块 · 架构冻结）
+
+V1 **架构上冻结六大引擎**；**MVP 实现只打穿 Customer（+ Service 主题）**，其余可骨架占位，禁止假 LIVE。
+
+### 4.1 Customer Insight Engine
+
+> 顾客到底怎么看你的店？
+
+输出示例：
+
+```json
+{
+  "positiveMemory": ["环境好", "湘菜正宗"],
+  "negativeMemory": ["等待时间长", "价格偏高"]
+}
+```
+
+### 4.2 Product Engine
+
+> 什么菜留下顾客，什么菜拖累经营？
+
+招牌 / 爆品 / 差评菜 / 性价比。
+
+### 4.3 Service Engine
+
+> 服务有没有影响增长？
+
+等位 / 上菜速度 / 态度 / 高峰压力。
+
+### 4.4 Brand Perception Engine
+
+> 顾客脑中有没有形成记忆？别人为什么选择你？
+
+### 4.5 Competition Engine
+
+> 你在市场里的位置？（同区域 / 同价格带 / 同品类）
+
+### 4.6 Growth Opportunity Engine
+
+> 下一步增长机会在哪里？
+
+例：年轻消费者认可环境，但产品记忆弱 → 机会：打造年轻湘菜场景（**机会信号，不是战略终局**）。
+
+---
+
+## 5. Diagnosis Output（三层 · 冻结）
+
+| Level | 名称 | 含义 | 例 |
+|-------|------|------|----|
+| **L1** | Finding | 发现 | 近30天差评中「等待」出现次数增加 42% |
+| **L2** | Pattern | 模式 | 高峰时段服务能力不足正在影响体验 |
+| **L3** | Signal | 经营信号（进 MealKey） | `severity: HIGH` · `title: 服务体验风险` |
+
+Finding/Pattern 对应代码 `DiagnosisFinding.observation/pattern/meaning`。  
+Signal 对齐 `@mealkey/business-signal-engine` / Host `worldChanges`。  
+决策室另经 `VerticalInsight`（P1）。
+
+---
+
+## 6. 与 Daily Cockpit 集成（最高价值入口 · 冻结）
+
+```text
+定时/打开今日
+    ↓
+M-OPS-DIAG 运行（有证据才充实）
+    ↓
+生成 Signals / worldChanges
+    ↓
+Daily Cockpit / 今日雷达
+    ↓
+老板打开 →「店今天有没有问题」
+```
+
+展示示意（产品叙事，非强制文案）：
+
+```text
+早上好，老板。
+今天发现 3 个经营信号：
+
+🔴 服务风险 — 近7天等待相关差评增加
+🟡 产品机会 — 招牌菜被主动推荐增多
+🟢 品牌资产 — 小红书自然传播增长
+```
+
+工程现状：RIP 证据 → `collectMOpsDiagWorldChangesForScan` → `toDailyScanV1` 雷达；无证据不注入。
+
+---
+
+## 7. 与 Decision Room 集成（冻结）
+
+```text
+Signal →（老板/系统）Decision Case → Decision Room
+```
+
+例题：是否需要优化服务流程？  
+进入五层决策：发生什么 → 为什么 → 选项 → 常委挑战 → 怎么决定。  
+**拍板只在决策室**；m-ops-diag 只提供 Insight/证据，不代签。
+
+---
+
+## 8. 数据进化（冻结原则）
+
+每一次诊断的**可验证结论**，经正式 Memory / Brain API 沉淀（**禁止 Engine 直写 Prisma 事实表**）：
+
+```text
+Restaurant DNA
+  顾客认知 · 产品优势 · 经营弱点 · 变化趋势 · 老板决策历史
+```
+
+目标轨迹：
+
+> 第一次：AI 认识你的店。  
+> 第 100 次：AI 比新顾问更了解你的店。
+
+Host 可缓存 `lastMOpsDiag` 于 profile（展示用）；Brain 写回须走既有门禁。
+
+---
+
+## 9. Package 结构（目标冻结）
+
+目标树（演进方向；现有扁平 `src/*.ts` 须逐步迁入，禁止平行第二套协议）：
+
+```text
+packages/m-ops-diag/
+  src/
+    contracts/
+      request.ts
+      result.ts
+    evidence/
+      analyzer.ts
+    engines/
+      customer.ts
+      product.ts
+      service.ts
+      brand.ts
+      competition.ts
+      growth.ts
+    signal/
+      builder.ts
+    adapter/
+      brain.ts
+      insight.ts
+    index.ts
+```
+
+Host（MealKey）：
+
+```text
+apps/web/src/server/services/m-ops-diag-client.ts
+apps/web/src/server/routers/m-ops-diag.ts
+```
+
+---
+
+## 10. V1 MVP 范围（冻结）
+
+### 不做
 
 | 不做 | 原因 |
 |------|------|
+| ❌ POS 实时接入 | L2 系统层后置 |
 | ❌ 自动经营评分排行榜 | 假精确 |
-| ❌ AI 告诉老板应该怎么经营 | 越权（战略/决策） |
-| ❌ 自动生成战略方案 | 属 Decision Intelligence |
-| ❌ 完整 ERP | 偏离感知器定位 |
-| ❌ HTTP 服务化 | V1 运行时冻结 |
-| ❌ 注册第五顾问席 | 架构冻结 |
+| ❌ 完整竞争地图 | 范围膨胀 |
+| ❌ 自动战略方案 | 属 Decision Intelligence |
+| ❌ HTTP 服务化 / 第五顾问席 | 架构冻结 |
+
+### 只做 · 一个令人惊艳的能力
+
+> **输入一家餐厅名字 + 地址 + 品类，让 AI 在几分钟内告诉老板：顾客眼中的你、最大问题、最大机会。**
+
+竖切：消费者反馈经营诊断（Customer + Service 主题优先）。
 
 ---
 
-## 7. V1 MVP 范围：先打穿一条竖切
+## 11. 与 Tool Agent 框架
 
-**不做**六大健康模型全集。
-
-**只做：**「消费者反馈经营诊断」
-
-数据源（Phase 递进）：
-
-```text
-大众点评 / 小红书 / 抖音（及可接入的评论证据）
-```
-
-分析焦点：
-
-- 为什么喜欢你  
-- 为什么讨厌你  
-- 顾客真正记住什么  
-- 最大体验问题  
-
-老板可见价值（示意）：
-
-```text
-你的顾客眼中的餐厅：不是你认为的品牌。
-他们认为：1. … 2. … 3. …
-最大的机会：…
-最大的风险：…
-```
+- 四件套：Manifest · Engine · Ports · Bridge  
+- Ports：`signal` + `insight` + `gap`（V1 不做 `work`）  
+- 上架闸门见 `MEALKEY_TOOL_AGENT_FRAMEWORK_V1.md`  
 
 ---
 
-## 8. 开发顺序（冻结）
+## 12. 工程落地状态（对照 · 非放宽冻结）
 
-| Phase | 交付 | 状态 |
-|-------|------|------|
-| **0** | 本文冻结 | ✅ |
-| **1** | `packages/m-ops-diag`：input → mock evidence → engine → signals | ✅ |
-| **2** | 接 Restaurant Brain / RIP 只读；Host Bridge；tRPC `mOpsDiag` | ✅ |
-| **3** | 外采：`useLive` → live-market-evidence（点评/小红书检索） | ✅（可选开关） |
-| **4** | 接 Daily Cockpit：RIP 证据 → worldChanges → 今日雷达 | ✅（有证据才注入） |
-
----
-
-## 9. 与 Tool Agent 框架的关系
-
-- 服从 `MEALKEY_TOOL_AGENT_FRAMEWORK_V1`：四件套 · 四 Ports（本 Agent：`signal` + `insight` + `gap`；V1 不做 `work`）  
-- Agent ID 使用产品族名 `m-ops-diag`（框架同时承认 `m-ops-*` / `l3.*`）  
-- Host Bridge 放 `apps/web`（Phase 4），Engine **零 Prisma**  
+| 项 | 状态 |
+|----|------|
+| 包骨架 + mock → signals | ✅ |
+| Brain/RIP 只读 Bridge + tRPC | ✅ |
+| 可选 live 外采 | ✅（开关） |
+| 今日雷达注入（有证据） | ✅ |
+| 六大 engines/ 目录迁入 | ⏳ 按目标树演进 |
+| UX 首次体验打穿 | ⏳ **下一刀** |
 
 ---
 
-## 10. 修订记录
+## 13. 下一步（产品顺序 · 冻结建议）
+
+**先做：** 《餐厅经营诊断系统 V1 用户体验设计》  
+
+成败不在堆代码，而在第一次展示：
+
+> **「AI 真的看懂我的店了。」**
+
+须设计：
+
+1. 首次输入流程（店名 + 地址 + 品类）  
+2. 数据采集等待过程（诚实进度，不假勾）  
+3. 经营诊断报告首页  
+4. 顾客声音墙  
+5. 六维健康雷达（展示用，禁止假精确总分排行）  
+6. 今日经营扫描卡片  
+7. 一键进入决策室路径  
+
+UX 冻结后，再按 §9 目标树开包加深六引擎。
+
+---
+
+## 14. 修订记录
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
-| V1-freeze | 2026-07-21 | 命名/运行时/双出口优先级/Contract/MVP 竖切/非目标 |
+| V1-freeze | 2026-07-21 | 命名/运行时/双出口/Contract/MVP |
+| V1.0 Architecture Freeze | 2026-07-21 | 升格为能力边界与工程真源：角色边界、证据三层、六大引擎、三层输出、Cockpit/Room、目标包结构、下一步 UX |

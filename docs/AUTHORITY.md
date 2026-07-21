@@ -39,7 +39,7 @@
 | **L0 Council 4+1 审计** | `docs/FOUNDER_OS_COUNCIL_INTELLIGENCE_GOVERNANCE_AUDIT_V1.md` | S5 闸门清单；代码真源 `founder-os/mk-insight.ts` | 可加深测试；不得绕过 Adapter |
 | **L0 垂直 Agent 接入** | `docs/FOUNDER_OS_VERTICAL_AGENT_MKINSIGHT_ADAPTER_V1.md` | L3 → MKInsight Adapter → Council；禁止私有 Report 直进 | **否** — 垂直能力不得升格为第五核心 Agent |
 | **L0 Tool Agent 框架** | `docs/MEALKEY_TOOL_AGENT_FRAMEWORK_V1.md` · `@mealkey/tool-agent-kit` · `tool-agents/` | **~100 L3 可拆分可组合**：四件套 · 四 Ports · Registry · Compose · 上架闸门 | **否** — 只扩 L3；禁止升格 L1 / 第七 Runtime；MVP 未过前批量上架仍受停扩闸门 |
-| **L0 经营诊断感知器** | `docs/M_OPS_DIAG_AGENT_V1.md` · `@mealkey/m-ops-diag` | **m-ops-diag**=经营感知器（非咨询师）；进程内 TS；P0 Signal→今日 / P1 Insight→决策室；MVP=消费者反馈诊断 | **否** — 禁止第五席/战略终局/V1 HTTP；UI 称「餐启经营诊断」 |
+| **L0 经营诊断感知器** | `docs/M_OPS_DIAG_AGENT_V1.md` · `@mealkey/m-ops-diag` | **Architecture Freeze**：观察者非决策者；证据三层；六大引擎架构；Finding→Pattern→Signal；P0 Cockpit / P1 Room；MVP=店名+地址+品类→顾客眼中的你 | **否** — 禁止第五席/战略终局/V1 HTTP/假评分；下一刀=UX 体验设计再加深六引擎 |
 | **L0 治理协议细节** | `docs/COUNCIL_PROTOCOL_V1_FREEZE.md` | 常委角色 / 投票 / veto / 会议对象 | 可加深实现；接口语义不回滚 |
 | **L0 Agent/Runtime 边界** | `docs/MEALKEY_AGENT_RUNTIME_BOUNDARY_V2.md` | Expert 四席 vs Runtime（执行/成长/记忆）；扩模块闸门 | **否** — 运行时不得再注册为 M-* 顾问席 |
 | **L0 Agent 生态地图** | `docs/MEALKEY_AGENT_ECOSYSTEM_MAP_V2.md` | 三层：L1 四席 / L2 Runtime / L3 工具；MKDecision 与商业化 | **否** — 工具层可扩，不得升格为 L1 或冒充战略判断 |
@@ -96,7 +96,8 @@
 13s. **拍板唯一场**（2026-07-21）：老板拍板/签字**仅决策室**；今日禁止拍板主 CTA，只允许「进入决策室」。
 13t. **变化解读主页面化**（2026-07-21）：取消经营分析二级页；今日=动态模块栏（门店/舆情/推进中）+ 本页变化解读主位；旧 `/business-analysis` 重定向 `/dashboard`。
 13u. **Tool Agent Framework V1 已冻结**（2026-07-21）：支撑约 100 个独立 L3；单元=Manifest+Engine+Ports+Bridge；合法出口仅 Signal/Insight/Work/Gap；代码 `@mealkey/tool-agent-kit`；引擎目录 `tool-agents/`。真源 `MEALKEY_TOOL_AGENT_FRAMEWORK_V1.md`。批量上架仍服从 MVP 停扩闸门。  
-13v. **M-OPS-DIAG V1 已冻结**（2026-07-21）：定位=经营感知器；ID=`m-ops-diag`；包=`@mealkey/m-ops-diag`；产品名=餐启经营诊断；V1 纯 TS 进程内；出口优先级 Signal→今日 > Insight→决策室；MVP 竖切=消费者反馈诊断。真源 `M_OPS_DIAG_AGENT_V1.md`。**下一刀 = Phase2 接 Brain 只读 / Phase4 接今日驾驶舱。**  
+13v. **M-OPS-DIAG Architecture Freeze V1.0**（2026-07-21）：能力边界与工程真源（非开发说明书）；角色=观察/发现/证据/预警/决策输入；六大 Diagnosis Engine 架构冻结、MVP 只打穿消费者反馈；Evidence 三层；Finding→Pattern→Signal；Cockpit/Room 集成；目标包树 `contracts/engines/signal/adapter`。真源 `M_OPS_DIAG_AGENT_V1.md`。**下一刀 = 《餐厅经营诊断系统 V1 用户体验设计》**，再按目标树加深六引擎。  
+
 13w. **GitHub 真源 + 仓库清理**（2026-07-21）：远端 `mealkey-agent-1` 为唯一真源；禁止本地长期堆积未推送；`.vercel/` / `*.tsbuildinfo` 出库；Cursor 规则 `tool-agent-framework-v1` · `github-source-of-truth`；说明 `REPO_SYNC_AND_TOOL_AGENT_RULES_V1.md`。  
 18. **Experience Blueprint P0–P5 工程已收口（2026-07-19）**：契约 · Candidate/Inbox · Challenge/Readiness · 经营决策习惯 · M-INTEL 锚点门禁均已接线；真源 `MEALKEY_DECISION_EXPERIENCE_ENGINEERING_BLUEPRINT_V1.md`。黄金路径手测仍有效。**2026-07-21 起主线收束为 MVP 90天飞轮**（不再并行开新能力专题）。禁止 Scan 滥造 Decision、无锚点装懂外部、对外「决策人格」字样。  
 18b. **Restaurant Intelligence Profile V1 已正式冻结**（2026-07-19）：第一次登录 = **建立经营认知**（非信息采集）；Identity 速写 → M-INTEL Evidence → 《餐厅经营画像》Snapshot → 确认门禁 → Brain 投影 → 驾驶舱。三层：**事实=Brain / 理解=RIP / 决策=DIE**。契约 `founder-layer/contracts/restaurant-intelligence-profile.ts`。真源：`MEALKEY_RESTAURANT_INTELLIGENCE_PROFILE_V1.md`。**下一工程刀 = R1 经营速写+确认门禁（可先 Identity-only 画像）**。  

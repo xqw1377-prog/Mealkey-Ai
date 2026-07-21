@@ -5,7 +5,7 @@
 > **日期：** 2026-07-21  
 > **权威挂载：** `docs/AUTHORITY.md` L0  
 > **产品一句：** MealKey 不是开发一堆 Agent，而是定义餐饮经营 Agent 操作系统；本协议把「能力」标准化，防止生态变成 AI 应用垃圾场。  
-> **配套：** `MEALKEY_TOOL_AGENT_FRAMEWORK_V1.md` · `MEALKEY_AGENT_ECOSYSTEM_MAP_V2.md` · `MEALKEY_FOUNDER_OS_PERMISSION_MODEL_V2.md` · `FOUNDER_OS_VERTICAL_AGENT_MKINSIGHT_ADAPTER_V1.md` · `BUSINESS_SIGNAL_ENGINE_V1.md` · `MEALKEY_DECISION_INTELLIGENCE_ENGINE_V1.md` · `M_OPS_DIAG_AGENT_V1.md`  
+> **配套：** `MEALKEY_AGENT_ARCHITECTURE_PRINCIPLE_V1.md` · `MEALKEY_AGENT_PLATFORM_ARCHITECTURE_V1.md` · `MEALKEY_TOOL_AGENT_FRAMEWORK_V1.md` · `MEALKEY_AGENT_ECOSYSTEM_MAP_V2.md` · `MEALKEY_FOUNDER_OS_PERMISSION_MODEL_V2.md` · `FOUNDER_OS_VERTICAL_AGENT_MKINSIGHT_ADAPTER_V1.md` · `BUSINESS_SIGNAL_ENGINE_V1.md` · `MEALKEY_DECISION_INTELLIGENCE_ENGINE_V1.md` · `M_OPS_DIAG_AGENT_V1.md`  
 > **代码落点（演进）：** `@mealkey/tool-agent-kit` · `@mealkey/agent-sdk` · Host Bridge  
 > **冲突裁决：** 生态规则以本文为准；L3 四件套/四 Ports 以 Tool Agent Framework 为准；战略边界以 AUTHORITY 为准  
 
@@ -457,19 +457,16 @@ Host.invoke → 鉴权 → Context 切片 → 调度 Engine
 
 ## 16. 下一步（冻结）
 
-**不要马上堆新 Agent。** 协议语义本刀已收口。
+**平台原则与架构已另冻：**  
+`MEALKEY_AGENT_ARCHITECTURE_PRINCIPLE_V1.md` · `MEALKEY_AGENT_PLATFORM_ARCHITECTURE_V1.md`
 
-下一刀设计文档：
+下一刀：
 
-# 《MealKey Agent Protocol V1 — Agent 运行时与第三方开发者接入流程》
+# 《Agent 运行时与第三方开发者接入流程》
 
-须回答：
+> 拿到 SDK 后 **7 天内**如何做出可上架 Agent？
 
-> 第三方开发者拿到 SDK 后，**7 天内**如何开发出一个能跑在 MealKey 上的 Agent？
-
-须覆盖：SDK 最小包 · Hello Skill · Sandbox 餐厅 · 本地调试 · 提交审核清单 · 计费/权限联调。
-
-并行（产品线）：经营诊断 AI 推理架构；工程类型落 `agent-sdk/protocol/*`。
+并行：诊断 Agent 按**独立产品形状**推进（Gateway 语义），禁止在 Core 再堆业务 Agent。
 
 ---
 

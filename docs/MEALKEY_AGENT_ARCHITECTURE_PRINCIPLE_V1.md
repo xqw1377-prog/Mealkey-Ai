@@ -120,16 +120,21 @@ mealkey-agents/（或独立 git）
 
 ---
 
-## 8. 下一步
+## 8. 硬闸门（2026-07-21 起）
 
-工程与产品边界展开见：
+> **MealKey 仓内禁止新增任何 Agent。**  
+> 新 Agent = 外接独立产品，只经 `MEALKEY_AGENT_EXTERNAL_INTERFACE_V1`。  
+> Agent UI/视觉框架 = `MEALKEY_AGENT_UI_FRAMEWORK_V1`（文档在 Core，实现外置）。
 
-**`docs/MEALKEY_AGENT_PLATFORM_ARCHITECTURE_V1.md`**
+## 9. 下一步
+
+**`MEALKEY_AGENT_PLATFORM_ARCHITECTURE_V1.md`** · **`MEALKEY_AGENT_EXTERNAL_INTERFACE_V1.md`**
 
 ---
 
-## 9. 修订记录
+## 10. 修订记录
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
 | V1.0 | 2026-07-21 | OS 定规则 / Agent 独立产品；三边界；与四席防误读；仓库变薄 |
+| V1.0+ | 2026-07-21 | 明确禁 Core 新增 Agent；外接接口 + UI 框架分册 |

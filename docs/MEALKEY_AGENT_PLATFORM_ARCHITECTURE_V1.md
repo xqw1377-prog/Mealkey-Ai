@@ -108,7 +108,7 @@ mealkey-agents/                  # 独立仓或多仓
   menu-optimization-agent/
 ```
 
-**过渡：** `packages/m-ops-diag` 保持可运行样板，直到拆仓完成；新功能优先按独立 Agent 形状开发。
+**硬闸门：** Core **禁止新增**任何 Agent。`packages/m-ops-diag` 仅存量过渡至迁出；接口形状对齐 `MEALKEY_AGENT_EXTERNAL_INTERFACE_V1.md`。
 
 ---
 
@@ -371,11 +371,11 @@ Agent UI 登录（可 SSO 到 MealKey）
 
 ## 15. 下一步（冻结）
 
-1. **《Agent 运行时与第三方开发者接入流程》** — 7 日上手手册（SDK 实操）  
-2. 经营诊断：按独立产品形状推进 UI/Gateway，而非继续加厚 Core  
-3. 类型落地：`agent-sdk` Context/Ports；Gateway 路由草案  
+1. 工程落点：Gateway Context/Ingress（`MEALKEY_AGENT_EXTERNAL_INTERFACE_V1`）  
+2. 外置仓：诊断 Agent UI 按 `MEALKEY_AGENT_UI_FRAMEWORK_V1` + `M_OPS_DIAG_UX_V1` 实现  
+3. 7 日开发者手册（可选）  
 
-**停止：** 在 Core `packages/` 新增第二个、第三个业务垂直 Agent 大包。
+**停止：** MealKey 仓内任何新 Agent。
 
 ---
 

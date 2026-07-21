@@ -14,7 +14,8 @@
 > **约 100 个独立 Agent = 同一套 L3 框架上的可插拔工具；可拆分运行、可组合进 MealKey；永不升格为第五顾问席。**
 
 > **生态上层：** `MEALKEY_AGENT_PROTOCOL_V1` = 接入契约；`MEALKEY_AGENT_PLATFORM_ARCHITECTURE_V1` = Gateway/独立部署；`MEALKEY_AGENT_ARCHITECTURE_PRINCIPLE_V1` = OS 定规则。  
-> 本文 = 过渡期 L3 四件套工程具体化；**新业务 Agent 不得继续堆进 Core packages，应外置独立仓。**
+> 本文 = 过渡期 L3 四件套工程具体化。  
+> **硬闸门（2026-07-21）：MealKey 仓禁止新增任何 Agent**；外接见 `MEALKEY_AGENT_EXTERNAL_INTERFACE_V1.md`。
 
 MealKey 不是「不断加聊天机器人」，而是：
 

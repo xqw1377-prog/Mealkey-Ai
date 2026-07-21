@@ -1,0 +1,22 @@
+{
+  "name": "@mealkey-agents/restaurant-diagnosis",
+  "version": "0.1.0",
+  "private": true,
+  "description": "外置·餐厅经营诊断 Agent — 经 Platform SDK 接入 MealKey（非 Core 内置）",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "run:sandbox": "tsx src/run-sandbox.ts",
+    "test": "tsx src/self-test.ts"
+  },
+  "dependencies": {
+    "@mealkey/agent-sdk": "*",
+    "@mealkey/m-ops-diag": "*"
+  },
+  "devDependencies": {
+    "tsx": "^4.23.0",
+    "typescript": "^5.4.0"
+  }
+}

@@ -44,6 +44,7 @@ import {
   weeklyOpsToWorldHint,
 } from "@/server/founder-layer/capability/ops-metrics/weekly-upload";
 import { collectMOpsDiagWorldChangesForScan } from "@/server/services/m-ops-diag-client";
+import { collectGatewayIngressWorldChanges } from "@/server/agent-platform-gateway";
 
 type HomeLike = {
   ownerName?: string;
@@ -600,7 +601,24 @@ export function toDailyScanV1(
     // ignore
   }
 
-  // L3 m-ops-diag：消费者反馈感知 → 今日雷达（有 RIP 证据才注入）
+  // 外接 Agent Gateway Ingress 侧车 → 今日雷达（优先于进程内过渡桥）
+  try {
+    const gwChanges = collectGatewayIngressWorldChanges({
+      projectId,
+      profile: options.profile || null,
+      limit: 4,
+    });
+    const seenIds = new Set(worldChanges.map((c) => c.id));
+    for (const c of gwChanges) {
+      if (seenIds.has(c.id)) continue;
+      seenIds.add(c.id);
+      worldChanges.unshift(c);
+    }
+  } catch {
+    // ignore
+  }
+
+  // L3 m-ops-diag（过渡）：消费者反馈感知 → 今日雷达（有 RIP 证据才注入）
   try {
     const opsChanges = collectMOpsDiagWorldChangesForScan({
       projectId,

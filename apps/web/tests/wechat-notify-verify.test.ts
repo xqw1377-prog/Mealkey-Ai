@@ -28,7 +28,7 @@ describe("verifyAndParseWechatNotify production gate", () => {
   });
 
   afterEach(() => {
-    process.env.NODE_ENV = prev.NODE_ENV;
+    vi.unstubAllEnvs();
     for (const [k, v] of Object.entries(prev)) {
       if (v === undefined) delete process.env[k];
       else process.env[k] = v;
@@ -36,7 +36,7 @@ describe("verifyAndParseWechatNotify production gate", () => {
   });
 
   it("production without platform public key throws", async () => {
-    process.env.NODE_ENV = "production";
+    vi.stubEnv("NODE_ENV", "production");
     // getWechatConfig may fail on invalid private key — stub via dynamic import of function
     // and only assert the production key gate when config exists.
     const mod = await import("@/server/services/payment/wechat-pay");

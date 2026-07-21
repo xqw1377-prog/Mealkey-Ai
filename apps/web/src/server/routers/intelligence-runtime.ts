@@ -180,10 +180,10 @@ export const intelligenceRuntimeRouter = router({
             }),
           { ownerId: project.owner.id },
         );
-        const profile = validateProfile(updated.profile) as Record<
-          string,
-          unknown
-        >;
+        if (!updated) {
+          throw new Error("项目资料更新失败，请重试");
+        }
+        const profile = updated.profile;
         const intelligence = buildFounderIntelligenceProfile({
           ownerId: project.owner.id,
           projectId: project.id,

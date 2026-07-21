@@ -32,7 +32,7 @@ export function worldChangesToEvidenceItems(
     const relevance =
       c.kind === "alert" ? 0.88 : c.kind === "customer" ? 0.82 : 0.72;
     const weight = computeEvidenceWeight({
-      sourceTrustBand: "B",
+      sourceTrustBand: "external_monitor",
       timestamp: now.toISOString(),
       relevance,
       confidence: relevance,
@@ -122,7 +122,7 @@ export function brainSliceToEvidenceItems(
         ? Math.max(0.2, Math.min(1, f.confidence))
         : 0.55;
     const weight = computeEvidenceWeight({
-      sourceTrustBand: "C",
+      sourceTrustBand: "brain_fact",
       timestamp: now.toISOString(),
       relevance: 0.75,
       confidence: conf,

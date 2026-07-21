@@ -248,7 +248,7 @@ export function pickFocusCandidate(
       c.status !== "watching" &&
       shouldPromoteCandidate({
         promoteScore: c.promoteScore,
-        status: c.status === "watching" ? "open" : c.status,
+        status: c.status,
       }),
   );
   if (!promotable.length) return null;

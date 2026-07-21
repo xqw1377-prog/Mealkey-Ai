@@ -127,8 +127,8 @@ function dynamicPanel<TProps extends object, TModule>(
     let lastError: unknown;
     for (let attempt = 0; attempt < 2; attempt += 1) {
       try {
-        const module = await loader();
-        return pick(module);
+        const loadedModule = await loader();
+        return pick(loadedModule);
       } catch (error) {
         lastError = error;
         if (attempt === 1) {

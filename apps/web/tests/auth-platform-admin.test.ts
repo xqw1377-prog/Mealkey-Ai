@@ -33,7 +33,7 @@ describe("requirePlatformAdmin", () => {
   });
 
   afterEach(() => {
-    process.env.NODE_ENV = prev.NODE_ENV;
+    vi.unstubAllEnvs();
     process.env.PLATFORM_ADMIN_EMAILS = prev.PLATFORM_ADMIN_EMAILS;
     if (prev.MK_ALLOW_PUBLIC_PREVIEW_AUTH === undefined) {
       delete process.env.MK_ALLOW_PUBLIC_PREVIEW_AUTH;
@@ -43,7 +43,7 @@ describe("requirePlatformAdmin", () => {
   });
 
   it("rejects unauthenticated users by default", async () => {
-    process.env.NODE_ENV = "development";
+    vi.stubEnv("NODE_ENV", "development");
     authMock.mockResolvedValue(null);
     const { requirePlatformAdmin, AuthError } = await import(
       "@/lib/auth-helpers"
@@ -54,7 +54,7 @@ describe("requirePlatformAdmin", () => {
   });
 
   it("allows synthetic local admin only when MK_ALLOW is on and allowlist empty", async () => {
-    process.env.NODE_ENV = "development";
+    vi.stubEnv("NODE_ENV", "development");
     process.env.MK_ALLOW_PUBLIC_PREVIEW_AUTH = "1";
     process.env.PLATFORM_ADMIN_EMAILS = "";
     authMock.mockResolvedValue(null);
@@ -64,7 +64,7 @@ describe("requirePlatformAdmin", () => {
   });
 
   it("never bypasses on production even with MK_ALLOW", async () => {
-    process.env.NODE_ENV = "production";
+    vi.stubEnv("NODE_ENV", "production");
     process.env.MK_ALLOW_PUBLIC_PREVIEW_AUTH = "1";
     process.env.PLATFORM_ADMIN_EMAILS = "admin@mealkey.com";
     authMock.mockResolvedValue(null);
@@ -77,7 +77,7 @@ describe("requirePlatformAdmin", () => {
   });
 
   it("accepts allowlisted session user", async () => {
-    process.env.NODE_ENV = "production";
+    vi.stubEnv("NODE_ENV", "production");
     process.env.PLATFORM_ADMIN_EMAILS = "admin@mealkey.com";
     authMock.mockResolvedValue({
       user: { id: "u1", email: "admin@mealkey.com" },

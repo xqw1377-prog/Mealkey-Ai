@@ -35,7 +35,9 @@ import type { CapabilityScore } from "@/server/founder-layer/contracts/capabilit
 import { mapFourToEight } from "@/server/founder-layer/capability/growth/eight-dim";
 import { buildGrowthRuntimeSnapshot } from "@/server/founder-layer/capability/growth/snapshot";
 import { buildAssetContextBlock } from "@/server/services/asset.service";
+import { settleCapabilityConsumption } from "@/server/services/consumption.service";
 import type { ExpertStatement } from "@/lib/meeting";
+import type { FounderMeeting } from "@/server/founder-layer/contracts/meeting";
 
 function asString(value: unknown): string | undefined {
   return typeof value === "string" && value.trim() ? value.trim() : undefined;
@@ -424,9 +426,12 @@ export const founderRouter = router({
         ].filter(Boolean) as string[],
       });
 
+      const meetingExtras = runtime.meeting as FounderMeeting & {
+        opinions?: Array<{ rawRef?: { agentRunId?: unknown } }>;
+      };
       const agentRunIds = [
         ...new Set(
-          (runtime.meeting.opinions ?? [])
+          (meetingExtras.opinions ?? [])
             .map((opinion) => opinion.rawRef?.agentRunId)
             .filter((id): id is string => typeof id === "string" && id.trim().length > 0),
         ),

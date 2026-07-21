@@ -95,6 +95,7 @@ async function loadOwnerProject(userId: string, projectId: string) {
       id: true,
       name: true,
       city: true,
+      district: true,
       category: true,
       stage: true,
       profile: true,

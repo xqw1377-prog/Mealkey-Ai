@@ -24,11 +24,15 @@ describe("payment mode", () => {
   const snapshot: Record<string, string | undefined> = {};
 
   afterEach(() => {
+    vi.unstubAllEnvs();
     for (const key of envKeys) {
+      if (key === "NODE_ENV") {
+        if (snapshot[key] !== undefined) vi.stubEnv(key, snapshot[key]);
+        continue;
+      }
       if (snapshot[key] === undefined) delete process.env[key];
       else process.env[key] = snapshot[key];
     }
-    vi.unstubAllEnvs();
   });
 
   function remember() {

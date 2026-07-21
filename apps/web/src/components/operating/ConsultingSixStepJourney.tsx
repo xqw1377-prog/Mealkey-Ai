@@ -47,13 +47,37 @@ const ADVISOR_INITIAL: Record<AdvisorId, string> = {
   ries: "心",
   trout: "空",
   ye: "冲",
+  growth: "增",
+  huayehu: "华",
+  kotler: "科",
+  culture: "文",
 };
 
 const ADVISOR_TONE: Record<AdvisorId, string> = {
   ries: "bg-[#141413] text-white",
   trout: "bg-[#5f6b4e] text-white",
   ye: "bg-[#3d4a5c] text-white",
+  growth: "bg-[#4a5c3d] text-white",
+  huayehu: "bg-[#5c4a3d] text-white",
+  kotler: "bg-[#3d455c] text-white",
+  culture: "bg-[#5c3d4a] text-white",
 };
+
+type WarRoomVotePreference = "ries" | "trout" | "ye" | "blend";
+
+function toWarRoomVotePreference(
+  preference: AdvisorId | "blend",
+): WarRoomVotePreference {
+  if (
+    preference === "blend" ||
+    preference === "ries" ||
+    preference === "trout" ||
+    preference === "ye"
+  ) {
+    return preference;
+  }
+  return "blend";
+}
 
 export function ConsultingSixStepJourney({
   projectId,
@@ -422,7 +446,7 @@ export function ConsultingSixStepJourney({
               void run(() =>
                 voteRoom.mutateAsync({
                   projectId,
-                  preference,
+                  preference: toWarRoomVotePreference(preference),
                   blendNote: blendNote || undefined,
                 }),
               )

@@ -311,7 +311,7 @@ MealKey **不**实现 Agent 垂直算法，**不**实现 Agent 独立前端。
 |------|------|
 | 修 bug / 对齐本接口形状 | 在 Core 新增第二个诊断/选址/招聘 Agent |
 | 逐步改为调 Gateway 等价路径 | 继续加深为「Core 内永久业务中心」 |
-| 迁出到 `mealkey-agents/restaurant-diagnosis-agent` | 把新页面当 MealKey 主站新业务线堆进去 |
+| 迁出到独立仓 `M-OPS-Agent`（本地 `C:\Users\xqw13\M-OPS-Agent`） | 把新页面当 MealKey 主站新业务线堆进去 |
 
 迁出完成前：内部调用须能映射为 §3–§4 同等语义，以便一字不改切外接。
 
@@ -329,7 +329,18 @@ MealKey **不**实现 Agent 垂直算法，**不**实现 Agent 独立前端。
 
 ---
 
-## 11. Host 工程落点（2026-07-21）
+## 11. 外置诊断 Agent 本地仓
+
+独立产品目录（与 MealKey Core 分离）：
+
+`C:\Users\xqw13\M-OPS-Agent`（仓库名 M-OPS-Agent）
+
+含 Skill / Web / 随仓 `packages/{agent-sdk,m-ops-diag,tool-agent-kit}`。  
+启动：`npm install` → `npm test` → `npm run web:dev`。
+
+---
+
+## 12. Host 工程落点（2026-07-21）
 
 | 逻辑 | `apps/web/src/server/agent-platform-gateway/` |
 |------|-----------------------------------------------|
@@ -341,9 +352,10 @@ V1 用户 Token：`Bearer sandbox` / `sandbox_*` / `MK_GATEWAY_USER_TOKENS`；Ag
 
 ---
 
-## 12. 修订记录
+## 13. 修订记录
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
 | V1.0 | 2026-07-21 | 禁 Core 新增 Agent；Context/Ingress/认证/拒收码/SDK 边界/投影规则 |
 | V1.0+ | 2026-07-21 | Host Gateway 路由与 registry/sandbox 落点 |
+| V1.0++ | 2026-07-21 | 外置仓落点 `C:\Users\xqw13\M-OPS-Agent` |

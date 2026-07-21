@@ -38,7 +38,7 @@
 | **L0 Council 4+1** | `docs/FOUNDER_OS_COUNCIL_INTELLIGENCE_4PLUS1_V1.md` | 4=四大能力接入；+1=MKInsight/Evidence/Trace 治理；Sprint 1–5 | **否** — 禁止把 4+1 误解为「选择方向」；Adapter 先于垂直 Agent 扩席 |
 | **L0 Council 4+1 审计** | `docs/FOUNDER_OS_COUNCIL_INTELLIGENCE_GOVERNANCE_AUDIT_V1.md` | S5 闸门清单；代码真源 `founder-os/mk-insight.ts` | 可加深测试；不得绕过 Adapter |
 | **L0 垂直 Agent 接入** | `docs/FOUNDER_OS_VERTICAL_AGENT_MKINSIGHT_ADAPTER_V1.md` | L3 → MKInsight Adapter → Council；禁止私有 Report 直进 | **否** — 垂直能力不得升格为第五核心 Agent |
-| **L0 Agent Protocol** | `docs/MEALKEY_AGENT_PROTOCOL_V1.md` | **生态壁垒**：Agent 接协议不接库；Manifest · MKContext · Ports · Permission · Runtime 三模式 · Quality · Store | **否** — 禁第三方直连 Prisma；禁非法出口；Store 商业化服从 MVP 停扩闸门 |
+| **L0 Agent Protocol** | `docs/MEALKEY_AGENT_PROTOCOL_V1.md` | **生态壁垒/能力标准化**：五层模型 · Capability Registry · Decision Skill · Insight L1–L5 · 五维质量 · Memory 隔离 · 能力市场 | **否** — 禁直连库/私有永久记忆；默认≤L3；禁无限自造能力；Store 服从 MVP 停扩 |
 | **L0 Tool Agent 框架** | `docs/MEALKEY_TOOL_AGENT_FRAMEWORK_V1.md` · `@mealkey/tool-agent-kit` · `tool-agents/` | **~100 L3 可拆分可组合**：四件套 · 四 Ports · Registry · Compose · 上架闸门 | **否** — 只扩 L3；禁止升格 L1 / 第七 Runtime；MVP 未过前批量上架仍受停扩闸门 |
 | **L0 经营诊断感知器** | `docs/M_OPS_DIAG_AGENT_V1.md` · `@mealkey/m-ops-diag` | **Architecture Freeze**：观察者非决策者；证据三层；六大引擎；Finding→Pattern→Signal；P0 Cockpit / P1 Room | **否** — 禁止第五席/战略终局/V1 HTTP/假评分 |
 | **L0 经营诊断 UX** | `docs/M_OPS_DIAG_UX_V1.md` | **信任瞬间**：First Moment≤60s · 采集过程感 · 经营画像一句话 · 顾客声音墙 · 六观察面（禁假评分）· 今日扫描卡 · V1 仅 5 页 | **否** — 诊断页禁拍板/禁战略方案；无证据禁假勾 |
@@ -100,7 +100,7 @@
 13s. **拍板唯一场**（2026-07-21）：老板拍板/签字**仅决策室**；今日禁止拍板主 CTA，只允许「进入决策室」。
 13t. **变化解读主页面化**（2026-07-21）：取消经营分析二级页；今日=动态模块栏（门店/舆情/推进中）+ 本页变化解读主位；旧 `/business-analysis` 重定向 `/dashboard`。
 13u. **Tool Agent Framework V1 已冻结**（2026-07-21）：支撑约 100 个独立 L3；单元=Manifest+Engine+Ports+Bridge；合法出口仅 Signal/Insight/Work/Gap；代码 `@mealkey/tool-agent-kit`；引擎目录 `tool-agents/`。真源 `MEALKEY_TOOL_AGENT_FRAMEWORK_V1.md`。批量上架仍服从 MVP 停扩闸门。  
-13aa. **MealKey Agent Protocol V1 已冻结**（2026-07-21）：生态/OS 接入契约；Agent 接协议不接库；Manifest · MKContext · Signal/Insight/Work/Gap · Data Permission · inprocess/cloud_https/enterprise_local · QualityScore · Store 四步生命周期。样板=`m-ops-diag`。真源 `MEALKEY_AGENT_PROTOCOL_V1.md`。Tool Framework = 协议的内置工程具体化。  
+13aa. **MealKey Agent Protocol V1.1 已冻结**（2026-07-21）：生态规则升格——五层模型；Capability Registry（能力地图）；Decision Skill（非 Prompt）；Insight L1–L5（默认≤L3）；五维 Quality；Memory 隔离；餐饮能力市场；Version Strategy。样板=`m-ops-diag`。真源 `MEALKEY_AGENT_PROTOCOL_V1.md`。**下一刀 = Agent 运行时与第三方开发者接入流程（7 日上手）**。  
 13v. **M-OPS-DIAG Architecture Freeze V1.0**（2026-07-21）：能力边界与工程真源；角色=观察/发现/证据/预警/决策输入；六大引擎架构；Evidence 三层；Finding→Pattern→Signal；Cockpit/Room。真源 `M_OPS_DIAG_AGENT_V1.md`。  
 13x. **M-OPS-DIAG UX Freeze V1.0**（2026-07-21）：壁垒=「它真的懂我的店」；First Moment≤60s；采集过程感；经营画像一句话；顾客声音墙；六观察面；今日扫描卡；V1 仅 5 页。真源 `M_OPS_DIAG_UX_V1.md`。  
 13y. **M-OPS-DIAG Data Collection Freeze V1.0**（2026-07-21）：最少主动采集+最大外部感知+持续学习；Identity/Business Fact/Consumer 三层；必采 10 事实；Evidence Card 与权重表；日扫四域；Brain 落点树。真源 `M_OPS_DIAG_DATA_COLLECTION_V1.md`。  

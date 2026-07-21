@@ -1,468 +1,481 @@
 # MealKey Agent Protocol V1（餐启 Agent 协议 · 冻结）
 
-> **版本：** V1.0  
-> **状态：正式冻结（Freeze）**  
+> **版本：** V1.1  
+> **状态：正式冻结（Freeze）** — 生态规则，不只是技术接口  
 > **日期：** 2026-07-21  
 > **权威挂载：** `docs/AUTHORITY.md` L0  
-> **产品一句：** 定义「一个餐饮经营能力如何接入经营大脑」——不是 Agent 接数据库，而是 Agent 接协议。  
-> **配套：** `MEALKEY_TOOL_AGENT_FRAMEWORK_V1.md` · `MEALKEY_AGENT_ECOSYSTEM_MAP_V2.md` · `MEALKEY_FOUNDER_OS_PERMISSION_MODEL_V2.md` · `FOUNDER_OS_VERTICAL_AGENT_MKINSIGHT_ADAPTER_V1.md` · `BUSINESS_SIGNAL_ENGINE_V1.md` · `M_OPS_DIAG_AGENT_V1.md`  
-> **代码落点（演进）：** `@mealkey/tool-agent-kit`（L3 运行面）· `@mealkey/agent-sdk`（协议类型扩展）· Host Bridge（`apps/web`）  
-> **冲突裁决：** 生态接入规则以本文为准；L3 四件套/四 Ports 以 Tool Agent Framework 为准；战略边界以 Ecosystem Map / AUTHORITY 为准  
+> **产品一句：** MealKey 不是开发一堆 Agent，而是定义餐饮经营 Agent 操作系统；本协议把「能力」标准化，防止生态变成 AI 应用垃圾场。  
+> **配套：** `MEALKEY_TOOL_AGENT_FRAMEWORK_V1.md` · `MEALKEY_AGENT_ECOSYSTEM_MAP_V2.md` · `MEALKEY_FOUNDER_OS_PERMISSION_MODEL_V2.md` · `FOUNDER_OS_VERTICAL_AGENT_MKINSIGHT_ADAPTER_V1.md` · `BUSINESS_SIGNAL_ENGINE_V1.md` · `MEALKEY_DECISION_INTELLIGENCE_ENGINE_V1.md` · `M_OPS_DIAG_AGENT_V1.md`  
+> **代码落点（演进）：** `@mealkey/tool-agent-kit` · `@mealkey/agent-sdk` · Host Bridge  
+> **冲突裁决：** 生态规则以本文为准；L3 四件套/四 Ports 以 Tool Agent Framework 为准；战略边界以 AUTHORITY 为准  
 
 ---
 
-## 0. 为什么必须有协议（冻结）
+## 目录（冻结）
 
-三壁垒合一，MealKey 才具备「餐饮 AI 操作系统」基础：
+1. Agent 定位与五层模型  
+2. Agent Manifest  
+3. Capability Registry（能力地图）  
+4. Context Contract（含 Brain 租用）  
+5. Evidence Contract  
+6. Insight Contract（输出分级 L1–L5）  
+7. Decision Skill Contract  
+8. Permission Model  
+9. Quality Model  
+10. Marketplace Model（餐饮能力市场）  
+11. Memory 隔离与 Learning  
+12. Runtime 调用与三模式  
+13. Version Strategy  
+14. 合规样板 m-ops-diag  
+15. 验收与下一步  
+
+---
+
+## 0. 护城河（冻结）
 
 | 壁垒 | 资产 |
 |------|------|
-| **数据壁垒** | Restaurant Brain |
-| **认知壁垒** | Decision Intelligence |
-| **生态壁垒** | **Agent Protocol（本文）** |
+| 数据 | Restaurant Brain |
+| 认知 | Decision Intelligence |
+| 生态 | **Agent Protocol（把能力拆解·封装·组合·交易）** |
 
-类比：
+护城河不是某一个模型，也不是某几个 Agent，而是：
 
-| 平台 | 接入物 |
-|------|--------|
-| iOS | App 接口 |
-| 微信 | 小程序接口 |
-| OpenAI | GPTs / Tools |
-| **MealKey** | **餐饮经营能力 → 经营大脑** |
+> **把餐饮经营领域的能力标准化。**
 
-`m-ops-diag`（餐厅经营诊断）= **验证本协议的第一个垂直 Agent**。
+`m-ops-diag` = 第一个协议合规样板，并验证全系统闭环。
 
 ---
 
-## 1. 核心原则（冻结）
+## 1. Agent 定位与五层模型（冻结）
 
-### 1.1 Agent 不接系统，Agent 接协议
-
-```text
-❌ 第三方 Agent → 调 Prisma / 读库 / 写 Brain 表
-✅ 第三方 Agent → MealKey Agent Protocol → Runtime → Identity/Brain/Memory/Decision/Execution
-```
-
-错误路径导致：数据泄露 · 系统耦合 · 质量不可控 · 无法商业化。
-
-### 1.2 铁律五条
-
-1. **零直连数据面**：Agent 永不持有 DB 连接串；只消费 Host 下发的 `MKContext` 投影。  
-2. **声明式能力**：未在 Manifest 声明的 capability / port / permission → Runtime 拒收。  
-3. **合法出口唯一**：Signal · Insight · Work · Gap（对齐 Tool Agent Framework Ports）。  
-4. **永不升格 L1**：第三方与内置 L3 同等，禁止注册第五顾问席 / 战略终局。  
-5. **质量可审计**：无证据链 / 无置信度 / 私有 JSON 冒充 Insight → 不得上架或不得进宿主。  
-
-### 1.3 与现有文档关系
+### 1.1 接协议，不接库
 
 ```text
-Agent Protocol V1（本文）     ← 生态/OS 接入契约（含第三方）
-        ↓ 具体化
-Tool Agent Framework V1       ← 内置 L3 工程四件套（当前主实现）
-        ↓ 样板
-m-ops-diag                    ← 第一个合规垂直 Agent
+❌ Agent → Prisma / 全库
+✅ Agent → Protocol → Runtime → Identity / Brain / Memory / Decision / Execution
 ```
 
-内置 Agent 必须满足本文；第三方 Agent **额外**满足生命周期、Sandbox、Marketplace、远程调用规范。
+### 1.2 铁律
+
+1. 零直连数据面  
+2. 能力必须挂 Capability Registry（禁无限自造）  
+3. 核心交付物是 **Decision Skill**，不是 Prompt  
+4. 合法 Port：Signal · Insight · Work · Gap  
+5. 默认最大输出级 **L3**；L4/L5 须平台认证  
+6. 无永久私有记忆；Learning 经 Brain 审核  
+7. 永不升格 L1 / 战略终局  
+
+### 1.3 五层结构（任何 Agent 必须符合）
+
+```text
+                 Agent
+                  ↑
+        Capability Layer     它能解决什么问题
+                  ↑
+        Intelligence Layer   它如何判断（Decision Skill）
+                  ↑
+        Context Layer        它基于什么事实（MKContext 租用）
+                  ↑
+        Evidence Layer       它有什么依据
+                  ↑
+        Execution Layer      如何产生改变（经 Port → Host，非直写）
+```
+
+缺任一层 → 不得 Live 上架。  
+「只有 Prompt」= 不合格。
 
 ---
 
-## 2. Agent Manifest 规范（冻结）
-
-每个 Agent 必须提交可机读 Manifest（身份证）。
-
-### 2.1 规范形状
+## 2. Agent Manifest（冻结）
 
 ```typescript
 AgentManifestV1 {
-  id: string                    // 全局唯一：m-<domain> 或 partner.<org>.<slug>
-  name: string                  // 产品短名
-  version: string               // semver
-  category: AgentCategoryV1     // operation | product | competition | brand | growth | finance | site | other
+  id: string                         // m-<domain> | partner.<org>.<slug>
+  name: string
+  version: string                    // semver
   provider: "mealkey" | "partner" | "enterprise"
   runtimeMode: "inprocess" | "cloud_https" | "enterprise_local"
   stage: "idea" | "pilot" | "sandbox" | "live" | "deprecated"
 
-  capabilities: string[]        // 例 ["diagnosis","insight"] — 能力标签，非出口
-  ports: Array<"signal"|"insight"|"work"|"gap">
+  /** 必须挂 Registry，见 §3 */
+  capabilityIds: string[]            // 例 ["ops.diagnosis.health_check"]
 
-  input: string[]               // 声明消费的 Context 切片键
-  output: string[]              // 声明产出类型键
+  ports: Array<"signal"|"insight"|"work"|"gap">
+  maxInsightLevel: 1 | 2 | 3 | 4 | 5  // 默认 ≤3；4/5 须认证
 
   permissions: DataPermissionV1[]
+  skillPackageRef: string            // Decision Skill Package 契约 ID
+
+  schemas: { inputRef: string; outputRef: string }
   invokePolicy: {
     requiresDecisionAuth: boolean
     requiresBossConfirm: boolean
     billable: boolean
   }
-
-  schemas: {
-    inputRef: string            // 契约 ID
-    outputRef: string
-  }
-
   quality: {
-    minEvidenceSteps: number    // 进首页 Signal 默认 ≥2
-    allowsInferenceOnly: false  // V1 必须 false
+    minEvidenceSteps: number         // 首页 Signal 默认 ≥2
+    allowsInferenceOnly: false
   }
-
   marketplace?: {
     priceMonthlyFen?: number
-    description?: string
+    pricePerUseFen?: number
+    pitch?: string                   // 能力卖点，非 App 介绍
   }
 }
 ```
 
-### 2.2 与代码对齐
+对齐：`ToolAgentManifest`（kit）+ `agent-sdk` 演进字段。
 
-| 协议字段 | 当前代码 |
-|----------|----------|
-| Manifest 核心 | `ToolAgentManifest`（`@mealkey/tool-agent-kit`） |
-| 扩展：provider / runtimeMode / marketplace / DataPermission 细粒度 | **V1 冻结语义**；落点演进 `@mealkey/agent-sdk` + kit 扩展 |
-| 样板 | `packages/m-ops-diag/src/manifest.ts`（`m-ops-diag`） |
+---
 
-示例（经营诊断 · 语义）：
+## 3. Capability Registry（冻结）
 
-```typescript
+### 3.1 规则
+
+> Agent **不允许无限定义能力**。必须挂到 MealKey 能力分类。
+
+未注册 `capabilityId` → 审核失败。
+
+### 3.2 一级分类（V1）
+
+```text
+经营 · 营销 · 产品 · 组织 · 财务 · 增长 · 学习 · 选址
+```
+
+（与 Tool `kind` 可映射：ops/campaign/menu/hiring/finance/…）
+
+### 3.3 二级示例（经营）
+
+```text
+经营
+ ├─ ops.diagnosis.*      经营诊断
+ ├─ ops.cost.*           成本分析
+ ├─ ops.efficiency.*     效率优化
+ └─ ops.store_mgmt.*     门店管理
+```
+
+样板能力（m-ops-diag）：
+
+```json
 {
-  id: "m-ops-diag",
-  name: "餐启经营诊断",
-  version: "1.0.0",
-  category: "operation",
-  provider: "mealkey",
-  runtimeMode: "inprocess",
-  capabilities: ["diagnosis", "insight"],
-  ports: ["signal", "insight", "gap"],
-  input: ["RestaurantIdentity", "RestaurantFacts", "ExternalEvidence"],
-  output: ["BusinessSignal", "MKInsight", "Gap"],
-  permissions: ["Restaurant.Basic", "Restaurant.Reviews", "Restaurant.Operation"],
-  // …invokePolicy / schemas / quality
+  "capabilityIds": [
+    "ops.diagnosis.health_check",
+    "ops.diagnosis.problem_detection",
+    "ops.diagnosis.operation_analysis"
+  ]
 }
 ```
 
-系统据此知道：**能干什么、不能干什么、能看见什么、能写出什么。**
+### 3.4 能力地图目标
+
+Registry 累积后形成 **餐饮经营能力地图** —— Marketplace 按能力浏览，不是按 App 图标浏览。
+
+新增一级/二级：须改本文 + Registry 真源，禁止 silently 膨胀。
 
 ---
 
-## 3. 统一输入 · MKContext（冻结）
+## 4. Context Contract（冻结）
 
-第三方 **不得** 自定义宿主数据格式。只接受 Host 组装的投影：
+### 4.1 MKContextV1
 
-```typescript
-MKContextV1 {
-  user: { id: string; role: "boss" | "staff" | "system" }
+第三方只消费 Host 下发投影（见 V1.0 字段集），核心块：
 
-  businessIdentity: {
-    brand?: string
-    stores?: Array<{ id?: string; name?: string; city?: string; district?: string }>
-    region?: string
-    category?: string
-  }
+- `user` · `businessIdentity`  
+- `restaurantBrain`（facts/history/dna **切片**）  
+- `externalEvidence`  
+- `decisionContext` · `invoke`  
 
-  restaurantBrain: {
-    facts: unknown[]            // 已授权切片，非全库 dump
-    history?: unknown[]
-    dna?: unknown               // Decision DNA 等投影
-  }
+### 4.2 Brain 租用模型
 
-  externalEvidence: {
-    reviews?: unknown[]
-    market?: unknown[]
-    competitors?: unknown[]
-  }
+第三方 **不拥有** 餐厅数据。请求：
 
-  decisionContext?: {
-    currentQuestion?: string
-    caseId?: string
-  }
-
-  /** Host 注入的调用元数据 */
-  invoke: {
-    purpose: "radar" | "council" | "execution" | "standalone"
-    horizon?: "today" | "7d" | "30d"
-    projectId?: string
-  }
+```json
+{
+  "agent": "m-ops-diag",
+  "need": ["store.basic", "reviews", "sales.trend"]
 }
 ```
 
-### 3.1 硬规则
+Runtime 按 Permission 裁剪 → 返回 **Context Package**。  
+类比：iOS 不给 App 整机权限。
 
-1. Agent **只读** Context；写回仅经合法 Port → Host Bridge。  
-2. Context 按 Permission **最小切片**下发；未授权字段不出现。  
-3. 现有 `AgentContext`（`agent-sdk`）与各 Bridge 组装物，演进对齐 `MKContextV1`；V1 允许适配层改名，**语义不得绕过**。  
-4. `m-ops-diag` 的 `RestaurantDiagnosisRequest` = MKContext 在诊断场景下的 **专用投影**（合法特化，仍由 Host 填充）。
+`RestaurantDiagnosisRequest` = 诊断场景下的合法特化投影。
 
 ---
 
-## 4. 统一输出协议（冻结）
+## 5. Evidence Contract（冻结）
 
-所有 Agent 输出必须可映射到下列标准物之一（可多选，须 Manifest 声明）。
-
-### 4.1 BusinessSignal（→ 今日 / 雷达）
-
-```typescript
-BusinessSignalPortV1 {
-  type: string                  // 对齐既有 Signal type 枚举
-  title: string
-  observation: string
-  pattern?: string
-  meaning?: string
-  impact: string                // 影响描述；严重度另字段
-  severity: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL"
-  confidence: number            // 0–1
-  evidence: Array<{ source: string; fact: string }>
-  evidenceChain?: Array<{ kind: "internal_fact"|"external_intel"|"inference"; claim: string }>
-  watchHint?: string            // 关注建议；禁拍板句
-}
-```
-
-对齐：`BUSINESS_SIGNAL_ENGINE_*` · `DiagnosisSignal` · Tool Port `signal`。
-
-### 4.2 MKInsight（→ 决策室 / Council）
-
-```typescript
-MKInsightPortV1 {
-  topic: string
-  finding: string
-  reasoning?: string
-  evidence: Array<{ claim: string; source?: string }>
-  impact?: string
-  confidence: number
-  recommendation?: string       // V1：仅「可讨论方向」；禁止战略终局 / 批准句
-  unknowns?: string[]
-}
-```
-
-对齐：VerticalInsight / `toVerticalMkInsights` · Tool Port `insight`。  
-**禁止**私有 Report 直进七常委。
-
-### 4.3 Work（→ Execution，须授权）
-
-结构化执行物（菜单草案、SOP 清单等）；`requiresDecisionAuth` 常为 true。
-
-### 4.4 Gap（→ 采集 / 诚实空态）
-
-```typescript
-GapPortV1 { field: string; reason: string; severity: "low"|"medium"|"high" }
-```
-
-无证据时必须能出 Gap，禁止装懂。
-
-### 4.5 Report（可选 · 降级）
-
-长报告 **不是** 一等公民。若 Manifest 声明 `report` capability：
-
-- 仅作附件 / 导出  
-- **不得**单独驱动今日主位或拍板  
-- 进宿主前须同时带 Signal 或 Insight 或 Gap  
-
-`m-ops-diag` V1：**不**以 Report 为合法主出口。
+1. 进宿主的判断须可追溯 Evidence（`EVIDENCE_CHAIN_PROTOCOL_V1`）。  
+2. 首页 Signal：`evidenceChain.length ≥ 2`，且不得纯 inference。  
+3. 权重服从采集架构 / 决策质量机制；AI 推测不得冒充事实。  
+4. 无证据 → Gap，禁止装懂。  
 
 ---
 
-## 5. Permission 规范（冻结）
+## 6. Insight Contract · 输出分级（冻结）
 
-### 5.1 Data Permission 声明
+**不能所有输出都进老板视野。**
 
-Agent 必须声明最小读集。示例枚举（V1）：
+| Level | 名称 | 含义 | 例 | 默认第三方 |
+|-------|------|------|-----|------------|
+| **L1** | Observation | 观察/事实 | 近30天等待相关差评关键词 +35% | ✅ |
+| **L2** | Diagnosis | 诊断判断 | 高峰人员配置不足是主因（有 Pattern） | ✅ |
+| **L3** | Recommendation | 关注/改善建议 | 建议评估晚高峰排班（非拍板） | ✅ 默认上限 |
+| **L4** | Decision Support | 决策室议题 | 是否增加一个晚班人力？ | 🔒 须认证 |
+| **L5** | Execution | 进 M-EXEC | 生成排班调整计划 | 🔒 须认证 + 授权 |
 
-| Permission | 含义 |
-|------------|------|
-| `Restaurant.Basic` | 品牌/门店/区位/品类 Identity |
-| `Restaurant.Facts` | 经营事实最小集 |
-| `Restaurant.Reviews` | 消费者评价证据 |
-| `Restaurant.Operation` | 运营相关外感/事实切片 |
-| `Restaurant.Market` | 竞争/商圈证据 |
-| `Brain.DNA` | Decision DNA 投影（敏感，默认需审核） |
-| `Finance.Summary` | 汇总经营财务（非银行明细） |
+### 6.1 与 Ports 映射
 
-**默认拒绝（V1 第三方不可申请或极高门槛）：**
+| Level | 典型 Port / 落点 |
+|-------|------------------|
+| L1–L2 | Signal（今日）· Gap |
+| L3 | Signal.watchHint · Insight（弱） |
+| L4 | Insight → 决策室（Promote Gate） |
+| L5 | Work → Execution（须 `requiresDecisionAuth`） |
 
-| 拒绝项 | 原因 |
-|--------|------|
-| `Founder.Personal` | 老板个人隐私 |
-| `Finance.Bank` | 银行/支付明细 |
-| `Org.HR.PII` | 员工隐私 |
-| `Raw.Database` | 任何直连 |
+### 6.2 硬规则
 
-### 5.2 与 ToolPermission 映射
-
-细粒度 `Restaurant.*` → Host 映射到现有 `READ_BRAIN_SLICE` / `READ_RIP` / `READ_EVIDENCE` 等执行权。  
-写出侧仅：`EMIT_SIGNAL` · `EMIT_INSIGHT` · `EMIT_WORK`；`WRITE_MEMORY` **仅 Host Bridge**。
+- Manifest `maxInsightLevel` 默认 **3**  
+- 未认证 Agent 输出 L4/L5 → Runtime **降级或拒收**  
+- L3 禁止「请批准 / 已决策」句式  
+- L4 只形成议题，拍板仍只在决策室  
+- Report 长文不是一等公民；须附带 L1+ 结构化物  
 
 ---
 
-## 6. Runtime 调用规范（冻结）
+## 7. Decision Skill Contract（冻结）
 
-### 6.1 调用路径
+### 7.1 核心不是 Prompt
 
 ```text
-Host.invoke({
-  agentId, purpose, projectId,
-  auth?,                 // decisionId / executionGrantId
-}) 
-  → 鉴权（Permission + invokePolicy）
-  → 组装 MKContext 切片
-  → 按 runtimeMode 调度 Engine
-  → 校验输出 Ports / Quality
-  → 投影到 Radar / Insight Adapter / Execution / Gap UI
-  → 审计日志 +（可选）计费
+普通 AI:  问题 → LLM → 答案
+MealKey:  问题 → Context → Evidence → Hypothesis
+          → Challenge → Assessment → Action → Learning
 ```
 
-Engine **零 Prisma / 零直写 Brain**。
+第三方提交物：
 
-### 6.2 三种运行模式
+| ❌ 不合格 | ✅ 合格 |
+|----------|--------|
+| 「我的 Prompt 很牛」 | **Decision Skill Package** |
 
-| 模式 | 谁开发 | 形态 |
-|------|--------|------|
-| **inprocess** | MealKey 内置 | Package 进程内调用（当前 `m-ops-diag`） |
-| **cloud_https** | 第三方云 | Runtime ↔ Partner Agent Server（HTTPS + 签名） |
-| **enterprise_local** | 连锁企业 | Enterprise Agent Runtime + 私有数据；经协议回传 Ports |
+### 7.2 Skill Package 形状
 
-V1 工程优先打穿 **inprocess**；cloud_https / enterprise_local 冻结接口语义，实现可后置。
+```typescript
+DecisionSkillPackageV1 {
+  skillId: string                 // 例 skill.ops.restaurant_health
+  title: string                   // 餐厅健康评估
+  capabilityIds: string[]
 
-### 6.3 远程调用最低要求（cloud_https）
+  inputs: string[]                // 经营数据 · 顾客评价 · 竞争环境
+  judgments: string[]             // 收入/产品/服务/组织风险 等判断面
+  outputs: {
+    maxLevel: 1|2|3|4|5
+    ports: Array<"signal"|"insight"|"work"|"gap">
+  }
 
-1. mTLS 或 HMAC 请求签名  
-2. Context 仅含已授权切片；响应仅 Ports JSON  
-3. 超时 / 重试 / 熔断由 Host 控制  
-4. Partner **不得**回调 MealKey 内部私有 API 读库  
+  /** 推理阶段声明（可映射 DIE） */
+  stages: Array<
+    | "context" | "evidence" | "hypothesis"
+    | "challenge" | "assessment" | "action" | "learning"
+  >
+
+  /** 稳定性：同输入应同档结论的约束说明 */
+  stabilityNotes?: string
+}
+```
+
+样板叙事（m-ops-diag）：
+
+```text
+Skill: 餐厅健康评估
+输入: 经营事实 · 顾客评价 · 竞争环境
+判断: 收入/产品/服务/组织等风险面
+输出: 诊断卡 · 改善关注项 · 待验证 gaps（默认 ≤L3）
+```
 
 ---
 
-## 7. Quality 评分规范（冻结）
+## 8. Permission Model（冻结）
 
-上架与运行时双重门禁。
+### 8.1 可读声明（最小集）
 
-### 7.1 运行时拒收
+`Restaurant.Basic` · `Restaurant.Facts` · `Restaurant.Reviews` · `Restaurant.Operation` · `Restaurant.Market` · `Brain.DNA`（高门槛）· `Finance.Summary`
 
-| 检查 | 失败 |
+### 8.2 默认拒绝
+
+`Founder.Personal` · `Finance.Bank` · `Org.HR.PII` · `Raw.Database`
+
+### 8.3 写出
+
+仅经 Ports；`WRITE_MEMORY` **仅 Host**。映射既有 `ToolPermission`。
+
+---
+
+## 9. Quality Model（冻结）
+
+防止能力市场变成垃圾场。
+
+### 9.1 五维 Agent Quality Score
+
+| 维度 | 说明 |
 |------|------|
-| Port 未在 Manifest 声明 | 丢弃该字段 |
-| Signal 无 evidence 且要上今日主位 | 拒收或降为 watch |
-| 纯 inference 链 | 拒收（`allowsInferenceOnly=false`） |
-| 含拍板句 / MKDecision | 拒收 |
-| 数字无源 | 删数字或拒收 |
-| confidence 缺失 | 默认 0.3 且不上主位 |
-
-对齐：`EVIDENCE_CHAIN_PROTOCOL_V1` · 诊断模型闸门 G1–G8。
-
-### 7.2 Quality Score（上架 / Sandbox）
+| **Accuracy** | 判断是否经得起复核 |
+| **Evidence** | 有没有依据 / 链是否完整 |
+| **Explainability** | 能否说明为什么（L1→L2 可追溯） |
+| **Outcome** | 能否改变结果（进今日/决策/执行后的有效性） |
+| **Learning** | 是否经平台 Learning 闭环变好（非私自记忆） |
 
 ```text
-QualityScore =
-  证据完整度 ×0.35
-+ 锚点相关性（是否像「这家店」）×0.25
-+ 可操作性（Signal 能否进今日/决策室）×0.20
-+ 稳定性（同输入多次输出一致档）×0.10
-+ 安全合规（无越权/无禁词战略）×0.10
+AgentScore ≈ Accuracy + Evidence + Explainability + Outcome + Learning
+（实现可归一 0–100；上架用阈值）
 ```
 
-阈值（V1 建议）：Sandbox 通过 ≥ 0.70；Live 上架 ≥ 0.80；抽检失败可降级 `pilot` / 下架。
+### 9.2 运行时拒收（摘要）
+
+Port 未声明 · 无证据上主位 · 纯推理链 · 拍板句 · 无源数字 · 越级 L4/L5 · 越权字段。
+
+### 9.3 阈值（V1 建议）
+
+Sandbox ≥ 70 · Live ≥ 80 · 抽检失败降级/下架。
+
+与旧版加权式 QualityScore 并存时：**五维为人读真源**；加权式为自动化近似，冲突以五维审计为准。
 
 ---
 
-## 8. 生命周期与 Marketplace（冻结）
+## 10. Marketplace Model（冻结）
 
-### 8.1 接入四步
+### 10.1 不是应用商店
+
+> 餐饮 **能力市场**：老板购买的是能力，不是下载 App。
+
+例（价格示意，不冻结数字）：
+
+| 能力 | 计价形态 |
+|------|----------|
+| 经营诊断 | ¥199/月 |
+| 品牌定位 | ¥999/次 |
+| 选址分析 | ¥499/次 |
+
+### 10.2 生命周期
 
 ```text
-1. 注册  → 提交 AgentManifestV1
-2. 审核  → 输入/输出/权限/质量标准
-3. Sandbox → 标准模拟餐厅（例：长沙湘菜馆 A · 合成评价与事实）跑批
-4. 发布  → MealKey Agent Store · 用户安装启用
+注册 Manifest + Skill Package
+  → 能力挂载审核（Registry）
+  → Sandbox（标准模拟餐厅）
+  → 发布能力市场
+  → 用户按门店安装/订阅
 ```
 
-### 8.2 Agent Store（产品语义）
+### 10.3 平台收入钩子
 
-- 用户按门店/项目 **安装** Agent（启用 ports 消费）  
-- 未安装不得静默调用第三方  
-- 内置 `m-ops-diag` 可作为系统预装（仍走同一 Protocol）
+抽佣 · Brain/M-INTEL 调用计费 · 企业版接入。  
+具体费率商务定；协议冻结 `billable` + 计量点。
 
-### 8.3 商业模式（平台层 · 冻结方向）
+---
 
-| 收入 | 说明 |
+## 11. Memory 隔离与 Learning（冻结）
+
+第三方 Agent **不能**直接拥有用户永久记忆。
+
+```text
+❌ Agent 偷偷保存老板习惯 / 跨店档案
+✅ Agent → Learning Event → MealKey Brain 审核 → 写入 Decision DNA / Memory
+```
+
+| 规则 | 含义 |
 |------|------|
-| Agent 交易抽佣 | 例 ¥199/月第三方诊断，平台抽成比例商务定，协议预留 `marketplace.priceMonthlyFen` |
-| 数据能力计费 | M-INTEL / Brain / Evidence 按调用 |
-| 企业版 | 集团自建 Agent（enterprise_local）接入费 / 席位费 |
-
-协议 **不**冻结具体价格数字；冻结 **计费钩子**（`invokePolicy.billable` + Host 计量）。
-
----
-
-## 9. 对现有架构的影响（冻结）
-
-### 9.1 已有（保持）
-
-```text
-tool-agent-kit · agent-sdk · MKInsight Adapter
-Business Signal · Memory / Brain · Decision / Execution
-```
-
-### 9.2 协议层增量（演进清单，非一次做完）
-
-```text
-packages/agent-sdk/src/protocol/   # 或等价路径
-  manifest.ts          # AgentManifestV1
-  mk-context.ts        # MKContextV1
-  permission.ts        # DataPermissionV1
-  ports.ts             # Signal/Insight/Work/Gap 校验
-  quality.ts           # QualityScore
-  marketplace.ts       # 上架元数据（可后置）
-
-packages/tool-agent-kit/
-  # 扩展 Manifest 可选字段；保持四 Ports 不变
-
-apps/web/.../tool-agents/invoke.ts
-  # 鉴权 · Context 切片 · 审计 · 计费钩子
-```
-
-### 9.3 MVP 闸门
-
-飞轮未验证前：**协议可冻结、类型可落、样板可加深**；  
-批量第三方上架 / Store 商业化 **仍服从** `MEALKEY_CORE_PRODUCT_LOOP_V1` 停扩闸门。
+| 会话态 | 单次 invoke 内可用 |
+| 结果态 | Signal/Insight 由 Host 落今日/决策室 |
+| 长期态 | 仅经审核的 Learning Event |
+| 禁止 | Agent 侧私有用户画像库 |
 
 ---
 
-## 10. 合规样板：m-ops-diag（冻结）
+## 12. Runtime 调用与三模式（冻结）
 
-| 协议项 | m-ops-diag |
-|--------|------------|
+```text
+Host.invoke → 鉴权 → Context 切片 → 调度 Engine
+  → 校验 Port / Level / Quality → 投影宿主 → 审计/计费
+```
+
+| 模式 | 说明 |
+|------|------|
+| inprocess | 内置包（当前 m-ops-diag） |
+| cloud_https | 第三方云；签名 Context；只回 Ports |
+| enterprise_local | 企业私有 Runtime |
+
+远程：禁止回调内部读库 API。V1 工程优先 inprocess。
+
+---
+
+## 13. Version Strategy（冻结）
+
+| 规则 | 说明 |
+|------|------|
+| Protocol semver | 破坏性变更升 major；本文 V1.x 内可加字段 |
+| Agent semver | Manifest.version；Host 可钉版本调用 |
+| Capability 稳定性 | 已 Live 的 capabilityId 不改语义；废弃走 `deprecated` |
+| 双轨兼容 | 旧 ToolAgentManifest 可适配升级；新字段缺省=最严（maxLevel=3） |
+| 停扩闸门 | Store 批量上架服从 MVP 核心飞轮闸门 |
+
+---
+
+## 14. 合规样板：m-ops-diag（冻结）
+
+覆盖闭环验证：
+
+```text
+用户输入餐厅 → Identity → Brain → M-INTEL
+  → 经营扫描 → 诊断 → Signal → Decision → Execution → Learning
+```
+
+| 项 | 值 |
+|----|-----|
 | id | `m-ops-diag` |
-| provider | mealkey |
-| runtimeMode | inprocess |
+| capabilities | ops.diagnosis.* |
+| maxInsightLevel | 3（认证前） |
 | ports | signal · insight · gap |
-| input 投影 | `RestaurantDiagnosisRequest` |
-| output | `DiagnosisSignal` / `DiagnosisInsight` / gaps |
-| permissions | Basic · Reviews · Operation（经 Brain/RIP/Evidence） |
-| 不做 | Report 主出口 · 拍板 · 假评分 · 直连 DB |
+| skill | 餐厅健康评估 |
+| 五层 | 齐备（Execution 仅经 Host/决策授权） |
 
-后续第三方诊断类 Agent 必须达到 **同等 Port 纪律**，方可进 Store。
+第一个实现叙事：`restaurant-diagnosis-agent implements Agent Protocol V1`（工程 id 仍为 `m-ops-diag`）。
 
 ---
 
-## 11. 验收标准（冻结）
+## 15. 验收标准（冻结）
 
-1. 任意 Agent 无法在无 Manifest 情况下被 Host 调用。  
-2. 无 DB 凭证出现在 Agent 进程配置中。  
-3. 非法 Port / 拍板句被 Runtime 拒收。  
-4. 同 MKContext 切片下，样板 Agent 输出可进今日或决策室适配器。  
-5. Permission 未声明的字段不出现在 Context。  
-
----
-
-## 12. 下一步（冻结）
-
-1. **工程：** 在 `agent-sdk` / `tool-agent-kit` 落下 `AgentManifestV1` · `MKContextV1` · Port 校验（先类型+单测）。  
-2. **样板：** `m-ops-diag` 标明 Protocol Compliance。  
-3. **并行产品刀：** 经营诊断 AI 推理架构（模型分工与稳定性）——协议解决「怎么接入」，推理架构解决「怎么判得稳」。  
-4. Store / 远程 HTTPS：**语义已冻，实现后置**。  
+1. 无 Manifest / 无 Skill Package → 不可调用  
+2. capabilityId 不在 Registry → 不可上架  
+3. 默认第三方无法发出 L4/L5  
+4. Agent 进程无 DB 凭证、无永久用户记忆  
+5. 输出可映射 L1–L3 且证据可追溯  
+6. Learning 不经 Brain 审核不得进 DNA  
 
 ---
 
-## 13. 修订记录
+## 16. 下一步（冻结）
+
+**不要马上堆新 Agent。** 协议语义本刀已收口。
+
+下一刀设计文档：
+
+# 《MealKey Agent Protocol V1 — Agent 运行时与第三方开发者接入流程》
+
+须回答：
+
+> 第三方开发者拿到 SDK 后，**7 天内**如何开发出一个能跑在 MealKey 上的 Agent？
+
+须覆盖：SDK 最小包 · Hello Skill · Sandbox 餐厅 · 本地调试 · 提交审核清单 · 计费/权限联调。
+
+并行（产品线）：经营诊断 AI 推理架构；工程类型落 `agent-sdk/protocol/*`。
+
+---
+
+## 17. 修订记录
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
-| V1.0 Protocol Freeze | 2026-07-21 | Manifest · MKContext · Ports · Permission · Runtime 三模式 · Quality · Lifecycle/Store · 与 Tool Framework / m-ops-diag 对齐 |
+| V1.0 | 2026-07-21 | Manifest · MKContext · Ports · Permission · Runtime · Quality · Store |
+| V1.1 | 2026-07-21 | 五层模型 · Capability Registry · Decision Skill · Insight L1–L5 · 五维质量 · Memory 隔离 · 能力市场 · Version Strategy · 下一刀=开发者接入流程 |

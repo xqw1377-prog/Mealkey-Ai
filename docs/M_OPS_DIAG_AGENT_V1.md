@@ -7,7 +7,7 @@
 > **日期：** 2026-07-21  
 > **归属：** MealKey Agent Ecosystem（L3 Tool Agent）  
 > **权威挂载：** `docs/AUTHORITY.md` L0  
-> **配套：** `MEALKEY_TOOL_AGENT_FRAMEWORK_V1.md` · `BUSINESS_SIGNAL_ENGINE_V1.md` · `FOUNDER_OS_VERTICAL_AGENT_MKINSIGHT_ADAPTER_V1.md` · `MEALKEY_RESTAURANT_BRAIN_V1.md` · `TODAY_RADAR_EXPERIENCE_V1.md`  
+> **配套：** `M_OPS_DIAG_UX_V1.md`（体验真源）· `MEALKEY_TOOL_AGENT_FRAMEWORK_V1.md` · `BUSINESS_SIGNAL_ENGINE_V1.md` · `FOUNDER_OS_VERTICAL_AGENT_MKINSIGHT_ADAPTER_V1.md` · `MEALKEY_RESTAURANT_BRAIN_V1.md` · `TODAY_RADAR_EXPERIENCE_V1.md`  
 > **代码真源：** `@mealkey/m-ops-diag` · `packages/m-ops-diag` · Host `apps/web/src/server/services/m-ops-diag-client.ts`  
 > **冲突裁决：** 与本文冲突时，以本文 + `AUTHORITY.md` 为准
 
@@ -352,25 +352,14 @@ apps/web/src/server/routers/m-ops-diag.ts
 
 ---
 
-## 13. 下一步（产品顺序 · 冻结建议）
+## 13. 下一步（产品顺序 · 冻结）
 
-**先做：** 《餐厅经营诊断系统 V1 用户体验设计》  
+**UX 已冻结：** `docs/M_OPS_DIAG_UX_V1.md`  
 
-成败不在堆代码，而在第一次展示：
+**下一刀：** 《餐厅经营诊断系统 V1 数据采集架构设计》  
+（必须采 / 可自动抓 / 权重 — 决定诊断能力上限）  
 
-> **「AI 真的看懂我的店了。」**
-
-须设计：
-
-1. 首次输入流程（店名 + 地址 + 品类）  
-2. 数据采集等待过程（诚实进度，不假勾）  
-3. 经营诊断报告首页  
-4. 顾客声音墙  
-5. 六维健康雷达（展示用，禁止假精确总分排行）  
-6. 今日经营扫描卡片  
-7. 一键进入决策室路径  
-
-UX 冻结后，再按 §9 目标树开包加深六引擎。
+数据采集架构落地后，再按 UX 五页 + §9 目标树加深前端与六引擎。
 
 ---
 

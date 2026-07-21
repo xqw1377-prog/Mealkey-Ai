@@ -42,6 +42,7 @@
 | **L0 Agent 平台架构** | `docs/MEALKEY_AGENT_PLATFORM_ARCHITECTURE_V1.md` | **四基建** Identity/Brain/Decision/Agent OS；Lifecycle；Runtime 五件套；Context Manager；Orchestra；四独立 | **否** — 禁 Core 新增 Agent；禁特权读库；组合须经 OS 编排 |
 | **L0 Agent 外接接口** | `docs/MEALKEY_AGENT_EXTERNAL_INTERFACE_V1.md` | **唯一接入面**：认证签名 · Context API · Ingress Ports · 拒收码 · SDK 边界 | **否 — MealKey 仓禁止新增任何 Agent**；存量仅 m-ops-diag 过渡 |
 | **L0 Agent SDK** | `docs/MEALKEY_AGENT_SDK_V1.md` · `@mealkey/agent-sdk/platform` | **开发者骨架**：createAgentClient · Context 租用 · Ingress · OAuth/安装 · Handoff · Billing 钩子 · Sandbox | **否** — SDK 禁嵌垂直 Agent；禁直连 Brain/Prisma |
+| **L0 Agent 7 日上手** | `docs/MEALKEY_AGENT_DEVELOPER_ONBOARDING_7DAY_V1.md` | Day0–7：Hello Context → Skill → Ingress → Manifest → UI → Handoff → 审核包 | 可加深样例；不得改外接硬闸门 |
 | **L0 Agent UI 框架** | `docs/MEALKEY_AGENT_UI_FRAMEWORK_V1.md` | **规范在 OS、实现外置**：双表面 · 五段旅程 · 视觉禁令 · Handoff；Core 只做今日/决策室投影 | **否** — 禁止在 apps/web 新建垂直 Agent 业务站 |
 | **L0 Agent Protocol** | `docs/MEALKEY_AGENT_PROTOCOL_V1.md` | **生态壁垒/能力标准化**：五层模型 · Capability Registry · Decision Skill · Insight L1–L5 · 五维质量 · Memory 隔离 · 能力市场 | **否** — 禁直连库/私有永久记忆；默认≤L3；禁无限自造能力；Store 服从 MVP 停扩 |
 | **L0 Tool Agent 框架** | `docs/MEALKEY_TOOL_AGENT_FRAMEWORK_V1.md` · `@mealkey/tool-agent-kit` · `tool-agents/` | **~100 L3 可拆分可组合**：四件套 · 四 Ports · Registry · Compose · 上架闸门 | **否** — 只扩 L3；禁止升格 L1 / 第七 Runtime；MVP 未过前批量上架仍受停扩闸门 |
@@ -111,7 +112,8 @@
 13ad. **Agent 外接硬闸门**（2026-07-21）：**MealKey 仓库禁止新增任何 Agent**；接口 `MEALKEY_AGENT_EXTERNAL_INTERFACE_V1.md`；UI 框架 `MEALKEY_AGENT_UI_FRAMEWORK_V1.md`（实现外置）。存量仅 `m-ops-diag` 过渡迁出。  
 13ae. **MealKey Agent SDK V1 已冻结**（2026-07-21）：外接开发者唯一工具包；`createAgentClient` · Context 租用 · Ingress · Handoff · Billing · Sandbox；`@mealkey/agent-sdk/platform`。真源 `MEALKEY_AGENT_SDK_V1.md`。  
 13af. **Agent Gateway Host P0**（2026-07-21）：`/api/v1/gateway/*`；侧车 `profile.agentGatewayIngress`。代码 `apps/web/src/server/agent-platform-gateway`。  
-13ag. **外置诊断样板 + 雷达消费**（2026-07-21）：`mealkey-agents/restaurant-diagnosis-agent` 经 Platform SDK 跑 Skill→Ingress；今日扫描优先消费 Gateway 侧车。**下一刀 = 外置诊断前端 + 开发者手册；Core packages 禁增 Agent。**  
+13ag. **外置诊断样板 + 雷达消费**（2026-07-21）：`mealkey-agents/restaurant-diagnosis-agent` Skill→Ingress；今日扫描消费 Gateway 侧车。  
+13ah. **外置诊断 Web + 7 日上手**（2026-07-21）：Agent UI 五段旅程（`npm run web:dev -w @mealkey-agents/restaurant-diagnosis`）；开发者手册 `MEALKEY_AGENT_DEVELOPER_ONBOARDING_7DAY_V1.md`。**Core packages 禁增 Agent。**  
 13v. **M-OPS-DIAG Architecture Freeze V1.0**（2026-07-21）：能力边界与工程真源；角色=观察/发现/证据/预警/决策输入；六大引擎架构；Evidence 三层；Finding→Pattern→Signal；Cockpit/Room。真源 `M_OPS_DIAG_AGENT_V1.md`。  
 13x. **M-OPS-DIAG UX Freeze V1.0**（2026-07-21）：壁垒=「它真的懂我的店」；First Moment≤60s；采集过程感；经营画像一句话；顾客声音墙；六观察面；今日扫描卡；V1 仅 5 页。真源 `M_OPS_DIAG_UX_V1.md`。  
 13y. **M-OPS-DIAG Data Collection Freeze V1.0**（2026-07-21）：最少主动采集+最大外部感知+持续学习；Identity/Business Fact/Consumer 三层；必采 10 事实；Evidence Card 与权重表；日扫四域；Brain 落点树。真源 `M_OPS_DIAG_DATA_COLLECTION_V1.md`。  

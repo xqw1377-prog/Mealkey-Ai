@@ -1,4 +1,4 @@
-/**
+﻿/**
  * 决策室服务端运行时：MKInsight 接入 + ExpertReport 兼容投影 + LLM 常委意见
  * V4：四大能力经 Intelligence Provider → MKInsight → Council
  */
@@ -20,13 +20,13 @@ import {
   type ExpertEngineId,
   type ExpertReport,
   type MKInsight,
-} from "../../../../../../packages/agents/src/founder-os";
-import { toMPntMkInsights } from "../../../../../../packages/agents/src/m-pnt/consulting";
-import { toMMktMkInsights } from "../../../../../../packages/agents/src/m-mkt/consulting";
-import { toMBizMkInsights } from "../../../../../../packages/agents/src/m-biz/consulting";
-import { toMEdMkInsights } from "../../../../../../packages/agents/src/m-ed/consulting";
-import { hasAgentConsultingSubstance } from "../../../../../../packages/agents/src/consulting-os";
-import { harvestSeatPrimaryFacts } from "../../../../../../packages/agents/src/consulting-os/seat-evidence";
+} from "@mealkey/agents/founder-os";
+import { toMPntMkInsights } from "@mealkey/agents/m-pnt/consulting";
+import { toMMktMkInsights } from "@mealkey/agents/m-mkt/consulting";
+import { toMBizMkInsights } from "@mealkey/agents/m-biz/consulting";
+import { toMEdMkInsights } from "@mealkey/agents/m-ed/consulting";
+import { hasAgentConsultingSubstance } from "@mealkey/agents/consulting-os";
+import { harvestSeatPrimaryFacts } from "@mealkey/agents/consulting-os/seat-evidence";
 import { getOrCreateBrandConsultingProject } from "@/server/services/m-pnt-consulting.service";
 import { getOrCreateAgentConsulting } from "@/server/services/agent-consulting.service";
 import {
@@ -44,7 +44,7 @@ import {
   collectWorldChangesFromProfile,
   enrichCouncilEvidencePacket,
 } from "@/server/founder-layer/council/council-world-evidence";
-import type { DomainStrengthSnapshot } from "../../../../../../packages/agents/src/consulting-os";
+import type { DomainStrengthSnapshot } from "@mealkey/agents/consulting-os";
 
 export { isCouncilStubAllowedByEnv };
 

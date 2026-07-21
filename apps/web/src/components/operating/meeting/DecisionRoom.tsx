@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
@@ -26,7 +26,7 @@ import {
   decisionRoomPhaseLabel,
   type CouncilMeetingSession,
   type CouncilRoleId,
-} from "../../../../../../packages/agents/src/founder-os";
+} from "@mealkey/agents/founder-os";
 
 type Mode = "major" | "special";
 type Step = "setup" | "round1" | "debate" | "board" | "closed";

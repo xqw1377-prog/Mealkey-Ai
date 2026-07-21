@@ -1,4 +1,4 @@
-/**
+﻿/**
  * M-PNT 品牌战略咨询项目 tRPC
  */
 import { z } from "zod";
@@ -55,7 +55,7 @@ import {
   STAGE_CONTRACTS,
   getConsultingCoverageChecklist,
   PRIMARY_FACT_SOURCE_LABELS,
-} from "../../../../../packages/agents/src/m-pnt/consulting";
+} from "@mealkey/agents/m-pnt/consulting";
 
 const statementSchema = z.object({
   forAudience: z.string().min(1).max(200),

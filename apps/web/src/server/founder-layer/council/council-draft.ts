@@ -1,4 +1,4 @@
-/**
+﻿/**
  * 七常委待裁决草稿读写（project.profile.activeCouncilDraft）
  */
 
@@ -13,7 +13,7 @@ import {
   toProfileConflictTRPC,
   updateProjectProfile,
 } from "@/server/services/project-profile";
-import type { CouncilMeetingSession } from "../../../../../../packages/agents/src/founder-os";
+import type { CouncilMeetingSession } from "@mealkey/agents/founder-os";
 
 const log = createLogger("council-draft");
 

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * 通用六步咨询项目服务 — M-MKT / M-BIZ / M-ED
  */
 import { prisma } from "@/lib/prisma";
@@ -33,11 +33,11 @@ import {
   type ConsultingAgentKind,
   type ResearchPack,
   type SeatPrimaryFact,
-} from "../../../../../packages/agents/src/consulting-os";
+} from "@mealkey/agents/consulting-os";
 import { getWebSearch } from "@mealkey/knowledge-engine";
-import { mmktBlueprint } from "../../../../../packages/agents/src/m-mkt/consulting";
-import { mbizBlueprint } from "../../../../../packages/agents/src/m-biz/consulting";
-import { medBlueprint } from "../../../../../packages/agents/src/m-ed/consulting";
+import { mmktBlueprint } from "@mealkey/agents/m-mkt/consulting";
+import { mbizBlueprint } from "@mealkey/agents/m-biz/consulting";
+import { medBlueprint } from "@mealkey/agents/m-ed/consulting";
 import { enrichFromEngines } from "@/server/services/agent-consulting-engines";
 import {
   attachEntrySchemes,
@@ -51,7 +51,7 @@ import {
   buildMmktSignOffPackageMarkdown,
   mmktSignOffPackageFilename,
   type EntryDeliveryPack,
-} from "../../../../../packages/agents/src/m-mkt/consulting";
+} from "@mealkey/agents/m-mkt/consulting";
 import {
   attachModeSchemes,
   buildMbizExecutionRoadmap,
@@ -63,7 +63,7 @@ import {
   signMbizStrategyReport,
   buildMbizSignOffPackageMarkdown,
   mbizSignOffPackageFilename,
-} from "../../../../../packages/agents/src/m-biz/consulting";
+} from "@mealkey/agents/m-biz/consulting";
 import {
   attachGovernanceSchemes,
   buildMedExecutionRoadmap,
@@ -75,7 +75,7 @@ import {
   signMedStrategyReport,
   buildMedSignOffPackageMarkdown,
   medSignOffPackageFilename,
-} from "../../../../../packages/agents/src/m-ed/consulting";
+} from "@mealkey/agents/m-ed/consulting";
 
 const log = createLogger("agent-consulting");
 

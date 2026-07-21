@@ -114,7 +114,7 @@ export default function NewAgentPage() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="w-full rounded-[12px] border border-[rgba(24,24,23,0.12)] bg-white px-3 py-2.5 text-[14px]"
-                placeholder="餐厅经营诊断"
+                placeholder="餐厅经营体检系统"
               />
             </label>
             <div className="mt-3 grid gap-3 sm:grid-cols-2">

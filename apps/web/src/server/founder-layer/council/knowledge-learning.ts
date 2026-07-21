@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Knowledge Learning Loop — 持久化适配器
  *
  * 将 applyExpertLearning 的 learning_adjustments 持久化到 Memory 表，
@@ -14,8 +14,8 @@ import {
   draftLearningFromCalibration,
   getLearningAdjustments,
   type LearningEvent,
-} from "../../../../../../packages/agents/src/founder-os";
-import type { CouncilRoleId } from "../../../../../../packages/agents/src/founder-os";
+} from "@mealkey/agents/founder-os";
+import type { CouncilRoleId } from "@mealkey/agents/founder-os";
 
 /**
  * 将校准提示持久化为学习事件

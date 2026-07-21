@@ -9,7 +9,7 @@ import {
 } from "../../_components/developer-portal";
 
 export const metadata: Metadata = {
-  title: "M-OPS Example · Mealkey Developers",
+  title: "餐厅经营体检系统 · Mealkey Developers",
 };
 
 export default function MOpsExamplePage() {
@@ -17,9 +17,9 @@ export default function MOpsExamplePage() {
     <DeveloperShell activePath="/developers/examples/m-ops">
       <main className="mx-auto max-w-3xl px-5 py-10 md:px-8">
         <DocHeader
-          eyebrow="REFERENCE IMPLEMENTATION"
-          title="M-OPS · 生态 Hello World"
-          description="第一个官方 Tool Agent 样板：用户产品 + 开发模板 + 教材。实现外置，禁止回流 Core。"
+          eyebrow="REFERENCE · 餐启"
+          title="餐厅经营体检系统"
+          description="官方 Hello World Agent：用户产品 + 开发模板 + 教材。外置实现，经 Gateway 接入；禁止回流 Core。"
           authority="M_OPS_AGENT_AS_REFERENCE_IMPLEMENTATION_V1 · M_OPS_DIAG_EXTERNAL_POINTER_V1"
         />
         <DocSection title="它示范什么">
@@ -36,10 +36,10 @@ C:\\Users\\xqw13\\M-OPS-Agent
 
 npm install
 npm test
-npm run web:dev          # Agent UI
+npm run web:dev          # 体检 Agent UI（餐启 logo）
 npm run run:sandbox      # → Gateway`}</CodeBlock>
           <p className="text-[13px] text-[#6f747b]">
-            工程 id 叙事：m-ops-diag · capabilities ops.diagnosis.* · maxInsightLevel 3
+            Gateway id：restaurant-diagnosis · 中文名：餐厅经营体检系统 · maxInsightLevel 3
           </p>
         </DocSection>
         <DocSection title="对照文档">

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * M-PNT 品牌战略咨询项目 — 服务层
  * 持久化：project.profile.mPntBrandProject
  */
@@ -115,8 +115,8 @@ import {
   type PrimaryFactSourceType,
   type PositionRehearsalChecklist,
   type AdvisorId,
-} from "../../../../../packages/agents/src/m-pnt/consulting";
-import type { TheoryLLMAdapter } from "../../../../../packages/agents/src/m-pnt/matrix/types";
+} from "@mealkey/agents/m-pnt/consulting";
+import type { TheoryLLMAdapter } from "@mealkey/agents/m-pnt/matrix/types";
 import { tryCreateSharedLlmAdapter } from "./llm-polish";
 import { getWebSearch } from "@mealkey/knowledge-engine";
 

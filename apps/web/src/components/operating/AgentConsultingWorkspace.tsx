@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 /**
  * M-MKT / M-BIZ / M-ED 共用六步咨询工作台
@@ -31,7 +31,7 @@ import {
   type DecisionArtifact,
   type JourneyNextStep,
   type ResearchPack,
-} from "../../../../../packages/agents/src/consulting-os";
+} from "@mealkey/agents/consulting-os";
 
 function stepRank(step: SixStepId) {
   return SIX_STEP_ORDER.indexOf(step);

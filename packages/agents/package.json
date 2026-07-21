@@ -26,6 +26,46 @@
       "types": "./dist/founder-os/index.d.ts",
       "import": "./dist/founder-os/index.js",
       "default": "./dist/founder-os/index.js"
+    },
+    "./consulting-os": {
+      "types": "./dist/consulting-os/index.d.ts",
+      "import": "./dist/consulting-os/index.js",
+      "default": "./dist/consulting-os/index.js"
+    },
+    "./m-pnt/consulting": {
+      "types": "./dist/m-pnt/consulting/index.d.ts",
+      "import": "./dist/m-pnt/consulting/index.js",
+      "default": "./dist/m-pnt/consulting/index.js"
+    },
+    "./m-mkt/consulting": {
+      "types": "./dist/m-mkt/consulting/index.d.ts",
+      "import": "./dist/m-mkt/consulting/index.js",
+      "default": "./dist/m-mkt/consulting/index.js"
+    },
+    "./m-biz/consulting": {
+      "types": "./dist/m-biz/consulting/index.d.ts",
+      "import": "./dist/m-biz/consulting/index.js",
+      "default": "./dist/m-biz/consulting/index.js"
+    },
+    "./m-ed/consulting": {
+      "types": "./dist/m-ed/consulting/index.d.ts",
+      "import": "./dist/m-ed/consulting/index.js",
+      "default": "./dist/m-ed/consulting/index.js"
+    },
+    "./consulting-os/seat-evidence": {
+      "types": "./dist/consulting-os/seat-evidence.d.ts",
+      "import": "./dist/consulting-os/seat-evidence.js",
+      "default": "./dist/consulting-os/seat-evidence.js"
+    },
+    "./consulting-os/meeting": {
+      "types": "./dist/consulting-os/meeting.d.ts",
+      "import": "./dist/consulting-os/meeting.js",
+      "default": "./dist/consulting-os/meeting.js"
+    },
+    "./m-pnt/matrix/types": {
+      "types": "./dist/m-pnt/matrix/types.d.ts",
+      "import": "./dist/m-pnt/matrix/types.js",
+      "default": "./dist/m-pnt/matrix/types.js"
     }
   },
   "scripts": {

@@ -61,7 +61,7 @@ export default function DevelopersHomePage() {
             </p>
             <div className="mt-6 flex flex-col items-center gap-3 text-center">
               {[
-                { label: "Agent", sub: "M-OPS Diagnosis" },
+                { label: "Agent", sub: "餐厅经营体检系统" },
                 { label: "MealKey Operating System", sub: "Gateway · Protocol" },
                 { label: "Restaurant Brain", sub: "Context 租用" },
                 { label: "Business Decision", sub: "今日 · 决策室 · 执行" },

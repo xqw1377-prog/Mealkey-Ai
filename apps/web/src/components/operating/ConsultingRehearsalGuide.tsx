@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -8,7 +8,7 @@ import {
   DEFAULT_REHEARSAL_CHECKLIST,
   type PositioningStatement,
   type PositionRehearsalChecklist,
-} from "../../../../../packages/agents/src/m-pnt/consulting";
+} from "@mealkey/agents/m-pnt/consulting";
 import { VoiceMicButton } from "@/components/operating/ConsultingGuidedIntake";
 
 type Answers = Partial<Record<keyof PositioningStatement, string>>;

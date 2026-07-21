@@ -89,15 +89,15 @@ function toCard(
   };
 }
 
-/** 确保 Store 有官方 M-OPS / 诊断样板位 */
+/** 确保 Store 有官方 M-OPS / 体检样板位 */
 export async function ensureOfficialStoreListings() {
   const official = [
     {
       id: "listing_official_mops",
       slug: "restaurant-diagnosis",
-      name: "餐厅经营诊断（M-OPS）",
+      name: "餐厅经营体检系统",
       description:
-        "官方参考实现：外置垂直 Agent 经 Gateway Context/Ingress 交付洞察。安装 = 授权进 OS，不是下载包。",
+        "餐启官方参考实现：持续体检餐厅经营状态，经 Gateway 交付信号与洞察。安装 = 授权进 OS，不是下载包。",
       agentId: "restaurant-diagnosis",
       referenceHref: "/developers/examples/m-ops",
       category: "经营分析",
@@ -107,12 +107,15 @@ export async function ensureOfficialStoreListings() {
   for (const item of official) {
     const existing = await prisma.agentListing.findUnique({ where: { id: item.id } });
     if (existing) {
-      if (existing.status !== "active" || existing.visibility !== "public") {
-        await prisma.agentListing.update({
-          where: { id: item.id },
-          data: { status: "active", visibility: "public" },
-        });
-      }
+      await prisma.agentListing.update({
+        where: { id: item.id },
+        data: {
+          status: "active",
+          visibility: "public",
+          name: item.name,
+          description: item.description,
+        },
+      });
       continue;
     }
     const slugTaken = await prisma.agentListing.findUnique({ where: { slug: item.slug } });

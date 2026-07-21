@@ -1,4 +1,4 @@
-export {
+﻿export {
   COUNCIL_CONSTITUTION,
   ROLE_CONTRACTS,
   DECISION_TYPES,
@@ -26,7 +26,7 @@ export {
   runDecisionRoomToBoard,
   DECISION_ROOM_PRESETS,
   listCouncilSeats,
-} from "../../../../../../packages/agents/src/founder-os";
+} from "@mealkey/agents/founder-os";
 
 export type {
   CasePacket,
@@ -43,4 +43,4 @@ export type {
   PersonaV2,
   CouncilMeetingSession,
   DecisionRoomMode,
-} from "../../../../../../packages/agents/src/founder-os";
+} from "@mealkey/agents/founder-os";

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { Mic, MicOff } from "lucide-react";
@@ -7,7 +7,7 @@ import {
   guidedFactCoverage,
   humanizeConsultingGap,
   type GuidedFactQuestion,
-} from "../../../../../packages/agents/src/m-pnt/consulting";
+} from "@mealkey/agents/m-pnt/consulting";
 
 export function VoiceMicButton({
   active,

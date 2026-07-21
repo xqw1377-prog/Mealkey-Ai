@@ -28,7 +28,7 @@ import {
   type BrandStrategyProject,
   type MpntJourneyStep,
   type IntakeChecklistItem,
-} from "../../../../../packages/agents/src/m-pnt/consulting";
+} from "@mealkey/agents/m-pnt/consulting";
 import { EngineDegradationBanner } from "@/components/operating/EngineDegradationBanner";
 import { MpntReportDoc } from "@/components/operating/MpntReportDoc";
 import { useSpeechToTextField } from "@/hooks/useSpeechToTextField";

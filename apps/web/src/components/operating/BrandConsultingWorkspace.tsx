@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 /**
  * M-PNT 品牌战略咨询工作台 — 六步价值路径为主
@@ -17,7 +17,7 @@ import {
   BRAND_BASICS_FIELDS,
   type BrandBasicsFieldKey,
   type BrandStrategyProject,
-} from "../../../../../packages/agents/src/m-pnt/consulting";
+} from "@mealkey/agents/m-pnt/consulting";
 
 export function BrandConsultingWorkspace({ projectId }: { projectId: string }) {
   const utils = trpc.useUtils();

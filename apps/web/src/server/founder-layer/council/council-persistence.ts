@@ -1,4 +1,4 @@
-/**
+﻿/**
  * 七常委持久化层 — Council Decision Memory + Track Record 写库
  *
  * 职责：
@@ -16,7 +16,7 @@ import type {
   CouncilRoleId,
   DecisionMemory,
   DecisionResolution,
-} from "../../../../../../packages/agents/src/founder-os";
+} from "@mealkey/agents/founder-os";
 
 function buildId(prefix: string): string {
   const rand =

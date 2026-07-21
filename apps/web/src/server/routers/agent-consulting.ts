@@ -1,4 +1,4 @@
-/**
+﻿/**
  * M-MKT / M-BIZ / M-ED 六步咨询 tRPC（同构）
  */
 import { z } from "zod";
@@ -20,7 +20,7 @@ import {
   upsertAgentPrimaryFacts,
   voteAgentWarRoom,
 } from "@/server/services/agent-consulting.service";
-import type { ConsultingAgentKind } from "../../../../../packages/agents/src/consulting-os";
+import type { ConsultingAgentKind } from "@mealkey/agents/consulting-os";
 
 function wrapError(error: unknown): never {
   const message = error instanceof Error ? error.message : "咨询项目操作失败";

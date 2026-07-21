@@ -1,6 +1,6 @@
-"use client";
+﻿"use client";
 
-import type { ConsultingNextStep } from "../../../../../packages/agents/src/m-pnt/consulting";
+import type { ConsultingNextStep } from "@mealkey/agents/m-pnt/consulting";
 
 /** 顶部固定：永远只告诉老板「现在做这一件」 */
 export function ConsultingNextStepBar({

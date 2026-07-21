@@ -1,4 +1,4 @@
-/**
+﻿/**
  * 六步咨询：把旧一枪引擎投影为 ResearchPack / AdvisorStrategySet
  * 失败时由调用方回退 blueprint 模板。
  */
@@ -8,14 +8,14 @@ import {
   type AdvisorStrategySet,
   type ConsultingAgentKind,
   type ResearchPack,
-} from "../../../../../packages/agents/src/consulting-os";
+} from "@mealkey/agents/consulting-os";
 import { buildBusinessSnapshotFromChat } from "@/lib/business";
 import type { EquitySnapshot } from "@/lib/equity";
 import type { MarketSnapshot } from "@/lib/market";
 import { mbizDegradedResponse, checkMBizHealth, mbizScan, normalizeBizIndustry, normalizeBizStage } from "@/server/services/m-biz-client";
 import { previewMEdSnapshot } from "@/server/services/m-ed.service";
 import { previewMMktSnapshot } from "@/server/services/m-mkt.service";
-import { buildConflictSummary } from "../../../../../packages/agents/src/consulting-os/meeting";
+import { buildConflictSummary } from "@mealkey/agents/consulting-os/meeting";
 import type { BusinessSnapshot } from "@/lib/business";
 
 export type EngineProjectCtx = {

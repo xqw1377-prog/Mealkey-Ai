@@ -1,4 +1,4 @@
-/**
+﻿/**
  * 决策室 tRPC — 七常委 Decision Council 产品链路
  * V2 扩展：自动持久化 Decision Memory + 常委战迹 + 验证回写 + 历史查询
  */
@@ -21,7 +21,7 @@ import {
   type CouncilRoleId,
   type DecisionRoomMode,
   type IssueLevel,
-} from "../../../../../packages/agents/src/founder-os";
+} from "@mealkey/agents/founder-os";
 import {
   generateCouncilOpinions,
   loadProjectExpertReports,

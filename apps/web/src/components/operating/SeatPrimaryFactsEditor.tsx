@@ -1,8 +1,8 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
-import type { SeatPrimaryFact } from "../../../../../packages/agents/src/consulting-os";
+import type { SeatPrimaryFact } from "@mealkey/agents/consulting-os";
 
 type FactDraft = {
   factId?: string;

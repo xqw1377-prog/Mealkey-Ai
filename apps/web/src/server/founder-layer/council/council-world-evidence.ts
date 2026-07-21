@@ -1,12 +1,12 @@
-/**
+﻿/**
  * 七常委开会前：把「今日世界变化 + Brain 已知/未知 + 领域强度」注入 EvidencePacket。
  * 对齐 E0/E1/M-*：证据与强度进决策，而非加席位。
  */
 import type {
   EvidenceItem,
   EvidencePacket,
-} from "../../../../../../packages/agents/src/founder-os";
-import type { DomainStrengthSnapshot } from "../../../../../../packages/agents/src/consulting-os";
+} from "@mealkey/agents/founder-os";
+import type { DomainStrengthSnapshot } from "@mealkey/agents/consulting-os";
 import { computeEvidenceWeight } from "@/server/founder-layer/capability/decision-center/evidence-weight";
 import type { WorldChangeV1 } from "@/server/founder-layer/capability/restaurant-intelligence/world-changes";
 

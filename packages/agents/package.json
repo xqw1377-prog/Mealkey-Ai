@@ -4,69 +4,21 @@
   "private": true,
   "description": "MealKey Agent 产品矩阵: LaunchAgent（开店顾问）+ MPntAgent（餐饮定位）",
   "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
   "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "default": "./dist/index.js"
-    },
-    "./launch": {
-      "types": "./dist/launch/index.d.ts",
-      "import": "./dist/launch/index.js",
-      "default": "./dist/launch/index.js"
-    },
-    "./m-pnt": {
-      "types": "./dist/m-pnt/index.d.ts",
-      "import": "./dist/m-pnt/index.js",
-      "default": "./dist/m-pnt/index.js"
-    },
-    "./founder-os": {
-      "types": "./dist/founder-os/index.d.ts",
-      "import": "./dist/founder-os/index.js",
-      "default": "./dist/founder-os/index.js"
-    },
-    "./consulting-os": {
-      "types": "./dist/consulting-os/index.d.ts",
-      "import": "./dist/consulting-os/index.js",
-      "default": "./dist/consulting-os/index.js"
-    },
-    "./m-pnt/consulting": {
-      "types": "./dist/m-pnt/consulting/index.d.ts",
-      "import": "./dist/m-pnt/consulting/index.js",
-      "default": "./dist/m-pnt/consulting/index.js"
-    },
-    "./m-mkt/consulting": {
-      "types": "./dist/m-mkt/consulting/index.d.ts",
-      "import": "./dist/m-mkt/consulting/index.js",
-      "default": "./dist/m-mkt/consulting/index.js"
-    },
-    "./m-biz/consulting": {
-      "types": "./dist/m-biz/consulting/index.d.ts",
-      "import": "./dist/m-biz/consulting/index.js",
-      "default": "./dist/m-biz/consulting/index.js"
-    },
-    "./m-ed/consulting": {
-      "types": "./dist/m-ed/consulting/index.d.ts",
-      "import": "./dist/m-ed/consulting/index.js",
-      "default": "./dist/m-ed/consulting/index.js"
-    },
-    "./consulting-os/seat-evidence": {
-      "types": "./dist/consulting-os/seat-evidence.d.ts",
-      "import": "./dist/consulting-os/seat-evidence.js",
-      "default": "./dist/consulting-os/seat-evidence.js"
-    },
-    "./consulting-os/meeting": {
-      "types": "./dist/consulting-os/meeting.d.ts",
-      "import": "./dist/consulting-os/meeting.js",
-      "default": "./dist/consulting-os/meeting.js"
-    },
-    "./m-pnt/matrix/types": {
-      "types": "./dist/m-pnt/matrix/types.d.ts",
-      "import": "./dist/m-pnt/matrix/types.js",
-      "default": "./dist/m-pnt/matrix/types.js"
-    }
+    ".": "./src/index.ts",
+    "./launch": "./src/launch/index.ts",
+    "./m-pnt": "./src/m-pnt/index.ts",
+    "./founder-os": "./src/founder-os/index.ts",
+    "./consulting-os": "./src/consulting-os/index.ts",
+    "./consulting-os/seat-evidence": "./src/consulting-os/seat-evidence.ts",
+    "./consulting-os/meeting": "./src/consulting-os/meeting.ts",
+    "./m-pnt/consulting": "./src/m-pnt/consulting/index.ts",
+    "./m-pnt/matrix/types": "./src/m-pnt/matrix/types.ts",
+    "./m-mkt/consulting": "./src/m-mkt/consulting/index.ts",
+    "./m-biz/consulting": "./src/m-biz/consulting/index.ts",
+    "./m-ed/consulting": "./src/m-ed/consulting/index.ts"
   },
   "scripts": {
     "build": "tsc",

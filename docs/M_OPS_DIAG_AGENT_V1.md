@@ -7,7 +7,7 @@
 > **日期：** 2026-07-21  
 > **归属：** MealKey Agent Ecosystem（L3 Tool Agent）  
 > **权威挂载：** `docs/AUTHORITY.md` L0  
-> **配套：** `M_OPS_DIAG_UX_V1.md`（体验真源）· `MEALKEY_TOOL_AGENT_FRAMEWORK_V1.md` · `BUSINESS_SIGNAL_ENGINE_V1.md` · `FOUNDER_OS_VERTICAL_AGENT_MKINSIGHT_ADAPTER_V1.md` · `MEALKEY_RESTAURANT_BRAIN_V1.md` · `TODAY_RADAR_EXPERIENCE_V1.md`  
+> **配套：** `M_OPS_DIAG_UX_V1.md` · `M_OPS_DIAG_DATA_COLLECTION_V1.md` · `MEALKEY_TOOL_AGENT_FRAMEWORK_V1.md` · `BUSINESS_SIGNAL_ENGINE_V1.md` · `FOUNDER_OS_VERTICAL_AGENT_MKINSIGHT_ADAPTER_V1.md` · `MEALKEY_RESTAURANT_BRAIN_V1.md` · `TODAY_RADAR_EXPERIENCE_V1.md`  
 > **代码真源：** `@mealkey/m-ops-diag` · `packages/m-ops-diag` · Host `apps/web/src/server/services/m-ops-diag-client.ts`  
 > **冲突裁决：** 与本文冲突时，以本文 + `AUTHORITY.md` 为准
 
@@ -354,12 +354,12 @@ apps/web/src/server/routers/m-ops-diag.ts
 
 ## 13. 下一步（产品顺序 · 冻结）
 
-**UX 已冻结：** `docs/M_OPS_DIAG_UX_V1.md`  
+**已冻结：** UX `M_OPS_DIAG_UX_V1.md` · 采集 `M_OPS_DIAG_DATA_COLLECTION_V1.md`  
 
-**下一刀：** 《餐厅经营诊断系统 V1 数据采集架构设计》  
-（必须采 / 可自动抓 / 权重 — 决定诊断能力上限）  
+**下一刀：** 《餐厅经营诊断系统 V1 诊断模型设计》  
+（六引擎推理 · Evidence→Finding→Pattern→Signal · 反泛建议）  
 
-数据采集架构落地后，再按 UX 五页 + §9 目标树加深前端与六引擎。
+模型冻结后，再按 UX 五页 + 采集架构 + §9 目标树落地。
 
 ---
 

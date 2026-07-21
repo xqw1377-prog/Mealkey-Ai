@@ -2,14 +2,10 @@
  * @mealkey/agent-sdk
  *
  * MealKey OS SDK — 7 Frozen Kernel Protocols
+ * + Platform Gateway Client（外接 Agent 真源：docs/MEALKEY_AGENT_SDK_V1.md）
+ *   import from "@mealkey/agent-sdk/platform"
  *
- * Protocol 1: Context (MKContext, OwnerContext, ProjectContext, MemoryContext, DecisionContext, KnowledgeContext)
- * Protocol 2: Decision (MKDecision, Evidence)
- * Protocol 3: Memory (MemoryEngine, MemoryInput, MemoryLayer)
- * Protocol 4: Agent Manifest (AgentManifest)
- * Protocol 5: Capability (CapabilityDefinition)
- * Protocol 6: Mission (Mission)
- * Protocol 7: Agent Run (AgentRun)
+ * 禁止在本包新增垂直 Agent 业务实现。
  */
 
 // ═══════════════════════════════════════════════════════════════
@@ -189,3 +185,23 @@ export function safeParseJsonArray(value: string | null | undefined): string[] {
 export { diagnoseTool } from "./tools/diagnose";
 export { reportTool } from "./tools/report";
 export { searchTool } from "./tools/search";
+
+// Platform Gateway Client（推荐外接 Agent 使用 deep import）
+export {
+  createAgentClient,
+  signal,
+  insight,
+  gap,
+  work,
+  MkError,
+  MkScopeError,
+  MkAuthError,
+} from "./platform";
+export type {
+  AgentClientConfig,
+  AgentPlatformClient,
+  ContextScope,
+  ContextPackageV1,
+  IngressBatchV1,
+  IngressAckV1,
+} from "./platform";

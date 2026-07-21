@@ -323,23 +323,15 @@ MealKey 仓内 **不得** 为新 Agent 开包；存量 `m-ops-diag` 仅过渡迁
 
 ## 14. 下一步（冻结）
 
-进入技术骨架下一刀：
+**Agent SDK V1 已冻结：** `docs/MEALKEY_AGENT_SDK_V1.md` · `@mealkey/agent-sdk/platform`
 
-# 《MealKey Agent SDK V1 设计》
+下一工程刀：
 
-须定义：
+1. Gateway 真实路由对接 External Interface  
+2. 外置诊断仓改用 Platform SDK  
+3. 7 日开发者手册（基于 SDK Hello）  
 
-1. 第三方拿什么 SDK 包  
-2. 如何获取餐厅上下文  
-3. 如何（经 Gateway）使用 Brain 切片——**无直连 Brain**  
-4. 如何返回 Signal / Insight  
-5. 如何进入 Decision Room（L4 认证路径）  
-6. 如何获得用户授权  
-7. 如何收费结算钩子  
-
-SDK 设计完成后，平台才具备可交付的「餐饮 Agent 平台」开发者骨架。
-
-**并行工程：** Gateway 落点；**禁止** MealKey 仓内新增 Agent。
+**禁止** MealKey 仓内新增 Agent。
 
 ---
 

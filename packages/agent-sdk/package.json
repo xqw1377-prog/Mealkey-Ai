@@ -2,7 +2,7 @@
   "name": "@mealkey/agent-sdk",
   "version": "0.1.0",
   "private": true,
-  "description": "MealKey Agent SDK - 7 Frozen Protocols + 类型 + 基础工具（零依赖）",
+  "description": "MealKey Agent SDK - 7 Protocols + Platform Gateway Client（外接 Agent；无垂直业务）",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -11,6 +11,11 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "default": "./dist/index.js"
+    },
+    "./platform": {
+      "types": "./dist/platform/index.d.ts",
+      "import": "./dist/platform/index.js",
+      "default": "./dist/platform/index.js"
     },
     "./*": {
       "types": "./dist/*.d.ts",

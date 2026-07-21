@@ -15,7 +15,7 @@ import {
 } from "@/server/founder-layer/capability/restaurant-intelligence/external-collector";
 import { projectCustomerPerception } from "@/server/founder-layer/capability/restaurant-intelligence/customer-perception";
 import { buildCognitionGap } from "@/server/founder-layer/capability/restaurant-intelligence/cognition-gap";
-import { buildHabitSeedFromRip } from "@/server/founder-layer/capability/restaurant-intelligence/dna-seed";
+import { buildHabitSeedFromRip, buildRipFactProposals } from "@/server/founder-layer/capability/restaurant-intelligence/dna-seed";
 import {
   PROFILE_RIP_KEY,
   type RestaurantEvidenceV1,
@@ -72,6 +72,40 @@ describe("Restaurant Intelligence Profile R1/R2", () => {
       snapshots: [{ ...snap, status: "confirmed" as const }],
     };
     expect(needsRipConfirmGate(confirmed)).toBe(false);
+
+    const rejected = {
+      ...store,
+      snapshots: [{ ...snap, status: "rejected" as const }],
+    };
+    expect(needsRipConfirmGate(rejected)).toBe(true);
+  });
+
+  it("扩张场景初步判断强调复制能力而非盲目开店", () => {
+    const snap = buildIdentityOnlySnapshot({
+      projectId: "proj_1",
+      identity,
+    });
+    expect(snap.alerts.some((a) => /复制能力/.test(a.line))).toBe(true);
+  });
+
+  it("R2：种子证据会点亮 feedbackIntelReady", () => {
+    const pack = collectExternalIntelligence({
+      identity,
+      profile: {
+        [PROFILE_RIP_MARKET_EVIDENCE_KEY]: [
+          {
+            schemaVersion: 1,
+            id: "ev_fb",
+            source: "大众点评",
+            content: "味道好但等位久",
+            sentiment: "negative",
+            aspect: "服务",
+            confidence: 0.8,
+          },
+        ] satisfies RestaurantEvidenceV1[],
+      },
+    });
+    expect(pack.feedbackIntelReady).toBe(true);
   });
 
   it("profile 键可读空 store", () => {
@@ -218,5 +252,36 @@ describe("Restaurant Intelligence Profile R1/R2", () => {
       expect(habit.reminder).not.toContain(banned);
       expect(habit.traits.join("")).not.toContain(banned);
     }
+  });
+
+  it("R3：确认后事实包含阶段/未知项/顾客信号", () => {
+    const pack = collectExternalIntelligence({
+      identity,
+      profile: {
+        [PROFILE_RIP_MARKET_EVIDENCE_KEY]: [
+          {
+            schemaVersion: 1,
+            id: "ev_env",
+            source: "大众点评",
+            content: "环境很好，适合聚餐",
+            sentiment: "positive",
+            aspect: "环境",
+            keyword: "聚餐氛围",
+            confidence: 0.85,
+          },
+        ] satisfies RestaurantEvidenceV1[],
+      },
+    });
+    const snap = buildRestaurantIntelligenceSnapshot({
+      projectId: "proj_1",
+      identity,
+      external: pack,
+      founderClaim: "菜品品质",
+    });
+    const proposals = buildRipFactProposals(snap);
+    expect(proposals.some((p) => p.key === "stage")).toBe(true);
+    expect(proposals.some((p) => p.key === "knownUnknowns")).toBe(true);
+    expect(proposals.some((p) => p.key === "customerPraise")).toBe(true);
+    expect(proposals.length).toBeGreaterThanOrEqual(4);
   });
 });

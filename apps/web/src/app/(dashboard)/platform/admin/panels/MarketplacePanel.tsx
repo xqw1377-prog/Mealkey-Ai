@@ -122,11 +122,17 @@ export function MarketplacePanel({
                           ...current,
                           [listing.id]: {
                             ...getListingEdit(listing),
-                            priceCents: event.target.value,
+                            priceCents: event.target.value.replace(/\D+/g, ""),
                           },
                         }))
                       }
                       inputMode="numeric"
+                      autoComplete="off"
+                      onFocus={(event) => event.currentTarget.select()}
+                      onMouseUp={(event) => {
+                        event.preventDefault();
+                        event.currentTarget.select();
+                      }}
                       placeholder="价格（分）"
                       className="w-full rounded-[12px] border border-[rgba(24,24,23,0.08)] bg-white px-3 py-2 text-[13px] text-[#202124] outline-none"
                     />

@@ -9,6 +9,7 @@ import {
 } from "@/server/founder-layer/capability/m-intel/anchor-gate";
 import type { BusinessIdentityV1 } from "@/server/founder-layer/contracts/business-identity";
 import type { RestaurantEvidenceV1 } from "@/server/founder-layer/contracts/restaurant-intelligence-profile";
+import { fetchLiveMarketEvidence } from "./live-market-evidence";
 
 /** profile 可选种子：适配器/手工注入的市场证据（非 Brain 事实） */
 export const PROFILE_RIP_MARKET_EVIDENCE_KEY = "restaurantMarketEvidence" as const;
@@ -187,8 +188,14 @@ export function collectExternalIntelligence(input: {
       Boolean(e.aspect) ||
       e.sentiment !== "neutral",
   );
+  const feedbackIntelReady = evidences.some(
+    (e) =>
+      e.sentiment === "negative" ||
+      e.sentiment === "positive" ||
+      Boolean(e.aspect),
+  );
   const marketScanReady = evidences.some((e) =>
-    /竞品|商圈|地图|市场/.test(`${e.source}${e.content}`),
+    /竞品|商圈|地图|市场|竞争/.test(`${e.source}${e.content}${e.signal || ""}`),
   );
 
   if (evidences.length === 0) {
@@ -203,9 +210,80 @@ export function collectExternalIntelligence(input: {
     canClaimRegional: true,
     evidences,
     reviewIntelReady,
-    feedbackIntelReady: false,
+    feedbackIntelReady,
     marketScanReady,
     degradedNotes,
     subjectLabel: gate.subjectLabel,
   };
+}
+
+/**
+ * 同步采集 + 公开检索补强（有锚点才 live）。
+ * live 失败时保留种子/账本证据并诚实降级。
+ */
+export async function collectExternalIntelligenceWithLive(input: {
+  identity: BusinessIdentityV1;
+  profile?: Record<string, unknown> | null;
+  injectedEvidence?: RestaurantEvidenceV1[];
+  category?: string;
+  /** 测试可跳过 live，避免网络抖动 */
+  skipLive?: boolean;
+}): Promise<ExternalCollectResult> {
+  const base = collectExternalIntelligence({
+    identity: input.identity,
+    profile: input.profile,
+    injectedEvidence: input.injectedEvidence,
+  });
+
+  if (!base.canClaimRegional || input.skipLive) {
+    return base;
+  }
+
+  try {
+    const live = await fetchLiveMarketEvidence({
+      brandName: input.identity.brandName,
+      city: input.identity.city || "",
+      district: input.identity.district || input.identity.address,
+      category: input.category,
+      storeName: input.identity.objectName,
+    });
+
+    if (live.evidences.length === 0) {
+      return {
+        ...base,
+        degradedNotes: [
+          ...base.degradedNotes,
+          ...live.notes,
+        ].slice(0, 8),
+      };
+    }
+
+    const merged = collectExternalIntelligence({
+      identity: input.identity,
+      profile: input.profile,
+      injectedEvidence: [
+        ...(input.injectedEvidence || []),
+        ...live.evidences,
+      ],
+    });
+
+    return {
+      ...merged,
+      degradedNotes: [
+        ...merged.degradedNotes,
+        live.hitProvider
+          ? `已接入公开检索（${live.hitProvider}）×${live.evidences.length}`
+          : `已尝试公开检索 ×${live.evidences.length}`,
+        ...live.notes,
+      ].slice(0, 8),
+    };
+  } catch {
+    return {
+      ...base,
+      degradedNotes: [
+        ...base.degradedNotes,
+        "公开检索暂不可用，已降级为身份/种子证据",
+      ].slice(0, 8),
+    };
+  }
 }

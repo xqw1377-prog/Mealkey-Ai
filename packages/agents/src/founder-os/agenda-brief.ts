@@ -27,6 +27,8 @@ export type AgendaReadiness = {
   briefComplete: boolean;
   hasSubstanceReport: boolean;
   usingStubOnly: boolean;
+  /** 因证据缺口需显式确认 */
+  requiresAllowGaps?: boolean;
   missing: string[];
   summary: string;
 };
@@ -88,12 +90,28 @@ export function upsertAgendaBrief(
   };
 }
 
+/** 缺口是否多到需要显式「带着缺口开会」 */
+export function evidenceGapsRequireAck(input: {
+  evidenceItemCount?: number;
+  evidenceGaps?: string[];
+}): boolean {
+  const gaps = input.evidenceGaps?.length || 0;
+  const items = input.evidenceItemCount || 0;
+  return gaps >= 2 || (gaps >= 1 && items < 2);
+}
+
 export function evaluateAgendaReadiness(input: {
   brief?: AgendaBrief | null;
   /** 是否挂载了实质 ExpertReport（非 stub） */
   substanceReportCount?: number;
   /** 是否允许在仅有 stub 时开会（显式确认） */
   allowStub?: boolean;
+  /** 证据包条目数 */
+  evidenceItemCount?: number;
+  /** 证据/强度缺口 */
+  evidenceGaps?: string[];
+  /** 显式确认带着缺口开会 */
+  allowGaps?: boolean;
 }): AgendaReadiness {
   const briefComplete = input.brief?.status === "complete";
   const substance = (input.substanceReportCount || 0) > 0;
@@ -106,17 +124,48 @@ export function evaluateAgendaReadiness(input: {
   if (!substance && !input.allowStub) {
     missing.push("至少 1 份实质专家报告（或显式确认使用草案）");
   }
-  const ok = briefComplete && (substance || Boolean(input.allowStub));
+  const requiresAllowGaps = evidenceGapsRequireAck({
+    evidenceItemCount: input.evidenceItemCount,
+    evidenceGaps: input.evidenceGaps,
+  });
+  // 草案路径已承认资产薄；正式路径缺口多须勾选 allowGaps
+  if (requiresAllowGaps && !input.allowGaps && !input.allowStub) {
+    missing.push(
+      "证据/强度缺口较多：勾选「带着缺口开会」或先补一手事实",
+    );
+  }
+  const ok =
+    briefComplete &&
+    (substance || Boolean(input.allowStub)) &&
+    !(requiresAllowGaps && !input.allowGaps && !input.allowStub);
+  const gapNote =
+    (input.evidenceGaps?.length || 0) > 0
+      ? ` 证据/强度提醒：${input.evidenceGaps!.slice(0, 2).join("；")}`
+      : "";
+  const emptyEvidenceNote =
+    ok && (input.evidenceItemCount || 0) === 0
+      ? " 证据包为空，常委意见将以降级置信度运行。"
+      : ok && (input.evidenceItemCount || 0) > 0
+        ? ` 已挂载证据 ${input.evidenceItemCount} 条。`
+        : "";
+  const gapsAckNote =
+    ok && requiresAllowGaps && (input.allowGaps || input.allowStub)
+      ? " 已确认带着缺口开会。"
+      : "";
   return {
     ok,
     briefComplete: Boolean(briefComplete),
     hasSubstanceReport: substance,
     usingStubOnly: !substance && Boolean(input.allowStub),
+    requiresAllowGaps,
     missing,
     summary: ok
-      ? substance
-        ? "议程与专家资产就绪，可开会。"
-        : "议程已齐；你已确认在草案资产下开会。"
+      ? (substance
+          ? "议程与专家资产就绪，可开会。"
+          : "议程已齐；你已确认在草案资产下开会。") +
+        emptyEvidenceNote +
+        gapNote +
+        gapsAckNote
       : `决策室信息未齐：${missing.slice(0, 3).join("；")}`,
   };
 }

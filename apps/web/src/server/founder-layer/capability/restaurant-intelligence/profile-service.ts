@@ -21,6 +21,7 @@ import {
 import { updateProjectProfile } from "@/server/services/project-profile";
 import {
   collectExternalIntelligence,
+  collectExternalIntelligenceWithLive,
   type ExternalCollectResult,
 } from "./external-collector";
 import {
@@ -82,7 +83,7 @@ export function getCurrentRipSnapshot(
   );
 }
 
-/** 未确认（含草稿 / 待确认 / 已修正未再确认）时需要门禁 */
+/** 未确认（含草稿 / 待确认 / 已修正 / 已拒绝未再确认）时需要门禁 */
 export function needsRipConfirmGate(
   store: RestaurantIntelligenceProfileStoreV1,
 ): boolean {
@@ -91,7 +92,8 @@ export function needsRipConfirmGate(
   return (
     current.status === "draft" ||
     current.status === "pending_confirm" ||
-    current.status === "revised"
+    current.status === "revised" ||
+    current.status === "rejected"
   );
 }
 
@@ -114,16 +116,28 @@ export function stageLabelFromIdentity(identity: BusinessIdentityV1): string {
 function alertLinesFromIdentity(identity: BusinessIdentityV1): string[] {
   const problem = identity.biggestProblem || "";
   const lines: string[] = [];
-  if (problem) {
+  const expanding =
+    identity.focus === "expansion" ||
+    /第二|扩张|开店|加盟|复制|连锁/.test(problem);
+
+  if (expanding && identity.storeCountApprox <= 1) {
+    lines.push(
+      "你现在最重要的问题，未必是立刻开第二家，而是先证明第一家店具备可复制能力。",
+    );
+  } else if (problem) {
     lines.push(`你提到最困扰的是「${problem}」，我会先围绕这件事建立判断。`);
   }
+
   lines.push(
     `当前关注重点是「${FOCUS_LABEL[identity.focus]}」，画像会优先盯相关信号。`,
   );
+
   if (!identity.externalIntelReady) {
     lines.push("品牌或位置还不完整时，我不会假装已经看过外部评价。");
   } else {
-    lines.push("外部评价采集尚未接入；当前画像基于你提供的经营身份速写。");
+    lines.push(
+      "盈利模型、复购结构、店长独立能力若仍未知，复制决策应先补这些一手事实。",
+    );
   }
   return lines.slice(0, 3);
 }
@@ -321,8 +335,19 @@ export async function generateIdentityOnlyRip(input: {
   force?: boolean;
   /** 测试注入；生产勿传假点评 */
   injectedEvidence?: RestaurantEvidenceV1[];
+  /** 测试跳过公开检索 */
+  skipLive?: boolean;
 }): Promise<RestaurantIntelligenceSnapshotV1> {
   let created: RestaurantIntelligenceSnapshotV1 | null = null;
+
+  // 先 live 采集（在 CAS 写之前），避免在同步 mutator 里 await
+  const liveExternal = await collectExternalIntelligenceWithLive({
+    identity: input.identity,
+    profile: null,
+    injectedEvidence: input.injectedEvidence,
+    category: input.category,
+    skipLive: input.skipLive,
+  });
 
   await persistRipStore(
     input.projectId,
@@ -344,11 +369,28 @@ export async function generateIdentityOnlyRip(input: {
         return store;
       }
 
+      // 合并 profile 内种子/账本（live 结果已在 injected）
       const external = collectExternalIntelligence({
         identity: input.identity,
         profile,
-        injectedEvidence: input.injectedEvidence,
+        injectedEvidence: [
+          ...(input.injectedEvidence || []),
+          ...liveExternal.evidences,
+        ],
       });
+      const merged: ExternalCollectResult = {
+        ...external,
+        degradedNotes: [
+          ...liveExternal.degradedNotes,
+          ...external.degradedNotes,
+        ].slice(0, 8),
+        reviewIntelReady:
+          external.reviewIntelReady || liveExternal.reviewIntelReady,
+        feedbackIntelReady:
+          external.feedbackIntelReady || liveExternal.feedbackIntelReady,
+        marketScanReady:
+          external.marketScanReady || liveExternal.marketScanReady,
+      };
 
       const snapshot = buildRestaurantIntelligenceSnapshot({
         projectId: input.projectId,
@@ -356,7 +398,7 @@ export async function generateIdentityOnlyRip(input: {
         category: input.category,
         versionLabel: nextVersionLabel(store),
         status: "pending_confirm",
-        external,
+        external: merged,
       });
       created = snapshot;
       return {
@@ -461,9 +503,10 @@ export async function confirmRipSnapshot(input: {
         );
       }
       if (input.action === "reject") {
+        // 不符合 ≠ 跳过：仍引导回画像修正，不得静默进驾驶舱
         return {
           ...profile,
-          nextSuggestedRoute: "/dashboard",
+          nextSuggestedRoute: ripPagePath(input.projectId),
         };
       }
       return profile;
@@ -478,9 +521,9 @@ export async function confirmRipSnapshot(input: {
   }
 
   const redirectTo =
-    input.action === "revise"
-      ? `/projects/${input.projectId}/restaurant-intelligence`
-      : "/dashboard";
+    input.action === "confirm"
+      ? "/dashboard"
+      : ripPagePath(input.projectId);
 
   return { snapshot: updated, redirectTo, habitSeeded };
 }
@@ -490,6 +533,9 @@ export function ripPagePath(projectId: string): string {
 }
 
 export const PROFILE_RIP_LAST_DIFF_KEY = "restaurantIntelligenceLastDiff" as const;
+/** 当日经营扫描戳（Asia/Shanghai 日切） */
+export const PROFILE_RIP_DAILY_SCAN_AT =
+  "restaurantIntelligenceDailyScanAt" as const;
 
 /**
  * R4 日更：重采证据 → 新 Snapshot → 差分（不新建 Prisma Decision）
@@ -501,12 +547,21 @@ export async function refreshRipDaily(input: {
   identity: BusinessIdentityV1;
   category?: string;
   injectedEvidence?: RestaurantEvidenceV1[];
+  skipLive?: boolean;
 }): Promise<{
   snapshot: RestaurantIntelligenceSnapshotV1;
   previous: RestaurantIntelligenceSnapshotV1 | null;
 }> {
   let created: RestaurantIntelligenceSnapshotV1 | null = null;
   let previous: RestaurantIntelligenceSnapshotV1 | null = null;
+
+  const liveExternal = await collectExternalIntelligenceWithLive({
+    identity: input.identity,
+    profile: null,
+    injectedEvidence: input.injectedEvidence,
+    category: input.category,
+    skipLive: input.skipLive,
+  });
 
   await persistRipStore(
     input.projectId,
@@ -516,8 +571,24 @@ export async function refreshRipDaily(input: {
       const external = collectExternalIntelligence({
         identity: input.identity,
         profile,
-        injectedEvidence: input.injectedEvidence,
+        injectedEvidence: [
+          ...(input.injectedEvidence || []),
+          ...liveExternal.evidences,
+        ],
       });
+      const merged: ExternalCollectResult = {
+        ...external,
+        degradedNotes: [
+          ...liveExternal.degradedNotes,
+          ...external.degradedNotes,
+        ].slice(0, 8),
+        reviewIntelReady:
+          external.reviewIntelReady || liveExternal.reviewIntelReady,
+        feedbackIntelReady:
+          external.feedbackIntelReady || liveExternal.feedbackIntelReady,
+        marketScanReady:
+          external.marketScanReady || liveExternal.marketScanReady,
+      };
       const inheritConfirmed = previous?.status === "confirmed";
       const snapshot = buildRestaurantIntelligenceSnapshot({
         projectId: input.projectId,
@@ -525,7 +596,7 @@ export async function refreshRipDaily(input: {
         category: input.category || previous?.basic.category,
         versionLabel: nextVersionLabel(store),
         status: inheritConfirmed ? "confirmed" : "pending_confirm",
-        external,
+        external: merged,
         founderClaim: previous?.cognitionGap?.founderClaim,
       });
       if (inheritConfirmed) {
@@ -544,6 +615,7 @@ export async function refreshRipDaily(input: {
       return {
         ...profile,
         [PROFILE_RIP_LAST_DIFF_KEY]: diff,
+        [PROFILE_RIP_DAILY_SCAN_AT]: new Date().toISOString(),
         nextSuggestedRoute:
           created.status === "pending_confirm"
             ? ripPagePath(input.projectId)

@@ -170,11 +170,39 @@ function pickEvidence(
             ? "M-ED"
             : undefined;
 
-  const fromPacket = (packet?.items ?? [])
-    .filter((i) => !engineHint || i.sourceAgent === engineHint)
+  const items = packet?.items ?? [];
+  const strengthRank = (s?: string) =>
+    s === "strong" ? 3 : s === "medium" ? 2 : 1;
+
+  const byEngine = items
+    .filter((i) => engineHint && i.sourceAgent === engineHint)
+    .sort((a, b) => strengthRank(b.strength) - strengthRank(a.strength))
     .slice(0, 2)
     .map((i) => i.evidenceId);
-  if (fromPacket.length) return fromPacket;
+  if (byEngine.length) return byEngine;
+
+  // 世界变化 / Brain / 强证：无席位引擎匹配时仍须引用真实证据，禁止空引用
+  const contextual = items
+    .filter(
+      (i) =>
+        i.sourceAgent === "WORLD" ||
+        i.sourceAgent === "BRAIN" ||
+        i.evidenceId.startsWith("WC-") ||
+        i.evidenceId.startsWith("BR-") ||
+        i.strength === "strong" ||
+        i.category === "world_change" ||
+        i.category === "brain_fact",
+    )
+    .sort((a, b) => strengthRank(b.strength) - strengthRank(a.strength))
+    .slice(0, 2)
+    .map((i) => i.evidenceId);
+  if (contextual.length) return contextual;
+
+  const any = [...items]
+    .sort((a, b) => strengthRank(b.strength) - strengthRank(a.strength))
+    .slice(0, 2)
+    .map((i) => i.evidenceId);
+  if (any.length) return any;
 
   // 无证据包时不得编造假 ID；允许用引擎 headline 标记但须可识别为 stub
   const fromReports = (reports ?? [])
@@ -182,6 +210,70 @@ function pickEvidence(
     .slice(0, 1)
     .map((r) => `${r.engineId}-HEAD`);
   return fromReports;
+}
+
+function claimForEvidenceIds(
+  ids: string[],
+  packet?: EvidencePacket,
+): string | undefined {
+  if (!ids.length || !packet?.items?.length) return undefined;
+  for (const id of ids) {
+    const hit = packet.items.find((i) => i.evidenceId === id);
+    if (hit?.claim) return hit.claim.slice(0, 72);
+  }
+  return undefined;
+}
+
+/** 启发式互质询：对立席位引用对方证据 ID，避免空挑战 */
+function attachHeuristicChallenges(
+  opinions: CouncilOpinion[],
+  packet?: EvidencePacket,
+): CouncilOpinion[] {
+  const byMember = new Map(opinions.map((o) => [o.member, o]));
+  const pairs: Array<[CouncilRoleId, CouncilRoleId]> = [
+    ["CFO", "CSO"],
+    ["CRO", "CMO"],
+    ["COO", "BMO"],
+    ["CBO", "CMO"],
+    ["BMO", "CFO"],
+    ["CSO", "CRO"],
+  ];
+
+  return opinions.map((op) => {
+    const challenges: string[] = [...(op.challenge_to_others || [])];
+    for (const [from, to] of pairs) {
+      if (from !== op.member) continue;
+      const target = byMember.get(to);
+      if (!target) continue;
+      if (target.position === op.position && op.position === "support") continue;
+      const ev =
+        target.evidence_used?.[0] ||
+        op.evidence_used?.[0] ||
+        packet?.items?.[0]?.evidenceId ||
+        "（尚无证据ID）";
+      const claim = claimForEvidenceIds(
+        [target.evidence_used?.[0] || "", op.evidence_used?.[0] || ""].filter(
+          Boolean,
+        ),
+        packet,
+      );
+      challenges.push(
+        `→${to}：你方立场「${target.position}」依据 ${ev}${
+          claim ? `（${claim}）` : ""
+        } 是否经得起「${op.member}」视角的压力测试？`,
+      );
+    }
+    // 证据缺口时自挑战
+    if ((packet?.gaps?.length || 0) > 0 && challenges.length < 2) {
+      challenges.push(
+        `自检：证据缺口「${packet!.gaps![0]}」未关闭前，不可把条件支持说成强支持。`,
+      );
+    }
+    return {
+      ...op,
+      challenge_to_others: challenges.slice(0, 3),
+    };
+  });
 }
 
 /** 校验并清洗意见中的 evidence_used，非法 ID 剔除并降权 */
@@ -252,7 +344,7 @@ export function buildHeuristicOpinions(input: {
   forcePositions?: Partial<Record<CouncilRoleId, CouncilPosition>>;
 }): CouncilOpinion[] {
   const topic = input.topic.trim() || "本议题";
-  return input.roster.map((member) => {
+  const base = input.roster.map((member) => {
     const persona = getPersonaV2(member);
     const role = getRoleContract(member);
     const position =
@@ -262,24 +354,33 @@ export function buildHeuristicOpinions(input: {
       input.evidencePacket,
       input.expertReports,
     );
+    const evidenceClaim = claimForEvidenceIds(
+      evidence_used,
+      input.evidencePacket,
+    );
 
     // 使用差异化的角色驱动判断
     const spec = buildRoleSpecificJudgment(member, topic, position);
+    const groundedJudgment = evidenceClaim
+      ? `${spec.judgment} 依据：${evidenceClaim}`
+      : spec.judgment;
+    const groundedReasoning = evidenceClaim
+      ? [...spec.reasoning.slice(0, 3), `证据锚点：${evidenceClaim}`]
+      : spec.reasoning;
 
-    const veto = position === "oppose" && (member === "CRO" || member === "CFO" || member === "COO" || member === "CSO" || member === "CMO" || member === "CBO" || member === "BMO");
-    // 所有常委在 hard veto 触发时以 oppose 带红线
-    const hasHardVeto = position === "oppose" && persona.veto_protocol.hard.length > 0;
+    const hasHardVeto =
+      position === "oppose" && persona.veto_protocol.hard.length > 0;
 
     return {
       member,
       position,
       confidence: position === "support" ? 72 : position === "oppose" ? 78 : 66,
-      summary: spec.judgment.slice(0, 120),
-      judgment: spec.judgment.slice(0, 200),
+      summary: groundedJudgment.slice(0, 120),
+      judgment: groundedJudgment.slice(0, 240),
       top_risk: spec.top_risk,
       proposal: spec.proposal.slice(0, 160),
       needs_validation: spec.needs_validation.slice(0, 120),
-      reasoning: spec.reasoning.slice(0, 4),
+      reasoning: groundedReasoning.slice(0, 4),
       evidence_used,
       key_assumptions: [persona.world_view.slice(0, 80)],
       risks: spec.risks.slice(0, 3),
@@ -291,6 +392,8 @@ export function buildHeuristicOpinions(input: {
       minority_report: position === "oppose" || hasHardVeto,
     };
   }).map((op) => sanitizeOpinionEvidence(op, input.evidencePacket));
+
+  return attachHeuristicChallenges(base, input.evidencePacket);
 }
 
 /** 按所需引擎生成占位 ExpertReport（无咨询资产时） */

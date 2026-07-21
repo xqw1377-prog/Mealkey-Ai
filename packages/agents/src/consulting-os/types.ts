@@ -389,6 +389,20 @@ export type AgentConsultingProject = {
       related: "research" | "war_room" | "decision";
       capturedAt: string;
     }>;
+    /**
+     * 领域证据账本（M-MKT/M-BIZ/M-ED 各自结构，JSON 存档）
+     * 对标 M-PNT EvidenceLedger —— 确认调研后写入。
+     */
+    domainLedger?: Record<string, unknown>;
+    /** 领域强度快照（确认调研/策略时刷新） */
+    domainStrength?: {
+      overall: number;
+      grade: "A" | "B" | "C" | "D";
+      readyForCouncil: boolean;
+      gaps: string[];
+      summary: string;
+      agentId: ConsultingAgentKind;
+    };
   };
   updatedAt: string;
 };

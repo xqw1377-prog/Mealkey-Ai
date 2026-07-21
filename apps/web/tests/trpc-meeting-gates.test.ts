@@ -22,6 +22,11 @@ const mocks = vi.hoisted(() => {
   const createDecision = vi.fn();
   const persistFounderMemoryWritesArchive = vi.fn();
   const evaluateEngineMeetingGate = vi.fn();
+  const createExecutionFromDecision = vi.fn();
+  const ingestSignalsAndEvolve = vi.fn(
+    (profile: Record<string, unknown>) => profile,
+  );
+  const buildCouncilDecisionSignals = vi.fn(() => []);
 
   return {
     projectFindFirst,
@@ -41,6 +46,9 @@ const mocks = vi.hoisted(() => {
     createDecision,
     persistFounderMemoryWritesArchive,
     evaluateEngineMeetingGate,
+    createExecutionFromDecision,
+    ingestSignalsAndEvolve,
+    buildCouncilDecisionSignals,
   };
 });
 
@@ -137,6 +145,26 @@ vi.mock("@/server/founder-layer/memory", async (importOriginal) => {
     ...actual,
     persistFounderMemoryWrites: (...args: unknown[]) =>
       mocks.persistFounderMemoryWritesArchive(...args),
+  };
+});
+
+vi.mock(
+  "@/server/founder-layer/capability/execution/create-from-decision",
+  () => ({
+    createExecutionFromDecision: (...args: unknown[]) =>
+      mocks.createExecutionFromDecision(...args),
+  }),
+);
+
+vi.mock("@/server/founder-layer/intelligence", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@/server/founder-layer/intelligence")>();
+  return {
+    ...actual,
+    ingestSignalsAndEvolve: (...args: unknown[]) =>
+      mocks.ingestSignalsAndEvolve(...args),
+    buildCouncilDecisionSignals: (...args: unknown[]) =>
+      mocks.buildCouncilDecisionSignals(...args),
   };
 });
 
@@ -379,6 +407,23 @@ describe("createCaller · decisionArchive.confirmFromMeeting", () => {
     // findMany 已被 prisma mock 默认返回 []；显式再钉一次
     const { prisma } = await import("@/lib/prisma");
     (prisma.decision.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+    mocks.createExecutionFromDecision.mockResolvedValue({
+      result: {
+        decisionId: "dec_cmtestid01",
+        mkStatus: "EXECUTING",
+        actionPlan: { planId: "ap_exec_dec_cmtestid01" },
+        validationTask: {
+          id: "vt_1",
+          decisionId: "dec_cmtestid01",
+          d7ReviewDueAt: new Date().toISOString(),
+        },
+        sourceEventId: "ExecutionStarted:dec_cmtestid01",
+      },
+      nextProfile: {
+        lastActionPlan: { planId: "ap_exec_dec_cmtestid01" },
+        activeValidationTaskId: "vt_1",
+      },
+    });
 
     const api = caller({ userId: "user_1", ownerId: "owner_1" });
     const result = await api.decisionArchive.confirmFromMeeting({
@@ -391,8 +436,32 @@ describe("createCaller · decisionArchive.confirmFromMeeting", () => {
     });
     expect(result).toMatchObject({
       decisionId: "dec_cmtestid01",
+      executionStarted: true,
+      actionPlanId: "ap_exec_dec_cmtestid01",
+      mkStatus: "EXECUTING",
     });
+    expect(result.executionError).toBeNull();
     expect(mocks.createDecision).toHaveBeenCalled();
+    expect(mocks.createExecutionFromDecision).toHaveBeenCalled();
     expect(mocks.projectUpdateMany).toHaveBeenCalled();
+  });
+
+  it("自动执行失败时 executionStarted=false 且带回错误", async () => {
+    const { prisma } = await import("@/lib/prisma");
+    (prisma.decision.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+    mocks.createExecutionFromDecision.mockRejectedValue(
+      new Error("仅已批准决策可进入执行"),
+    );
+
+    const api = caller({ userId: "user_1", ownerId: "owner_1" });
+    const result = await api.decisionArchive.confirmFromMeeting({
+      projectId: "proj_1",
+      problem: "要不要扩张？",
+      judgement: "先验证再扩张",
+      allowInsufficientEvidence: true,
+    });
+    expect(result.executionStarted).toBe(false);
+    expect(result.executionError).toMatch(/批准|执行/);
+    expect(result.decisionId).toBe("dec_cmtestid01");
   });
 });

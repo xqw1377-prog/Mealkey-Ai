@@ -95,7 +95,8 @@ function scoreSTP(d: InventedDirection, f: ThinkingFactPack): {
   }
 
   // 规模性
-  const hasSize = tiers => tiers && tiers.length > 0 && tiers.some(t => /大|增长|万亿|亿级/.test(t.growth || ""));
+  const hasSize = (tiers: Array<{ name: string; size: string; growth: string }> | undefined) =>
+    tiers && tiers.length > 0 && tiers.some((t: { name: string; size: string; growth: string }) => /大|增长|万亿|亿级/.test(t.growth || ""));
   const isSizeable = hasSize(f.demographicTiers);
   if (isSizeable || /规模|市场|人群/.test(text)) {
     add("规模性", 12, "细分市场有足够规模", true);
@@ -215,7 +216,7 @@ export async function runSTPEngine(
   risks.push({ risk: "【细分官】细分越窄品牌天花板越低，需规划扩展路径", severity: "R1" });
 
   const enriched = enrichVerdictWithKnowledge({
-    source: "ye_maozhong",
+    source: null,
     directionText: `${preferred.oneLiner} ${preferred.name} ${preferred.focus} ${f.who} ${word}`,
     baseChecks: preferredRow.checks,
     baseScore: preferredRow.total,

@@ -8,7 +8,7 @@ import type {
 } from "@/server/founder-layer/contracts/decision-center";
 import type { DecisionHorizonV1 } from "@/server/founder-layer/contracts/business-identity";
 import {
-  decisionEntryPath,
+  decisionReadyPath,
   isExpansionDecisionTopic,
 } from "@/lib/decision-entry";
 import { collectDecisionSignals } from "@/server/founder-layer/capability/decision-intelligence/signal-engine";
@@ -23,7 +23,26 @@ import {
   diffRipSnapshots,
   pickRipDiffPair,
   signalsFromRipDiff,
+  type RipDiffV1,
 } from "@/server/founder-layer/capability/restaurant-intelligence/rip-diff";
+import {
+  buildWorldChangesFromDiff,
+  primaryWorldChangeHref,
+  worldChangesSummaryLine,
+} from "@/server/founder-layer/capability/restaurant-intelligence/world-changes";
+import { PROFILE_RIP_LAST_DIFF_KEY } from "@/server/founder-layer/capability/restaurant-intelligence/profile-service";
+import {
+  signalsFromSeatConsulting,
+  worldChangesFromSeatConsulting,
+} from "@/server/founder-layer/capability/decision-center/seat-consulting-scan";
+import { buildBusinessRadar } from "@/server/founder-layer/capability/decision-center/build-business-radar";
+import { collectD7ReviewItems } from "@/server/founder-layer/capability/decision-center/d7-review";
+import { extractRestaurantContextForSignals } from "@/server/founder-layer/capability/decision-center/restaurant-context-for-signals";
+import {
+  readWeeklyOpsMetrics,
+  weeklyOpsToInternalFacts,
+  weeklyOpsToWorldHint,
+} from "@/server/founder-layer/capability/ops-metrics/weekly-upload";
 
 type HomeLike = {
   ownerName?: string;
@@ -126,9 +145,15 @@ function expansionCaseHref(projectId: string) {
   return `/projects/${projectId}/decision-case`;
 }
 
-/** 今日决策入口：一律进决策链路，禁止默认掉进顾问咨询会 */
-function decisionEntryHref(projectId: string, topic: string) {
-  return decisionEntryPath(projectId, topic);
+/** 今日决策入口：默认 ready（可配 why 摘要）；扩店走 case */
+function decisionEntryHref(
+  projectId: string,
+  topic: string,
+  whyNow?: string,
+) {
+  return decisionReadyPath(projectId, topic, {
+    whyNow: whyNow || undefined,
+  });
 }
 
 export type DailyScanOptions = {
@@ -144,6 +169,13 @@ export type DailyScanOptions = {
   decisionHorizon?: DecisionHorizonV1 | null;
   /** 原始 profile，用于 RIP 差分 → Signal */
   profile?: Record<string, unknown> | null;
+  /** 近期 Decision（D+7 补充源） */
+  recentDecisions?: Array<{
+    id: string;
+    problem?: string | null;
+    judgement?: string | null;
+    outcome?: string | null;
+  }> | null;
 };
 
 export function toDailyScanV1(
@@ -511,8 +543,9 @@ export function toDailyScanV1(
     return 1;
   })();
 
-  // R4：经营画像差分 → Signal（无实质变化则空）
+  // R4/E1：经营画像差分 → Signal + 世界变化条
   let ripSignals: DecisionSignalV1[] = [];
+  let worldChanges: NonNullable<DailyScanV1["worldChanges"]> = [];
   try {
     const ripStore = readRipStore(options.profile || undefined);
     const { previous, current } = pickRipDiffPair(
@@ -520,8 +553,13 @@ export function toDailyScanV1(
       ripStore.currentSnapshotId,
     );
     if (current && current.status === "confirmed" && previous) {
-      // 须有上一版才算日更差分，避免首版确认刷噪声 Candidate
-      const diff = diffRipSnapshots(previous, current);
+      const storedDiff = options.profile?.[PROFILE_RIP_LAST_DIFF_KEY];
+      const diff: RipDiffV1 =
+        storedDiff &&
+        typeof storedDiff === "object" &&
+        (storedDiff as RipDiffV1).toSnapshotId === current.snapshotId
+          ? (storedDiff as RipDiffV1)
+          : diffRipSnapshots(previous, current);
       ripSignals = signalsFromRipDiff({
         projectId,
         brandName: options.brandName,
@@ -531,12 +569,49 @@ export function toDailyScanV1(
         diff,
         current,
       });
+      worldChanges = buildWorldChangesFromDiff({
+        diff,
+        current,
+        projectId,
+      });
     } else {
       ripSignals = [];
+      worldChanges = [];
     }
   } catch {
     ripSignals = [];
+    worldChanges = [];
   }
+
+  // E2：三席咨询进展 → 世界变化 + Signal
+  try {
+    const seatChanges = worldChangesFromSeatConsulting({
+      profile: options.profile || null,
+      projectId,
+    });
+    const seenTitles = new Set(worldChanges.map((c) => c.title));
+    for (const c of seatChanges) {
+      if (seenTitles.has(c.title)) continue;
+      seenTitles.add(c.title);
+      worldChanges.push(c);
+    }
+    worldChanges = worldChanges.slice(0, 6);
+  } catch {
+    // ignore
+  }
+
+  const seatSignals = (() => {
+    try {
+      return signalsFromSeatConsulting({
+        profile: options.profile || null,
+        projectId,
+        brandName: options.brandName,
+        city: options.city,
+      });
+    } catch {
+      return [] as DecisionSignalV1[];
+    }
+  })();
 
   // Signal → Candidate → Focus（不在此 createDecision）
   const signals = collectDecisionSignals({
@@ -554,7 +629,7 @@ export function toDailyScanV1(
         }
       : null,
     riskBlocksOpportunity: riskBlocks,
-    ripSignals,
+    ripSignals: [...ripSignals, ...seatSignals],
   });
   const candidates = buildCandidatesFromSignals(signals, {
     projectId,
@@ -572,7 +647,11 @@ export function toDailyScanV1(
   if (focusCandidate) {
     const focusTopic =
       focusCandidate.question || focusCandidate.title || "今日经营决策";
-    const href = decisionEntryHref(projectId, focusTopic);
+    const href = decisionEntryHref(
+      projectId,
+      focusTopic,
+      focusCandidate.whyNow || undefined,
+    );
     todayFocus = {
       kind: "decide",
       title: focusCandidate.question || focusCandidate.title,
@@ -594,6 +673,31 @@ export function toDailyScanV1(
         reason: "open_card",
       };
     }
+  } else if (worldChanges.length > 0) {
+    const first = worldChanges[0]!;
+    const topic =
+      first.decisionTopic ||
+      first.title ||
+      "根据今日经营变化，下一步最该拍什么板？";
+    const href =
+      first.href || primaryWorldChangeHref(projectId, worldChanges, topic);
+    todayFocus = {
+      kind: "decide",
+      title: topic,
+      whyToday: clip(
+        `${worldChangesSummaryLine(worldChanges)}建议先判断：${first.title}`,
+        72,
+      ),
+      href,
+      readinessStars,
+      known: known.slice(0, 4),
+      missing: missing.slice(0, 4),
+    };
+    primaryCta = {
+      label: "进入决策会议室",
+      href,
+      reason: "open_card",
+    };
   } else if (primaryCard) {
     todayFocus = {
       kind: "watch",
@@ -642,8 +746,15 @@ export function toDailyScanV1(
     openActions.length,
     actions.filter((a) => !a.done).length,
   );
+  const reviewDue = collectD7ReviewItems({
+    projectId,
+    profile: options.profile,
+    decisions: options.recentDecisions,
+  });
+
   const reviewingCount =
-    home.activeValidationTask || home.pendingRedeision ? 1 : 0;
+    (home.activeValidationTask || home.pendingRedeision ? 1 : 0) +
+    reviewDue.length;
 
   const inboxFull = projectInboxFromCandidates({
     candidates,
@@ -667,7 +778,16 @@ export function toDailyScanV1(
       href: `/projects/${projectId}/decisions`,
     });
   }
-  if (reviewingCount > 0) {
+  for (const due of reviewDue) {
+    loopItems.push({
+      id: due.id,
+      kind: "case",
+      title: clip(due.title, 48),
+      bucket: "reviewing",
+      href: due.href,
+    });
+  }
+  if (reviewDue.length === 0 && (home.activeValidationTask || home.pendingRedeision)) {
     const title =
       home.activeValidationTask?.hypothesisStatement ||
       home.pendingRedeision?.topic ||
@@ -703,11 +823,65 @@ export function toDailyScanV1(
     })),
   };
 
+  const restaurantContext = extractRestaurantContextForSignals({
+    restaurantName,
+    brandName: options.brandName,
+    stageLabel: diagnosis.stageLabel,
+    profile: options.profile,
+  });
+
+  const weeklyOps = readWeeklyOpsMetrics(options.profile);
+  const opsFacts = weeklyOpsToInternalFacts(weeklyOps);
+  const opsHint = weeklyOpsToWorldHint(weeklyOps);
+
+  const radar = buildBusinessRadar({
+    projectId,
+    worldChanges,
+    todayFocus,
+    primaryCard,
+    diagnosis,
+    restaurantContext,
+    externalIntelReady: identityHint.externalIntelReady,
+    internalFacts: opsFacts,
+    opsWorldHint: opsHint,
+  });
+
+  // D+7 到期时提升为今日主 CTA（复盘优先于闲逛）
+  let finalCta = primaryCta;
+  let finalFocus = todayFocus;
+  if (reviewDue[0] && todayFocus.kind === "observe") {
+    finalFocus = {
+      kind: "decide",
+      title: reviewDue[0].title,
+      whyToday: "决策已满 7 天，该对照结果复盘了。",
+      href: reviewDue[0].href,
+      readinessStars: 4,
+      known: ["当时有过明确裁决", "已进入执行/验证窗口"],
+      missing: [...reviewDue[0].questions],
+    };
+    finalCta = {
+      label: "进入第7天复盘",
+      href: reviewDue[0].href,
+      reason: "d7_review",
+    };
+  }
+
   return {
     diagnosis,
-    todayFocus,
+    todayFocus: finalFocus,
     identityHint,
     inbox,
+    worldChanges,
+    worldScanSummary: worldChangesSummaryLine(worldChanges),
+    radar,
+    reviewDue: reviewDue.map((r) => ({
+      id: r.id,
+      decisionId: r.decisionId,
+      title: r.title,
+      href: r.href,
+      daysOverdue: r.daysOverdue,
+      questions: r.questions,
+    })),
     primaryCard,
     secondaryCards,
     actions,
@@ -720,6 +894,6 @@ export function toDailyScanV1(
         : 0,
       actions: actions.length,
     },
-    primaryCta,
+    primaryCta: finalCta,
   };
 }

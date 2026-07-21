@@ -43,7 +43,7 @@ function RestaurantIntelligenceFlow({ projectId }: { projectId: string }) {
         router.replace("/dashboard");
       } else {
         setPhase("portrait");
-        setShowRevise(false);
+        setShowRevise(payload.snapshot.status === "rejected");
         await refetch();
       }
     },
@@ -58,6 +58,7 @@ function RestaurantIntelligenceFlow({ projectId }: { projectId: string }) {
   const generateAttempted = useRef(false);
 
   const snapshot = data?.snapshot ?? null;
+  const identity = data?.identity ?? null;
 
   useEffect(() => {
     if (isLoading || snapshot || generateAttempted.current) return;
@@ -81,7 +82,7 @@ function RestaurantIntelligenceFlow({ projectId }: { projectId: string }) {
     const timer = window.setTimeout(() => {
       setRecognizingDone(true);
       setPhase("portrait");
-    }, 1400);
+    }, 1600);
     return () => window.clearTimeout(timer);
   }, [snapshot?.snapshotId, snapshot?.status, router]);
 
@@ -100,11 +101,11 @@ function RestaurantIntelligenceFlow({ projectId }: { projectId: string }) {
       <PageLoadingState
         eyebrow="经营认知"
         title="正在认识你的生意…"
-        description="先整理你提供的经营身份，再生成第一版画像。"
+        description="先整理你提供的经营身份，再自动补充外部信息。"
         steps={[
           { label: "读取经营身份", status: "done" },
-          { label: "建立理解草稿", status: "active" },
-          { label: "生成经营画像", status: "pending" },
+          { label: "采集外部线索", status: "active" },
+          { label: "生成经营认知档案", status: "pending" },
         ]}
       />
     );
@@ -126,13 +127,6 @@ function RestaurantIntelligenceFlow({ projectId }: { projectId: string }) {
           >
             重新生成
           </button>
-          <button
-            type="button"
-            className="inline-flex min-h-12 w-full items-center justify-center rounded-[16px] border border-[rgba(24,24,23,0.12)] bg-white px-5 text-[15px] font-semibold text-[#181817]"
-            onClick={() => router.replace("/dashboard")}
-          >
-            先进入驾驶舱
-          </button>
         </div>
       </PageContent>
     );
@@ -144,12 +138,15 @@ function RestaurantIntelligenceFlow({ projectId }: { projectId: string }) {
         <RecognizingScreen
           steps={collectionSteps}
           notes={snapshot?.collection.degradedNotes}
-          onSkip={() => router.replace("/dashboard")}
           generating={generate.isPending || !snapshot}
         />
       </PageContent>
     );
   }
+
+  const ownerLabel = identity?.objectName
+    ? `${identity.objectName.replace(/店$/, "")}老板`
+    : "老板";
 
   return (
     <PageContent>
@@ -157,17 +154,28 @@ function RestaurantIntelligenceFlow({ projectId }: { projectId: string }) {
         <header className="space-y-3">
           <MKBrand subtitle={null} />
           <p className="text-[11px] font-medium tracking-[0.14em] text-[#66735E]">
-            建立你的经营认知
+            餐启 · 经营认知档案
           </p>
           <h1 className="font-display text-[30px] font-semibold leading-[1.1] tracking-[-0.045em] text-[#202124] md:text-[36px]">
             {snapshot.basic.brandName}经营画像 {snapshot.versionLabel}
           </h1>
           <p className="text-[15px] leading-7 text-[#3a3d41]">
-            这是我对你的第一理解。确认前不会当作最终事实写入。
+            {ownerLabel}，这是我目前对你这家生意的理解。请确认，这是不是你正在经营的世界。
           </p>
         </header>
 
+        <TrustLegend
+          reviewReady={snapshot.collection.reviewIntelReady}
+          evidenceInsufficient={snapshot.customer.evidenceInsufficient}
+        />
+
         <PortraitCard snapshot={snapshot} />
+
+        {snapshot.status === "rejected" ? (
+          <p className="rounded-[12px] border border-[rgba(180,124,92,0.35)] bg-[#FBF6F2] px-4 py-3 text-[14px] leading-6 text-[#8A4F31]">
+            你标记为不符合。请修改后再次确认——确认前不会进入驾驶舱，也不会把错误理解写入 Brain。
+          </p>
+        ) : null}
 
         {showRevise ? (
           <section className="space-y-4 border-y border-[rgba(24,24,23,0.08)] py-5">
@@ -228,7 +236,7 @@ function RestaurantIntelligenceFlow({ projectId }: { projectId: string }) {
         ) : (
           <section className="space-y-3">
             <p className="text-[15px] font-medium text-[#202124]">
-              这是我对你的第一理解，准确吗？
+              确认档案 · 准确吗？
             </p>
             <div className="space-y-2 rounded-[12px] border border-[rgba(24,24,23,0.08)] bg-[#FBFAF7] px-4 py-3">
               <p className="text-[11px] tracking-[0.12em] text-[#66735E]">
@@ -272,7 +280,7 @@ function RestaurantIntelligenceFlow({ projectId }: { projectId: string }) {
               }
               className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[16px] bg-[#181817] px-5 text-[15px] font-semibold text-white"
             >
-              基本准确，进入驾驶舱
+              确认档案，进入驾驶舱
               <Check className="h-4 w-4" />
             </button>
             <button
@@ -281,7 +289,7 @@ function RestaurantIntelligenceFlow({ projectId }: { projectId: string }) {
               onClick={() => setShowRevise(true)}
               className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[16px] border border-[rgba(24,24,23,0.12)] bg-white px-5 text-[15px] font-semibold text-[#181817]"
             >
-              修改
+              继续完善
               <Pencil className="h-4 w-4" />
             </button>
             <button
@@ -296,7 +304,7 @@ function RestaurantIntelligenceFlow({ projectId }: { projectId: string }) {
               }
               className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[16px] border border-transparent px-5 text-[15px] font-medium text-[#6f747b]"
             >
-              不符合，先进入驾驶舱
+              不符合，我来改
               <X className="h-4 w-4" />
             </button>
           </section>
@@ -310,15 +318,40 @@ function RestaurantIntelligenceFlow({ projectId }: { projectId: string }) {
   );
 }
 
+function TrustLegend({
+  reviewReady,
+  evidenceInsufficient,
+}: {
+  reviewReady: boolean;
+  evidenceInsufficient: boolean;
+}) {
+  return (
+    <div className="grid grid-cols-3 gap-2 rounded-[12px] border border-[rgba(24,24,23,0.08)] bg-[#FBFAF7] px-3 py-3 text-center">
+      <div>
+        <p className="text-[11px] tracking-[0.08em] text-[#66735E]">你告诉我</p>
+        <p className="mt-1 text-[13px] font-semibold text-[#202124]">★★★★★</p>
+      </div>
+      <div>
+        <p className="text-[11px] tracking-[0.08em] text-[#66735E]">我观察到的</p>
+        <p className="mt-1 text-[13px] font-semibold text-[#202124]">
+          {reviewReady && !evidenceInsufficient ? "★★★★☆" : "★★☆☆☆"}
+        </p>
+      </div>
+      <div>
+        <p className="text-[11px] tracking-[0.08em] text-[#66735E]">我推断的</p>
+        <p className="mt-1 text-[13px] font-semibold text-[#202124]">★★★☆☆</p>
+      </div>
+    </div>
+  );
+}
+
 function RecognizingScreen({
   steps,
   notes,
-  onSkip,
   generating,
 }: {
-  steps: Array<{ label: string; done: boolean; skipped?: boolean }>;
+  steps: Array<{ label: string; done: boolean }>;
   notes?: string[];
-  onSkip?: () => void;
   generating?: boolean;
 }) {
   return (
@@ -332,7 +365,7 @@ function RecognizingScreen({
           正在认识你的生意…
         </h1>
         <p className="text-[15px] leading-7 text-[#3a3d41]">
-          先建立第一版经营理解。外部证据未就绪时会明示降级，不会打假勾。
+          不是在收集资料，而是在建立你的经营认知档案。外部证据未就绪时会明示降级，不会打假勾。
         </p>
       </div>
 
@@ -343,14 +376,8 @@ function RecognizingScreen({
             className="flex items-center justify-between gap-3 text-[15px]"
           >
             <span className="text-[#202124]">{step.label}</span>
-            <span
-              className={
-                step.done
-                  ? "text-[#66735E]"
-                  : "text-[#6f747b]"
-              }
-            >
-              {step.done ? "已完成" : "未接入 · 已降级"}
+            <span className={step.done ? "text-[#66735E]" : "text-[#6f747b]"}>
+              {step.done ? "✓ 已完成" : "⚠ 未接入 · 已降级"}
             </span>
           </li>
         ))}
@@ -367,17 +394,8 @@ function RecognizingScreen({
       ) : null}
 
       <p className="text-[13px] text-[#66735E]">
-        {generating ? "正在生成你的经营画像…" : "即将展示画像…"}
+        {generating ? "正在生成你的经营认知档案…" : "即将展示档案…"}
       </p>
-      {onSkip ? (
-        <button
-          type="button"
-          onClick={onSkip}
-          className="text-[13px] font-medium text-[#6f747b] underline-offset-2 hover:underline"
-        >
-          先进入驾驶舱
-        </button>
-      ) : null}
     </div>
   );
 }
@@ -391,10 +409,30 @@ function PortraitCard({
     .filter(Boolean)
     .join(" · ");
 
+  const knownStrengths = [
+    snapshot.cognitionGap?.founderClaim,
+    snapshot.basic.category ? `品类清晰：${snapshot.basic.category}` : null,
+    snapshot.collection.identityReady ? "经营身份已锚定" : null,
+  ].filter(Boolean) as string[];
+
+  const unknowns = [
+    !snapshot.basic.avgTicketHint || snapshot.basic.avgTicketHint === "未知"
+      ? "当前真实客单 / 盈利模型"
+      : null,
+    snapshot.customer.evidenceInsufficient ? "用户复购结构" : null,
+    /扩张|复制|第二/.test(snapshot.basic.stageLabel || "")
+      ? "店长复制能力"
+      : null,
+  ].filter(Boolean) as string[];
+
+  const marketEvidence = snapshot.evidence.filter((e) => e.source !== "经营身份");
+
   return (
     <section className="space-y-5 rounded-[12px] border border-[rgba(24,24,23,0.08)] bg-white p-5">
       <div>
-        <p className="text-[11px] tracking-[0.12em] text-[#66735E]">一、基础身份</p>
+        <p className="text-[11px] tracking-[0.12em] text-[#66735E]">
+          【经营主体】· 你告诉我
+        </p>
         <dl className="mt-3 space-y-2 text-[15px] text-[#202124]">
           <div className="flex justify-between gap-3">
             <dt className="text-[#6f747b]">品牌</dt>
@@ -405,7 +443,7 @@ function PortraitCard({
             <dd>{snapshot.basic.category || "待确认"}</dd>
           </div>
           <div className="flex justify-between gap-3">
-            <dt className="text-[#6f747b]">位置</dt>
+            <dt className="text-[#6f747b]">所在地</dt>
             <dd>{location || "待补"}</dd>
           </div>
           <div className="flex justify-between gap-3">
@@ -413,62 +451,85 @@ function PortraitCard({
             <dd>{snapshot.basic.stageLabel || "待确认"}</dd>
           </div>
           <div className="flex justify-between gap-3">
-            <dt className="text-[#6f747b]">客单</dt>
-            <dd>{snapshot.basic.avgTicketHint || "未知"}</dd>
-          </div>
-          <div className="flex justify-between gap-3">
             <dt className="text-[#6f747b]">竞争</dt>
-            <dd className="text-right">{snapshot.basic.competitionHint || "未知"}</dd>
+            <dd className="text-right">
+              {snapshot.basic.competitionHint || "未知"}
+            </dd>
           </div>
         </dl>
       </div>
 
       <div>
         <p className="text-[11px] tracking-[0.12em] text-[#66735E]">
-          二、顾客怎么看你
+          【我了解到的经营事实】
+        </p>
+        <div className="mt-3 space-y-3 text-[15px] leading-7 text-[#202124]">
+          {knownStrengths.length > 0 ? (
+            <div>
+              <p className="text-[13px] text-[#66735E]">优势 / 已知</p>
+              <ul className="mt-1 space-y-1">
+                {knownStrengths.map((s) => (
+                  <li key={s}>✓ {s}</li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+          {unknowns.length > 0 ? (
+            <div>
+              <p className="text-[13px] text-[#B47C5C]">未知 · 决策前须补</p>
+              <ul className="mt-1 space-y-1 text-[#8A4F31]">
+                {unknowns.map((u) => (
+                  <li key={u}>⚠ {u}</li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+        </div>
+      </div>
+
+      <div>
+        <p className="text-[11px] tracking-[0.12em] text-[#66735E]">
+          【市场正在怎么看你】· 我观察到的
         </p>
         {snapshot.customer.evidenceInsufficient ? (
           <p className="mt-3 text-[15px] leading-7 text-[#6f747b]">
-            尚未形成可靠的顾客认知（缺锚点或外部采集未就绪）
+            尚未形成可靠的顾客认知（缺锚点或外部采集未就绪）。不会假装已完成网络评价分析。
           </p>
         ) : (
           <div className="mt-3 space-y-3 text-[15px] text-[#202124]">
-            {snapshot.customer.aspectScores.length > 0 ? (
-              <ul className="space-y-1.5">
-                {snapshot.customer.aspectScores.map((a) => (
-                  <li
-                    key={a.aspect}
-                    className="flex items-center justify-between gap-3"
-                  >
-                    <span className="text-[#6f747b]">{a.label}</span>
-                    <span>
-                      {typeof a.score === "number" ? `${a.score}` : "—"}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            ) : null}
             {snapshot.customer.positiveKeywords.length > 0 ? (
               <p>
-                <span className="text-[#6f747b]">正向 · </span>
+                <span className="text-[#66735E]">好评集中 · </span>
                 {snapshot.customer.positiveKeywords.join("、")}
               </p>
             ) : null}
             {snapshot.customer.watchouts.length > 0 ? (
               <p>
-                <span className="text-[#B47C5C]">需关注 · </span>
+                <span className="text-[#B47C5C]">差评 / 需关注 · </span>
                 {snapshot.customer.watchouts.join("、")}
               </p>
+            ) : null}
+            {marketEvidence.length > 0 ? (
+              <ul className="space-y-2 border-t border-[rgba(24,24,23,0.06)] pt-3 text-[13px] leading-6 text-[#3a3d41]">
+                {marketEvidence.slice(0, 3).map((e) => (
+                  <li key={e.id}>
+                    <span className="text-[#66735E]">{e.source}</span>
+                    {" · "}
+                    {e.content.slice(0, 90)}
+                    {e.content.length > 90 ? "…" : ""}
+                  </li>
+                ))}
+              </ul>
             ) : null}
           </div>
         )}
       </div>
 
-      <div>
-        <p className="text-[11px] tracking-[0.12em] text-[#66735E]">
-          三、老板认知 vs 顾客认知
-        </p>
-        {snapshot.cognitionGap ? (
+      {snapshot.cognitionGap ? (
+        <div>
+          <p className="text-[11px] tracking-[0.12em] text-[#66735E]">
+            【老板 vs 顾客】
+          </p>
           <div className="mt-3 space-y-2 text-[15px] leading-7 text-[#202124]">
             <p>你认为：{snapshot.cognitionGap.founderClaim}</p>
             <p className="text-[#6f747b]">↓</p>
@@ -477,16 +538,12 @@ function PortraitCard({
               {snapshot.cognitionGap.summaryLine}
             </p>
           </div>
-        ) : (
-          <p className="mt-3 text-[15px] leading-7 text-[#6f747b]">
-            确认前可补充你认为的优势；有顾客证据时会对照差距，写入经营决策习惯（不是性格测评）。
-          </p>
-        )}
-      </div>
+        </div>
+      ) : null}
 
       <div>
         <p className="text-[11px] tracking-[0.12em] text-[#66735E]">
-          四、系统当下判断
+          【我的初步判断】· 系统推断
         </p>
         <ul className="mt-3 space-y-2">
           {snapshot.alerts.map((a) => (

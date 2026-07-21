@@ -204,6 +204,27 @@ export function evaluateSeatSignOffReadiness(
       label: "策略已确认",
       ok: Boolean(project.assets.strategyConfirmedAt),
     },
+    {
+      id: "domain.strength",
+      label: "领域强度达标（≥50 或可进常委）",
+      ok: (() => {
+        const s = project.assets.domainStrength;
+        // 旧案卷无强度快照时不挡；新路径确认调研后必有快照
+        if (!s) return true;
+        return s.readyForCouncil || s.overall >= 50;
+      })(),
+    },
+    {
+      id: "domain.ledger",
+      label: "领域证据账本已写入（有则≥2条）",
+      ok: (() => {
+        const ledger = project.assets.domainLedger as
+          | { facts?: unknown[] }
+          | undefined;
+        if (!ledger) return true;
+        return (ledger.facts?.length || 0) >= 2;
+      })(),
+    },
   ];
 
   const blockers = checks.filter((c) => !c.ok).map((c) => c.label);

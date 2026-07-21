@@ -182,12 +182,27 @@ function renderEvidence(packet?: EvidencePacket): string {
   if (!packet?.items?.length) {
     return "# Evidence Packet\n- 证据不足：允许 oppose 或 conditional，不得强行 support。";
   }
-  const lines = packet.items.map(
-    (e) =>
-      `- [${e.evidenceId}] (${e.sourceAgent}/${e.strength ?? "medium"}) ${e.claim}`,
-  );
-  const gaps = packet.gaps?.length ? ["", "## 证据缺口", bullet(packet.gaps)] : [];
-  return [`# Evidence Packet — ${packet.caseId}`, ...lines, ...gaps].join("\n");
+  const lines = packet.items.map((e) => {
+    const agent = e.sourceAgent || e.category || "CTX";
+    return `- [${e.evidenceId}] (${agent}/${e.strength ?? "medium"}) ${e.claim}`;
+  });
+  const gaps = packet.gaps?.length
+    ? ["", "## 证据缺口", bullet(packet.gaps)]
+    : [];
+  const gapRule = packet.gaps?.length
+    ? [
+        "",
+        "## 缺口挑战硬约束",
+        `- 你必须在 challenge_to_others 或 needs_validation 中至少点名 1 条证据缺口（共 ${packet.gaps.length} 条）。`,
+        "- 缺口未关闭前，不得输出无条件 support。",
+      ]
+    : [];
+  return [
+    `# Evidence Packet — ${packet.caseId}`,
+    ...lines,
+    ...gaps,
+    ...gapRule,
+  ].join("\n");
 }
 
 function renderDebate(round: PromptRound, challenges?: string[]): string {
@@ -245,7 +260,8 @@ const OUTPUT_SCHEMA_HINT = `# Output Schema — Council Opinion (JSON only)
 3. 必须填满 judgment / evidence_used / top_risk / proposal / needs_validation。
 4. 证据不足时不得为了完整而强行 support。
 5. 触发红线时 veto=true，写明 veto_reason，并给出 alternative_proposal。
-6. 只输出合法 JSON，不要 Markdown 围栏。`;
+6. 证据缺口存在时，必须在 challenge_to_others 或 needs_validation 点名至少 1 条。
+7. 只输出合法 JSON，不要 Markdown 围栏。`;
 
 /**
  * 组装单常委运行时 Prompt。

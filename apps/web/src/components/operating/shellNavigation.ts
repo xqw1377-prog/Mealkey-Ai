@@ -4,7 +4,7 @@ import type { NavSection } from "@/types/operating";
 
 /**
  * Founder OS V2 一级导航（决策闭环）
- * 今日（决策 HQ）→ 能力（含咨询）→ 决策（decision-room）→ 行动（打卡）→ 成长
+ * 今日 → 能力 → 决策 → 行动 → 我的（账户/余额）
  */
 export function createShellNavItems(defaultProjectId?: string | null): ShellNavItem[] {
   const hasWorld = Boolean(defaultProjectId);
@@ -38,14 +38,10 @@ export function createShellNavItems(defaultProjectId?: string | null): ShellNavI
       disabledHint: "先建立企业",
     },
     {
-      label: "成长",
-      href: hasWorld
-        ? `/projects/${defaultProjectId}/runtime?tab=growth`
-        : "/profile",
+      label: "我的",
+      href: "/profile",
       section: "growth",
       icon: TrendingUp,
-      disabled: !hasWorld,
-      disabledHint: "先建立企业",
     },
   ];
 }

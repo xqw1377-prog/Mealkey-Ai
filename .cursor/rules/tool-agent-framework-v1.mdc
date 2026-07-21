@@ -1,0 +1,38 @@
+---
+description: L3 Tool Agent 框架 + m-ops-diag 经营感知器 — 可拆分可组合，禁止升格顾问席
+alwaysApply: true
+---
+
+# Tool Agent Framework V1（冻结）
+
+权威：`docs/MEALKEY_TOOL_AGENT_FRAMEWORK_V1.md` · `docs/M_OPS_DIAG_AGENT_V1.md` · `docs/AUTHORITY.md`（13u / 13v）
+
+## 三层
+
+- **L1** 四席永远 4（m-pnt / m-mkt / m-biz / m-ed）— 战略判断
+- **L2** 六大 Runtime 冻结 — 禁止第七
+- **L3** Tool Agent 可扩至 ~100 — **不创造战略终局**
+
+## 一个 L3 = 四件套
+
+Manifest · Engine（零 Prisma）· Ports · Host Bridge（可选）
+
+合法出口仅四口：`signal` | `insight` | `work` | `gap`  
+禁止：直出拍板合同、私有 JSON 进常委、注册 `FounderAgentName`。
+
+## 目录
+
+- 框架包：`packages/tool-agent-kit`
+- 引擎包：`packages/<agent>` 或 `tool-agents/`
+- Host：`apps/web` 只做薄 Bridge
+
+## 样板：m-ops-diag
+
+- ID / 包：`m-ops-diag` / `@mealkey/m-ops-diag`
+- 产品名：**餐启经营诊断**（UI 禁裸技术名当主标题）
+- 定位：**经营感知器**（看见→识别→证据→洞察），不是咨询师
+- V1：纯 TS 进程内，不 HTTP
+- 出口优先级：BusinessSignal→今日驾驶舱 **先于** VerticalInsight→决策室
+- MVP 竖切：消费者反馈诊断
+
+新 L3 必须先过框架上架清单，再写代码。

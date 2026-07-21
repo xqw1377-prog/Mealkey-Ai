@@ -2,6 +2,7 @@
 
 import type { inferRouterOutputs } from "@trpc/server";
 import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { PageErrorState } from "@/components/operating/PageState";
 import { useProjectStore } from "@/stores/projectStore";
@@ -17,6 +18,7 @@ export function DashboardRouteClient({
 }: {
   initialHomeResponse?: DashboardHomeResponse;
 }) {
+  const router = useRouter();
   const setCurrentProject = useProjectStore((s) => s.setCurrentProject);
   const currentProject = useProjectStore((s) => s.currentProject);
   const currentProjectId = useProjectStore((s) => s.currentProjectId);
@@ -36,14 +38,23 @@ export function DashboardRouteClient({
   const gateProjectId =
     homeResponse?.currentProject?.id ?? currentProjectId ?? undefined;
 
-  const { data: ripGate } = trpc.restaurantIntelligence.get.useQuery(
-    { projectId: gateProjectId! },
-    {
-      enabled: Boolean(gateProjectId),
-      retry: false,
-      staleTime: 30_000,
-    },
-  );
+  const { data: ripGate, isFetched: ripFetched } =
+    trpc.restaurantIntelligence.get.useQuery(
+      { projectId: gateProjectId! },
+      {
+        enabled: Boolean(gateProjectId),
+        retry: false,
+        staleTime: 30_000,
+      },
+    );
+
+  // 硬门禁：未确认经营认知档案不得停留在驾驶舱
+  useEffect(() => {
+    if (!gateProjectId || !ripFetched) return;
+    if (ripGate?.needsConfirm) {
+      router.replace(`/projects/${gateProjectId}/restaurant-intelligence`);
+    }
+  }, [gateProjectId, ripFetched, ripGate?.needsConfirm, router]);
 
   const errorMessage = error?.message?.toLowerCase() ?? "";
   const errorCode = error?.data?.code;
@@ -67,6 +78,20 @@ export function DashboardRouteClient({
 
   if (awaitingFirstHome) {
     return <DashboardRouteSkeleton />;
+  }
+
+  if (gateProjectId && ripFetched && ripGate?.needsConfirm) {
+    return (
+      <PageErrorState
+        eyebrow="经营认知"
+        title="请先确认经营认知档案"
+        description="MealKey 需要先认识你的生意，确认后才会进入今日驾驶舱。"
+        primaryAction={{
+          href: `/projects/${gateProjectId}/restaurant-intelligence`,
+          label: "去确认档案",
+        }}
+      />
+    );
   }
 
   if (error && !homeResponse) {

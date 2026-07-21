@@ -60,6 +60,11 @@ type SubscriptionEdit = {
   cancelAtPeriodEnd: boolean;
 };
 
+type InvoiceEdit = {
+  planId: string;
+  orderNo: string;
+};
+
 export function BusinessPanel({
   activeWorkspaceId,
   showSeededData,
@@ -94,6 +99,8 @@ export function BusinessPanel({
   lowestMarginCapability,
   getSubscriptionEdit,
   setSubscriptionEdits,
+  getInvoiceEdit,
+  setInvoiceEdits,
   runAction,
   readJson,
   isPending,
@@ -139,6 +146,8 @@ export function BusinessPanel({
   lowestMarginCapability: CapabilityConsumptionSummary | null;
   getSubscriptionEdit: (subscription: SubscriptionRow) => SubscriptionEdit;
   setSubscriptionEdits: Dispatch<SetStateAction<Record<string, SubscriptionEdit>>>;
+  getInvoiceEdit: (invoice: InvoiceRow) => InvoiceEdit;
+  setInvoiceEdits: Dispatch<SetStateAction<Record<string, InvoiceEdit>>>;
   runAction: RunAction;
   readJson: (response: Response) => Promise<unknown>;
   isPending: boolean;
@@ -533,11 +542,17 @@ export function BusinessPanel({
                           ...current,
                           [subscription.id]: {
                             ...getSubscriptionEdit(subscription),
-                            seats: event.target.value,
+                            seats: event.target.value.replace(/\D+/g, ""),
                           },
                         }))
                       }
                       inputMode="numeric"
+                      autoComplete="off"
+                      onFocus={(event) => event.currentTarget.select()}
+                      onMouseUp={(event) => {
+                        event.preventDefault();
+                        event.currentTarget.select();
+                      }}
                       placeholder="席位数"
                       className="rounded-[12px] border border-[rgba(24,24,23,0.08)] bg-white px-3 py-2 text-[13px] text-[#202124] outline-none"
                     />
@@ -592,8 +607,8 @@ export function BusinessPanel({
         <ObjectsTable
           id="business-invoices"
           eyebrow="归因检查"
-          title="发票与归因（只读）"
-          description="发票确认/开票闭环尚未接通，这里仅做归因巡检与草稿队列查看，点操作不会推进开票状态。"
+          title="发票与归因"
+          description="先补齐购买方案和订单归因，再把草稿发票推进到已确认、已开票状态。"
         >
           {visibleBusinessInvoices.length === 0 ? (
             <EmptyState title="没有发票对象" description="当前还没有进入平台管理视野的发票。" />
@@ -612,7 +627,11 @@ export function BusinessPanel({
                       <p className="text-[14px] font-semibold text-[#202124]">
                         {invoice.currency} {invoice.total}
                       </p>
-                      <p className="text-[12px] leading-5 text-[#6f747b]">{formatDate(invoice.createdAt)}</p>
+                      <p className="text-[12px] leading-5 text-[#6f747b]">
+                        创建 {formatDate(invoice.createdAt)}
+                        {invoice.issuedAt ? ` · 开票 ${formatDate(invoice.issuedAt)}` : ""}
+                        {invoice.paidAt ? ` · 支付 ${formatDate(invoice.paidAt)}` : ""}
+                      </p>
                     </div>
                   </div>
                   <div className="mt-3 flex flex-wrap gap-2">
@@ -644,13 +663,100 @@ export function BusinessPanel({
                   </div>
                   {invoice.isUnlinked ? (
                     <p className="mt-3 text-[12px] leading-5 text-[#7A6941]">
-                      这张发票还缺少明确的购买方案归因，建议补齐支付 metadata 或关联计划信息。
+                      这张发票还缺少明确的购买方案归因，请先补齐计划或订单号，再确认发票。
                     </p>
                   ) : invoice.isSeeded ? (
                     <p className="mt-3 text-[12px] leading-5 text-[#6f747b]">
                       该发票来自演示数据，购买语义已按当前订阅口径自动回填。
                     </p>
                   ) : null}
+                  {invoice.status === "issued" || invoice.status === "paid" ? (
+                    <div className="mt-3 rounded-[12px] border border-[rgba(102,115,94,0.14)] bg-[rgba(102,115,94,0.06)] px-3 py-3 text-[12px] leading-5 text-[#465240]">
+                      {invoice.status === "paid"
+                        ? "该发票已经随支付链路完成，不需要再由管理台重复推进。"
+                        : "该发票已经推进到已开票状态，可继续做归档或对账。"}
+                    </div>
+                  ) : (
+                    <div className="mt-3 grid gap-2 xl:grid-cols-[1fr_0.9fr_auto_auto]">
+                      <select
+                        value={getInvoiceEdit(invoice).planId}
+                        onChange={(event) =>
+                          setInvoiceEdits((current) => ({
+                            ...current,
+                            [invoice.id]: {
+                              ...getInvoiceEdit(invoice),
+                              planId: event.target.value,
+                            },
+                          }))
+                        }
+                        className="rounded-[12px] border border-[rgba(24,24,23,0.08)] bg-white px-3 py-2 text-[13px] text-[#202124] outline-none"
+                      >
+                        <option value="">选择购买方案</option>
+                        {visibleBusinessPlans.map((plan) => (
+                          <option key={plan.id} value={plan.id}>
+                            {plan.name}
+                          </option>
+                        ))}
+                      </select>
+                      <input
+                        value={getInvoiceEdit(invoice).orderNo}
+                        onChange={(event) =>
+                          setInvoiceEdits((current) => ({
+                            ...current,
+                            [invoice.id]: {
+                              ...getInvoiceEdit(invoice),
+                              orderNo: event.target.value,
+                            },
+                          }))
+                        }
+                        placeholder="订单号（可选）"
+                        className="rounded-[12px] border border-[rgba(24,24,23,0.08)] bg-white px-3 py-2 text-[13px] text-[#202124] outline-none"
+                      />
+                      <button
+                        type="button"
+                        disabled={isPending}
+                        onClick={() =>
+                          runAction(async () => {
+                            const draft = getInvoiceEdit(invoice);
+                            const response = await fetch("/api/platform/admin/billing", {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({
+                                action: "confirm_invoice",
+                                id: invoice.id,
+                                planId: draft.planId || null,
+                                orderNo: draft.orderNo.trim() || null,
+                              }),
+                            });
+                            return readJson(response);
+                          }, { successMessage: invoice.status === "confirmed" ? "发票归因已更新" : "发票已确认归因", refreshScope: "billing" })
+                        }
+                        className="inline-flex min-h-10 items-center justify-center rounded-[12px] border border-[rgba(24,24,23,0.10)] bg-white px-4 text-[13px] font-semibold text-[#202124] disabled:opacity-50"
+                      >
+                        {invoice.status === "confirmed" ? "更新归因" : "确认归因"}
+                      </button>
+                      <button
+                        type="button"
+                        disabled={isPending || invoice.status !== "confirmed" || invoice.isUnlinked}
+                        onClick={() =>
+                          runAction(async () => {
+                            const response = await fetch("/api/platform/admin/billing", {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({
+                                action: "issue_invoice",
+                                id: invoice.id,
+                              }),
+                            });
+                            return readJson(response);
+                          }, { successMessage: "发票已推进到已开票", refreshScope: "billing" })
+                        }
+                        className="inline-flex min-h-10 items-center justify-center rounded-[12px] bg-[#181817] px-4 text-[13px] font-semibold text-white disabled:opacity-50"
+                      >
+                        推进开票
+                      </button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

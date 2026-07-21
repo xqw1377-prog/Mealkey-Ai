@@ -6,6 +6,7 @@ import {
   type SeatSignOffCheck,
   type SeatSignOffReadiness,
 } from "../../consulting-os/delivery-gates";
+import { enrichConsultingWithDomainDepth } from "../../consulting-os/domain-depth";
 import type { AgentConsultingProject } from "../../consulting-os/types";
 import type { ModeContract } from "./types";
 
@@ -15,9 +16,10 @@ export type MbizSignOffReadiness = SeatSignOffReadiness;
 export function evaluateMbizSignOffReadiness(
   project: AgentConsultingProject,
 ): MbizSignOffReadiness {
-  const contract = project.assets.modeContract as ModeContract | undefined;
-  const pack = project.assets.executionRoadmap?.modePack;
-  return evaluateSeatSignOffReadiness(project, {
+  const withDepth = enrichConsultingWithDomainDepth("m-biz", project);
+  const contract = withDepth.assets.modeContract as ModeContract | undefined;
+  const pack = withDepth.assets.executionRoadmap?.modePack;
+  return evaluateSeatSignOffReadiness(withDepth, {
     contractFrozen: contract?.status === "frozen",
     packReady: Boolean(pack?.wallCard || contract?.wallCard),
     contractLabel: "模式主航道合同已冻结",
@@ -31,14 +33,15 @@ export function signMbizStrategyReport(
 ): AgentConsultingProject {
   const signedBy = input.signedBy.trim();
   if (!signedBy) throw new Error("请填写签字人");
-  const readiness = evaluateMbizSignOffReadiness(project);
+  const withDepth = enrichConsultingWithDomainDepth("m-biz", project);
+  const readiness = evaluateMbizSignOffReadiness(withDepth);
   if (!readiness.ok) {
     throw new Error(`签字前未就绪：${readiness.blockers.join("；")}`);
   }
   return {
-    ...project,
+    ...withDepth,
     assets: {
-      ...project.assets,
+      ...withDepth.assets,
       signOffStatus: "signed",
       signedBy,
       signedAt: new Date().toISOString(),

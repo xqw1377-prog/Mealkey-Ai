@@ -6,6 +6,7 @@ import {
   type SeatSignOffCheck,
   type SeatSignOffReadiness,
 } from "../../consulting-os/delivery-gates";
+import { enrichConsultingWithDomainDepth } from "../../consulting-os/domain-depth";
 import type { AgentConsultingProject } from "../../consulting-os/types";
 import type { GovernanceContract } from "./types";
 
@@ -15,11 +16,12 @@ export type MedSignOffReadiness = SeatSignOffReadiness;
 export function evaluateMedSignOffReadiness(
   project: AgentConsultingProject,
 ): MedSignOffReadiness {
-  const contract = project.assets.governanceContract as
+  const withDepth = enrichConsultingWithDomainDepth("m-ed", project);
+  const contract = withDepth.assets.governanceContract as
     | GovernanceContract
     | undefined;
-  const pack = project.assets.executionRoadmap?.governancePack;
-  return evaluateSeatSignOffReadiness(project, {
+  const pack = withDepth.assets.executionRoadmap?.governancePack;
+  return evaluateSeatSignOffReadiness(withDepth, {
     contractFrozen: contract?.status === "frozen",
     packReady: Boolean(pack?.wallCard || contract?.wallCard),
     contractLabel: "治理决策合同已冻结",
@@ -33,14 +35,15 @@ export function signMedStrategyReport(
 ): AgentConsultingProject {
   const signedBy = input.signedBy.trim();
   if (!signedBy) throw new Error("请填写签字人");
-  const readiness = evaluateMedSignOffReadiness(project);
+  const withDepth = enrichConsultingWithDomainDepth("m-ed", project);
+  const readiness = evaluateMedSignOffReadiness(withDepth);
   if (!readiness.ok) {
     throw new Error(`签字前未就绪：${readiness.blockers.join("；")}`);
   }
   return {
-    ...project,
+    ...withDepth,
     assets: {
-      ...project.assets,
+      ...withDepth.assets,
       signOffStatus: "signed",
       signedBy,
       signedAt: new Date().toISOString(),

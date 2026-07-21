@@ -172,7 +172,10 @@ MealKey 长期壁垒。沉淀：
 
 > **工具 Agent 执行，不负责战略判断。**
 
-未实现前不得在 UI 冒充 LIVE Expert；实现走 §7 闸门。
+**框架专篇（~100 个可拆分可组合）：** `docs/MEALKEY_TOOL_AGENT_FRAMEWORK_V1.md`  
+**代码真源：** `@mealkey/tool-agent-kit` · 引擎目录 `tool-agents/`
+
+未实现前不得在 UI 冒充 LIVE Expert；实现走 §7 闸门 + 框架上架清单。
 
 ### 4.1 创业阶段
 

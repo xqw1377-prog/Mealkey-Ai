@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { ArrowRight, Compass } from "lucide-react";
 import { BrandSwitcher } from "@/components/operating/BrandSwitcher";
+import { BusinessPointsStrip } from "@/components/operating/BusinessPointsStrip";
 import { IntelligenceProfilePanel } from "@/components/operating/IntelligenceProfilePanel";
 import { PageContent } from "@/components/operating/PageContent";
 import { PageErrorState, PageLoadingState } from "@/components/operating/PageState";
+import { useBusinessWallet } from "@/hooks/useBusinessWallet";
 import { trendTone } from "@/lib/format";
 import { useProjectStore } from "@/stores/projectStore";
 import { trpc } from "@/lib/trpc";
@@ -20,6 +22,7 @@ export default function ProfilePage() {
   const storeProjectId = useProjectStore((s) => s.currentProjectId);
   const { data, isLoading, error } = trpc.dashboard.getOwnerPortrait.useQuery();
   const { data: projects } = trpc.project.list.useQuery();
+  const { wallet, loading: walletLoading } = useBusinessWallet();
   const currentProject =
     projects?.find((p) => p.id === storeProjectId) || projects?.[0];
   const projectId = currentProject?.id;
@@ -37,7 +40,7 @@ export default function ProfilePage() {
   if (isLoading) {
     return (
       <PageLoadingState
-        eyebrow="成长"
+        eyebrow="我的"
         title="正在打开…"
         description="读取你的经营习惯与短板。"
       />
@@ -48,7 +51,7 @@ export default function ProfilePage() {
     return (
       <div className="space-y-5 pb-2 pt-6 md:pt-8">
         <PageErrorState
-          eyebrow="成长"
+          eyebrow="我的"
           title="暂时打不开"
           description="先回今日，稍后再看。"
           primaryAction={{ href: "/dashboard", label: "回今日" }}
@@ -125,15 +128,22 @@ export default function ProfilePage() {
   return (
     <PageContent width="default" inset="shell" className="space-y-8">
       <header className="space-y-2">
-        <p className="text-[11px] tracking-[0.14em] text-[#66735E]">成长</p>
+        <p className="text-[11px] tracking-[0.14em] text-[#66735E]">我的</p>
         <h1 className="font-display text-[28px] font-semibold leading-tight tracking-[-0.04em] text-[#202124] md:text-[34px]">
           {enterpriseName}
         </h1>
         <p className="text-[14px] leading-6 text-[#6f747b]">
-          你怎么拍板、哪里变强、哪里还卡着。
+          账户、经营习惯与能力短板。
         </p>
         {projectId ? <BrandSwitcher projectId={projectId} variant="full" /> : null}
       </header>
+
+      {!walletLoading ? (
+        <section className="space-y-2">
+          <p className="text-[11px] tracking-[0.12em] text-[#6f747b]">账户余额</p>
+          <BusinessPointsStrip wallet={wallet} compact />
+        </section>
+      ) : null}
 
       <section className="space-y-3 border-y border-[rgba(24,24,23,0.1)] py-6">
         <p className="text-[11px] tracking-[0.12em] text-[#6f747b]">现在这样</p>

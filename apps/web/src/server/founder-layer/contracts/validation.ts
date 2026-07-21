@@ -119,6 +119,9 @@ export interface ValidationTask {
   /** AI 监督判断文案 */
   aiJudgement?: string;
   passProbability?: number;
+  /** MVP：签字后第 7 天复盘到期（与 90 天验证并行） */
+  d7ReviewDueAt?: string;
+  d7ReviewStatus?: "pending" | "done" | "skipped";
   createdAt: string;
   updatedAt: string;
 }

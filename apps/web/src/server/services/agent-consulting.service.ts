@@ -24,6 +24,9 @@ import {
   harvestSeatPrimaryFacts,
   normalizeSeatPrimaryFacts,
   assertAgentConsultingNotDegraded,
+  enrichConsultingWithDomainDepth,
+  assertDomainDepthForStrategy,
+  mergeIdentityPriorsIntoAnswers,
   type AgentConsultingBlueprint,
   type AgentConsultingProject,
   type ConsultingAgentKind,
@@ -562,20 +565,39 @@ export async function runAgentResearch(
       `信息采集未完成，不能开始调研。${gate.summary}`,
     );
   }
+
+  // Business Identity / 项目档案先验注入（不覆盖用户已填）
+  const bi =
+    profile.businessIdentity && typeof profile.businessIdentity === "object"
+      ? (profile.businessIdentity as Record<string, unknown>)
+      : null;
+  const intakeWithPriors = mergeIdentityPriorsIntoAnswers(current.intakeAnswers, {
+    brandName:
+      (typeof bi?.brandName === "string" && bi.brandName) || project.name,
+    city: (typeof bi?.city === "string" && bi.city) || project.city,
+    category:
+      (typeof bi?.category === "string" && bi.category) || project.category,
+    district:
+      (typeof bi?.district === "string" && bi.district) || project.district,
+    focusProblem:
+      typeof bi?.biggestProblem === "string" ? bi.biggestProblem : null,
+  });
+
   let { research } = await buildResearchAndAdvisors(
     agentId,
     blueprint,
-    current.intakeAnswers,
+    intakeWithPriors,
     project,
   );
   research = await enrichResearchWithWebSearch(
     research,
-    current.intakeAnswers,
+    intakeWithPriors,
     project.city || undefined,
   );
   // 禁止假升 engine：hybrid/engine 只能来自真实搜索或外呼引擎
   const consulting = {
     ...current,
+    intakeAnswers: intakeWithPriors,
     assets: { ...current.assets, research },
     updatedAt: new Date().toISOString(),
   };
@@ -736,6 +758,8 @@ export async function confirmAgentResearch(
     },
     updatedAt: new Date().toISOString(),
   };
+  // 领域证据账本 + 强度评分（对齐 M-PNT EvidenceLedger）
+  consulting = enrichConsultingWithDomainDepth(agentId, consulting);
   await persist(project.id, profile, agentId, consulting);
   return {
     consulting,
@@ -906,6 +930,9 @@ export async function confirmAgentStrategy(
     agentId,
   );
   assertAgentConsultingNotDegraded(consulting, "确认策略");
+  // 刷新领域深度并硬门禁（证据不足不交付）
+  consulting = enrichConsultingWithDomainDepth(agentId, consulting);
+  assertDomainDepthForStrategy(agentId, consulting, "确认策略");
   const war = consulting.assets.warRoom;
   if (!war || war.status !== "agreed") {
     throw new Error("请先完成会议室拍板");
@@ -955,17 +982,18 @@ export async function confirmAgentStrategy(
     consulting = finalized.project;
     await persist(project.id, profile, agentId, consulting);
 
-    // Restaurant Brain：市场咨询结构化事实薄写
+    // Restaurant Brain：市场咨询结构化事实写回（置信度跟领域强度）
     try {
       const { syncMarketFactsToRestaurantBrain } = await import(
         "@/server/restaurant-brain/sync-business-facts"
       );
       const answers = consulting.intakeAnswers || {};
+      const strength = consulting.assets.domainStrength?.overall ?? 50;
       await syncMarketFactsToRestaurantBrain(prisma, {
         projectId: project.id,
         ownerId: project.ownerId,
         source: "consulting",
-        confidence: 0.7,
+        confidence: Math.min(0.88, 0.55 + strength / 200),
         city:
           (typeof answers.city === "string" && answers.city) ||
           project.city ||
@@ -979,11 +1007,21 @@ export async function confirmAgentStrategy(
         targetCustomer:
           typeof answers.targetCustomer === "string"
             ? answers.targetCustomer
-            : null,
+            : typeof answers.scene === "string"
+              ? answers.scene
+              : null,
         brandRisk:
           typeof decision.killCriteria?.[0] === "string"
             ? decision.killCriteria[0]
             : null,
+        sceneCut:
+          typeof answers.scene === "string" ? answers.scene : null,
+        entryMode:
+          typeof finalized.contract?.entryMode === "string"
+            ? finalized.contract.entryMode
+            : typeof decision.recommendation === "string"
+              ? decision.recommendation
+              : null,
       });
     } catch (error) {
       console.warn("Restaurant Brain market facts sync failed:", error);
@@ -1029,11 +1067,12 @@ export async function confirmAgentStrategy(
         "@/server/restaurant-brain/sync-business-facts"
       );
       const answers = consulting.intakeAnswers || {};
+      const strength = consulting.assets.domainStrength?.overall ?? 50;
       await syncBusinessFactsToRestaurantBrain(prisma, {
         projectId: project.id,
         ownerId: project.ownerId,
         source: "consulting",
-        confidence: 0.7,
+        confidence: Math.min(0.88, 0.55 + strength / 200),
         avgTicket:
           typeof answers.avgTicket === "string" ? answers.avgTicket : null,
         unitEconomics:
@@ -1088,6 +1127,48 @@ export async function confirmAgentStrategy(
     });
     consulting = finalized.project;
     await persist(project.id, profile, agentId, consulting);
+
+    // Restaurant Brain：股权/组织事实写回（补齐 M-ED 缺口）
+    try {
+      const { syncEquityFactsToRestaurantBrain } = await import(
+        "@/server/restaurant-brain/sync-business-facts"
+      );
+      const answers = consulting.intakeAnswers || {};
+      const gov = finalized.contract;
+      await syncEquityFactsToRestaurantBrain(prisma, {
+        projectId: project.id,
+        ownerId: project.ownerId,
+        source: "consulting",
+        confidence: Math.min(
+          0.85,
+          0.55 + (consulting.assets.domainStrength?.overall || 40) / 200,
+        ),
+        controlFloor:
+          (typeof gov?.controlFloor === "string" && gov.controlFloor) ||
+          (typeof answers.control === "string" ? answers.control : null),
+        optionPool:
+          typeof answers.pool === "string"
+            ? answers.pool
+            : typeof answers.optionPool === "string"
+              ? answers.optionPool
+              : null,
+        mustSign: Array.isArray(gov?.mustSign)
+          ? gov.mustSign.join("、")
+          : (typeof gov?.mustSign === "string" && gov.mustSign) ||
+            (typeof answers.mustSign === "string" ? answers.mustSign : null),
+        lockFirst:
+          typeof gov?.lockFirst === "string" ? gov.lockFirst : null,
+        oneLiner:
+          typeof gov?.oneLiner === "string"
+            ? gov.oneLiner
+            : typeof decision.recommendation === "string"
+              ? decision.recommendation
+              : null,
+      });
+    } catch (error) {
+      console.warn("Restaurant Brain equity facts sync failed:", error);
+    }
+
     return {
       consulting,
       strategyReportMarkdown: markdown,

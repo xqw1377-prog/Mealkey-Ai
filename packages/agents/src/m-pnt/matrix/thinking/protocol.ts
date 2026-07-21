@@ -129,6 +129,14 @@ export type ThinkingFactPack = {
   }>;
   /** 可追溯证据短句（来源 snippet / 证据笔记） */
   evidenceSnippets?: string[];
+  /** 证据账本一手事实（verified 优先）— 约束七席造策 */
+  primaryFacts?: Array<{
+    claim: string;
+    sourceType: string;
+    strength: "strong" | "moderate" | "weak";
+    relatedStage?: string;
+    verified: boolean;
+  }>;
   /** V2 扩展字段 — 文化母体 / 符号 / 细分数据 */
   culturalCode?: string;
   symbolSet?: string[];
@@ -216,6 +224,10 @@ export type ThinkingEngineResult = {
     ries: SeatVerdict;
     trout: SeatVerdict;
     ye: SeatVerdict;
+    huayehu: SeatVerdict;
+    kotler: SeatVerdict;
+    growth: SeatVerdict;
+    culture: SeatVerdict;
   };
   mode: "heuristic" | "llm_hybrid";
 };

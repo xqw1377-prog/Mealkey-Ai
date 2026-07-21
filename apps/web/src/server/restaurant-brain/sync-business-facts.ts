@@ -207,6 +207,8 @@ export type MarketFactsInput = {
   ticketBand?: string | null;
   targetCustomer?: string | null;
   brandRisk?: string | null;
+  sceneCut?: string | null;
+  entryMode?: string | null;
 };
 
 export async function syncMarketFactsToRestaurantBrain(
@@ -288,6 +290,134 @@ export async function syncMarketFactsToRestaurantBrain(
       wrote.push("brandRisk");
     }
   }
+  if (input.sceneCut?.trim() && confidence >= 0.45) {
+    const r = await brain.proposeAndMaybeMergeDna({
+      kind: "dna_patch_propose",
+      projectId: input.projectId,
+      layer: "market",
+      key: "sceneCut",
+      value: input.sceneCut.trim().slice(0, 120),
+      confidence,
+      source: input.source,
+      at,
+    });
+    if (r.accepted) {
+      dnaAccepted = true;
+      wrote.push("sceneCut");
+    }
+  }
+  if (input.entryMode?.trim() && confidence >= 0.45) {
+    const r = await brain.proposeAndMaybeMergeDna({
+      kind: "dna_patch_propose",
+      projectId: input.projectId,
+      layer: "market",
+      key: "entryMode",
+      value: input.entryMode.trim().slice(0, 140),
+      confidence,
+      source: input.source,
+      at,
+    });
+    if (r.accepted) {
+      dnaAccepted = true;
+      wrote.push("entryMode");
+    }
+  }
 
   return { restaurantId, wrote, dnaAccepted };
+}
+
+export type EquityFactsInput = {
+  projectId: string;
+  ownerId: string;
+  source: DnaSource;
+  confidence: number;
+  controlFloor?: string | null;
+  optionPool?: string | null;
+  mustSign?: string | null;
+  lockFirst?: string | null;
+  oneLiner?: string | null;
+};
+
+/**
+ * M-ED 股权治理确认 → Restaurant Brain 组织/经营层 DNA
+ */
+export async function syncEquityFactsToRestaurantBrain(
+  prisma: PrismaClient,
+  input: EquityFactsInput,
+): Promise<{ restaurantId: string; wrote: string[]; accepted: number }> {
+  const confidence = Math.max(
+    0,
+    Math.min(1, Number.isFinite(input.confidence) ? input.confidence : 0.5),
+  );
+  const brain = createRestaurantBrainService(prisma);
+  const snapshot = await brain.ensureByProject({
+    projectId: input.projectId,
+    ownerId: input.ownerId,
+  });
+  const restaurantId = snapshot.restaurant.id;
+  const wrote: string[] = [];
+  let accepted = 0;
+  const at = new Date().toISOString();
+
+  const proposals: Array<{
+    layer: "organization" | "founder" | "business";
+    key: string;
+    value: string;
+  }> = [];
+
+  if (input.controlFloor?.trim()) {
+    proposals.push({
+      layer: "organization",
+      key: "controlFloor",
+      value: input.controlFloor.trim().slice(0, 120),
+    });
+  }
+  if (input.optionPool?.trim()) {
+    proposals.push({
+      layer: "organization",
+      key: "optionPool",
+      value: input.optionPool.trim().slice(0, 80),
+    });
+  }
+  if (input.mustSign?.trim()) {
+    proposals.push({
+      layer: "organization",
+      key: "mustSignDocs",
+      value: input.mustSign.trim().slice(0, 160),
+    });
+  }
+  if (input.lockFirst?.trim()) {
+    proposals.push({
+      layer: "organization",
+      key: "governancePriority",
+      value: input.lockFirst.trim().slice(0, 120),
+    });
+  }
+  if (input.oneLiner?.trim()) {
+    proposals.push({
+      layer: "business",
+      key: "equityDecision",
+      value: input.oneLiner.trim().slice(0, 140),
+    });
+  }
+
+  for (const p of proposals) {
+    if (confidence < 0.45) continue;
+    const r = await brain.proposeAndMaybeMergeDna({
+      kind: "dna_patch_propose",
+      projectId: input.projectId,
+      layer: p.layer,
+      key: p.key,
+      value: p.value,
+      confidence,
+      source: input.source,
+      at,
+    });
+    if (r.accepted) {
+      accepted += 1;
+      wrote.push(p.key);
+    }
+  }
+
+  return { restaurantId, wrote, accepted };
 }

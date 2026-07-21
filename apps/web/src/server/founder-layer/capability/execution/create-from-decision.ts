@@ -17,6 +17,7 @@ import {
 import type { ValidationTask } from "../../contracts/validation";
 import type { ActionPlan } from "../../contracts/capability";
 import type { MKDecisionStatus } from "../../contracts/mk-decision";
+import { computeD7ReviewDueAt } from "../decision-center/d7-review";
 
 function asTasks(raw: unknown): ValidationTask[] {
   if (!Array.isArray(raw)) return [];
@@ -78,6 +79,8 @@ export async function createExecutionFromDecision(
     );
   }
 
+  const d7ReviewDueAt = computeD7ReviewDueAt();
+
   const planBundle = createValidationPlanFromDecision({
     projectId: input.projectId,
     decisionId,
@@ -102,6 +105,13 @@ export async function createExecutionFromDecision(
     owner: "老板",
     horizonDays: 90,
   });
+
+  // MVP：验证仍可 90 天，但强制挂 D+7 复盘到期点
+  planBundle.task = {
+    ...planBundle.task,
+    d7ReviewDueAt,
+    d7ReviewStatus: "pending",
+  };
 
   const todayActions = buildTodayActionsFromMeetingConfirm({
     nextActions: input.nextActions,
@@ -147,6 +157,8 @@ export async function createExecutionFromDecision(
     actionPlanId: actionPlan.planId,
     validationTask: planBundle.task,
     executionStartedAt: new Date().toISOString(),
+    d7ReviewDueAt,
+    d7ReviewStatus: "pending",
   });
 
   await prisma.decision.update({
@@ -178,6 +190,9 @@ export async function createExecutionFromDecision(
       actions: actionPlan.actions,
       alignmentNotes: [],
       validationTaskId: planBundle.task.id,
+      d7ReviewDueAt,
+      d7ReviewStatus: "pending",
+      createdAt: actionPlan.createdAt,
     },
     validationTasks: upsertValidationTask(existingTasks, planBundle.task),
     activeValidationTaskId: planBundle.task.id,

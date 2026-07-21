@@ -246,19 +246,26 @@ export function generateCrossExaminations(
     const questionPool = positionDiff ? qs : qs.slice(0, Math.min(1, qs.length));
 
     for (const q of questionPool) {
-      // 随机选取一个 evidence ID
+      // 校验 evidence ID 是否在证据包中；无随机——优先第一条有效引用，保证可复现
       const evidenceIds = targetOp.evidence_used ?? [];
-      const targetEvidenceId =
-        evidenceIds.length > 0
-          ? evidenceIds[Math.floor(Math.random() * evidenceIds.length)]
-          : undefined;
-
-      // 校验 evidence ID 是否在证据包中
+      const targetEvidenceId = evidenceIds[0];
       const validEvidence =
         targetEvidenceId &&
         evidencePacket?.items?.some((i) => i.evidenceId === targetEvidenceId)
           ? targetEvidenceId
-          : undefined;
+          : evidencePacket?.items?.[0]?.evidenceId;
+
+      const cited = evidencePacket?.items?.find(
+        (i) => i.evidenceId === validEvidence,
+      );
+      const weakCite =
+        !cited ||
+        cited.strength === "weak" ||
+        (evidencePacket?.gaps?.length || 0) > 0;
+      let severity: "high" | "medium" | "low" = "medium";
+      if (positionDiff) severity = "high";
+      else if (weakCite) severity = "medium";
+      else severity = "low";
 
       challenges.push({
         from: challenger as CouncilRoleId,
@@ -266,7 +273,7 @@ export function generateCrossExaminations(
         question: q,
         targetEvidenceId: validEvidence,
         conflictAxis: conflictAxis?.label ?? "观点分歧",
-        severity: positionDiff ? "high" : "medium",
+        severity,
       });
     }
   }

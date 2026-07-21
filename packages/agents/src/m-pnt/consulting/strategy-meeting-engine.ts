@@ -46,6 +46,18 @@ const SPEAKER_FROM_THEORY: Record<string, AdvisorId> = {
   trout: "trout",
   ye_maozhong: "ye",
   ye: "ye",
+  huayehu: "huayehu",
+  kotler: "kotler",
+  growth: "growth",
+  culture: "culture",
+  // 折叠标签仍可解析
+  "MK-MIND": "ries",
+  "MK-RIVAL": "trout",
+  "MK-CLASH": "ye",
+  "MK-SYMBOL": "huayehu",
+  "MK-STP": "kotler",
+  "MK-GROWTH": "growth",
+  "MK-CULTURE": "culture",
 };
 
 type DebateChallenge = {
@@ -99,25 +111,26 @@ function pitchScript(s: AdvisorStrategyCard): string {
 }
 
 function fallbackDebateChallenges(
-  by: Record<AdvisorId, AdvisorStrategyCard>,
+  by: Partial<Record<AdvisorId, AdvisorStrategyCard>>,
 ): DebateChallenge[] {
   const ries = by.ries;
   const trout = by.trout;
   const ye = by.ye;
-  return [
+  if (!ries || !trout || !ye) return [];
+  const base: DebateChallenge[] = [
     {
       fromId: "trout",
       toId: "ries",
       targetDirection: ries.oneLiner,
-      attack: `你押心智词「${ries.battlefield}」。若菜单仍是大而全，客人记不住词。请当场回答：砍掉哪三道菜？`,
-      defenseHint: "用砍菜证明聚焦不是口号",
+      attack: `你押心智词「${ries.battlefield}」。若菜单仍是大而全，客人记不住词。请当场回答：砍掉哪三道菜？依据：${(trout.proof || "").slice(0, 40)}`,
+      defenseHint: "用砍菜证明聚焦不是口号；改 RTB 或菜单证明",
       severity: "R3",
     },
     {
       fromId: "ries",
       toId: "trout",
       targetDirection: trout.oneLiner,
-      attack: `砍菜可以，但「${trout.battlefield}」若收不成一个词，区隔会散成对照广告。`,
+      attack: `砍菜可以，但「${trout.battlefield}」若收不成一个词，区隔会散成对照广告。依据：${(ries.proof || "").slice(0, 40)}`,
       defenseHint: "把区隔压缩成可复述的第一词",
       severity: "R2",
     },
@@ -126,26 +139,47 @@ function fallbackDebateChallenges(
       toId: "ries",
       targetDirection: ries.oneLiner,
       attack: `词对了，但${ye.forWhom}进店要的是场面——「${ye.jobToBeDone}」。没有场合套餐和迎客句，词是空的。`,
-      defenseHint: "心智词必须绑定可验场合动作",
+      defenseHint: "心智词必须绑定可验场合动作；改 scene/menu",
       severity: "R3",
     },
   ];
+  if (by.huayehu) {
+    base.push({
+      fromId: "huayehu",
+      toId: "ries",
+      targetDirection: ries.oneLiner,
+      attack: `心智词「${ries.battlefield}」若没有可感知超级符号，进店仍认不出品牌。符号官要求：门头/桌签必须钉死一个符号。`,
+      defenseHint: "补可感知符号触点",
+      severity: "R2",
+    });
+  }
+  if (by.kotler && by.growth) {
+    base.push({
+      fromId: "kotler",
+      toId: "growth",
+      targetDirection: by.growth.oneLiner,
+      attack: `增长飞轮若未先钉死细分「${by.kotler.forWhom}」，获客会散。细分官要求先选目标市场再谈飞轮。`,
+      defenseHint: "飞轮动作绑定单一细分",
+      severity: "R2",
+    });
+  }
+  return base;
 }
 
 function challengesFromCrossFire(
   fire: CrossFireBrief,
-  by: Record<AdvisorId, AdvisorStrategyCard>,
+  by: Partial<Record<AdvisorId, AdvisorStrategyCard>>,
 ): DebateChallenge[] {
   const out: DebateChallenge[] = [];
   for (const c of fire.challenges || []) {
-    const fromId = SPEAKER_FROM_THEORY[c.from];
-    const toId = SPEAKER_FROM_THEORY[c.to];
+    const fromId = SPEAKER_FROM_THEORY[c.from] || (c.from as AdvisorId);
+    const toId = SPEAKER_FROM_THEORY[c.to] || (c.to as AdvisorId);
     if (!fromId || !toId || fromId === toId) continue;
-    if (!by[toId]) continue;
+    if (!by[toId] || !by[fromId]) continue;
     out.push({
       fromId,
       toId,
-      targetDirection: c.targetDirection || by[toId].oneLiner,
+      targetDirection: c.targetDirection || by[toId]!.oneLiner,
       attack: c.attack,
       defenseHint: c.defenseHint || "",
       severity: c.severity || "R2",
@@ -154,7 +188,7 @@ function challengesFromCrossFire(
   return out.length ? out : fallbackDebateChallenges(by);
 }
 
-/** 每位被质询顾问只打一轮：质询→反驳→改策（最多 3 席） */
+/** 每位被质询顾问只打一轮；七席最多 5 席被质询改策 */
 function pickDebateRound(all: DebateChallenge[]): DebateChallenge[] {
   const seen = new Set<AdvisorId>();
   const round: DebateChallenge[] = [];
@@ -162,7 +196,7 @@ function pickDebateRound(all: DebateChallenge[]): DebateChallenge[] {
     if (seen.has(c.toId)) continue;
     seen.add(c.toId);
     round.push(c);
-    if (round.length >= 3) break;
+    if (round.length >= 5) break;
   }
   return round;
 }
@@ -261,19 +295,20 @@ function reviseCardAfterChallenge(
 
 function buildDebateTurns(
   challenges: DebateChallenge[],
-  by: Record<AdvisorId, AdvisorStrategyCard>,
+  allStrategies: AdvisorStrategyCard[],
 ): { turns: WarRoomTurn[]; strategies: AdvisorStrategyCard[] } {
-  const revised: Record<AdvisorId, AdvisorStrategyCard> = {
-    ries: { ...by.ries, proofPlan: ensureProofPlan(by.ries) },
-    trout: { ...by.trout, proofPlan: ensureProofPlan(by.trout) },
-    ye: { ...by.ye, proofPlan: ensureProofPlan(by.ye) },
-  };
+  const revised: Partial<Record<AdvisorId, AdvisorStrategyCard>> = {};
+  for (const s of allStrategies) {
+    revised[s.advisorId] = { ...s, proofPlan: ensureProofPlan(s) };
+  }
   const turns: WarRoomTurn[] = [];
   const round = pickDebateRound(challenges);
 
   for (const c of round) {
-    const fromName = ADVISOR_META[c.fromId].name;
-    const toName = ADVISOR_META[c.toId].name;
+    const target = revised[c.toId];
+    if (!target) continue;
+    const fromName = ADVISOR_META[c.fromId]?.name || c.fromId;
+    const toName = ADVISOR_META[c.toId]?.name || c.toId;
     const severity = c.severity ? `【${c.severity}】` : "";
 
     turns.push(
@@ -289,7 +324,7 @@ function buildDebateTurns(
       ),
     );
 
-    const result = reviseCardAfterChallenge(revised[c.toId], c);
+    const result = reviseCardAfterChallenge(target, c);
     revised[c.toId] = result.card;
 
     turns.push(
@@ -302,7 +337,7 @@ function buildDebateTurns(
 
   return {
     turns,
-    strategies: [revised.ries, revised.trout, revised.ye],
+    strategies: allStrategies.map((s) => revised[s.advisorId] || s),
   };
 }
 
@@ -311,33 +346,43 @@ export type OpenWarRoomResult = {
   set: AdvisorStrategySet;
 };
 
-/** 老板拍板前一页纸：三案对照，禁止散文 */
+/** 老板拍板前一页纸：七案对照，禁止散文 */
 export function buildFounderDecisionCard(
   set: AdvisorStrategySet,
 ): FounderDecisionCard {
-  const options: FounderDecisionOption[] = (
-    ["ries", "trout", "ye"] as AdvisorId[]
-  ).map((id) => {
-    const s = set.strategies.find((x) => x.advisorId === id)!;
-    const meta = ADVISOR_META[id];
-    const proof = ensureProofPlan(s);
-    return {
-      advisorId: id,
-      seatName: meta.name,
-      seatCode: meta.code,
-      oneLiner: s.oneLiner,
-      sacrifice: s.sacrifice,
-      thisWeekProof: `菜单：${proof.menu}；话术：${proof.script}`,
-      ifChoose: `资源押「${s.battlefield || s.oneLiner}」；本周只验这一套证明。`,
-      ifNot: `若另起第二卖点，${meta.name}案失效，会议白开。`,
-    };
-  });
+  const order: AdvisorId[] = [
+    "ries",
+    "trout",
+    "ye",
+    "huayehu",
+    "kotler",
+    "growth",
+    "culture",
+  ];
+  const options: FounderDecisionOption[] = order
+    .map((id) => set.strategies.find((x) => x.advisorId === id))
+    .filter(Boolean)
+    .map((s) => {
+      const card = s!;
+      const meta = ADVISOR_META[card.advisorId];
+      const proof = ensureProofPlan(card);
+      return {
+        advisorId: card.advisorId,
+        seatName: meta.name,
+        seatCode: meta.code,
+        oneLiner: card.oneLiner,
+        sacrifice: card.sacrifice,
+        thisWeekProof: `菜单：${proof.menu}；话术：${proof.script}`,
+        ifChoose: `资源押「${card.battlefield || card.oneLiner}」；本周只验这一套证明。`,
+        ifNot: `若另起第二卖点，${meta.name}案失效，会议白开。`,
+      };
+    });
 
   const title = "一页纸决策卡 · 品牌战略委员会";
-  const subtitle = "拍板前只看这一页。三案互斥，选主轴或写清折中主辅。";
+  const subtitle = "拍板前只看这一页。七案互斥，选主轴或写清折中主辅。";
   const question = "本阶段唯一主航道，押哪一条？";
   const blendHint =
-    "折中规则：必须写清谁主轴、谁只做约束；禁止三案平均用力。";
+    "折中规则：必须写清谁主轴、谁只做约束；禁止多案平均用力。";
   const rule =
     "没有拍板不能散会。拍板后菜单/话术/传播不得另起第二套主卖点。";
 
@@ -378,17 +423,13 @@ export function buildFounderDecisionCard(
 export function openWarRoomDebate(set: AdvisorStrategySet): OpenWarRoomResult {
   const by = Object.fromEntries(
     set.strategies.map((s) => [s.advisorId, s]),
-  ) as Record<AdvisorId, AdvisorStrategyCard>;
-
-  const ries = by.ries;
-  const trout = by.trout;
-  const ye = by.ye;
+  ) as Partial<Record<AdvisorId, AdvisorStrategyCard>>;
 
   const challengePool = set.crossFire
     ? challengesFromCrossFire(set.crossFire, by)
     : fallbackDebateChallenges(by);
 
-  const debate = buildDebateTurns(challengePool, by);
+  const debate = buildDebateTurns(challengePool, set.strategies);
 
   const ctx = set.schemeContext
     ? masterSchemeContextFromInputs(set.schemeContext)
@@ -413,23 +454,34 @@ export function openWarRoomDebate(set: AdvisorStrategySet): OpenWarRoomResult {
   };
 
   const decisionCard = buildFounderDecisionCard(debatedSet);
+  const pitchOrder: AdvisorId[] = [
+    "ries",
+    "trout",
+    "ye",
+    "huayehu",
+    "kotler",
+    "growth",
+    "culture",
+  ];
+  const pitchTurns = pitchOrder
+    .map((id) => debatedSet.strategies.find((s) => s.advisorId === id))
+    .filter(Boolean)
+    .map((s) => turn(s!.advisorId, "pitch", pitchScript(s!), "pitch"));
 
   const turns: WarRoomTurn[] = [
     turn(
       "host",
       "host",
-      "品牌战略委员会现在开会。今天只决一件事：主定位押哪条。出席：心智官、空位官、冲突官。规则：各人 60 秒亮策；交叉质询后必须当场反驳并修正策略表；禁止讲正确的废话；没有老板拍板，不能散会。",
+      "品牌战略委员会现在开会。今天只决一件事：主定位押哪条。出席：心智官、空位官、冲突官、符号官、细分官、增长官、文化官。规则：各人 60 秒亮策；交叉质询后必须当场反驳并修正策略表；禁止讲正确的废话；没有老板拍板，不能散会。",
       "call_to_order",
     ),
-    turn("ries", "pitch", pitchScript(ries), "pitch"),
-    turn("trout", "pitch", pitchScript(trout), "pitch"),
-    turn("ye", "pitch", pitchScript(ye), "pitch"),
+    ...pitchTurns,
     ...debate.turns,
     turn(
       "host",
       "synthesis",
       [
-        "主席综合：三案仍互斥，不能并行当主轴。",
+        "主席综合：七案仍互斥，不能并行当主轴。",
         "本轮已完成「质询 → 反驳 → 修正策略表」；拍板请看修正后的主轴与牺牲，不要看开场旧稿。",
         set.crossFire?.gameSummary
           ? `交火纪要：${set.crossFire.gameSummary}`
@@ -865,6 +917,18 @@ export function applyUserVoteToWarRoom(
     `场合约束：本周证明不得缺——${ensureProofPlan(ye).scene}`,
     preference !== "ye" && preference !== "blend"
       ? `冲突官保留：场合套餐须对应「${ye.jobToBeDone}」`
+      : null,
+    set.strategies.find((s) => s.advisorId === "huayehu")
+      ? `符号约束：门头/桌签须钉死可感知符号（符号官）`
+      : null,
+    set.strategies.find((s) => s.advisorId === "kotler")
+      ? `细分约束：主航道不得偏离目标细分「${set.strategies.find((s) => s.advisorId === "kotler")!.forWhom}」`
+      : null,
+    set.strategies.find((s) => s.advisorId === "growth")
+      ? `增长约束：本周证明须能进入飞轮验证，禁止只喊增长口号`
+      : null,
+    set.strategies.find((s) => s.advisorId === "culture")
+      ? `文化约束：传播须锚定社会矛盾，禁止空喊价值观`
       : null,
   ].filter(Boolean) as string[];
 

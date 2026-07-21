@@ -19,6 +19,7 @@ import {
   readDecisionVoiceBrief,
   type DecisionVoiceBrief,
 } from "@/lib/decision-voice-brief";
+import { buildDecisionBriefFromFocus } from "@/lib/decision-brief-from-scan";
 import { trpc } from "@/lib/trpc";
 import {
   buildCouncilArchiveExtras,
@@ -44,6 +45,7 @@ export function DecisionRoom({ projectId }: Props) {
   const searchParams = useSearchParams();
   const resumeRequested = searchParams.get("resume") === "1";
   const topicFromQuery = (searchParams.get("topic") || "").trim();
+  const whyFromQuery = (searchParams.get("why") || "").trim();
   const intakeMode = (searchParams.get("intake") || "").trim(); // voice | ready | ''
   const meta = trpc.decisionCouncil.meta.useQuery();
   const resumeQuery = trpc.decisionCouncil.resumeActiveDraft.useQuery(
@@ -73,6 +75,8 @@ export function DecisionRoom({ projectId }: Props) {
   const resumedRef = useRef(false);
   const [founderNote, setFounderNote] = useState("");
   const [archiveOk, setArchiveOk] = useState(false);
+  const [executionStarted, setExecutionStarted] = useState<boolean | null>(null);
+  const [executionError, setExecutionError] = useState<string | null>(null);
   const [expertNote, setExpertNote] = useState<string | null>(null);
   const [opinionSource, setOpinionSource] = useState<string | null>(null);
   const [brandStrength, setBrandStrength] = useState<number | null>(null);
@@ -81,6 +85,7 @@ export function DecisionRoom({ projectId }: Props) {
   const [constraints, setConstraints] = useState("");
   const [successLooksLike, setSuccessLooksLike] = useState("");
   const [allowStubReports, setAllowStubReports] = useState(false);
+  const [allowGaps, setAllowGaps] = useState(false);
   const [showAdvancedSetup, setShowAdvancedSetup] = useState(false);
   /** 默认语音对话；一句话 / 进阶手填为辅 */
   const [setupPath, setSetupPath] = useState<"dialogue" | "oneshot">(
@@ -138,15 +143,38 @@ export function DecisionRoom({ projectId }: Props) {
   useEffect(() => {
     if (resumeRequested || step !== "setup") return;
     const stored = readDecisionVoiceBrief(projectId);
-    if (!stored) return;
-    setReadyBrief(stored);
-    setCustomTopic(stored.topic);
-    setWhyNow(stored.whyNow);
-    setDecisionQuestion(stored.decisionQuestion);
-    setConstraints(stored.constraints);
-    setSuccessLooksLike(stored.successLooksLike);
-    if (intakeMode === "ready") setSetupPath("oneshot");
-  }, [intakeMode, projectId, resumeRequested, step]);
+    if (stored) {
+      setReadyBrief(stored);
+      setCustomTopic(stored.topic);
+      setWhyNow(stored.whyNow);
+      setDecisionQuestion(stored.decisionQuestion);
+      setConstraints(stored.constraints);
+      setSuccessLooksLike(stored.successLooksLike);
+      if (intakeMode === "ready") setSetupPath("oneshot");
+      return;
+    }
+    // 无 sessionStorage：用 URL topic + why 合成 Brief（入口契约兜底）
+    if (intakeMode === "ready" && topicFromQuery) {
+      const hydrated = buildDecisionBriefFromFocus({
+        title: topicFromQuery,
+        whyToday: whyFromQuery || "今日经营变化，需要拍板下一步",
+      });
+      setReadyBrief(hydrated);
+      setCustomTopic(hydrated.topic);
+      setWhyNow(hydrated.whyNow);
+      setDecisionQuestion(hydrated.decisionQuestion);
+      setConstraints(hydrated.constraints);
+      setSuccessLooksLike(hydrated.successLooksLike);
+      setSetupPath("oneshot");
+    }
+  }, [
+    intakeMode,
+    projectId,
+    resumeRequested,
+    step,
+    topicFromQuery,
+    whyFromQuery,
+  ]);
 
   function applyBriefAndOpen(brief: DecisionVoiceBrief) {
     setCustomTopic(brief.topic);
@@ -172,6 +200,7 @@ export function DecisionRoom({ projectId }: Props) {
         constraints: brief.constraints,
         successLooksLike: brief.successLooksLike,
         allowStubReports,
+        allowGaps,
         forceLevel,
         roster: mode === "special" ? roster : undefined,
       });
@@ -318,6 +347,7 @@ export function DecisionRoom({ projectId }: Props) {
         constraints: brief.constraints,
         successLooksLike: brief.successLooksLike,
         allowStubReports,
+        allowGaps,
         // major/special 均可带预设级别；专项会另传自选花名册
         forceLevel,
         roster: mode === "special" ? roster : undefined,
@@ -437,6 +467,7 @@ export function DecisionRoom({ projectId }: Props) {
           .slice(0, 4);
 
         const extras = buildCouncilArchiveExtras(payload.session);
+        const draftDecisionId = payload.session.casePacket.caseId;
         const archivePayload = {
           projectId,
           problem: payload.session.agenda.topic,
@@ -460,6 +491,10 @@ export function DecisionRoom({ projectId }: Props) {
           evidenceSufficient: evidenceOk,
           allowInsufficientEvidence,
           decisionContract: extras.decisionContract,
+          draftDecisionId:
+            draftDecisionId && !draftDecisionId.startsWith("DR-")
+              ? draftDecisionId
+              : undefined,
           councilTrace: {
             caseId: payload.session.casePacket.caseId,
             sessionId: payload.session.sessionId,
@@ -469,8 +504,12 @@ export function DecisionRoom({ projectId }: Props) {
             decisionTrace: payload.session.decisionTrace || undefined,
           },
         };
+        let archiveResult: {
+          executionStarted?: boolean;
+          executionError?: string | null;
+        } | null = null;
         try {
-          await confirmArchive.mutateAsync(archivePayload);
+          archiveResult = await confirmArchive.mutateAsync(archivePayload);
         } catch (archiveErr) {
           const msg =
             archiveErr instanceof Error ? archiveErr.message : String(archiveErr);
@@ -482,7 +521,7 @@ export function DecisionRoom({ projectId }: Props) {
               danger: true,
             });
             if (!ok) throw archiveErr;
-            await confirmArchive.mutateAsync({
+            archiveResult = await confirmArchive.mutateAsync({
               ...archivePayload,
               supersedesDecisionId: match[1],
             });
@@ -496,6 +535,8 @@ export function DecisionRoom({ projectId }: Props) {
         } catch {
           // 归档已成功；清草稿失败不阻断关闭
         }
+        setExecutionStarted(Boolean(archiveResult?.executionStarted));
+        setExecutionError(archiveResult?.executionError || null);
         setArchiveOk(true);
         setStep("closed");
       } catch (archiveErr) {
@@ -687,6 +728,12 @@ export function DecisionRoom({ projectId }: Props) {
         {session && expertNote ? (
           <p className="mt-2 text-[12px] leading-5 text-[#6f747b]">{expertNote}</p>
         ) : null}
+        {session?.evidencePacket?.gaps &&
+        session.evidencePacket.gaps.length > 0 ? (
+          <p className="mt-1.5 text-[12px] leading-5 text-[#8A4F31]">
+            开会提醒：{session.evidencePacket.gaps.slice(0, 2).join("；")}
+          </p>
+        ) : null}
       </header>
 
       {error ? (
@@ -715,13 +762,26 @@ export function DecisionRoom({ projectId }: Props) {
           {readyBrief && intakeMode === "ready" ? (
             <div className="space-y-3 rounded-[14px] border border-[rgba(24,24,23,0.08)] bg-[#FBFAF7] p-4">
               <p className="text-[11px] tracking-[0.1em] text-[#66735E]">
-                今日已采齐 · 确认后开案
+                分析已就绪 · 确认后开案
               </p>
               <p className="font-display text-[18px] font-semibold text-[#202124]">
                 {readyBrief.topic}
               </p>
               <ul className="space-y-1.5 text-[13px] leading-6 text-[#3a3d41]">
                 <li>为何现在 · {readyBrief.whyNow}</li>
+                {readyBrief.evidenceSummary &&
+                readyBrief.evidenceSummary.length > 0 ? (
+                  <li>
+                    证据 ·{" "}
+                    {readyBrief.evidenceSummary.slice(0, 3).join("；")}
+                  </li>
+                ) : null}
+                {readyBrief.reviewQuestions &&
+                readyBrief.reviewQuestions.length > 0 ? (
+                  <li>
+                    复盘三问 · {readyBrief.reviewQuestions.join(" / ")}
+                  </li>
+                ) : null}
                 <li>底线 · {readyBrief.constraints}</li>
                 <li>做成什么样 · {readyBrief.successLooksLike}</li>
               </ul>
@@ -872,6 +932,17 @@ export function DecisionRoom({ projectId }: Props) {
                   仅演示：没有完整咨询报告时仍用草案开会（生产默认禁止）
                 </span>
               </label>
+              <label className="flex items-start gap-2 text-[13px] text-[#3c4043]">
+                <input
+                  type="checkbox"
+                  checked={allowGaps}
+                  onChange={(e) => setAllowGaps(e.target.checked)}
+                  className="mt-1"
+                />
+                <span>
+                  带着证据缺口开会（缺口 ≥2 或证据过少时必须勾选，否则先补一手事实）
+                </span>
+              </label>
 
               {mode === "special" ? (
                 <div>
@@ -959,6 +1030,43 @@ export function DecisionRoom({ projectId }: Props) {
             {session.expertReports.map((r) => r.engineId).join("、") || "—"}
             {expertNote ? ` · ${expertNote}` : ""}
           </p>
+          {session.evidencePacket?.items &&
+          session.evidencePacket.items.length > 0 ? (
+            <div className="space-y-2 border border-[rgba(24,24,23,0.06)] bg-[#FBFAF7] px-3 py-3">
+              <p className="text-[11px] tracking-[0.08em] text-[#66735E]">
+                本次证据包 · {session.evidencePacket.items.length} 条
+                {session.evidencePacket.gaps?.length
+                  ? ` · 缺口 ${session.evidencePacket.gaps.length}`
+                  : ""}
+              </p>
+              <ul className="space-y-1.5">
+                {session.evidencePacket.items.slice(0, 5).map((item) => (
+                  <li
+                    key={item.evidenceId}
+                    className="text-[13px] leading-5 text-[#3c4043]"
+                  >
+                    <span className="font-medium text-[#66735E]">
+                      {item.evidenceId}
+                    </span>
+                    {item.strength ? (
+                      <span className="text-[#9aa0a6]"> · {item.strength}</span>
+                    ) : null}
+                    <span className="text-[#6f747b]"> — {item.claim}</span>
+                  </li>
+                ))}
+              </ul>
+              {session.evidencePacket.gaps &&
+              session.evidencePacket.gaps.length > 0 ? (
+                <p className="text-[12px] leading-5 text-[#8A4F31]">
+                  {session.evidencePacket.gaps.slice(0, 2).join("；")}
+                </p>
+              ) : null}
+            </div>
+          ) : (
+            <p className="text-[12px] leading-5 text-[#8A4F31]">
+              尚无证据包：本轮意见将以降级置信度运行，补一手事实后再正式拍板更稳。
+            </p>
+          )}
           {session.insights && session.insights.length > 0 ? (
             <ul className="space-y-2">
               {session.insights.slice(0, 8).map((insight) => (
@@ -1076,6 +1184,20 @@ export function DecisionRoom({ projectId }: Props) {
                 <p className="mt-1 text-[13px] leading-6 text-[#3c4043]">
                   {op.judgment || op.summary}
                 </p>
+                {op.evidence_used && op.evidence_used.length > 0 ? (
+                  <p className="mt-1 text-[12px] text-[#66735E]">
+                    依据：{op.evidence_used.join("、")}
+                  </p>
+                ) : (
+                  <p className="mt-1 text-[12px] text-[#8A4F31]">
+                    未挂有效证据 ID（置信已降权）
+                  </p>
+                )}
+                {op.challenge_to_others && op.challenge_to_others.length > 0 ? (
+                  <p className="mt-1 text-[12px] leading-5 text-[#6f747b]">
+                    质询：{op.challenge_to_others[0]}
+                  </p>
+                ) : null}
                 {op.top_risk ? (
                   <p className="mt-1 text-[12px] text-[#8a3b2a]">
                     风险：{op.top_risk}
@@ -1098,6 +1220,13 @@ export function DecisionRoom({ projectId }: Props) {
                   >
                     <span className="font-semibold">
                       {c.agentA} vs {c.agentB}
+                      {c.severity === "high"
+                        ? " · 高冲突"
+                        : c.severity === "medium"
+                          ? " · 中冲突"
+                          : c.severity
+                            ? " · 低冲突"
+                            : ""}
                     </span>
                     {" — "}
                     {c.topic}
@@ -1280,13 +1409,26 @@ export function DecisionRoom({ projectId }: Props) {
                 onRestart={() => void reset()}
               />
               {archiveOk ? (
-                <p className="text-[12px] leading-5 text-[#6f747b]">
-                  已写入行动
-                  {session.insights?.length
-                    ? `（洞察 ${session.insights.length} 条）`
-                    : ""}
-                  。下次工作中再碰到要判断的事，还从「今日」进。
-                </p>
+                <div className="space-y-1 text-[12px] leading-5 text-[#6f747b]">
+                  <p>
+                    已裁决归档
+                    {session.insights?.length
+                      ? `（洞察 ${session.insights.length} 条）`
+                      : ""}
+                    。
+                  </p>
+                  {executionStarted ? (
+                    <p className="text-[#465240]">
+                      已自动进入执行，并挂上第 7 天复盘提醒。下次还从「今日」进。
+                    </p>
+                  ) : (
+                    <p className="text-[#8A4F31]">
+                      裁决已保存，但自动创建行动未完成
+                      {executionError ? `：${executionError}` : ""}
+                      。请到「行动」页手动开启执行。
+                    </p>
+                  )}
+                </div>
               ) : null}
               {session.decisionTrace ? (
                 <div className="border border-[rgba(24,24,23,0.08)] bg-[#FBFAF7] p-4">

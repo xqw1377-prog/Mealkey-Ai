@@ -1,6 +1,28 @@
 /**
  * 跑七席思维引擎 → 咨询策略集 + 可接 Cross-Fire 的 TheoryView
  */
+export { runMindEngine } from "./mind-engine";
+export { runRivalEngine } from "./rival-engine";
+export { runClashEngine } from "./clash-engine";
+export { runSymbolEngine } from "./symbol-engine";
+export { runSTPEngine } from "./stp-engine";
+export { runGrowthEngine } from "./growth-engine";
+export { runCultureEngine } from "./culture-engine";
+export {
+  SEAT_PUBLIC,
+  type SeatCode,
+  type SeatAdvisorId,
+  type ThinkingFactPack,
+  type SeatVerdict,
+  type ThinkingEngineResult,
+} from "./protocol";
+export {
+  evidenceBackedProof,
+  ownedMentalWord,
+  unlikeCompetitorLine,
+  wordOwnershipClaim,
+} from "./fact-evidence";
+
 import type {
   CrossFireResult,
   TheoryChallenge,
@@ -68,10 +90,29 @@ export function buildThinkingFactPack(
     }
   }
 
+  // 证据账本一手事实 → 事实包（verified 优先；禁止只靠 Brief 信念造策）
+  const ledgerFacts = (project.assets.evidenceLedger?.facts || [])
+    .filter((f) => (f.claim || "").trim().length >= 8)
+    .map((f) => ({
+      claim: f.claim.trim().slice(0, 120),
+      sourceType: f.sourceType || "other",
+      strength: (f.strength || "moderate") as "strong" | "moderate" | "weak",
+      relatedStage: f.relatedStage,
+      verified: f.verificationStatus === "verified",
+    }))
+    .sort((a, b) => Number(b.verified) - Number(a.verified));
+  for (const f of ledgerFacts.slice(0, 8)) {
+    const tag = f.verified ? "已核实" : "待核实";
+    evidenceSnippets.push(`[账本·${tag}] ${f.claim}`);
+  }
+
   const edgeFromVisit = (research.storeVisitPlan?.tasks || [])
     .filter((t) => t.status === "filled" && (t.observedEvidence || t.filledNote))
     .map((t) => t.observedEvidence || t.filledNote || "")
     .find((x) => x.trim().length >= 8);
+
+  const verifiedClaims = ledgerFacts.filter((f) => f.verified).map((f) => f.claim);
+  const edgeFromLedger = verifiedClaims[0];
 
   return {
     brandLabel: brief?.categoryDefinition
@@ -83,6 +124,7 @@ export function buildThinkingFactPack(
     need: (brief?.customerNeed || "吃得放心、可预期").replace(/。$/, ""),
     edge: (
       edgeFromVisit ||
+      edgeFromLedger ||
       brief?.founderBelief ||
       "一线能把出品做稳"
     ).replace(/。$/, ""),
@@ -96,11 +138,20 @@ export function buildThinkingFactPack(
     strengths: [
       brief?.founderBelief || "一线稳出品",
       research.whitespace ? `空位：${research.whitespace.slice(0, 24)}` : "",
+      verifiedClaims.length ? `账本已核实×${verifiedClaims.length}` : "",
       "品牌",
       "运营",
     ].filter(Boolean) as string[],
-    weaknesses: ["资源有限，不能多线开战"],
-    constraints: ["七席必须互斥", "输出须指导菜单与话术", "proof 须挂证据而非口号"],
+    weaknesses: [
+      "资源有限，不能多线开战",
+      ledgerFacts.length < 3 ? "一手证据不足 3 条" : "",
+    ].filter(Boolean) as string[],
+    constraints: [
+      "七席必须互斥",
+      "输出须指导菜单与话术",
+      "proof 须挂证据而非口号",
+      "造策须引用证据账本或调研来源",
+    ],
     competitorBriefs: (research.competitorBriefs || []).slice(0, 5).map((b) => ({
       name: b.name,
       mentalPosition: b.mentalPosition,
@@ -108,7 +159,8 @@ export function buildThinkingFactPack(
       threatToWhitespace: b.threatToWhitespace,
       summary: b.summary,
     })),
-    evidenceSnippets: evidenceSnippets.slice(0, 8),
+    evidenceSnippets: [...new Set(evidenceSnippets)].slice(0, 12),
+    primaryFacts: ledgerFacts.slice(0, 12),
     // V2 扩展字段
     culturalCode: research.culturalCode,
     symbolSet: research.symbolSet,
@@ -161,7 +213,6 @@ function verdictToTheoryView(v: SeatVerdict): TheoryView {
 function seatVerdictToAgentId(advisorId: SeatAdvisorId): "ries" | "trout" | "ye_maozhong" {
   if (advisorId === "ye") return "ye_maozhong";
   if (advisorId === "ries" || advisorId === "trout") return advisorId;
-  // For new seats, map to the closest existing one for compatibility
   if (advisorId === "huayehu") return "ries";
   if (advisorId === "kotler") return "trout";
   if (advisorId === "growth") return "ye_maozhong";
@@ -226,40 +277,61 @@ function enrichCrossFireWithAmmo(
   base: CrossFireResult,
   seats: ThinkingEngineResult["seats"],
 ): CrossFireResult {
+  /** 七席原生弹药优先；模板 Cross-Fire 仅作补缺，禁止折叠后冒充真交火 */
   const ammoChallenges: TheoryChallenge[] = [];
   const seatList = [
-    seats.ries, seats.trout, seats.ye,
-    seats.huayehu, seats.kotler, seats.growth, seats.culture,
-  ];
+    seats.ries,
+    seats.trout,
+    seats.ye,
+    seats.huayehu,
+    seats.kotler,
+    seats.growth,
+    seats.culture,
+  ].filter(Boolean);
+  const byId = Object.fromEntries(
+    seatList.map((s) => [s.advisorId, s]),
+  ) as Record<SeatAdvisorId, SeatVerdict>;
+
   for (const from of seatList) {
-    if (!from || !from.attackAmmo) continue;
-    for (const a of from.attackAmmo) {
-      const targetSeatId = mapSeatAdvisorId(a.targetSeat);
+    for (const a of from.attackAmmo || []) {
+      const target = byId[a.targetSeat];
       ammoChallenges.push({
         from: seatVerdictToAgentId(from.advisorId),
-        to: targetSeatId,
-        target_direction: "",
-        attack: a.attack,
+        to: seatVerdictToAgentId(a.targetSeat),
+        target_direction: target?.preferred.name || target?.keyMentalPosition || "",
+        attack: `【${from.publicName}】${a.attack}`,
         defense_hint: a.defenseHint,
         severity: a.severity,
       });
     }
   }
+
+  // 弹药在前，旧模板在后；按攻击文去重
   const merged = [...ammoChallenges, ...(base.challenges || [])];
   const seen = new Set<string>();
   const challenges = merged.filter((c) => {
-    const k = `${c.from}->${c.to}:${c.attack.slice(0, 24)}`;
+    const k = `${c.from}->${c.to}:${c.attack.slice(0, 32)}`;
     if (seen.has(k)) return false;
     seen.add(k);
     return true;
   });
 
+  const evidenceGaps = (seats.ries?.strategy &&
+    seats.ries.reasoningTrace.some((t) => /证据不足|一手证据/.test(t.judgment)))
+    ? ["证据账本覆盖不足时，任何席位不得强推 strong_recommend"]
+    : [];
+
   return {
     ...base,
     challenges,
+    soft_consensus: [
+      ...(base.soft_consensus || []),
+      "七席各自造策后，仅一条可当主航道；其余降为约束",
+      ...evidenceGaps,
+    ].slice(0, 8),
     game_summary:
-      base.game_summary ||
-      `七席交锋：心智官/空位官/冲突官/符号官/细分官/增长官/文化官 七方并行造策后博弈。`,
+      `七席交锋：弹药质询 ${ammoChallenges.length} 条 + 矩阵模板 ${base.challenges?.length || 0} 条；` +
+      (base.game_summary || "心智/空位/冲突/符号/细分/增长/文化并行造策后博弈。"),
   };
 }
 
@@ -403,11 +475,3 @@ export async function runThreeSeatThinkingEngines(
 
   return { engine, set };
 }
-
-export { SEAT_PUBLIC } from "./protocol";
-export {
-  evidenceBackedProof,
-  ownedMentalWord,
-  unlikeCompetitorLine,
-  wordOwnershipClaim,
-} from "./fact-evidence";

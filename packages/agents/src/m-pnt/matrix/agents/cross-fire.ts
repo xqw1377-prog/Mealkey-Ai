@@ -222,7 +222,7 @@ function buildChallenge(
   };
 }
 
-/** 站在攻击方理论体系上开火 */
+/** 站在攻击方理论体系上开火；优先用案卷证据句，减少纯关键词模板 */
 function attackLine(
   from: TheoryAgentId,
   _to: TheoryAgentId,
@@ -230,25 +230,33 @@ function attackLine(
   defender: TheoryView,
   targetOneLiner: string,
 ): string {
+  const evidenceHint = (attacker.core_strategic_logic || "")
+    .split(/[｜\n]/)
+    .map((s) => s.trim())
+    .find((s) => /证据|账本|调研|对手|场合|一手/.test(s));
+  const riskHint = attacker.main_risks[0]?.risk;
+  const ev = evidenceHint ? `（依据：${evidenceHint.slice(0, 48)}）` : "";
+  const risk = riskHint ? `攻击方自认风险：${riskHint.slice(0, 36)}。` : "";
+
   switch (from) {
     case "ries":
       return `【心智官】攻击 ${labelOf(defender.agent_id)} 的「${targetOneLiner}」：在心智第一与战略聚焦尺度下，该方向${
         /第一|首选|心智|占位/.test(targetOneLiner)
           ? "看似有占位，但仍可能切口过窄、难成可长期强化的领导概念"
           : "聚焦不足或难称心智第一，长期占位不成立"
-      }。心智官主推「${attacker.preferred_direction}」。`;
+      }。${ev}${risk}心智官主推「${attacker.preferred_direction}」。`;
     case "trout":
       return `【空位官】攻击 ${labelOf(defender.agent_id)} 的「${targetOneLiner}」：在竞争空位与第一联想尺度下，该方向${
         /对立|区隔|不|只|空位/.test(targetOneLiner)
           ? "有区隔苗头，但仍可能不够锋利、易被换皮跟进"
           : "缺少可感知空位，更像「更好」而非竞争中的不同"
-      }。空位官主推「${attacker.preferred_direction}」。`;
+      }。${ev}${risk}空位官主推「${attacker.preferred_direction}」。`;
     case "ye_maozhong":
       return `【冲突官】攻击 ${labelOf(defender.agent_id)} 的「${targetOneLiner}」：在冲突记忆与可成交尺度下，该方向${
         /冲突|对立|不|只|打破|而非/.test(targetOneLiner)
           ? "有冲突结构，但须证明能传播、能进店、30 天能验证"
           : "冲突点偏弱或只有正确口号，记不住也带不动成交"
-      }。冲突官主推「${attacker.preferred_direction}」。`;
+      }。${ev}${risk}冲突官主推「${attacker.preferred_direction}」。`;
   }
 }
 

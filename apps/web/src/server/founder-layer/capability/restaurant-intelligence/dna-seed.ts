@@ -1,5 +1,5 @@
 /**
- * RIP 确认 → 经营决策习惯种子 + Founder DNA 软投影（R3）
+ * RIP 确认 → 经营决策习惯种子 + Founder DNA + 经营事实包厚写（R3）
  * 对外文案：「经营决策习惯」；禁止「决策人格」。
  */
 
@@ -70,8 +70,131 @@ export function mergeHabitSeedIntoProfile(
   };
 }
 
+type DnaProposal = {
+  layer: "brand" | "business" | "market" | "organization" | "founder";
+  key: string;
+  value: string;
+  confidence: number;
+};
+
+export function buildRipFactProposals(
+  snapshot: RestaurantIntelligenceSnapshotV1,
+): DnaProposal[] {
+  const proposals: DnaProposal[] = [];
+  const basic = snapshot.basic;
+  const customer = snapshot.customer;
+  const gap = snapshot.cognitionGap;
+
+  if (basic.stageLabel?.trim()) {
+    proposals.push({
+      layer: "business",
+      key: "stage",
+      value: basic.stageLabel.trim().slice(0, 80),
+      confidence: 0.7,
+    });
+  }
+
+  const loc = [basic.city, basic.districtOrArea].filter(Boolean).join(" · ");
+  if (loc) {
+    proposals.push({
+      layer: "business",
+      key: "location",
+      value: loc.slice(0, 80),
+      confidence: 0.75,
+    });
+  }
+
+  if (basic.competitionHint && !/未知/.test(basic.competitionHint)) {
+    proposals.push({
+      layer: "market",
+      key: "competitionHint",
+      value: basic.competitionHint.slice(0, 120),
+      confidence: 0.55,
+    });
+  }
+
+  if (!customer.evidenceInsufficient) {
+    if (customer.positiveKeywords.length > 0) {
+      proposals.push({
+        layer: "market",
+        key: "customerPraise",
+        value: customer.positiveKeywords.slice(0, 5).join("、").slice(0, 120),
+        confidence: 0.6,
+      });
+    }
+    if (customer.watchouts.length > 0) {
+      proposals.push({
+        layer: "market",
+        key: "customerWatchout",
+        value: customer.watchouts.slice(0, 5).join("、").slice(0, 120),
+        confidence: 0.6,
+      });
+    }
+  } else {
+    proposals.push({
+      layer: "market",
+      key: "evidenceGap",
+      value: "顾客侧外部证据不足，决策须先补一手事实",
+      confidence: 0.65,
+    });
+  }
+
+  if (gap?.founderClaim?.trim()) {
+    proposals.push({
+      layer: "founder",
+      key: "strength",
+      value: gap.founderClaim.trim().slice(0, 80),
+      confidence: 0.58,
+    });
+  }
+
+  if (
+    gap &&
+    !customer.evidenceInsufficient &&
+    gap.summaryLine.includes("不一致")
+  ) {
+    proposals.push({
+      layer: "founder",
+      key: "blindSpot",
+      value: `自认「${gap.founderClaim}」与顾客高频信号可能不一致`.slice(0, 120),
+      confidence: 0.55,
+    });
+  }
+
+  const topAlert = snapshot.alerts[0]?.line?.trim();
+  if (topAlert) {
+    proposals.push({
+      layer: "business",
+      key: "primaryAlert",
+      value: topAlert.slice(0, 140),
+      confidence: 0.58,
+    });
+  }
+
+  // 显式未知项 → Brain 知道「不知道什么」
+  const unknowns: string[] = [];
+  if (!basic.avgTicketHint || basic.avgTicketHint === "未知") {
+    unknowns.push("真实客单");
+  }
+  if (customer.evidenceInsufficient) unknowns.push("顾客复购结构");
+  if (/扩张|复制|第二/.test(basic.stageLabel || "")) {
+    unknowns.push("店长复制能力");
+    unknowns.push("单店盈利模型");
+  }
+  if (unknowns.length > 0) {
+    proposals.push({
+      layer: "business",
+      key: "knownUnknowns",
+      value: unknowns.slice(0, 5).join("、"),
+      confidence: 0.72,
+    });
+  }
+
+  return proposals.slice(0, 12);
+}
+
 /**
- * 确认后安全字段投影：品类/阶段提示 + Founder strength/blindSpot 种子。
+ * 确认后经营事实包投影：品类/阶段/区位/顾客信号/未知项 + Founder 种子。
  * 失败不抛——不得阻断进驾驶舱。
  */
 export async function syncConfirmedRipToBrain(
@@ -93,6 +216,10 @@ export async function syncConfirmedRipToBrain(
       confidence: 0.62,
       brandName: snapshot.basic.brandName,
       category: snapshot.basic.category,
+      targetCustomers: snapshot.customer.evidenceInsufficient
+        ? undefined
+        : snapshot.customer.positiveKeywords.slice(0, 3).join("、") || undefined,
+      differentiation: snapshot.cognitionGap?.founderClaim,
     });
   } catch {
     // ignore
@@ -105,36 +232,17 @@ export async function syncConfirmedRipToBrain(
       ownerId: input.ownerId,
     });
 
-    const claim = snapshot.cognitionGap?.founderClaim?.trim();
-    if (claim) {
+    const at = new Date().toISOString();
+    for (const p of buildRipFactProposals(snapshot)) {
       const r = await brain.proposeAndMaybeMergeDna({
         kind: "dna_patch_propose",
         projectId: input.projectId,
-        layer: "founder",
-        key: "strength",
-        value: claim.slice(0, 80),
-        confidence: 0.58,
+        layer: p.layer,
+        key: p.key,
+        value: p.value,
+        confidence: p.confidence,
         source: "onboarding",
-        at: new Date().toISOString(),
-      });
-      if (r.accepted) accepted += 1;
-    }
-
-    if (
-      snapshot.cognitionGap &&
-      !snapshot.customer.evidenceInsufficient &&
-      snapshot.cognitionGap.summaryLine.includes("不一致")
-    ) {
-      const blind = `自认「${snapshot.cognitionGap.founderClaim}」与顾客高频信号可能不一致`;
-      const r = await brain.proposeAndMaybeMergeDna({
-        kind: "dna_patch_propose",
-        projectId: input.projectId,
-        layer: "founder",
-        key: "blindSpot",
-        value: blind.slice(0, 120),
-        confidence: 0.55,
-        source: "onboarding",
-        at: new Date().toISOString(),
+        at,
       });
       if (r.accepted) accepted += 1;
     }

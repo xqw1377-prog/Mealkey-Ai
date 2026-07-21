@@ -1,5 +1,6 @@
 /**
- * 把蒸馏知识库接到三席思维引擎
+ * 把蒸馏知识库接到思维引擎。
+ * source=null：无专属规则集时跳过蒸馏，禁止错用他派规则加分。
  */
 import {
   getCases,
@@ -10,7 +11,7 @@ import {
 import type { LawCheck, ReasoningStep } from "./protocol";
 
 export function enrichVerdictWithKnowledge(input: {
-  source: TheorySource;
+  source: TheorySource | null;
   directionText: string;
   baseChecks: LawCheck[];
   baseScore: number;
@@ -21,6 +22,20 @@ export function enrichVerdictWithKnowledge(input: {
   trace: ReasoningStep[];
   caseHint?: string;
 } {
+  if (!input.source) {
+    return {
+      checks: input.baseChecks,
+      score: Math.max(0, Math.min(100, Math.round(input.baseScore))),
+      trace: [
+        ...input.trace,
+        {
+          step: "蒸馏知识检验",
+          judgment: "本席尚无独立蒸馏规则集，沿用启发式商规（未借用他派加分）",
+        },
+      ],
+    };
+  }
+
   const matched = matchRulesToText(input.source, input.directionText, 6);
   const distilled = rulesToLawChecks(matched, input.directionText).map((c) => ({
     law: `蒸馏·${c.law}`,
@@ -58,7 +73,6 @@ export function enrichVerdictWithKnowledge(input: {
     });
   }
 
-  // 启发式 checks 在前，蒸馏补强在后（去重 law 名）
   const seen = new Set(input.baseChecks.map((c) => c.law));
   const merged = [
     ...input.baseChecks,

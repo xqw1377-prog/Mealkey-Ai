@@ -1,5 +1,5 @@
 /**
- * 三席方向发明 — LLM 深度 invent + 模板兜底
+ * 七席方向发明 — LLM 深度 invent + 模板兜底
  *
  * 有 TheoryLLMAdapter 时：每席发明 2 条可打方向 + 1 条对照否决；
  * 解析失败 / 超时 / 无 key → 回退启发式模板，保证结构不崩。
@@ -13,7 +13,7 @@ import type {
 import { clipWord } from "./protocol";
 
 const MASTER_NAMES =
-  /里斯|特劳特|叶茂中|Al\s*Ries|Jack\s*Trout|Ries|Trout|Ye\s*Maozhong/i;
+  /里斯|特劳特|叶茂中|华与华|科特勒|Al\s*Ries|Jack\s*Trout|Ries|Trout|Ye\s*Maozhong|Kotler|Philip\s*Kotler/i;
 
 function extractJsonObject(content: string): Record<string, unknown> | null {
   const raw = (content || "").trim();
@@ -68,6 +68,38 @@ function seatBrief(seat: SeatCode): {
           "发明可记忆、可当场兑现的冲突方向（场合/社会层）；冲突服务成交，禁止假大空重新定义行业。",
         vetoHint: "第 3 条必须是「假大空·重新定义」对照否决案",
         idPrefix: "C",
+      };
+    case "MK-SYMBOL":
+      return {
+        role: "符号官 MK-SYMBOL（超级符号学派）",
+        inventGoal:
+          "发明可寄生于文化母体的超级符号方向；符号必须可上门头、菜单、传播三触点。禁止符号堆砌。",
+        vetoHint: "第 3 条必须是「符号堆砌」对照否决案",
+        idPrefix: "S",
+      };
+    case "MK-STP":
+      return {
+        role: "细分官 MK-STP（科特勒 STP 学派）",
+        inventGoal:
+          "发明基于市场细分的聚焦方向；必须是可衡量、可进入、可盈利的细分。禁止泛定位所有人。",
+        vetoHint: "第 3 条必须是「所有人定位」对照否决案",
+        idPrefix: "K",
+      };
+    case "MK-GROWTH":
+      return {
+        role: "增长官 MK-GROWTH（增长飞轮学派）",
+        inventGoal:
+          "发明基于增长飞轮的方向；找到最小加速单元让复购/客单价/翻台形成正循环。禁止烧钱冲规模。",
+        vetoHint: "第 3 条必须是「烧钱冲规模」对照否决案",
+        idPrefix: "G",
+      };
+    case "MK-CULTURE":
+      return {
+        role: "文化官 MK-CULTURE（文化战略学派）",
+        inventGoal:
+          "发明基于社会矛盾的文化品牌方向；品牌成为消费者身份表达的仪式。禁止文化挪用式贴标签。",
+        vetoHint: "第 3 条必须是「文化挪用」对照否决案",
+        idPrefix: "U",
       };
   }
 }
@@ -158,6 +190,11 @@ function buildUserPrompt(seat: SeatCode, f: ThinkingFactPack): string {
         competitorBriefs: (f.competitorBriefs || []).slice(0, 4),
         evidenceSnippets: (f.evidenceSnippets || []).slice(0, 5),
         risks: f.risks.slice(0, 3),
+        culturalCode: f.culturalCode,
+        symbolSet: f.symbolSet,
+        demographicTiers: f.demographicTiers,
+        growthLevers: f.growthLevers,
+        socialContradiction: f.socialContradiction,
       },
       null,
       0,
@@ -225,7 +262,7 @@ export async function inventSeatDirections(params: {
     if (
       vetoFb &&
       last &&
-      !/更好|全面|假大空|重新定义|颠覆|升级/.test(
+      !/更好|全面|假大空|重新定义|颠覆|升级|堆砌|所有人|烧钱|挪用|贴标签/.test(
         `${last.oneLiner}${last.name}${last.type}`,
       )
     ) {

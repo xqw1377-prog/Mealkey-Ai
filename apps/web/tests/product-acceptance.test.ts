@@ -91,5 +91,31 @@ describe("product acceptance readiness", () => {
     expect(report.failCount).toBe(0);
     expect(report.readyForDemo).toBe(true);
     expect(report.summary).toMatch(/演示就绪|警告/);
+    expect(report.checks.some((c) => c.id === "gate.council_stub")).toBe(true);
+    expect(report.checks.some((c) => c.id === "ops.external_intel")).toBe(true);
+    expect(report.checks.some((c) => c.id === "product.auto_exec")).toBe(true);
+  });
+
+  it("production + ALLOW_COUNCIL_STUB=1 → council_stub fail", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("ALLOW_COUNCIL_STUB", "1");
+    vi.stubEnv("DASHSCOPE_API_KEY", "sk-test");
+    vi.mocked(getConsultingEngineHealth).mockResolvedValue({
+      checkedAt: new Date().toISOString(),
+      allOk: true,
+      engines: [
+        { id: "m-biz", label: "M-BIZ", ok: true, latencyMs: 8, detail: "ok" },
+        { id: "m-mkt", label: "M-MKT", ok: true, latencyMs: 9, detail: "ok" },
+        { id: "m-ed", label: "M-ED", ok: true, latencyMs: 11, detail: "ok" },
+      ],
+    });
+
+    const report = await buildProductAcceptanceReport();
+    expect(
+      report.checks.some(
+        (c) => c.id === "gate.council_stub" && c.status === "fail",
+      ),
+    ).toBe(true);
+    expect(report.readyForProduction).toBe(false);
   });
 });

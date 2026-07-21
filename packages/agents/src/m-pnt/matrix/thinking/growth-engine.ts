@@ -232,7 +232,7 @@ export async function runGrowthEngine(
   });
 
   const enriched = enrichVerdictWithKnowledge({
-    source: "ye_maozhong",
+    source: null,
     directionText: `${preferred.oneLiner} ${preferred.name} ${preferred.focus} ${levers.join(" ")} ${word}`,
     baseChecks: preferredRow.checks,
     baseScore: preferredRow.total,

@@ -6,11 +6,8 @@ import {
   ArrowRight,
   Brain,
   Check,
-  Compass,
   Clock,
   History,
-  MessageSquare,
-  Sparkles,
   ThumbsDown,
   ThumbsUp,
   Zap,
@@ -18,7 +15,6 @@ import {
 import { ActionTracker } from "./components";
 import { ValidationFeedbackCard } from "./ValidationFeedbackCard";
 import {
-  MKPageHeader,
   PositioningReviewQueue,
   PositioningVersionTimeline,
   BrandSwitcher,
@@ -31,7 +27,6 @@ import {
 import { PageContent } from "@/components/operating/PageContent";
 import { PageEmptyState, PageErrorState, PageLoadingState } from "@/components/operating/PageState";
 import { PageErrorBoundary } from "@/components/operating/PageErrorBoundary";
-import { DecisionLoopRail } from "@/components/operating/DecisionLoopRail";
 import { formatRelativeDate } from "@/lib/format";
 import { useProjectId } from "@/hooks/useProjectId";
 import { trpc } from "@/lib/trpc";
@@ -230,6 +225,15 @@ function TypeBadge({ type }: { type: string }) {
       {labels[type] ?? type}
     </span>
   );
+}
+
+/** 行动主列表窗口：近 3 日；更早收入历史 */
+const ACTIVE_WINDOW_MS = 3 * 24 * 60 * 60 * 1000;
+
+function isWithinActiveWindow(createdAt: Date | string | number) {
+  const t = new Date(createdAt).getTime();
+  if (!Number.isFinite(t)) return false;
+  return Date.now() - t <= ACTIVE_WINDOW_MS;
 }
 
 function StageBadge({ decision }: { decision: DecisionItem }) {
@@ -446,6 +450,8 @@ function DecisionsArchivePageInner() {
   );
 
   const allDecisions = (data?.pages.flatMap((page) => page.items) ?? []) as DecisionItem[];
+  const recentDecisions = allDecisions.filter((d) => isWithinActiveWindow(d.createdAt));
+  const historyDecisions = allDecisions.filter((d) => !isWithinActiveWindow(d.createdAt));
   const isAwaitingValidation = (decision: DecisionItem) => {
     const outcome = parseOutcome(decision.outcome);
     if (parseLearning(decision.learning)?.summary) return false;
@@ -453,356 +459,249 @@ function DecisionsArchivePageInner() {
     if (outcome.feedbackAt || outcome.helpful !== undefined || outcome.result) return false;
     return outcome.status === "validating" || decision.type === "meeting";
   };
-  const decisionsAwaitingValidation = allDecisions.filter(isAwaitingValidation);
-  const decisionsWithoutOutcome = allDecisions.filter((decision) => !parseOutcome(decision.outcome));
-  const decisionsWithOutcome = allDecisions.filter((decision) => Boolean(parseOutcome(decision.outcome)));
-  const decisionsWithLearning = allDecisions.filter((decision) => Boolean(parseLearning(decision.learning)?.summary));
+  const decisionsAwaitingValidation = recentDecisions.filter(isAwaitingValidation);
+  const decisionsWithOutcome = recentDecisions.filter((decision) =>
+    Boolean(parseOutcome(decision.outcome)),
+  );
+  const decisionsWithLearning = recentDecisions.filter((decision) =>
+    Boolean(parseLearning(decision.learning)?.summary),
+  );
   const featuredValidating = decisionsAwaitingValidation.slice(0, 3);
-  const positioningBrandName =
-    brands?.activeBrand?.brandName ||
-    positioningContext?.current?.brandPositioning?.brandName ||
-    (project as { brandName?: string } | null | undefined)?.brandName ||
-    project?.name ||
-    "";
-  const positioningCategory =
-    brands?.activeBrand?.category ||
-    positioningContext?.current?.brandPositioning?.category ||
-    project?.category ||
-    "";
   const positioningMentalPosition =
     brands?.activeBrand?.mentalPosition ||
     positioningContext?.current?.brandPositioning?.mentalPosition ||
     positioningContext?.current?.oneLiner ||
     brands?.activeBrand?.oneLiner ||
     "";
-  const topInsight = stats
-    ? stats.withFeedback > 0
-      ? `已收到 ${stats.withFeedback} 次结果反馈，当前认可率 ${stats.helpfulRate}%。`
-      : "判断在累积，但反馈还不够。先补最近一条结果。"
-    : "正在整理反馈。";
 
   if (!projectId) {
     return (
-      <div className="space-y-5 pb-2 pt-6 md:pt-8">
+      <div className="space-y-4 pb-2 pt-5 md:pt-6">
         <PageErrorState
           eyebrow="行动"
-          title="找不到企业上下文"
-          description="链接里的企业 ID 无效。请从企业列表或今日看板重新进入。"
-          primaryAction={{ href: "/projects", label: "看企业列表" }}
-          secondaryAction={{ href: "/dashboard", label: "回今日" }}
+          title="找不到企业"
+          description="请从企业列表或今日重新进入。"
+          primaryAction={{ href: "/projects", label: "企业列表" }}
+          secondaryAction={{ href: "/dashboard", label: "今日" }}
         />
       </div>
     );
   }
 
   if (projectLoading || isLoading) {
-    return (
-      <PageLoadingState
-        eyebrow="行动"
-        title="正在打开行动…"
-        description="读取已确认的决策与验证进度。"
-      />
-    );
+    return <PageLoadingState eyebrow="行动" title="正在打开…" />;
   }
 
   if (error) {
     return (
-      <div className="space-y-5 pb-2 pt-6 md:pt-8">
+      <div className="space-y-4 pb-2 pt-5 md:pt-6">
         <PageErrorState
           eyebrow="行动"
-          title="行动暂时打不开"
-          description={error.message || "稍后再试，或先回今日。"}
-          primaryAction={{ href: "/dashboard", label: "回今日" }}
-          secondaryAction={{
-            href: `/projects/${projectId}/decision-room`,
-            label: "发起决策",
-          }}
+          title="暂时打不开"
+          description={error.message || "稍后再试。"}
+          primaryAction={{ href: "/dashboard", label: "今日" }}
         />
       </div>
     );
   }
 
+  const overviewTitle =
+    decisionsAwaitingValidation.length > 0
+      ? `${decisionsAwaitingValidation.length} 项待打卡`
+      : recentDecisions.length > 0
+        ? `近3日 ${recentDecisions.length} 条`
+        : historyDecisions.length > 0
+          ? "近3日暂无"
+          : "暂无行动";
+
   return (
-    <PageContent width="default" inset="shell" className="space-y-5">
-      <DecisionLoopRail current="act" projectId={projectId || undefined} />
-      <MKPageHeader
-        eyebrow="行动 · 决策闭环"
-        title="跟进与验证"
-        description="拍板之后在这里打卡：做了什么、结果如何；偏航就回决策室再判。"
-        badge={
-          <div className="inline-flex items-center gap-2 rounded-[12px] border border-[rgba(24,24,23,0.08)] bg-[#FBFAF7] px-3 py-1.5 text-[13px] text-[#6f747b]">
-            <History className="h-4 w-4" />
-            {stats ? `${stats.total} 条` : "…"}
-          </div>
-        }
-      >
-        <div className="grid w-full grid-cols-2 gap-2 sm:grid-cols-3 md:flex md:w-auto md:flex-wrap">
-          <Link
-            href={`/projects/${projectId}/decision-room`}
-            prefetch={false}
-            className="col-span-2 inline-flex min-h-12 items-center justify-center gap-2 rounded-[16px] bg-[#181817] px-5 text-[15px] font-semibold text-white no-underline touch-manipulation active:scale-[0.98] sm:col-span-1"
-          >
-            去拍板
-            <Sparkles className="h-4 w-4" />
-          </Link>
-          <Link
-            href="/dashboard"
-            prefetch={false}
-            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[16px] border border-[rgba(24,24,23,0.12)] bg-white px-4 text-[15px] font-medium text-[#181817] no-underline touch-manipulation"
-          >
-            回今日
-          </Link>
+    <PageContent width="default" inset="shell" className="space-y-3">
+      <header className="flex items-start justify-between gap-3 pt-1">
+        <div className="min-w-0">
+          <p className="text-[11px] font-medium tracking-[0.14em] text-[#66735E]">行动</p>
+          <h1 className="mt-1 font-display text-[24px] font-semibold leading-[1.15] tracking-[-0.04em] text-[#202124] md:text-[28px]">
+            跟进验证
+          </h1>
         </div>
-      </MKPageHeader>
+        <div className="inline-flex shrink-0 items-center gap-1.5 rounded-[10px] border border-[rgba(24,24,23,0.08)] bg-[#FBFAF7] px-2.5 py-1 text-[12px] text-[#6f747b]">
+          <History className="h-3.5 w-3.5" />
+          近3日 {recentDecisions.length}
+          {historyDecisions.length > 0 ? (
+            <span className="text-[#9aa0a6]">· 历史 {historyDecisions.length}</span>
+          ) : null}
+        </div>
+      </header>
       <BrandSwitcher projectId={projectId} variant="full" />
+
+      <section
+        id="validation"
+        className="border-y border-[rgba(24,24,23,0.08)] py-3"
+      >
+        <div className="flex items-baseline justify-between gap-3">
+          <h2 className="font-display text-[18px] font-semibold tracking-[-0.02em] text-[#202124]">
+            {overviewTitle}
+          </h2>
+          {(stats?.pendingReview ?? 0) > 0 ? (
+            <p className="shrink-0 text-[12px] font-medium text-[#B47C5C]">
+              待复审 {stats?.pendingReview}
+            </p>
+          ) : null}
+        </div>
+        <div className="mt-2.5 grid grid-cols-4 gap-2">
+          <StatCard label="验证中" value={decisionsAwaitingValidation.length} />
+          <StatCard label="有结果" value={decisionsWithOutcome.length} />
+          <StatCard label="已学习" value={decisionsWithLearning.length} />
+          <StatCard label="待复审" value={stats?.pendingReview ?? 0} />
+        </div>
+      </section>
+
       {memorySnapshot &&
       (memorySnapshot.counts.patterns > 0 ||
         memorySnapshot.counts.preferences > 0 ||
         memorySnapshot.counts.decisions > 0) ? (
-        <section className="mb-6 rounded-[12px] border border-[rgba(24,24,23,0.08)] bg-[#FBFAF7] p-4 md:p-5">
-          <p className="text-[11px] font-medium tracking-[0.12em] text-[#66735E]">记得住的</p>
-          <h2 className="mt-1 font-display text-[18px] font-semibold leading-[1.3] tracking-[-0.02em] text-[#202124]">
-            下次决策会用上
-          </h2>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <section className="border-b border-[rgba(24,24,23,0.08)] pb-3">
+          <p className="text-[11px] font-medium tracking-[0.12em] text-[#66735E]">经验沉淀</p>
+          <div className="mt-2 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {memorySnapshot.preferences.slice(0, 2).map((p) => (
-              <div key={`${p.label}-${p.value}`} className="rounded-[14px] bg-[#F8F7F3] px-3 py-3">
+              <div key={`${p.label}-${p.value}`} className="rounded-[10px] bg-[#F8F7F3] px-3 py-2">
                 <p className="text-[11px] text-[#66735E]">偏好</p>
-                <p className="mt-1 text-[13px] leading-6 text-[#202124]">
+                <p className="mt-0.5 line-clamp-2 text-[13px] leading-5 text-[#202124]">
                   {p.label}：{p.value}
                 </p>
               </div>
             ))}
             {memorySnapshot.patterns.slice(0, 2).map((p) => (
-              <div key={p.patternId} className="rounded-[14px] bg-[#F8F7F3] px-3 py-3">
+              <div key={p.patternId} className="rounded-[10px] bg-[#F8F7F3] px-3 py-2">
                 <p className="text-[11px] text-[#B47C5C]">
-                  {p.kind === "success" ? "成功模式" : p.kind === "failure" ? "失败教训" : "部分成立"}
+                  {p.kind === "success" ? "成功" : p.kind === "failure" ? "教训" : "部分"}
                 </p>
-                <p className="mt-1 text-[13px] leading-6 text-[#202124]">{p.summary}</p>
+                <p className="mt-0.5 line-clamp-2 text-[13px] leading-5 text-[#202124]">{p.summary}</p>
               </div>
             ))}
-            {memorySnapshot.decisions.slice(0, 2).map((d, i) => (
-              <div key={d.decisionId || `dec-${i}`} className="rounded-[14px] bg-[#F8F7F3] px-3 py-3">
-                <p className="text-[11px] text-[#66735E]">近期决策</p>
-                <p className="mt-1 text-[13px] leading-6 text-[#202124]">{d.summary}</p>
+            {memorySnapshot.decisions.slice(0, 1).map((d, i) => (
+              <div key={d.decisionId || `dec-${i}`} className="rounded-[10px] bg-[#F8F7F3] px-3 py-2">
+                <p className="text-[11px] text-[#66735E]">近期</p>
+                <p className="mt-0.5 line-clamp-2 text-[13px] leading-5 text-[#202124]">{d.summary}</p>
               </div>
             ))}
           </div>
         </section>
       ) : null}
-      <section
-        id="validation"
-        className="mb-6 rounded-[12px] border border-[rgba(24,24,23,0.08)] bg-[#FBFAF7] p-4 md:p-5"
-      >
-        <div className="grid gap-4 lg:grid-cols-2">
-          <div>
-            <p className="text-[11px] font-medium tracking-[0.12em] text-[#66735E]">总览</p>
-            <h2 className="mt-1.5 font-display text-[22px] font-semibold leading-[1.18] tracking-[-0.03em] text-[#202124] md:text-[26px]">
-              {validationCenter?.items?.length
-                ? `${validationCenter.items.length} 个假设正在验证`
-                : `已沉淀 ${stats?.total ?? allDecisions.length} 条判断，${decisionsAwaitingValidation.length} 条待验证`}
-            </h2>
-            <p className="mt-3 text-[15px] leading-7 text-[#3a3d41]">{topInsight}</p>
-            {(stats?.pendingReview ?? 0) > 0 ? (
-              <p className="mt-2 text-[14px] leading-6 text-[#B47C5C]">
-                另有 {stats?.pendingReview} 条判断待复审。
-              </p>
-            ) : null}
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <StatCard label="验证中" value={decisionsAwaitingValidation.length} />
-            <StatCard label="已有结果" value={decisionsWithOutcome.length} />
-            <StatCard label="进入学习" value={decisionsWithLearning.length} />
-            <StatCard label="待复审" value={stats?.pendingReview ?? 0} />
-          </div>
-        </div>
-      </section>
 
       {positioningContext?.current ? (
-        <section className="mb-6 rounded-[12px] border border-[rgba(24,24,23,0.08)] bg-[#FBFAF7] p-4">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div className="min-w-0 flex-1">
-              <p className="text-[11px] font-medium tracking-[0.12em] text-[#66735E]">当前定位</p>
-              <p className="mt-1.5 font-display text-[18px] font-semibold leading-snug text-[#202124]">
-                {positioningMentalPosition}
-              </p>
-              <p className="mt-2 text-[13px] leading-6 text-[#6f747b]">
-                {[
-                  positioningBrandName ? `品牌名：${positioningBrandName}` : null,
-                  positioningCategory ? `品类：${positioningCategory}` : null,
-                ]
-                  .filter(Boolean)
-                  .join(" · ")}
-              </p>
-              <p className="mt-2 text-[13px] leading-6 text-[#6f747b]">
-                {(stats?.pendingReview ?? 0) > 0
-                  ? `${stats?.pendingReview} 条判断正在等待定位复审。`
-                  : "这条定位会继续影响后续判断与复盘。"}
-              </p>
-            </div>
-            <div className="grid w-full grid-cols-1 gap-2 md:flex md:w-auto md:flex-wrap">
-              <Link
-                href={`/projects/${projectId}/positioning`}
-                prefetch={false}
-                className="inline-flex min-h-11 items-center justify-center gap-2 border border-[rgba(24,24,23,0.08)] bg-[#F5F3EE] px-4 text-[13px] font-medium text-[#202124] no-underline touch-manipulation"
-              >
-                打开定位
-              </Link>
-              <Link
-                href={`/projects/${projectId}/decision-room?topic=${encodeURIComponent("基于当前定位，下一步最该拍什么板？")}`}
-                prefetch={false}
-                className="inline-flex min-h-11 items-center justify-center gap-2 bg-[#181817] px-4 text-[13px] font-semibold text-white no-underline touch-manipulation active:scale-[0.98]"
-              >
-                带着定位去决策
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
+        <section className="flex items-center justify-between gap-3 border-b border-[rgba(24,24,23,0.08)] py-2.5">
+          <div className="min-w-0">
+            <p className="text-[11px] tracking-[0.12em] text-[#66735E]">当前定位</p>
+            <p className="mt-0.5 truncate text-[14px] font-medium text-[#202124]">
+              {positioningMentalPosition}
+            </p>
           </div>
+          <Link
+            href={`/projects/${projectId}/positioning`}
+            prefetch={false}
+            className="inline-flex shrink-0 items-center gap-1 text-[13px] font-semibold text-[#181817] no-underline"
+          >
+            打开
+            <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
         </section>
       ) : null}
-
-
 
       {equityContext?.current ? (
-        <section className="mb-6 rounded-[12px] border border-[rgba(24,24,23,0.08)] bg-[#FBFAF7] p-4">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div className="min-w-0 flex-1">
-              <p className="text-[11px] font-medium tracking-[0.12em] text-[#66735E]">当前股权</p>
-              <p className="mt-1.5 font-display text-[18px] font-semibold leading-snug text-[#202124]">
-                {equityContext.current.oneLiner}
-              </p>
-              <p className="mt-2 text-[13px] leading-6 text-[#6f747b]">
-                {equityContext.current.pageOutput.health.biggestRisk}
-              </p>
-              <p className="mt-2 text-[13px] leading-6 text-[#6f747b]">
-                {[
-                  `阶段：${equityContext.current.stage}`,
-                  `健康度：${equityContext.current.pageOutput.health.score}`,
-                  `控制权：${equityContext.current.pageOutput.health.control}`,
-                ].join(" · ")}
-              </p>
-            </div>
-            <div className="grid w-full grid-cols-1 gap-2 md:flex md:w-auto md:flex-wrap">
-              <Link
-                href={`/projects/${projectId}/equity`}
-                prefetch={false}
-                className="inline-flex min-h-11 items-center justify-center gap-2 border border-[rgba(24,24,23,0.08)] bg-[#F5F3EE] px-4 text-[13px] font-medium text-[#202124] no-underline touch-manipulation"
-              >
-                股权诊断
-              </Link>
-              <Link
-                href={`/projects/${projectId}/decision-room?topic=${encodeURIComponent("基于当前股权结构，下一步最该拍什么板？")}`}
-                prefetch={false}
-                className="inline-flex min-h-11 items-center justify-center gap-2 bg-[#181817] px-4 text-[13px] font-semibold text-white no-underline touch-manipulation active:scale-[0.98]"
-              >
-                带着股权去决策
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
+        <section className="flex items-center justify-between gap-3 border-b border-[rgba(24,24,23,0.08)] py-2.5">
+          <div className="min-w-0">
+            <p className="text-[11px] tracking-[0.12em] text-[#66735E]">当前股权</p>
+            <p className="mt-0.5 truncate text-[14px] font-medium text-[#202124]">
+              {equityContext.current.oneLiner}
+            </p>
           </div>
+          <Link
+            href={`/projects/${projectId}/equity`}
+            prefetch={false}
+            className="inline-flex shrink-0 items-center gap-1 text-[13px] font-semibold text-[#181817] no-underline"
+          >
+            打开
+            <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
         </section>
       ) : null}
 
-      <div className="mb-6 grid gap-4 lg:grid-cols-2">
-        <PositioningVersionTimeline
-          current={(positioningContext?.current as PositioningSnapshot | null) ?? null}
-          previous={(positioningContext?.previous as PositioningSnapshot | null) ?? null}
-          history={
-            (positioningContext?.history as Array<PositioningSnapshot | null> | undefined) ??
-            []
-          }
-          projectId={projectId}
-        />
-        <PositioningReviewQueue
-          items={(reviewQueueData?.items as ReviewQueueItem[]) ?? []}
-          projectId={projectId}
-          dismissingId={dismissingId}
-          onDismiss={(id) => handleResolveReview(id, "dismissed")}
-          onReviewed={(id) => handleResolveReview(id, "reviewed")}
-        />
-      </div>
+      {(positioningContext?.current ||
+        ((reviewQueueData?.items as ReviewQueueItem[] | undefined)?.length ?? 0) > 0) ? (
+        <div className="grid gap-3 lg:grid-cols-2">
+          <PositioningVersionTimeline
+            current={(positioningContext?.current as PositioningSnapshot | null) ?? null}
+            previous={(positioningContext?.previous as PositioningSnapshot | null) ?? null}
+            history={
+              (positioningContext?.history as Array<PositioningSnapshot | null> | undefined) ??
+              []
+            }
+            projectId={projectId}
+          />
+          <PositioningReviewQueue
+            items={(reviewQueueData?.items as ReviewQueueItem[]) ?? []}
+            projectId={projectId}
+            dismissingId={dismissingId}
+            onDismiss={(id) => handleResolveReview(id, "dismissed")}
+            onReviewed={(id) => handleResolveReview(id, "reviewed")}
+          />
+        </div>
+      ) : null}
 
       {allDecisions.length === 0 ? (
-        <section className="rounded-[12px] border border-[rgba(24,24,23,0.08)] bg-[#FBFAF7] p-5 md:p-8">
+        <section className="border-y border-[rgba(24,24,23,0.08)] py-6">
           <PageEmptyState
             eyebrow="行动"
-            title="还没有需要跟进的决策"
-            description="开完会、拍完板，会出现在这里。"
+            title="暂无待跟进"
+            description="拍板后会出现在这里。"
             primaryAction={{
               href: `/projects/${projectId}/decision-room`,
-              label: "发起决策",
+              label: "去决策",
             }}
           />
         </section>
       ) : (
-        <div className="space-y-4">
-          <section className="grid gap-4 lg:grid-cols-2">
-            <div className="rounded-[12px] border border-[rgba(24,24,23,0.08)] bg-[#FBFAF7] p-4">
+        <div className="space-y-3">
+          {decisionsAwaitingValidation.length > 0 ? (
+            <section className="border-y border-[rgba(24,24,23,0.08)] py-3">
               <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-[11px] font-medium tracking-[0.12em] text-[#66735E]">验证中</p>
-                  <h2 className="mt-1.5 font-display text-[18px] font-semibold leading-snug tracking-[-0.02em] text-[#202124]">
-                    待回写的决策
-                  </h2>
-                </div>
-                <Brain className="h-5 w-5 text-[#66735E]" />
+                <h2 className="font-display text-[16px] font-semibold tracking-[-0.02em] text-[#202124]">
+                  待打卡
+                </h2>
+                <Brain className="h-4 w-4 text-[#66735E]" />
               </div>
-              <div className="mt-4 space-y-3">
-                {(featuredValidating.length > 0 ? featuredValidating : allDecisions.slice(0, 3)).map((decision) => (
-                  <button
-                    key={decision.id}
-                    type="button"
-                    onClick={() => setExpandedId(decision.id)}
-                    className="w-full min-h-11 rounded-[16px] bg-[#F8F7F3] p-3.5 text-left transition touch-manipulation hover:bg-[#F1F0EA] active:bg-[#F1F0EA]"
-                  >
-                    <div className="flex items-center gap-2">
-                      <StageBadge decision={decision} />
-                      <ConfidenceBadge confidence={decision.confidence} />
-                    </div>
-                    <p className="mt-2 text-[15px] leading-[1.6] text-[#202124]">{decision.problem}</p>
-                    <p className="mt-1 line-clamp-2 text-[13px] leading-[1.72] text-[#6f747b]">
-                      {decision.action || decision.judgement}
-                    </p>
-                    <p className="mt-2 text-[13px] font-medium text-[#B47C5C]">回填验证结果 →</p>
-                  </button>
+              <ul className="mt-2 space-y-1.5">
+                {featuredValidating.map((decision) => (
+                  <li key={decision.id}>
+                    <button
+                      type="button"
+                      onClick={() => setExpandedId(decision.id)}
+                      className="w-full min-h-9 rounded-[12px] bg-[#F8F7F3] px-3 py-2.5 text-left touch-manipulation"
+                    >
+                      <div className="flex items-center gap-2">
+                        <StageBadge decision={decision} />
+                        <ConfidenceBadge confidence={decision.confidence} />
+                      </div>
+                      <p className="mt-1.5 text-[14px] font-medium leading-5 text-[#202124]">
+                        {decision.problem}
+                      </p>
+                      <p className="mt-0.5 line-clamp-1 text-[12px] leading-5 text-[#6f747b]">
+                        {decision.action || decision.judgement}
+                      </p>
+                    </button>
+                  </li>
                 ))}
-              </div>
-            </div>
+              </ul>
+            </section>
+          ) : null}
 
-            <div className="rounded-[12px] border border-[rgba(24,24,23,0.08)] bg-[#FBFAF7] p-4">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-[11px] font-medium tracking-[0.12em] text-[#66735E]">AI 发现</p>
-                  <h2 className="mt-1.5 font-display text-[18px] font-semibold leading-snug tracking-[-0.02em] text-[#202124]">
-                    这批判断说明了什么
-                  </h2>
-                </div>
-                <MessageSquare className="h-5 w-5 text-[#66735E]" />
-              </div>
-              <div className="mt-4 grid gap-3">
-                <div className="rounded-[16px] bg-[rgba(102,115,94,0.07)] p-3.5">
-                  <p className="text-[12px] leading-5 tracking-[0.01em] text-[#66735E]">反馈</p>
-                  <p className="mt-1 text-[14px] leading-[1.72] text-[#202124]">
-                    {stats?.withFeedback
-                      ? `已有 ${stats.withFeedback} 条判断拿到结果。`
-                      : "还没有结果反馈。"}
-                  </p>
-                </div>
-                <div className="rounded-[16px] bg-[rgba(180,124,92,0.10)] p-3.5">
-                  <p className="text-[12px] leading-5 tracking-[0.01em] text-[#B47C5C]">提醒</p>
-                  <p className="mt-1 text-[14px] leading-[1.72] text-[#202124]">
-                    {(stats?.pendingReview ?? 0) > 0
-                      ? `定位已更新，有 ${stats?.pendingReview} 条判断待复审。`
-                      : decisionsAwaitingValidation.length > 0
-                        ? `还有 ${decisionsAwaitingValidation.length} 条判断在验证中，先补最近结果。`
-                        : "大部分判断已有结果，继续沉淀学习。"}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </section>
+          {recentDecisions.length === 0 && historyDecisions.length > 0 ? (
+            <p className="py-1 text-[13px] leading-5 text-[#6f747b]">
+              近 3 日暂无新行动，更早的已收入历史。
+            </p>
+          ) : null}
 
-          {allDecisions.map((decision) => {
+          {recentDecisions.map((decision) => {
             const outcome = parseOutcome(decision.outcome);
             const learning = parseLearning(decision.learning);
             const opinions = parseDecisionOpinions(outcome);
@@ -815,7 +714,7 @@ function DecisionsArchivePageInner() {
               <div
                 id={`decision-${decision.id}`}
                 key={decision.id}
-                className={`rounded-[12px] border bg-[#FBFAF7] p-4 transition md:p-3.5 ${
+                className={`rounded-[12px] border bg-[#FBFAF7] p-3 transition ${
                   needsReReview
                     ? "border-[rgba(180,124,92,0.35)] ring-1 ring-[rgba(180,124,92,0.12)]"
                     : "border-[rgba(24,24,23,0.08)]"
@@ -1217,13 +1116,77 @@ function DecisionsArchivePageInner() {
             );
           })}
 
-          {hasNextPage ? (
-            <div className="py-4 text-center">
+          {historyDecisions.length > 0 ? (
+            <details className="border-y border-[rgba(24,24,23,0.08)]">
+              <summary className="flex min-h-10 cursor-pointer list-none items-center justify-between gap-3 py-2.5 text-[14px] font-semibold text-[#202124] [&::-webkit-details-marker]:hidden">
+                <span className="inline-flex items-center gap-1.5">
+                  <History className="h-3.5 w-3.5 text-[#66735E]" />
+                  历史项目
+                </span>
+                <span className="text-[12px] font-medium text-[#6f747b]">
+                  {historyDecisions.length} 条
+                </span>
+              </summary>
+              <ul className="space-y-1.5 pb-3">
+                {historyDecisions.map((decision) => {
+                  const isExpanded = expandedId === decision.id;
+                  return (
+                    <li key={decision.id}>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setExpandedId(isExpanded ? null : decision.id)
+                        }
+                        className="w-full min-h-9 rounded-[12px] border border-[rgba(24,24,23,0.06)] bg-[#F8F7F3] px-3 py-2.5 text-left touch-manipulation"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex min-w-0 items-center gap-2">
+                            <StageBadge decision={decision} />
+                            <span className="truncate text-[13px] font-medium text-[#202124]">
+                              {decision.problem}
+                            </span>
+                          </div>
+                          <span className="shrink-0 text-[11px] text-[#9aa0a6]">
+                            {formatRelativeDate(decision.createdAt)}
+                          </span>
+                        </div>
+                        {isExpanded ? (
+                          <div className="mt-2 space-y-1.5 border-t border-[rgba(24,24,23,0.06)] pt-2">
+                            <p className="text-[12px] leading-5 text-[#6f747b]">
+                              {decision.judgement}
+                            </p>
+                            {decision.action ? (
+                              <p className="text-[12px] leading-5 text-[#6f747b]">
+                                动作 · {decision.action}
+                              </p>
+                            ) : null}
+                          </div>
+                        ) : null}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+              {hasNextPage ? (
+                <div className="pb-3 text-center">
+                  <button
+                    type="button"
+                    onClick={() => void fetchNextPage()}
+                    disabled={isFetchingNextPage}
+                    className="inline-flex min-h-10 items-center gap-2 rounded-[12px] border border-[rgba(24,24,23,0.12)] bg-white px-4 text-[13px] font-medium text-[#202124] touch-manipulation disabled:opacity-50"
+                  >
+                    {isFetchingNextPage ? "加载中…" : "加载更多历史"}
+                  </button>
+                </div>
+              ) : null}
+            </details>
+          ) : hasNextPage ? (
+            <div className="py-3 text-center">
               <button
                 type="button"
                 onClick={() => void fetchNextPage()}
                 disabled={isFetchingNextPage}
-                className="inline-flex min-h-11 items-center gap-2 rounded-[14px] border border-[rgba(24,24,23,0.12)] bg-white px-5 text-[13px] font-medium text-[#202124] touch-manipulation disabled:opacity-50"
+                className="inline-flex min-h-10 items-center gap-2 rounded-[12px] border border-[rgba(24,24,23,0.12)] bg-white px-4 text-[13px] font-medium text-[#202124] touch-manipulation disabled:opacity-50"
               >
                 {isFetchingNextPage ? "加载中…" : "加载更多"}
               </button>
@@ -1232,33 +1195,15 @@ function DecisionsArchivePageInner() {
         </div>
       )}
 
-      <div className="mt-8 flex flex-col gap-2.5 border-t border-[rgba(24,24,23,0.08)] pt-6 sm:flex-row sm:flex-wrap">
-        <Link
-          href={`/projects/${projectId}/decision-room`}
-          prefetch={false}
-          className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[16px] bg-[#181817] px-5 text-[14px] font-semibold text-white no-underline touch-manipulation active:scale-[0.98]"
-        >
-          发起决策
-          <ArrowRight className="h-4 w-4" />
-        </Link>
-        <Link
-          href="/dashboard"
-          prefetch={false}
-          className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[16px] border border-[rgba(24,24,23,0.12)] bg-white px-5 text-[14px] font-semibold text-[#181817] no-underline touch-manipulation"
-        >
-          回今日
-          <History className="h-4 w-4" />
-        </Link>
-      </div>
     </PageContent>
   );
 }
 
 function StatCard({ label, value }: { label: string; value: number | string }) {
   return (
-    <div className="rounded-[12px] border border-[rgba(24,24,23,0.08)] bg-[#FBFAF7] px-3 py-3 md:p-4">
-      <p className="text-[11px] tracking-[0.08em] text-[#6f747b]">{label}</p>
-      <p className="mt-2 font-display text-[24px] font-semibold leading-none tracking-[-0.04em] text-[#202124] md:text-[28px]">
+    <div className="rounded-[10px] border border-[rgba(24,24,23,0.08)] bg-[#FBFAF7] px-2 py-2">
+      <p className="text-[10px] tracking-[0.06em] text-[#6f747b]">{label}</p>
+      <p className="mt-1 font-display text-[18px] font-semibold leading-none tracking-[-0.03em] text-[#202124]">
         {value}
       </p>
     </div>

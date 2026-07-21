@@ -81,7 +81,45 @@ export interface ConflictEntry {
   evidenceA: string[];
   evidenceB: string[];
   challenge: string;
+  /** 按立场对立 + 证据强弱校准 */
+  severity?: "high" | "medium" | "low";
   resolution?: string;
+}
+
+function evidenceStrengthScore(
+  ids: string[],
+  packet?: EvidencePacket,
+): number {
+  if (!ids.length || !packet?.items?.length) return 0;
+  let best = 0;
+  for (const id of ids) {
+    const item = packet.items.find((i) => i.evidenceId === id);
+    if (!item) continue;
+    const s =
+      item.strength === "strong" ? 3 : item.strength === "medium" ? 2 : 1;
+    if (s > best) best = s;
+  }
+  return best;
+}
+
+function conflictSeverity(
+  oa: CouncilOpinion,
+  ob: CouncilOpinion,
+  evidenceA: string[],
+  evidenceB: string[],
+  packet?: EvidencePacket,
+): "high" | "medium" | "low" {
+  const posClash =
+    oa.position !== ob.position &&
+    !(oa.position === "conditional" && ob.position === "conditional");
+  const scoreA = evidenceStrengthScore(evidenceA, packet);
+  const scoreB = evidenceStrengthScore(evidenceB, packet);
+  const weakSide = Math.min(scoreA, scoreB) <= 1;
+  const gapPressure = (packet?.gaps?.length || 0) > 0;
+  if (posClash && (weakSide || gapPressure)) return "high";
+  if (posClash) return "medium";
+  if (weakSide) return "medium";
+  return "low";
 }
 
 /** Founder 决策板（董事会材料） */
@@ -173,8 +211,32 @@ function collectEvidenceIds(
           : op.member === "CFO" || op.member === "CRO"
             ? "M-ED"
             : undefined;
-  return (packet?.items ?? [])
-    .filter((i) => !engineHint || i.sourceAgent === engineHint)
+  const items = packet?.items ?? [];
+  const strengthRank = (s?: string) =>
+    s === "strong" ? 3 : s === "medium" ? 2 : 1;
+  const byEngine = items
+    .filter((i) => engineHint && i.sourceAgent === engineHint)
+    .sort((a, b) => strengthRank(b.strength) - strengthRank(a.strength))
+    .slice(0, 2)
+    .map((i) => i.evidenceId);
+  if (byEngine.length) return byEngine;
+
+  // 今日世界变化 / Brain：无席位引擎匹配时仍可引用
+  const contextual = items
+    .filter(
+      (i) =>
+        i.sourceAgent === "WORLD" ||
+        i.sourceAgent === "BRAIN" ||
+        i.evidenceId.startsWith("WC-") ||
+        i.evidenceId.startsWith("BR-"),
+    )
+    .sort((a, b) => strengthRank(b.strength) - strengthRank(a.strength))
+    .slice(0, 2)
+    .map((i) => i.evidenceId);
+  if (contextual.length) return contextual;
+
+  return [...items]
+    .sort((a, b) => strengthRank(b.strength) - strengthRank(a.strength))
     .slice(0, 2)
     .map((i) => i.evidenceId);
 }
@@ -230,17 +292,31 @@ export function buildConflictMap(
       challenges.find((c) => c.includes(`${a}→${b}`)) ??
       buildChallengeFromPersona(a, b);
 
+    const evidenceA = collectEvidenceIds(oa, evidencePacket);
+    const evidenceB = collectEvidenceIds(ob, evidencePacket);
     conflicts.push({
       topic: `${getPersonaV2(a).natural_bias} vs ${getPersonaV2(b).natural_bias}`,
       agentA: a,
       agentB: b,
-      evidenceA: collectEvidenceIds(oa, evidencePacket),
-      evidenceB: collectEvidenceIds(ob, evidencePacket),
+      evidenceA,
+      evidenceB,
       challenge: `${challenge}（须引用 Evidence ID）`,
+      severity: conflictSeverity(
+        oa,
+        ob,
+        evidenceA,
+        evidenceB,
+        evidencePacket,
+      ),
       resolution: undefined,
     });
   }
-  return conflicts;
+  // 高严重度优先
+  return conflicts.sort((x, y) => {
+    const rank = (s?: string) =>
+      s === "high" ? 3 : s === "medium" ? 2 : 1;
+    return rank(y.severity) - rank(x.severity);
+  });
 }
 
 /** 少数意见：反对票 + 红线 + minority_report 标记 */
@@ -486,16 +562,30 @@ export function prepareRound2(
     );
   }
 
-  // 补充传统角色自检
+  // 补充传统角色自检（禁止伪造 E-PENDING）
   for (const [from, to] of CHALLENGE_PAIRS) {
     if (!rosterSet.has(from) || !rosterSet.has(to)) continue;
     const alreadyIncluded = challenges.some((c) => c.includes(`${from}→${to}`));
     if (!alreadyIncluded) {
       const target = opinions.find((o) => o.member === to);
-      const ev = target?.evidence_used?.[0] ?? "E-PENDING";
-      challenges.push(
-        `${buildChallengeFromPersona(from, to)} — 请针对对方依据 ${ev} 提出质疑，并给出己方 Evidence ID`,
-      );
+      const fromOp = opinions.find((o) => o.member === from);
+      const ev =
+        (target
+          ? collectEvidenceIds(target, next.evidencePacket)[0]
+          : undefined) ||
+        (fromOp
+          ? collectEvidenceIds(fromOp, next.evidencePacket)[0]
+          : undefined) ||
+        next.evidencePacket?.items?.[0]?.evidenceId;
+      if (ev) {
+        challenges.push(
+          `${buildChallengeFromPersona(from, to)} — 请针对对方依据 ${ev} 提出质疑，并给出己方 Evidence ID`,
+        );
+      } else {
+        challenges.push(
+          `${buildChallengeFromPersona(from, to)} — 对方无有效证据 ID：请追问证据缺口，并要求其改为条件反对或补证后再表决`,
+        );
+      }
     }
   }
 

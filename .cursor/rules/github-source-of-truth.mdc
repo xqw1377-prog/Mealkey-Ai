@@ -1,0 +1,27 @@
+---
+description: GitHub 为唯一真源 — 禁止长期本地堆积未推送代码；框架与规则以远端为准
+alwaysApply: true
+---
+
+# GitHub 真源（工作流冻结）
+
+远端：`origin` → `https://github.com/xqw1377-prog/mealkey-agent-1.git`  
+默认分支：`master`
+
+## 铁律
+
+1. **GitHub = 唯一真源。** 功能开发完成后必须 commit + push；禁止只在本地堆代码。
+2. **新能力先落仓库再扩。** 冻结文档（`docs/*`）+ 包骨架进 git 后，再接 Host/UI。
+3. **密钥永不入库。** `.env` / `.env.local` / 凭证 / `.vercel` 输出禁止 commit。
+4. **改产品路径先读** `docs/AUTHORITY.md`；L3 扩 Agent 读 Tool Agent 框架与 m-ops-diag 冻结文。
+
+## Agent / Cursor 会话约定
+
+- 完成可交付改动后：提醒或按用户指令执行 commit + `git push origin HEAD`
+- 不在本地新建「孤儿包」而不进 git
+- 不把 `apps/web/tsconfig.tsbuildinfo`、`.next`、`dist`、`.vercel` 当源码提交
+
+## 分支
+
+- 日常默认同步 `master`
+- 大专题可用 `feature/*`，合并后删除远端旧分支；不要保留 gone 的长期脏分支状态

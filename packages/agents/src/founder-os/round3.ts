@@ -13,6 +13,7 @@ import type {
   CouncilOpinion,
   CouncilRoleId,
   CrossExaminationItem,
+  EvidencePacket,
 } from "./types";
 
 export interface Round3Input {
@@ -26,6 +27,8 @@ export interface Round3Input {
   calibrationHints: Record<CouncilRoleId, string>;
   /** 情景分析结果摘要 */
   scenarioSummaries: Record<CouncilRoleId, string>;
+  /** 证据包（改判时校验引用强度与缺口） */
+  evidencePacket?: EvidencePacket;
 }
 
 export interface Round3Opinion extends CouncilOpinion {
@@ -203,6 +206,27 @@ export function resolveRound3Heuristic(
         confidence = Math.min(confidence + 10, 70);
         change_of_view = true;
         change_reason = "对方补充的证据和缓释方案部分可接受，可改为条件支持。";
+      }
+    }
+
+    // 证据包缺口 / 未引用强证：禁止维持无条件 support
+    const packet = input.evidencePacket;
+    const usedIds = original.evidence_used || [];
+    const usedItems = (packet?.items || []).filter((i) =>
+      usedIds.includes(i.evidenceId),
+    );
+    const hasStrongCite = usedItems.some((i) => i.strength === "strong");
+    const gapHit = (packet?.gaps || []).length > 0;
+    if (position === "support" && packet) {
+      if (usedIds.length === 0 || (gapHit && !hasStrongCite)) {
+        position = "conditional";
+        confidence = Math.max(35, confidence - 12);
+        if (!change_of_view) {
+          change_of_view = true;
+          change_reason = gapHit
+            ? `证据缺口未关闭（${packet.gaps![0]}），不得维持无条件支持。`
+            : "未引用证据包内有效 ID，改为条件支持。";
+        }
       }
     }
 

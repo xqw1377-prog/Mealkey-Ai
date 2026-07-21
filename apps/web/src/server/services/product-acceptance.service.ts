@@ -3,7 +3,10 @@
  * 不假标完成：只报告配置/连通/门禁状态。
  */
 import { getConsultingEngineHealth } from "@/server/services/engine-health.service";
-import { isDegradedMeetingAllowed } from "@/server/services/engine-meeting-gate";
+import {
+  isCouncilStubAllowedByEnv,
+  isDegradedMeetingAllowed,
+} from "@/server/services/engine-meeting-gate";
 import {
   isWechatH5PreferredEnabled,
   isWechatPayConfigured,
@@ -51,7 +54,11 @@ export async function buildProductAcceptanceReport(): Promise<ProductAcceptanceR
   const health = await getConsultingEngineHealth();
   const paymentMode = getPaymentMode();
   const allowDegraded = isDegradedMeetingAllowed();
+  const allowCouncilStub = isCouncilStubAllowedByEnv();
   const isProd = process.env.NODE_ENV === "production";
+  const hasLiveSearch = Boolean(
+    process.env.SEARXNG_URL?.trim() || process.env.SERPAPI_KEY?.trim(),
+  );
 
   const engineChecks: AcceptanceCheck[] = health.engines.map((e) => ({
     id: `engine.${e.id}`,
@@ -83,6 +90,48 @@ export async function buildProductAcceptanceReport(): Promise<ProductAcceptanceR
           : "开发/演示可降级开会；生产务必关闭"
         : "生产门禁：任一席启发式将退点拒交付",
       bossVerify: "停掉一个引擎再开会：应退点且不能当正式交付",
+    },
+    {
+      id: "gate.council_stub",
+      category: "gate",
+      label: "常委占位报告",
+      status: allowCouncilStub
+        ? isProd
+          ? "fail"
+          : "warn"
+        : "pass",
+      detail: allowCouncilStub
+        ? isProd
+          ? "生产 ALLOW_COUNCIL_STUB=1 — 可用假报告开七常委，禁止商业交付"
+          : "开发可开 stub；生产必须关闭 ALLOW_COUNCIL_STUB"
+        : "生产禁 stub：须有 MKInsight 才能开常委",
+      bossVerify: "无席位咨询时开会应被拒绝（生产）",
+    },
+    {
+      id: "ops.external_intel",
+      category: "ops",
+      label: "外部情报检索",
+      status: hasLiveSearch ? "pass" : isProd ? "warn" : "warn",
+      detail: hasLiveSearch
+        ? "已配 SEARXNG_URL 或 SERPAPI_KEY"
+        : "未配公开检索 — 雷达多为诚实空态（不编造），种子期可接受但须书面说明",
+      bossVerify: "补齐品牌+城市后刷新雷达：有公开线索或诚实空态文案",
+    },
+    {
+      id: "product.auto_exec",
+      category: "ops",
+      label: "签字自动执行",
+      status: "pass",
+      detail: "confirmFromMeeting → createExecutionFromDecision + D+7",
+      bossVerify: "决策室签字后应提示「已自动进入执行」；失败须明示",
+    },
+    {
+      id: "product.weekly_ops",
+      category: "ops",
+      label: "经营周报上传",
+      status: "pass",
+      detail: "restaurantIntelligence.uploadWeeklyOps → OPERATION 信号",
+      bossVerify: "上传周营业额/客流/客单后雷达出现经营变化",
     },
     {
       id: "billing.mode",
@@ -194,6 +243,7 @@ export async function buildProductAcceptanceReport(): Promise<ProductAcceptanceR
     isProd &&
     enginesOk &&
     !allowDegraded &&
+    !allowCouncilStub &&
     paymentMode === "live" &&
     isWechatPayConfigured() &&
     hasUpstash() &&

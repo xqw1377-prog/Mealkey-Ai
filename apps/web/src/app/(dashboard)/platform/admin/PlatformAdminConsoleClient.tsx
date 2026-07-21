@@ -1,24 +1,26 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useEffect, useMemo, useState, useTransition } from "react";
-import Link from "next/link";
 import {
-  ArrowRight,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useState,
+  useTransition,
+  type ComponentType,
+  type Dispatch,
+  type SetStateAction,
+} from "react";
+import {
   BrainCircuit,
   ClipboardCheck,
   CircleDollarSign,
-  ChevronDown,
-  ChevronRight,
-  Building2,
-  Cpu,
-  Layers3,
-  RefreshCcw,
   AlertTriangle,
 } from "lucide-react";
 
 import type {
   BillingAccountRow,
+  InvoiceRow,
   LearningQueueRow,
   ListingRow,
   OrganizationRow,
@@ -29,9 +31,7 @@ import type {
   SubscriptionRow,
 } from "@/server/services/platform-admin.service";
 import type { AdminInboxItem } from "@/server/services/platform-admin-inbox.service";
-import { AdminInbox } from "./panels/AdminInbox";
 import { formatDate as formatDateShared, formatNumber as formatNumberShared } from "@/lib/format";
-import { ConfirmDialog } from "@/components/operating/ConfirmDialog";
 import {
   type AdminNavSectionId,
   type AdminPanel,
@@ -53,13 +53,14 @@ import {
   resolveWorkspace,
   usageAnomalyHash,
 } from "./admin-console-config";
-import { CompactMetricStrip, MetricGrid } from "./admin-console-ui";
-import { AlertList, capabilityAnchorId, consumptionAnchorId } from "./panels/shared";
+import { capabilityAnchorId, consumptionAnchorId } from "./panels/shared";
 import { type CapabilityConsumptionSummary } from "./panels/business-tables";
+import { PlatformAdminConsoleShell } from "./admin-console-shell";
 
 type FeedbackTone = "idle" | "loading" | "success" | "error";
 type UsageAnomalyFilter = "all" | "metadata" | "billable_without_cost" | "high_token_unbillable";
 type RefreshScope = "overview" | "billing" | "learning" | "marketplace" | "objects";
+const SEEDED_FILTER_STORAGE_KEY = "mealkey-platform-admin-show-seeded-data";
 type WorkspaceContextItem = {
   label: string;
   value: string;
@@ -77,7 +78,15 @@ type PlatformAdminResponseBody = {
   objectsListings?: ListingRow[];
   learningRecord?: { id: string; status: string };
   organization?: { id: string; slug?: string };
-  subscription?: { id: string; status?: string };
+  subscription?: { id: string; status?: string; replacedSubscriptionIds?: string[] };
+  invoice?: {
+    id: string;
+    status?: string;
+    planId?: string | null;
+    orderNo?: string | null;
+    issuedAt?: string | null;
+    paidAt?: string | null;
+  };
   plan?: { id: string; code?: string };
   listing?: { id: string; slug?: string; status?: string };
 };
@@ -114,6 +123,22 @@ function formatDate(value: string | null | undefined) {
     minute: "2-digit",
   });
   return next === "—" ? "--" : next;
+}
+
+function readPersistedSeededFilter() {
+  if (typeof window === "undefined") return false;
+  try {
+    return window.localStorage.getItem(SEEDED_FILTER_STORAGE_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function writePersistedSeededFilter(next: boolean) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(SEEDED_FILTER_STORAGE_KEY, next ? "1" : "0");
+  } catch {}
 }
 
 function formatPercent(value: number | null | undefined, digits = 0) {
@@ -160,10 +185,16 @@ function feedbackStyle(tone: FeedbackTone) {
 
 function statusChipTone(status: string) {
   const normalized = status.toLowerCase();
-  if (normalized === "active" || normalized === "approved" || normalized === "pass") {
+  if (
+    normalized === "active" ||
+    normalized === "approved" ||
+    normalized === "pass" ||
+    normalized === "issued" ||
+    normalized === "paid"
+  ) {
     return "bg-[rgba(102,115,94,0.10)] text-[#465240]";
   }
-  if (normalized === "pending" || normalized === "review" || normalized === "draft") {
+  if (normalized === "pending" || normalized === "review" || normalized === "draft" || normalized === "confirmed") {
     return "bg-[rgba(186,160,92,0.10)] text-[#7A6941]";
   }
   return "bg-[rgba(180,124,92,0.10)] text-[#8A5A40]";
@@ -190,7 +221,65 @@ function upsertById<T extends { id: string }>(rows: T[], nextRow: T, insertAtSta
   return rows.map((row) => (row.id === nextRow.id ? nextRow : row));
 }
 
+function buildListingHint(listing: {
+  installCount: number;
+  visibility: string;
+  revenueShareCount: number;
+}) {
+  if (listing.installCount === 0) return "尚未形成安装转化，建议先检查曝光与定价。";
+  if (listing.visibility !== "public") return "当前为非公开上架，仅内部或定向可见。";
+  if (listing.revenueShareCount === 0) return "缺少分润规则，商业闭环未完整。";
+  return "已具备上架与分润基础，可继续优化转化。";
+}
+
+function buildMarketplaceCardsFromListings(listings: ListingRow[]): PlatformAdminMetric[] {
+  const zeroInstallListingCount = listings.filter((item) => item.installCount === 0).length;
+  const privateListingCount = listings.filter((item) => item.visibility !== "public").length;
+  const averageRating =
+    listings.length === 0 ? 0 : listings.reduce((sum, item) => sum + item.rating, 0) / listings.length;
+  return [
+    {
+      id: "marketplace_active",
+      label: "活跃上架",
+      value: listings.filter((item) => item.status.toLowerCase() === "active").length,
+      helper: "正在对外展示或可流通的 Listing",
+    },
+    {
+      id: "marketplace_zero_install",
+      label: "零安装 Listing",
+      value: zeroInstallListingCount,
+      helper: "可优先检查曝光与定价",
+      tone: zeroInstallListingCount > 0 ? "warning" : "good",
+    },
+    {
+      id: "marketplace_private",
+      label: "非公开上架",
+      value: privateListingCount,
+      helper: "内部或定向分发的 Listing 数量",
+    },
+    {
+      id: "marketplace_rating",
+      label: "平均评分",
+      value: Math.round(averageRating * 20),
+      unit: "/100",
+      helper: "最近上架对象的平均评分（按 100 分口径展示）",
+      tone: averageRating >= 4 ? "good" : averageRating >= 3 ? "warning" : "neutral",
+    },
+  ];
+}
+
 async function readJson<T extends PlatformAdminResponseBody = PlatformAdminResponseBody>(response: Response) {
+  const contentType = response.headers.get("content-type") ?? "";
+  if (!contentType.includes("application/json")) {
+    const text = await response.text();
+    const compact = text.replace(/\s+/g, " ").trim();
+    throw new Error(
+      response.ok
+        ? compact.slice(0, 160) || "平台管理接口未返回 JSON"
+        : `请求失败（${response.status}）: ${compact.slice(0, 120) || "服务端未返回 JSON 错误体"}`,
+    );
+  }
+
   const body = (await response.json()) as T;
   if (!response.ok || body.ok === false) {
     throw new Error(body.error || "平台管理请求失败");
@@ -206,30 +295,36 @@ function PanelLoading() {
   );
 }
 
-const OverviewPanel = dynamic(() => import("./panels/OverviewPanel").then((m) => m.OverviewPanel), {
-  ssr: false,
-  loading: PanelLoading,
-});
-const BusinessPanel = dynamic(() => import("./panels/BusinessPanel").then((m) => m.BusinessPanel), {
-  ssr: false,
-  loading: PanelLoading,
-});
-const MarketplacePanel = dynamic(() => import("./panels/MarketplacePanel").then((m) => m.MarketplacePanel), {
-  ssr: false,
-  loading: PanelLoading,
-});
-const CognitivePanel = dynamic(() => import("./panels/CognitivePanel").then((m) => m.CognitivePanel), {
-  ssr: false,
-  loading: PanelLoading,
-});
-const LearningPanel = dynamic(() => import("./admin-console-panels").then((m) => m.LearningPanel), {
-  ssr: false,
-  loading: PanelLoading,
-});
-const ObjectsPanel = dynamic(() => import("./admin-console-panels").then((m) => m.ObjectsPanel), {
-  ssr: false,
-  loading: PanelLoading,
-});
+function dynamicPanel<TProps extends object, TModule>(
+  loader: () => Promise<TModule>,
+  pick: (module: TModule) => ComponentType<TProps>,
+) {
+  return dynamic<TProps>(async () => {
+    let lastError: unknown;
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      try {
+        const module = await loader();
+        return pick(module);
+      } catch (error) {
+        lastError = error;
+        if (attempt === 1) {
+          throw error;
+        }
+      }
+    }
+    throw lastError instanceof Error ? lastError : new Error("平台管理域加载失败");
+  }, {
+    ssr: false,
+    loading: PanelLoading,
+  });
+}
+
+const OverviewPanel = dynamicPanel(() => import("./panels/OverviewPanel"), (m) => m.OverviewPanel);
+const BusinessPanel = dynamicPanel(() => import("./panels/BusinessPanel"), (m) => m.BusinessPanel);
+const MarketplacePanel = dynamicPanel(() => import("./panels/MarketplacePanel"), (m) => m.MarketplacePanel);
+const CognitivePanel = dynamicPanel(() => import("./panels/CognitivePanel"), (m) => m.CognitivePanel);
+const LearningPanel = dynamicPanel(() => import("./admin-console-panels"), (m) => m.LearningPanel);
+const ObjectsPanel = dynamicPanel(() => import("./admin-console-panels"), (m) => m.ObjectsPanel);
 
 function buildAlert(
   id: string,
@@ -262,7 +357,7 @@ export function PlatformAdminConsoleClient({
   const [feedback, setFeedback] = useState<string | null>(null);
   const [feedbackTone, setFeedbackTone] = useState<FeedbackTone>("idle");
   // 默认仅真实对象，避免种子污染经营口径
-  const [showSeededData, setShowSeededData] = useState(false);
+  const [showSeededData, setShowSeededDataState] = useState(readPersistedSeededFilter);
   const [loadedScopes, setLoadedScopes] = useState<Set<RefreshScope>>(() => new Set(["overview"]));
   const [domainLoading, setDomainLoading] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
@@ -296,14 +391,23 @@ export function PlatformAdminConsoleClient({
   const [subscriptionEdits, setSubscriptionEdits] = useState<
     Record<string, { status: string; seats: string; cancelAtPeriodEnd: boolean }>
   >({});
+  const [invoiceEdits, setInvoiceEdits] = useState<Record<string, { planId: string; orderNo: string }>>({});
   const [listingEdits, setListingEdits] = useState<
     Record<string, { status: string; visibility: string; priceCents: string }>
   >({});
+  const setShowSeededData: Dispatch<SetStateAction<boolean>> = (value) => {
+    setShowSeededDataState((current) => {
+      const next = typeof value === "function" ? value(current) : value;
+      writePersistedSeededFilter(next);
+      return next;
+    });
+  };
   const [isPending, startTransition] = useTransition();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmTitle, setConfirmTitle] = useState("");
   const [confirmDescription, setConfirmDescription] = useState<string | undefined>();
   const [confirmAction, setConfirmAction] = useState<(() => void) | null>(null);
+  const [panelBoundaryKey, setPanelBoundaryKey] = useState(0);
 
   function askConfirm(opts: {
     title: string;
@@ -332,10 +436,12 @@ export function PlatformAdminConsoleClient({
     window.requestAnimationFrame(() => tryScroll());
   }
 
-  function writeHash(hash: string | null) {
+  function writeHash(panel: AdminPanel, hash: string | null) {
     if (typeof window === "undefined") return;
+    const url = new URL(window.location.href);
+    url.searchParams.set("panel", panel);
     const nextHash = hash ? `#${hash}` : "";
-    const nextUrl = `${window.location.pathname}${window.location.search}${nextHash}`;
+    const nextUrl = `${url.pathname}${url.search}${nextHash}`;
     window.history.replaceState(null, "", nextUrl);
   }
 
@@ -347,33 +453,33 @@ export function PlatformAdminConsoleClient({
 
   function navigateToPanel(panel: AdminPanel, sectionId?: string) {
     if (sectionId) {
-      writeHash(sectionId);
+      writeHash(panel, sectionId);
       jumpWithinPanel(panel, sectionId);
       return;
     }
 
-    writeHash(panelHash(panel));
+    writeHash(panel, panelHash(panel));
     setPendingPanelSectionTarget(null);
     setActivePanel(panel);
     setActiveWorkspaceId(resolveWorkspace(panel));
   }
 
   function navigateToLearningItem(learningId: string) {
-    writeHash(learningHash(learningId));
+    writeHash("learning", learningHash(learningId));
     setSelectedLearningId(learningId);
     setActivePanel("learning");
     setActiveWorkspaceId("learning-review");
   }
 
   function navigateToCognitiveSession(sessionId: string) {
-    writeHash(cognitiveHash(sessionId));
+    writeHash("cognitive", cognitiveHash(sessionId));
     setSelectedSessionId(sessionId);
     setActivePanel("cognitive");
     setActiveWorkspaceId("cognitive-review");
   }
 
   function navigateToObject(kind: "org" | "account" | "plan", id: string) {
-    writeHash(objectHash(kind, id));
+    writeHash("objects", objectHash(kind, id));
     setPendingPanelSectionTarget(null);
     setActivePanel("objects");
     setActiveWorkspaceId(resolveWorkspace("objects", objectHash(kind, id)));
@@ -404,7 +510,7 @@ export function PlatformAdminConsoleClient({
     setPendingPanelSectionTarget(null);
   }, [activePanel, pendingPanelSectionTarget]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (typeof window === "undefined") return;
 
     const syncFromHash = () => {
@@ -469,7 +575,7 @@ export function PlatformAdminConsoleClient({
   }, []);
 
   function jumpWithinPanel(panel: AdminPanel, sectionId: string) {
-    writeHash(sectionId);
+    writeHash(panel, sectionId);
     setActiveWorkspaceId(resolveWorkspace(panel, sectionId));
     if (activePanel === panel) {
       scrollToSection(sectionId);
@@ -484,7 +590,7 @@ export function PlatformAdminConsoleClient({
 
   function handleUsageAnomalySelect(usageRecordId: string) {
     setSelectedUsageAnomalyId(usageRecordId);
-    writeHash(usageAnomalyHash(usageRecordId));
+    writeHash("business", usageAnomalyHash(usageRecordId));
   }
 
   function handleOperationalAlertClick(alert: PlatformAdminAlert) {
@@ -725,18 +831,33 @@ export function PlatformAdminConsoleClient({
     () => visibleBusinessConsumptions.reduce((sum, item) => sum + item.actualPoints, 0),
     [visibleBusinessConsumptions],
   );
+  const visibleSettledConsumptionRevenueCents = useMemo(
+    () => visibleBusinessConsumptions.reduce((sum, item) => sum + item.revenueCents, 0),
+    [visibleBusinessConsumptions],
+  );
   const visibleSettledConsumptionCostCents = useMemo(
     () => visibleBusinessConsumptions.reduce((sum, item) => sum + item.costCents, 0),
     [visibleBusinessConsumptions],
   );
+  const visibleObservedUsageCostCents = useMemo(() => {
+    if (visibleBusinessUsageSummary.currency !== "CNY") return null;
+    return Math.max(0, Math.round(visibleBusinessUsageSummary.costValue * 100));
+  }, [visibleBusinessUsageSummary.costValue, visibleBusinessUsageSummary.currency]);
+  const visibleBusinessCostDisplayCents = useMemo(() => {
+    if (visibleSettledConsumptionCostCents > 0) return visibleSettledConsumptionCostCents;
+    return visibleObservedUsageCostCents ?? 0;
+  }, [visibleObservedUsageCostCents, visibleSettledConsumptionCostCents]);
   const visibleSettledGrossProfitCents = useMemo(
     () => visibleBusinessConsumptions.reduce((sum, item) => sum + item.grossProfitCents, 0),
     [visibleBusinessConsumptions],
   );
+  const visibleBusinessGrossProfitDisplayCents = useMemo(() => {
+    return visibleSettledConsumptionRevenueCents - visibleBusinessCostDisplayCents;
+  }, [visibleBusinessCostDisplayCents, visibleSettledConsumptionRevenueCents]);
   const visibleSettledGrossMargin = useMemo(() => {
-    if (visibleSettledConsumptionPoints <= 0) return null;
-    return Number((((visibleSettledGrossProfitCents / visibleSettledConsumptionPoints) * 100)).toFixed(1));
-  }, [visibleSettledConsumptionPoints, visibleSettledGrossProfitCents]);
+    if (visibleSettledConsumptionRevenueCents <= 0) return null;
+    return Number((((visibleBusinessGrossProfitDisplayCents / visibleSettledConsumptionRevenueCents) * 100)).toFixed(1));
+  }, [visibleBusinessGrossProfitDisplayCents, visibleSettledConsumptionRevenueCents]);
   const capabilityConsumptionSummaries = useMemo<CapabilityConsumptionSummary[]>(() => {
     const summaryMap = new Map<string, CapabilityConsumptionSummary>();
 
@@ -746,6 +867,7 @@ export function PlatformAdminConsoleClient({
         capabilityLabel: item.capabilityLabel,
         callCount: 0,
         totalPoints: 0,
+        totalRevenueCents: 0,
         totalCostCents: 0,
         grossProfitCents: 0,
         grossMarginPercent: null,
@@ -756,6 +878,7 @@ export function PlatformAdminConsoleClient({
 
       current.callCount += 1;
       current.totalPoints += item.actualPoints;
+      current.totalRevenueCents += item.revenueCents;
       current.totalCostCents += item.costCents;
       current.grossProfitCents += item.grossProfitCents;
       current.tokenTotal += item.tokenTotal;
@@ -772,8 +895,8 @@ export function PlatformAdminConsoleClient({
         ...item,
         averagePointsPerCall: item.callCount > 0 ? Math.round(item.totalPoints / item.callCount) : 0,
         grossMarginPercent:
-          item.totalPoints > 0
-            ? Number((((item.grossProfitCents / item.totalPoints) * 100)).toFixed(1))
+          item.totalRevenueCents > 0
+            ? Number((((item.grossProfitCents / item.totalRevenueCents) * 100)).toFixed(1))
             : null,
       }))
       .sort((a, b) => {
@@ -1197,9 +1320,14 @@ export function PlatformAdminConsoleClient({
       {
         id: "business_settled_cost_visible",
         label: "30 天模型成本",
-        value: Math.round(visibleSettledConsumptionCostCents / 100),
+        value: Math.round(visibleBusinessCostDisplayCents / 100),
         unit: "元",
-        helper: "真实视图下最近 30 天已结算消耗对应的模型与推理成本",
+        helper:
+          visibleSettledConsumptionCostCents > 0
+            ? "真实视图下最近 30 天已结算消耗对应的模型与推理成本"
+            : visibleObservedUsageCostCents
+              ? "结算侧还没完整回传 costCents，先回退展示第三方已观测成本"
+              : "真实视图下最近 30 天已结算消耗对应的模型与推理成本",
       },
       {
         id: "business_gross_margin_visible",
@@ -1221,6 +1349,8 @@ export function PlatformAdminConsoleClient({
     businessDomain.cards,
     showSeededData,
     visiblePointsSalesCents,
+    visibleBusinessCostDisplayCents,
+    visibleObservedUsageCostCents,
     visibleSettledConsumptionCostCents,
     visibleSettledConsumptionPoints,
     visibleSettledGrossMargin,
@@ -1305,6 +1435,89 @@ export function PlatformAdminConsoleClient({
     visiblePlatformPlanCount,
     visiblePointsProductCount,
     visibleSpecialtyPlanCount,
+  ]);
+
+  const derivedLearningCards = useMemo<PlatformAdminMetric[]>(() => {
+    if (showSeededData) return learningDomain.cards;
+    const approvedCount = learningDomain.queue.filter((item) => item.status.toLowerCase() === "approved").length;
+    const rejectedCount = learningDomain.queue.filter((item) => item.status.toLowerCase() === "rejected").length;
+    const reviewedCount = approvedCount + rejectedCount;
+    const passRate = reviewedCount === 0 ? 0 : Math.round((approvedCount / reviewedCount) * 100);
+    return [
+      {
+        id: "learning_pending_visible",
+        label: "待审记录",
+        value: visibleLearningPending,
+        helper: "当前工作台里仍等待平台复核的学习记录",
+        tone: visibleLearningPending > 0 ? "warning" : "good",
+      },
+      {
+        id: "learning_pass_rate_visible",
+        label: "通过率",
+        value: passRate,
+        unit: "%",
+        helper: "按当前可见复核队列计算的批准占比",
+      },
+      {
+        id: "learning_approved_visible",
+        label: "已批准",
+        value: approvedCount,
+        helper: "当前工作台里已经通过的学习记录",
+      },
+      {
+        id: "learning_rejected_visible",
+        label: "已驳回",
+        value: rejectedCount,
+        helper: "当前工作台里已驳回的学习记录",
+        tone: rejectedCount > 0 ? "warning" : "good",
+      },
+    ];
+  }, [learningDomain.cards, learningDomain.queue, showSeededData, visibleLearningPending]);
+
+  const derivedCognitiveCards = useMemo<PlatformAdminMetric[]>(() => {
+    if (showSeededData) return cognitiveDomain.cards;
+    return [
+      {
+        id: "cognitive_sessions_visible",
+        label: "认知会话",
+        value: cognitiveDomain.sessions.length,
+        helper: "当前工作台里可复核的认知会话数量",
+      },
+      {
+        id: "cognitive_low_confidence_visible",
+        label: "低置信会话",
+        value: visibleLowConfidenceSessions,
+        helper: "置信度低于阈值、需要优先处理的会话",
+        tone: visibleLowConfidenceSessions > 0 ? "danger" : "good",
+      },
+      {
+        id: "cognitive_missing_evidence_visible",
+        label: "缺证据会话",
+        value: visibleMissingEvidenceSessions,
+        helper: "存在 trace 或证据缺口，需要补链路",
+        tone: visibleMissingEvidenceSessions > 0 ? "warning" : "good",
+      },
+      {
+        id: "cognitive_avg_visible",
+        label: "平均置信度",
+        value: Math.round(visibleAverageConfidence * 100),
+        unit: "%",
+        helper: "按当前工作台可见会话计算的平均值",
+        tone:
+          visibleAverageConfidence >= 0.75
+            ? "good"
+            : visibleAverageConfidence >= 0.6
+              ? "warning"
+              : "danger",
+      },
+    ];
+  }, [
+    cognitiveDomain.cards,
+    cognitiveDomain.sessions.length,
+    showSeededData,
+    visibleAverageConfidence,
+    visibleLowConfidenceSessions,
+    visibleMissingEvidenceSessions,
   ]);
 
   const selectedLearning = useMemo(
@@ -1601,6 +1814,174 @@ export function PlatformAdminConsoleClient({
     );
   }
 
+  function getInvoiceEdit(invoice: InvoiceRow) {
+    return (
+      invoiceEdits[invoice.id] ?? {
+        planId: invoice.planId ?? "",
+        orderNo: invoice.orderNo ?? "",
+      }
+    );
+  }
+
+  function applyActionLocalPatch(body: PlatformAdminResponseBody) {
+    let patched = false;
+
+    if (body.subscription?.id) {
+      const subscriptionId = body.subscription.id;
+      const draft = subscriptionEdits[subscriptionId];
+      const replacedIds = new Set(body.subscription.replacedSubscriptionIds ?? []);
+      setOverview((current) => {
+        const patchRow = (row: SubscriptionRow) => {
+          if (row.id === subscriptionId) {
+            return {
+              ...row,
+              status: body.subscription?.status ?? row.status,
+              seats:
+                draft && Number.isFinite(Number(draft.seats))
+                  ? Math.max(1, Math.round(Number(draft.seats)))
+                  : row.seats,
+              cancelAtPeriodEnd: draft?.cancelAtPeriodEnd ?? row.cancelAtPeriodEnd,
+            };
+          }
+          if (replacedIds.has(row.id)) {
+            return {
+              ...row,
+              status: "canceled",
+              cancelAtPeriodEnd: true,
+            };
+          }
+          return row;
+        };
+
+        return {
+          ...current,
+          domains: {
+            ...current.domains,
+            business: {
+              ...current.domains.business,
+              subscriptions: current.domains.business.subscriptions.map(patchRow),
+            },
+            objects: {
+              ...current.domains.objects,
+              subscriptions: current.domains.objects.subscriptions.map(patchRow),
+            },
+          },
+        };
+      });
+      setSubscriptionEdits((current) => {
+        if (!(subscriptionId in current)) return current;
+        const next = { ...current };
+        delete next[subscriptionId];
+        return next;
+      });
+      patched = true;
+    }
+
+    if (body.invoice?.id) {
+      const invoiceId = body.invoice.id;
+      const draft = invoiceEdits[invoiceId];
+      setOverview((current) => {
+        const nextInvoices = current.domains.business.invoices.map((row) => {
+          if (row.id !== invoiceId) return row;
+
+          const nextPlanId = body.invoice?.planId ?? draft?.planId?.trim() ?? row.planId;
+          const resolvedPlan =
+            current.domains.business.plans.find((plan) => plan.id === nextPlanId) ?? null;
+          const nextPlanName = resolvedPlan?.name ?? row.planName;
+          const nextStatus = body.invoice?.status ?? row.status;
+          const nextOrderNo =
+            body.invoice?.orderNo ?? (draft?.orderNo?.trim() ? draft.orderNo.trim() : row.orderNo);
+
+          return {
+            ...row,
+            status: nextStatus,
+            planId: nextPlanId || null,
+            planName: nextPlanName,
+            planKind: resolvedPlan?.category ?? row.planKind,
+            planKindLabel: resolvedPlan?.categoryLabel ?? row.planKindLabel,
+            orderNo: nextOrderNo,
+            issuedAt: body.invoice?.issuedAt ?? row.issuedAt,
+            paidAt: body.invoice?.paidAt ?? row.paidAt,
+            isDraft: nextStatus === "draft",
+            isUnlinked: !row.isSeeded && !(resolvedPlan?.category && nextPlanName),
+          };
+        });
+        return {
+          ...current,
+          summary: {
+            ...current.summary,
+            draftInvoices: nextInvoices.filter((item) => item.status.toLowerCase() === "draft").length,
+          },
+          domains: {
+            ...current.domains,
+            business: {
+              ...current.domains.business,
+              invoices: nextInvoices,
+            },
+          },
+        };
+      });
+      setInvoiceEdits((current) => {
+        if (!(invoiceId in current)) return current;
+        const next = { ...current };
+        delete next[invoiceId];
+        return next;
+      });
+      patched = true;
+    }
+
+    if (body.listing?.id) {
+      const listingId = body.listing.id;
+      const draft = listingEdits[listingId];
+      setOverview((current) => {
+        const patchRow = (row: ListingRow) => {
+          if (row.id !== listingId) return row;
+          const nextVisibility = draft?.visibility ?? row.visibility;
+          return {
+            ...row,
+            status: body.listing?.status ?? row.status,
+            visibility: nextVisibility,
+            priceCents:
+              draft && Number.isFinite(Number(draft.priceCents))
+                ? Math.max(0, Math.round(Number(draft.priceCents)))
+                : row.priceCents,
+            detailHint: buildListingHint({
+              installCount: row.installCount,
+              visibility: nextVisibility,
+              revenueShareCount: row.revenueShareCount,
+            }),
+          };
+        };
+
+        const nextMarketplaceListings = current.domains.marketplace.listings.map(patchRow);
+        return {
+          ...current,
+          domains: {
+            ...current.domains,
+            marketplace: {
+              ...current.domains.marketplace,
+              cards: buildMarketplaceCardsFromListings(nextMarketplaceListings),
+              listings: nextMarketplaceListings,
+            },
+            objects: {
+              ...current.domains.objects,
+              listings: current.domains.objects.listings.map(patchRow),
+            },
+          },
+        };
+      });
+      setListingEdits((current) => {
+        if (!(listingId in current)) return current;
+        const next = { ...current };
+        delete next[listingId];
+        return next;
+      });
+      patched = true;
+    }
+
+    return patched;
+  }
+
   function openWorkspace(workspace: (typeof WORKSPACES)[number]) {
     if (workspace.panel === "objects" && workspace.sectionId === "objects-organizations") {
       navigateToPanel("objects", workspace.sectionId);
@@ -1726,12 +2107,16 @@ export function PlatformAdminConsoleClient({
         setFeedbackTone("loading");
         const result = await action();
         options.applyResult?.(result);
+        const shouldSkipRefresh =
+          typeof result === "object" &&
+          result !== null &&
+          applyActionLocalPatch(result as PlatformAdminResponseBody);
         const scopes = options.refreshScope
           ? Array.isArray(options.refreshScope)
             ? options.refreshScope
             : [options.refreshScope]
           : [];
-        for (const scope of scopes) {
+        for (const scope of shouldSkipRefresh ? [] : scopes) {
           await refreshScopedData(scope);
         }
         setFeedback(options.successMessage);
@@ -1840,24 +2225,13 @@ export function PlatformAdminConsoleClient({
           name: input.name,
           type: "workspace",
           ownerUserId: input.ownerUserId?.trim() || null,
+          planId: input.planId?.trim() || null,
+          seats: input.planId ? (input.seats ?? 1) : undefined,
         }),
       });
       const body = (await readJson(response)) as PlatformAdminResponseBody & {
-        organization?: { id: string; slug?: string; billingAccountId?: string };
+        organization?: { id: string; slug?: string; billingAccountId?: string; subscriptionId?: string };
       };
-      const billingAccountId = body.organization?.billingAccountId;
-      if (billingAccountId && input.planId) {
-        await fetch("/api/platform/admin/billing", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            action: "create_subscription",
-            billingAccountId,
-            planId: input.planId,
-            seats: input.seats ?? 1,
-          }),
-        }).then(readJson);
-      }
       setOrgName("");
       return body;
     }, {
@@ -1982,6 +2356,8 @@ export function PlatformAdminConsoleClient({
             lowestMarginCapability={lowestMarginCapability}
             getSubscriptionEdit={getSubscriptionEdit}
             setSubscriptionEdits={setSubscriptionEdits}
+            getInvoiceEdit={getInvoiceEdit}
+            setInvoiceEdits={setInvoiceEdits}
             runAction={runAction}
             readJson={readJson}
             isPending={isPending}
@@ -2019,6 +2395,7 @@ export function PlatformAdminConsoleClient({
           <LearningPanel
             showSeededData={showSeededData}
             learningDomain={learningDomain}
+            derivedLearningCards={derivedLearningCards}
             filteredLearningQueue={filteredLearningQueue}
             learningFilter={learningFilter}
             setLearningFilter={setLearningFilter}
@@ -2042,6 +2419,7 @@ export function PlatformAdminConsoleClient({
           <CognitivePanel
             showSeededData={showSeededData}
             cognitiveDomain={cognitiveDomain}
+            derivedCognitiveCards={derivedCognitiveCards}
             formatMetricValue={formatMetricValue}
             selectedSession={selectedSession}
             navigateToCognitiveSession={navigateToCognitiveSession}
@@ -2122,7 +2500,11 @@ export function PlatformAdminConsoleClient({
   return (
     <div className="space-y-5 pb-2">
       {domainLoading ? (
-        <div className="rounded-[14px] border border-[rgba(24,24,23,0.08)] bg-white px-4 py-3 text-[13px] text-[#5f6368]">
+        <div
+          role="status"
+          aria-live="polite"
+          className="rounded-[14px] border border-[rgba(24,24,23,0.08)] bg-white px-4 py-3 text-[13px] text-[#5f6368]"
+        >
           正在按需加载当前域数据…
         </div>
       ) : null}
@@ -2382,6 +2764,8 @@ export function PlatformAdminConsoleClient({
 
         <main className="min-w-0 space-y-4">
           <div
+            role={feedbackTone === "error" ? "alert" : "status"}
+            aria-live={feedbackTone === "error" ? "assertive" : "polite"}
             className={`flex flex-col gap-3 rounded-[18px] border px-4 py-3 transition lg:flex-row lg:items-center lg:justify-between ${feedbackStyle(
               feedbackTone,
             )}`}
@@ -2466,7 +2850,13 @@ export function PlatformAdminConsoleClient({
             </div>
           </section>
 
-          {renderActivePanel()}
+          <PageErrorBoundary
+            key={`${activePanel}-${panelBoundaryKey}`}
+            fallbackTitle={`${activePanelMeta.label}暂时无法打开`}
+            onReset={() => setPanelBoundaryKey((current) => current + 1)}
+          >
+            {renderActivePanel()}
+          </PageErrorBoundary>
         </main>
       </div>
     </div>

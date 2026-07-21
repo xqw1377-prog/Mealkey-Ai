@@ -203,6 +203,7 @@ export const decisionCouncilRouter = router({
         constraints: z.string().min(4).max(400),
         successLooksLike: z.string().min(4).max(400),
         allowStubReports: z.boolean().optional(),
+        allowGaps: z.boolean().optional(),
         forceLevel: levelSchema.optional(),
         roster: z.array(roleSchema).max(7).optional(),
       }),
@@ -210,7 +211,33 @@ export const decisionCouncilRouter = router({
     .mutation(async ({ ctx, input }) => {
       await assertProject(ctx.userId!, input.projectId);
       const allowStubReports = resolveAllowStubReports(input.allowStubReports);
-      const caseId = `DR-${input.projectId.slice(0, 6)}`;
+
+      // Case.id ≡ MKDecision.id：开会即预创建 DRAFT Decision
+      const ownerId = await getOwnerId(ctx.userId!);
+      const draft = await prisma.decision.create({
+        data: {
+          ownerId,
+          projectId: input.projectId,
+          type: "council_draft",
+          problem: input.topic,
+          observation: input.whyNow,
+          diagnosis: "决策室开案（待裁决）",
+          judgement: "待裁决",
+          strategy: input.decisionQuestion,
+          action: "待签字后生成行动",
+          confidence: 0.4,
+          evidence: "[]",
+          outcome: JSON.stringify({
+            mkStatus: "DRAFT",
+            status: "draft",
+            councilDraft: true,
+            createdAt: new Date().toISOString(),
+          }),
+        },
+        select: { id: true },
+      });
+      const caseId = draft.id;
+
       const loaded = await loadProjectExpertReports({
         userId: ctx.userId!,
         projectId: input.projectId,
@@ -230,6 +257,7 @@ export const decisionCouncilRouter = router({
           constraints: input.constraints,
           successLooksLike: input.successLooksLike,
           allowStubReports,
+          allowGaps: Boolean(input.allowGaps),
           forceLevel: input.forceLevel as IssueLevel | undefined,
           roster: input.roster as CouncilRoleId[] | undefined,
           caseId,
@@ -237,6 +265,16 @@ export const decisionCouncilRouter = router({
           insights: loaded.insights,
           evidencePacket: loaded.evidencePacket,
         });
+        // 软门禁：证据缺口 / 领域强度未达标 → 写入 cdoNote，不硬拦开会
+        const gaps = loaded.evidencePacket?.gaps || [];
+        if (gaps.length) {
+          session = {
+            ...session,
+            cdoNote: `${session.cdoNote} · 【证据/强度提醒】${gaps.slice(0, 3).join("；")}${
+              input.allowGaps ? "（已确认带着缺口开会）" : ""
+            }`,
+          };
+        }
         // Founder Model → 常委提醒权重；行业脱敏池 → 先验（建议增强，非终局）
         try {
           const project = await prisma.project.findFirst({
@@ -437,6 +475,7 @@ export const decisionCouncilRouter = router({
         constraints: z.string().min(4).max(400),
         successLooksLike: z.string().min(4).max(400),
         allowStubReports: z.boolean().optional(),
+        allowGaps: z.boolean().optional(),
         forceLevel: levelSchema.optional(),
         roster: z.array(roleSchema).max(7).optional(),
       }),
@@ -444,7 +483,30 @@ export const decisionCouncilRouter = router({
     .mutation(async ({ ctx, input }) => {
       await assertProject(ctx.userId!, input.projectId);
       const allowStubReports = resolveAllowStubReports(input.allowStubReports);
-      const caseId = `DR-${input.projectId.slice(0, 6)}`;
+      const ownerId = await getOwnerId(ctx.userId!);
+      const draft = await prisma.decision.create({
+        data: {
+          ownerId,
+          projectId: input.projectId,
+          type: "council_draft",
+          problem: input.topic,
+          observation: input.whyNow,
+          diagnosis: "决策室开案（待裁决）",
+          judgement: "待裁决",
+          strategy: input.decisionQuestion,
+          action: "待签字后生成行动",
+          confidence: 0.4,
+          evidence: "[]",
+          outcome: JSON.stringify({
+            mkStatus: "DRAFT",
+            status: "draft",
+            councilDraft: true,
+            createdAt: new Date().toISOString(),
+          }),
+        },
+        select: { id: true },
+      });
+      const caseId = draft.id;
       const loaded = await loadProjectExpertReports({
         userId: ctx.userId!,
         projectId: input.projectId,
@@ -464,6 +526,7 @@ export const decisionCouncilRouter = router({
           constraints: input.constraints,
           successLooksLike: input.successLooksLike,
           allowStubReports,
+          allowGaps: Boolean(input.allowGaps),
           forceLevel: input.forceLevel as IssueLevel | undefined,
           roster: input.roster as CouncilRoleId[] | undefined,
           caseId,

@@ -120,7 +120,7 @@ export const decisionIntelligenceRouter = router({
     .mutation(async ({ ctx, input }) => {
       const project = await requireProject(ctx.userId!, input.projectId);
       try {
-        return await founderDecideExpansion(prisma, {
+        const decided = await founderDecideExpansion(prisma, {
           projectId: project.id,
           ownerId: project.owner.id,
           decisionId: input.decisionId,
@@ -128,6 +128,28 @@ export const decisionIntelligenceRouter = router({
           mode: input.mode,
           founderReason: input.founderReason,
         });
+
+        // MVP 闭环：裁决后自动开执行，无需二次点击
+        const profile = validateProfile(project.profile) as Record<string, unknown>;
+        let executionStarted = false;
+        try {
+          const created = await commitExpansionExecution(prisma, {
+            projectId: project.id,
+            ownerId: project.owner.id,
+            decisionId: input.decisionId,
+            profile,
+          });
+          await updateProjectProfile(
+            project.id,
+            () => created.nextProfile,
+            { ownerId: project.owner.id },
+          );
+          executionStarted = true;
+        } catch (execErr) {
+          console.warn("auto commitExpansionExecution failed:", execErr);
+        }
+
+        return { ...decided, executionStarted };
       } catch (e) {
         throw new TRPCError({
           code: "BAD_REQUEST",

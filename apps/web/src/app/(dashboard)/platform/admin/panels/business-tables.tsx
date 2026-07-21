@@ -17,6 +17,7 @@ export type CapabilityConsumptionSummary = {
   capabilityLabel: string;
   callCount: number;
   totalPoints: number;
+  totalRevenueCents: number;
   totalCostCents: number;
   grossProfitCents: number;
   grossMarginPercent: number | null;

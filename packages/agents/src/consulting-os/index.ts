@@ -5,3 +5,4 @@ export * from "./delivery-gates";
 export * from "./seat-evidence";
 export * from "./expert-report-adapter";
 export * from "./intake";
+export * from "./domain-depth";

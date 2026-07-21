@@ -21,6 +21,16 @@ import {
   diffRipSnapshots,
   signalsFromRipDiff,
 } from "@/server/founder-layer/capability/restaurant-intelligence/rip-diff";
+import {
+  PROFILE_WEEKLY_OPS_KEY,
+  parseWeeklyOpsCsv,
+  readWeeklyOpsMetrics,
+  type WeeklyOpsMetricsV1,
+} from "@/server/founder-layer/capability/ops-metrics/weekly-upload";
+import {
+  toProfileConflictTRPC,
+  updateProjectProfile,
+} from "@/server/services/project-profile";
 
 async function requireOwnedProject(userId: string, projectId: string) {
   const project = await prisma.project.findFirst({
@@ -154,9 +164,14 @@ export const restaurantIntelligenceRouter = router({
       return result;
     }),
 
-  /** R4：日更重采 → 差分 → 可供 Scan 升格的信号（不写 Decision 行） */
+  /** R4/E2：日更重采 → 差分 → Scan 信号（手动 force 可同日重跑） */
   refreshDaily: protectedProcedure
-    .input(z.object({ projectId: z.string().min(1) }))
+    .input(
+      z.object({
+        projectId: z.string().min(1),
+        force: z.boolean().optional(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       const project = await requireOwnedProject(ctx.userId!, input.projectId);
       const profile = validateProfile(project.profile) as Record<
@@ -170,6 +185,16 @@ export const restaurantIntelligenceRouter = router({
           message: "请先完成经营身份速写",
         });
       }
+
+      const store = readRipStore(profile);
+      const current = getCurrentRipSnapshot(store);
+      if (!current || current.status !== "confirmed") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "请先确认经营认知档案后再刷新今日变化",
+        });
+      }
+
       const category =
         (typeof profile.category === "string" && profile.category) ||
         project.category ||
@@ -198,6 +223,106 @@ export const restaurantIntelligenceRouter = router({
         diff,
         signalCount: signals.length,
         signals,
+        refreshed: true,
+        forced: Boolean(input.force),
       };
+    }),
+
+  /** 读取最近一周经营内数 */
+  getWeeklyOps: protectedProcedure
+    .input(z.object({ projectId: z.string().min(1) }))
+    .query(async ({ ctx, input }) => {
+      const project = await requireOwnedProject(ctx.userId!, input.projectId);
+      const profile = validateProfile(project.profile) as Record<
+        string,
+        unknown
+      >;
+      return { metrics: readWeeklyOpsMetrics(profile) };
+    }),
+
+  /**
+   * 周经营数据上传（CSV 文本或手工字段）
+   * 写入 profile → 雷达 OPERATION 信号可信度提升
+   */
+  uploadWeeklyOps: protectedProcedure
+    .input(
+      z.object({
+        projectId: z.string().min(1),
+        csvText: z.string().max(20000).optional(),
+        weekOf: z.string().max(32).optional(),
+        revenue: z.number().nonnegative().optional(),
+        guests: z.number().nonnegative().optional(),
+        avgTicket: z.number().nonnegative().optional(),
+        notes: z.string().max(400).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const project = await requireOwnedProject(ctx.userId!, input.projectId);
+      let metrics: WeeklyOpsMetricsV1 | null = null;
+
+      if (input.csvText?.trim()) {
+        const parsed = parseWeeklyOpsCsv(input.csvText, {
+          weekOf: input.weekOf,
+        });
+        if (!parsed.ok) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: parsed.error,
+          });
+        }
+        metrics = {
+          ...parsed.metrics,
+          notes: input.notes || parsed.metrics.notes,
+        };
+      } else {
+        if (
+          input.revenue == null &&
+          input.guests == null &&
+          input.avgTicket == null
+        ) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "请上传 CSV 或至少填写营业额 / 客流 / 客单之一",
+          });
+        }
+        let avgTicket = input.avgTicket;
+        if (
+          avgTicket == null &&
+          input.revenue != null &&
+          input.guests &&
+          input.guests > 0
+        ) {
+          avgTicket =
+            Math.round((input.revenue / input.guests) * 100) / 100;
+        }
+        metrics = {
+          schemaVersion: 1,
+          weekOf:
+            input.weekOf || new Date().toISOString().slice(0, 10),
+          revenue: input.revenue,
+          guests: input.guests,
+          avgTicket,
+          notes: input.notes,
+          source: "manual",
+          uploadedAt: new Date().toISOString(),
+        };
+      }
+
+      try {
+        await updateProjectProfile(
+          project.id,
+          (prefs) => ({
+            ...prefs,
+            [PROFILE_WEEKLY_OPS_KEY]: metrics,
+          }),
+          { ownerId: project.ownerId },
+        );
+      } catch (error) {
+        const conflict = toProfileConflictTRPC(error);
+        if (conflict) throw conflict;
+        throw error;
+      }
+
+      return { ok: true as const, metrics };
     }),
 });

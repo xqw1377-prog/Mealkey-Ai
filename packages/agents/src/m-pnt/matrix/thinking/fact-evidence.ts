@@ -8,11 +8,48 @@ export function ownedMentalWord(f: ThinkingFactPack): string {
   return clipWord(f.whitespace || f.category, 10) || "主定位";
 }
 
-/** 证据句：优先调研来源/竞对摘要，其次景观句，最后才用 edge */
+/** 证据句：优先账本一手事实 → 调研来源/竞对 → 景观句 → edge */
 export function evidenceBackedProof(
   f: ThinkingFactPack,
   angle: "mind" | "rival" | "clash" | "symbol" | "stp" | "growth" | "culture",
 ): string {
+  const primary = (f.primaryFacts || []).filter((p) => p.claim.trim().length >= 8);
+  const verified = primary.filter((p) => p.verified);
+  const pickPrimary = () => {
+    const pool = verified.length ? verified : primary;
+    if (!pool.length) return null;
+    const byStage = (stage: string) =>
+      pool.find((p) => (p.relatedStage || "").includes(stage));
+    if (angle === "rival") {
+      return (
+        byStage("COMPETITIVE") ||
+        pool.find((p) => p.sourceType === "competitor_note") ||
+        pool[0]
+      );
+    }
+    if (angle === "clash" || angle === "culture") {
+      return (
+        byStage("CONSUMER") ||
+        pool.find((p) => p.sourceType === "customer_quote") ||
+        pool.find((p) => p.sourceType === "store_observation") ||
+        pool[0]
+      );
+    }
+    if (angle === "mind" || angle === "symbol") {
+      return (
+        byStage("CATEGORY") ||
+        pool.find((p) => p.sourceType === "founder_interview") ||
+        pool[0]
+      );
+    }
+    return pool[0];
+  };
+  const pf = pickPrimary();
+  if (pf) {
+    const tag = pf.verified ? "已核实一手" : "一手（待核实）";
+    return `${tag}：${pf.claim}`.slice(0, 140);
+  }
+
   const snippets = (f.evidenceSnippets || []).filter((s) => s.trim().length >= 12);
   const briefs = f.competitorBriefs || [];
   const rival = f.rivals[0] || "同质馆";

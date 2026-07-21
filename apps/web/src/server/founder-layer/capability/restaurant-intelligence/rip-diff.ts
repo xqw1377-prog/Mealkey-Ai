@@ -121,7 +121,7 @@ export function signalsFromRipDiff(input: {
         `${place}：${diff.summaryLine}。需判断是否升格为今日决策，而非直接下结论。`,
         160,
       ),
-      importance: diff.newWatchouts.length ? 0.72 : 0.58,
+      importance: diff.newWatchouts.length ? 0.78 : 0.62,
       urgency: diff.newWatchouts.length ? "medium" : "low",
       relatedScope: {
         brandName: brand,

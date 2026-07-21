@@ -1,12 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
 import { ArrowRight } from "lucide-react";
-import { BusinessPointsStrip } from "@/components/operating/BusinessPointsStrip";
 import { DecisionCenterMorning } from "@/components/operating/DecisionCenterMorning";
 import { PageContent } from "@/components/operating/PageContent";
-import { useBusinessWallet } from "@/hooks/useBusinessWallet";
 import { greetingByHour } from "@/lib/time-greeting";
 import { trpc } from "@/lib/trpc";
 import type { DailyScanV1 } from "@/server/founder-layer/contracts/decision-center";
@@ -131,12 +128,6 @@ type DashboardHomeData = {
   } | null;
 };
 
-function clampBrief(text: string, max = 140) {
-  const t = text.replace(/\s+/g, " ").trim();
-  if (t.length <= max) return t;
-  return `${t.slice(0, max - 1)}…`;
-}
-
 function CouncilPendingBanner({
   projectId,
   item,
@@ -154,7 +145,7 @@ function CouncilPendingBanner({
   return (
     <section className="relative mt-5 flex flex-col gap-3 border-l-2 border-[#B47C5C] bg-[rgba(180,124,92,0.06)] py-3.5 pl-4 pr-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
       <div className="min-w-0">
-        <p className="text-[11px] tracking-[0.1em] text-[#B47C5C]">待你拍板</p>
+        <p className="text-[11px] tracking-[0.1em] text-[#B47C5C]">待你进决策室</p>
         <p className="mt-1 text-[15px] font-medium leading-6 text-[#202124] sm:truncate">
           {item.topic}
         </p>
@@ -170,7 +161,7 @@ function CouncilPendingBanner({
           prefetch={false}
           className="inline-flex min-h-12 flex-1 items-center justify-center gap-1 rounded-[16px] bg-[#181817] px-5 text-[15px] font-semibold text-white no-underline touch-manipulation active:scale-[0.98] sm:min-h-11 sm:flex-none sm:rounded-none sm:bg-transparent sm:px-0 sm:text-[13px] sm:text-[#181817]"
         >
-          去拍板 <ArrowRight className="h-3.5 w-3.5" />
+          去决策室 <ArrowRight className="h-3.5 w-3.5" />
         </Link>
         <button
           type="button"
@@ -187,7 +178,7 @@ function CouncilPendingBanner({
 
 /**
  * 今日决策看板 — Phase 1 细节打磨
- * 价值顺序：待拍板 → 今日判断 → 自助发起 → 收件箱/行动
+ * 今日经营动态 → 值得关注 → 决策室（拍板只在决策室）
  */
 export function DashboardPage({
   currentProject,
@@ -196,32 +187,7 @@ export function DashboardPage({
   currentProject?: ProjectItem | null;
   home?: DashboardHomeData | null;
 }) {
-  const { wallet, loading: walletLoading } = useBusinessWallet();
   const greeting = greetingByHour();
-  const utils = trpc.useUtils();
-  const [pendingActionId, setPendingActionId] = useState<string | null>(null);
-  const [actionFeedback, setActionFeedback] = useState<{
-    tone: "loading" | "success" | "error";
-    message: string;
-  } | null>(null);
-  const [optimisticActionStates, setOptimisticActionStates] = useState<Record<string, boolean>>({});
-  const [recentActionUpdate, setRecentActionUpdate] = useState<{
-    id: string;
-    done: boolean;
-    title: string;
-  } | null>(null);
-  const toggleTodayAction = trpc.dashboard.toggleTodayAction.useMutation({
-    onSuccess: async () => {
-      await utils.dashboard.getHome.invalidate();
-      setPendingActionId(null);
-    },
-    onError: () => {
-      setPendingActionId(null);
-      setOptimisticActionStates({});
-      setActionFeedback({ tone: "error", message: "更新失败，请重试" });
-      window.setTimeout(() => setActionFeedback(null), 2400);
-    },
-  });
 
   if (!currentProject || !home) {
     return (
@@ -248,59 +214,14 @@ export function DashboardPage({
   }
 
   const scan = home.dailyScan;
-  const displayScan = useMemo(() => {
-    if (!scan) return scan;
-    if (Object.keys(optimisticActionStates).length === 0) return scan;
-    return {
-      ...scan,
-      actions: scan.actions.map((item) =>
-        Object.prototype.hasOwnProperty.call(optimisticActionStates, item.id)
-          ? { ...item, done: optimisticActionStates[item.id] }
-          : item,
-      ),
-    };
-  }, [optimisticActionStates, scan]);
   const isConsultingDraft = Boolean(
     home.pendingMeetingDraft?.href.includes("/advisor"),
   );
-
-  useEffect(() => {
-    if (!scan) return;
-    setOptimisticActionStates({});
-  }, [scan]);
-
-  useEffect(() => {
-    if (!recentActionUpdate) return;
-    const timer = window.setTimeout(() => setRecentActionUpdate(null), 3200);
-    return () => window.clearTimeout(timer);
-  }, [recentActionUpdate]);
 
   return (
     <PageContent width="narrow" inset="shell" className="relative pb-8">
       <div className="pointer-events-none absolute inset-x-0 -top-6 h-56 bg-[radial-gradient(ellipse_at_top,_rgba(102,115,94,0.09),_transparent_68%)]" />
 
-      {/* 钱包条退到次视觉层，不与今日主 CTA 抢注意力 */}
-      <div className="relative mt-1 opacity-90">
-        {!walletLoading ? <BusinessPointsStrip wallet={wallet} compact /> : null}
-      </div>
-
-      {actionFeedback ? (
-        <div
-          role={actionFeedback.tone === "loading" ? "status" : "alert"}
-          aria-live={actionFeedback.tone === "loading" ? "polite" : "assertive"}
-          className={`fixed bottom-4 right-4 z-40 max-w-[min(92vw,360px)] rounded-[16px] px-4 py-3 text-[13px] font-medium shadow-[0_18px_40px_rgba(24,24,23,0.16)] ${
-            actionFeedback.tone === "success"
-              ? "border border-[rgba(102,115,94,0.18)] bg-[#F2F6EE] text-[#465240]"
-              : actionFeedback.tone === "error"
-                ? "border border-[rgba(180,124,92,0.18)] bg-[#FBF1EB] text-[#8A4F2D]"
-                : "border border-[rgba(24,24,23,0.08)] bg-[rgba(24,24,23,0.03)] text-[#5f6368]"
-          }`}
-        >
-          {actionFeedback.message}
-        </div>
-      ) : null}
-
-      {/* 仅决策相关未完成条占主位；咨询草稿降级 */}
       {home.pendingCouncilAdjudication ? (
         <CouncilPendingBanner
           projectId={currentProject.id}
@@ -317,9 +238,6 @@ export function DashboardPage({
             <p className="mt-1 text-[15px] font-medium leading-6 text-[#202124] sm:truncate">
               {home.pendingMeetingDraft.topic}
             </p>
-            <p className="mt-0.5 text-[12px] text-[#6f747b]">
-              {home.pendingMeetingDraft.lifecycleLabel}
-            </p>
           </div>
           <Link
             href={
@@ -328,107 +246,18 @@ export function DashboardPage({
                 : `/projects/${currentProject.id}/decision-room?topic=${encodeURIComponent(home.pendingMeetingDraft.topic)}`
             }
             prefetch={false}
-            className="inline-flex min-h-12 w-full items-center justify-center gap-1 rounded-[16px] bg-[#181817] px-5 text-[15px] font-semibold text-white no-underline touch-manipulation active:scale-[0.98] sm:mt-0.5 sm:min-h-11 sm:w-auto sm:shrink-0 sm:rounded-none sm:bg-transparent sm:px-0 sm:text-[13px] sm:text-[#181817]"
+            className="inline-flex min-h-12 w-full items-center justify-center gap-1 rounded-[16px] bg-[#181817] px-5 text-[15px] font-semibold text-white no-underline touch-manipulation sm:w-auto"
           >
             继续决策 <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </section>
       ) : null}
 
-      {home.activeValidationTask || home.pendingRedeision ? (
-        <section className="relative mt-5 flex flex-col gap-2 border-l-2 border-[rgba(24,24,23,0.14)] py-3 pl-4 pr-2 sm:flex-row sm:items-center sm:justify-between">
-          <div className="min-w-0">
-            <p className="text-[11px] tracking-[0.1em] text-[#6f747b]">
-              {home.activeValidationTask?.suggestRedeision ||
-              home.pendingRedeision
-                ? "验证偏航 · 该复盘了"
-                : "正在验证"}
-            </p>
-            <p className="mt-1 text-[14px] leading-6 text-[#202124]">
-              {clampBrief(
-                home.activeValidationTask?.hypothesisStatement ||
-                  home.activeValidationTask?.title ||
-                  home.pendingRedeision?.topic ||
-                  "",
-                72,
-              )}
-              {home.activeValidationTask ? (
-                <span className="text-[#6f747b]">
-                  {" "}
-                  · 剩 {home.activeValidationTask.daysRemaining} 天
-                </span>
-              ) : null}
-            </p>
-          </div>
-          <Link
-            href={
-              home.pendingRedeision?.href?.includes("decision-")
-                ? home.pendingRedeision.href
-                : home.activeValidationTask?.href ||
-                  `/projects/${currentProject.id}/decisions`
-            }
-            prefetch={false}
-            className="inline-flex min-h-11 shrink-0 items-center gap-1 text-[13px] font-semibold text-[#181817] no-underline underline-offset-4 touch-manipulation hover:underline"
-          >
-            {home.pendingRedeision ||
-            home.activeValidationTask?.suggestRedeision
-              ? "去复盘"
-              : "去打卡"}
-            <ArrowRight className="h-3.5 w-3.5" />
-          </Link>
-        </section>
-      ) : null}
-
-      {displayScan ? (
+      {scan ? (
         <div className="relative mt-7">
           <DecisionCenterMorning
-            scan={displayScan}
+            scan={scan}
             projectId={currentProject.id}
-            pendingActionId={pendingActionId}
-            recentActionUpdate={recentActionUpdate}
-            onToggleAction={(actionId) => {
-              const action = displayScan.actions.find((item) => item.id === actionId);
-              if (!action) return;
-              const wasDone = Boolean(
-                action.done,
-              );
-              const nextDone = !wasDone;
-              setPendingActionId(actionId);
-              setOptimisticActionStates((current) => ({
-                ...current,
-                [actionId]: nextDone,
-              }));
-              setActionFeedback({
-                tone: "loading",
-                message: wasDone ? "正在取消完成…" : `正在完成：${action.title}`,
-              });
-              toggleTodayAction.mutate(
-                {
-                  projectId: currentProject.id,
-                  actionId,
-                },
-                {
-                  onSuccess: (result) => {
-                    const updated = result.actions.find((item) => item.actionId === actionId);
-                    const confirmedDone = updated
-                      ? updated.status === "done" || updated.status === "completed"
-                      : nextDone;
-                    setRecentActionUpdate({
-                      id: actionId,
-                      done: confirmedDone,
-                      title: action.title,
-                    });
-                    setActionFeedback({
-                      tone: "success",
-                      message: confirmedDone
-                        ? `已完成：${action.title}`
-                        : `已恢复未完成：${action.title}`,
-                    });
-                    window.setTimeout(() => setActionFeedback(null), 2400);
-                  },
-                },
-              );
-            }}
           />
         </div>
       ) : (
@@ -437,7 +266,7 @@ export function DashboardPage({
             今日决策
           </p>
           <h2 className="font-display text-[22px] font-semibold text-[#202124]">
-            系统扫描还在准备，你仍可先拍板
+            系统扫描还在准备，你仍可先进入决策室
           </h2>
           <p className="text-[15px] leading-7 text-[#6f747b]">
             用语音说清一件事，就能进入决策室完成判断。

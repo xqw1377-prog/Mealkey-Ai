@@ -7,6 +7,10 @@ node_modules/
 dist/
 .next/
 .turbo/
+*.tsbuildinfo
+
+# Vercel local / OIDC（禁止入库）
+.vercel/
 
 # Environment
 .env

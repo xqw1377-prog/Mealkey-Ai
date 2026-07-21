@@ -35,6 +35,16 @@ import {
   tryCreateSharedLlmAdapter,
 } from "@/server/services/llm-polish";
 import { isCouncilStubAllowedByEnv } from "@/server/services/engine-meeting-gate";
+import { prisma } from "@/lib/prisma";
+import { validateProfile } from "@/lib/profile-schema";
+import { loadRestaurantBrainContext } from "@/server/restaurant-brain/service";
+import {
+  calibrateOpinionConfidenceByEvidenceWeight,
+  collectDomainStrengthsFromProfile,
+  collectWorldChangesFromProfile,
+  enrichCouncilEvidencePacket,
+} from "@/server/founder-layer/council/council-world-evidence";
+import type { DomainStrengthSnapshot } from "../../../../../../packages/agents/src/consulting-os";
 
 export { isCouncilStubAllowedByEnv };
 
@@ -115,9 +125,26 @@ function mergeOpinions(
     const hit = llmOpinions.get(role);
     if (hit) {
       llmHits += 1;
-      return sanitizeOpinionEvidence(hit, evidencePacket);
     }
-    return sanitizeOpinionEvidence(fb.get(role)!, evidencePacket);
+    const raw = hit || fb.get(role)!;
+    const cleaned = sanitizeOpinionEvidence(raw, evidencePacket);
+    // LLM 路径 confidence 常为 40–95；启发式为 0–1。统一到 0–1 再按证据权重校准。
+    const conf01 =
+      cleaned.confidence > 1
+        ? cleaned.confidence / 100
+        : Math.max(0, Math.min(1, cleaned.confidence));
+    const calibrated = calibrateOpinionConfidenceByEvidenceWeight({
+      confidence: conf01,
+      evidenceUsedIds: cleaned.evidence_used,
+      packet: evidencePacket,
+    });
+    return {
+      ...cleaned,
+      confidence:
+        cleaned.confidence > 1
+          ? Math.round(calibrated * 100)
+          : calibrated,
+    };
   });
   return {
     opinions,
@@ -159,6 +186,7 @@ export async function loadProjectExpertReports(input: {
   const notes: string[] = [];
   let ledgerPacket: EvidencePacket | undefined;
   let brandStrength: number | undefined;
+  const liveDomainStrengths: DomainStrengthSnapshot[] = [];
 
   // M-PNT — Positioning Intelligence Provider
   try {
@@ -233,6 +261,13 @@ export async function loadProjectExpertReports(input: {
       insights.push(...batch);
       notes.push(`${cfg.engineId} Insight×${batch.length}`);
 
+      const strength = consulting.assets.domainStrength as
+        | DomainStrengthSnapshot
+        | undefined;
+      if (strength && typeof strength.overall === "number") {
+        liveDomainStrengths.push(strength);
+      }
+
       // 对齐 M-PNT evidenceLedger：席位一手事实进入常委 EvidencePacket
       const primaryFacts =
         consulting.assets.primaryFacts && consulting.assets.primaryFacts.length > 0
@@ -252,7 +287,7 @@ export async function loadProjectExpertReports(input: {
         ledgerPacket = ledgerPacket
           ? {
               ...ledgerPacket,
-              items: [...ledgerPacket.items, ...seatItems].slice(0, 24),
+              items: [...ledgerPacket.items, ...seatItems].slice(0, 28),
             }
           : {
               caseId: input.caseId,
@@ -268,7 +303,7 @@ export async function loadProjectExpertReports(input: {
   }
 
   const reports = projectInsightsToReports(insights, input.caseId);
-  const evidencePacket = insights.length
+  let evidencePacket = insights.length
     ? mergeEvidencePacket({
         caseId: input.caseId,
         base: ledgerPacket,
@@ -276,12 +311,115 @@ export async function loadProjectExpertReports(input: {
       })
     : ledgerPacket;
 
+  // E0/E1 → 七常委：世界变化 + Brain + 领域强度缺口注入证据包
+  try {
+    const project = await prisma.project.findFirst({
+      where: { id: input.projectId, owner: { userId: input.userId } },
+      select: { profile: true },
+    });
+    const profile = project
+      ? (validateProfile(project.profile) as Record<string, unknown>)
+      : null;
+    const worldChanges = collectWorldChangesFromProfile(profile);
+    const profileStrengths = collectDomainStrengthsFromProfile(profile);
+    const strengthByAgent = new Map<string, DomainStrengthSnapshot>();
+    for (const s of [...profileStrengths, ...liveDomainStrengths]) {
+      strengthByAgent.set(s.agentId, s);
+    }
+    const domainStrengths = [...strengthByAgent.values()];
+
+    let brainFacts: Array<{
+      id?: string;
+      claim?: string;
+      confidence?: number;
+      category?: string;
+    }> = [];
+    let knownUnknowns: Array<{ question?: string }> = [];
+    try {
+      const brain = await loadRestaurantBrainContext(prisma, {
+        projectId: input.projectId,
+        ownerId: input.userId,
+      });
+      if (brain.brand.positioning) {
+        brainFacts.push({
+          id: "brand-positioning",
+          claim: `定位：${brain.brand.positioning}`,
+          confidence: brain.capability.confidence,
+          category: "brand",
+        });
+      }
+      if (brain.brand.targetCustomer) {
+        brainFacts.push({
+          id: "brand-customer",
+          claim: `目标客群：${brain.brand.targetCustomer}`,
+          confidence: brain.capability.confidence,
+          category: "brand",
+        });
+      }
+      if (brain.brand.risk) {
+        brainFacts.push({
+          id: "brand-risk",
+          claim: `品牌风险：${brain.brand.risk}`,
+          confidence: brain.capability.confidence,
+          category: "risk",
+        });
+      }
+      for (const d of brain.history.recentDecisions.slice(0, 3)) {
+        if (!d.question) continue;
+        brainFacts.push({
+          id: `recent-${brainFacts.length}`,
+          claim: `近期决策：${d.question}${d.chosen ? ` → ${d.chosen}` : ""}`,
+          confidence: 0.6,
+          category: "history",
+        });
+      }
+      knownUnknowns = (brain.unknowns || [])
+        .filter((q) => String(q).trim().length >= 4)
+        .slice(0, 6)
+        .map((q) => ({ question: String(q) }));
+    } catch {
+      // Brain 失败不阻断开会
+    }
+
+    const beforeCount = evidencePacket?.items?.length || 0;
+    evidencePacket = enrichCouncilEvidencePacket({
+      caseId: input.caseId,
+      base: evidencePacket,
+      worldChanges,
+      brain: { facts: brainFacts, knownUnknowns },
+      domainStrengths,
+    });
+    if (worldChanges.length) {
+      notes.push(`今日世界变化×${worldChanges.length}`);
+    }
+    if (brainFacts.length) {
+      notes.push(`Brain事实×${brainFacts.length}`);
+    }
+    if (knownUnknowns.length) {
+      notes.push(`Brain未知×${knownUnknowns.length}`);
+    }
+    const notReady = domainStrengths.filter((s) => !s.readyForCouncil);
+    if (notReady.length) {
+      notes.push(
+        `领域强度提醒：${notReady.map((s) => `${s.agentId}${s.overall}`).join("、")}`,
+      );
+    }
+    const afterCount = evidencePacket.items.length;
+    if (afterCount > beforeCount) {
+      notes.push(`证据包 ${beforeCount}→${afterCount}`);
+    }
+  } catch {
+    notes.push("世界变化/Brain 注入跳过");
+  }
+
   const loadedEngines = [
     ...new Set(insights.map((i) => String(i.sourceAgent))),
   ];
   const sourceNote = loadedEngines.length
     ? `MKInsight 已挂载 ${loadedEngines.join("、")}（${notes.join(" · ")}）`
-    : "尚无可用咨询资产，使用占位报告";
+    : notes.length
+      ? `尚无咨询资产，已挂载经营上下文（${notes.join(" · ")}）`
+      : "尚无可用咨询资产，使用占位报告";
 
   return {
     reports,

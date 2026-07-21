@@ -1,9 +1,23 @@
 import type { PrismaClient } from "@/generated/prisma";
 
+import { PlatformAdminInputError } from "@/lib/platform-admin-route";
+
 type MetricTone = "neutral" | "good" | "warning" | "danger";
 type AlertSeverity = "info" | "warning" | "critical";
 type PlanCommercialCategory = "platform" | "specialty_pack" | "points_pack" | "balance_credit" | "other";
 type QueuePriority = "high" | "medium" | "low";
+
+export const PLATFORM_ADMIN_SUBSCRIPTION_STATUSES = ["active", "paused", "canceled"] as const;
+export const PLATFORM_ADMIN_LISTING_STATUSES = ["active", "draft", "paused"] as const;
+export const PLATFORM_ADMIN_LISTING_VISIBILITIES = ["public", "private"] as const;
+export const PLATFORM_ADMIN_LISTING_PRICING_MODELS = ["subscription"] as const;
+export const PLATFORM_ADMIN_INVOICE_STATUSES = ["draft", "confirmed", "issued", "paid"] as const;
+
+export type PlatformAdminSubscriptionStatus = (typeof PLATFORM_ADMIN_SUBSCRIPTION_STATUSES)[number];
+export type PlatformAdminListingStatus = (typeof PLATFORM_ADMIN_LISTING_STATUSES)[number];
+export type PlatformAdminListingVisibility = (typeof PLATFORM_ADMIN_LISTING_VISIBILITIES)[number];
+export type PlatformAdminListingPricingModel = (typeof PLATFORM_ADMIN_LISTING_PRICING_MODELS)[number];
+export type PlatformAdminInvoiceStatus = (typeof PLATFORM_ADMIN_INVOICE_STATUSES)[number];
 
 export type PlatformAdminMetric = {
   id: string;
@@ -85,12 +99,15 @@ export type InvoiceRow = {
   total: string;
   amountValue: number;
   currency: string;
+  planId: string | null;
   billingAccountName: string | null;
   planName: string | null;
   planKind: string | null;
   planKindLabel: string;
   orderNo: string | null;
   createdAt: string;
+  issuedAt: string | null;
+  paidAt: string | null;
   isDraft: boolean;
   isUnlinked: boolean;
   isSeeded: boolean;
@@ -452,6 +469,37 @@ function createId(prefix: string) {
   return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
 }
 
+export function normalizePlatformAdminEnumValue(value: string | null | undefined) {
+  return typeof value === "string" ? value.trim().toLowerCase() : "";
+}
+
+function isAllowedPlatformAdminValue<TValue extends string>(
+  value: string,
+  allowed: readonly TValue[],
+): value is TValue {
+  return allowed.includes(value as TValue);
+}
+
+export function isPlatformAdminSubscriptionStatus(value: string): value is PlatformAdminSubscriptionStatus {
+  return isAllowedPlatformAdminValue(value, PLATFORM_ADMIN_SUBSCRIPTION_STATUSES);
+}
+
+export function isPlatformAdminListingStatus(value: string): value is PlatformAdminListingStatus {
+  return isAllowedPlatformAdminValue(value, PLATFORM_ADMIN_LISTING_STATUSES);
+}
+
+export function isPlatformAdminListingVisibility(value: string): value is PlatformAdminListingVisibility {
+  return isAllowedPlatformAdminValue(value, PLATFORM_ADMIN_LISTING_VISIBILITIES);
+}
+
+export function isPlatformAdminListingPricingModel(value: string): value is PlatformAdminListingPricingModel {
+  return isAllowedPlatformAdminValue(value, PLATFORM_ADMIN_LISTING_PRICING_MODELS);
+}
+
+export function isPlatformAdminInvoiceStatus(value: string): value is PlatformAdminInvoiceStatus {
+  return isAllowedPlatformAdminValue(value, PLATFORM_ADMIN_INVOICE_STATUSES);
+}
+
 function countByKey(rows: Array<Record<string, unknown>>, key: string) {
   const map = new Map<string, number>();
   for (const row of rows) {
@@ -478,6 +526,26 @@ function round(value: number, digits = 1) {
 function ratio(numerator: number, denominator: number) {
   if (denominator <= 0) return 0;
   return round((numerator / denominator) * 100, 1);
+}
+
+function computeBusinessPointUnitCents(samples: Array<{ amountCents: number; pointsAmount: number }>) {
+  const totals = samples.reduce(
+    (current, sample) => {
+      if (sample.amountCents <= 0 || sample.pointsAmount <= 0) return current;
+      return {
+        amountCents: current.amountCents + sample.amountCents,
+        pointsAmount: current.pointsAmount + sample.pointsAmount,
+      };
+    },
+    { amountCents: 0, pointsAmount: 0 },
+  );
+  if (totals.amountCents <= 0 || totals.pointsAmount <= 0) return null;
+  return totals.amountCents / totals.pointsAmount;
+}
+
+function estimateBusinessPointRevenueCents(points: number, centsPerPoint: number | null) {
+  if (points <= 0 || typeof centsPerPoint !== "number" || !Number.isFinite(centsPerPoint)) return 0;
+  return Math.max(0, Math.round(points * centsPerPoint));
 }
 
 function daysUntil(value: Date | string | null | undefined) {
@@ -907,6 +975,7 @@ function aggregateUsageTrend(records: UsageRecordQueryRow[], days = 7): ThirdPar
 function aggregateUsageAnomalies(
   records: UsageRecordQueryRow[],
   consumptionRecords: ConsumptionRecordQueryRow[],
+  businessPointUnitCents: number | null,
   limit = 12,
 ): ThirdPartyUsageAnomalyRow[] {
   const averageTokens =
@@ -938,8 +1007,9 @@ function aggregateUsageAnomalies(
       modelKey: normalizeComparableLabel(record.model),
       runId: record.runId?.trim() ?? null,
       occurredAt: toIso(record.createdAt),
-      revenueCents: Math.max(0, Math.round(record.actualAmount)),
-      grossProfitCents: Math.max(0, Math.round(record.actualAmount)) - record.costCents,
+      revenueCents: estimateBusinessPointRevenueCents(record.actualAmount, businessPointUnitCents),
+      grossProfitCents:
+        estimateBusinessPointRevenueCents(record.actualAmount, businessPointUnitCents) - record.costCents,
     };
   });
   const consumptionById = new Map(enrichConsumption.map((item) => [item.record.id, item] as const));
@@ -1255,7 +1325,7 @@ function buildDraftInvoiceAlert(count: number): PlatformAdminAlert {
     id: "draft_invoices",
     severity: "warning",
     title: "草稿发票队列",
-    description: "发票确认/开票闭环待建，当前仅只读队列。",
+    description: "存在待确认归因或待开票的发票，建议尽快推进到已开票状态。",
     count,
   };
 }
@@ -1399,7 +1469,7 @@ export async function getPlatformAdminSummaryOverview(
             id: "queue_invoices",
             label: "待处理草稿发票",
             value: summary.draftInvoices,
-            helper: "发票确认/开票闭环待建，当前为只读队列",
+            helper: "优先补齐购买归因并推进确认、开票",
             tone: summary.draftInvoices > 0 ? "warning" : "good",
           },
           {
@@ -1432,7 +1502,7 @@ export async function getPlatformAdminSummaryOverview(
             id: "business_draft_invoices",
             label: "草稿发票",
             value: summary.draftInvoices,
-            helper: "只读队列，确认/开票闭环待建",
+            helper: "等待平台确认归因并推进开票的发票数量",
             tone: summary.draftInvoices > 0 ? "warning" : "good",
           },
           {
@@ -2044,6 +2114,8 @@ export async function getPlatformAdminOverview(
             currency: true,
             billingAccountId: true,
             metadata: true,
+            issuedAt: true,
+            paidAt: true,
             createdAt: true,
           },
         })
@@ -2553,6 +2625,7 @@ export async function getPlatformAdminOverview(
       total: invoice.total,
       amountValue,
       currency: invoice.currency,
+      planId,
       billingAccountName: resolveBillingAccountDisplayName({
         accountId: billingAccount?.id ?? null,
         accountName: billingAccount?.name ?? null,
@@ -2566,6 +2639,8 @@ export async function getPlatformAdminOverview(
       planKindLabel: formatInvoicePlanKind(planKind),
       orderNo,
       createdAt: toIso(invoice.createdAt) ?? "",
+      issuedAt: toIso(invoice.issuedAt),
+      paidAt: toIso(invoice.paidAt),
       isDraft: invoice.status === "draft",
       isUnlinked: !isSeeded && (!planKind || !resolvedPlanName),
       isSeeded,
@@ -2649,6 +2724,34 @@ export async function getPlatformAdminOverview(
       return rows;
     }, []);
 
+  const businessPointPricingSamples = paymentOrderRecords.reduce<Array<{ amountCents: number; pointsAmount: number }>>(
+    (rows, order) => {
+      const metadata = parseJsonObject(order.metadata);
+      const plan = planMap.get(order.planId);
+      const planMetadata = parseJsonObject(plan?.metadata ?? null);
+      const pointsAmount =
+        typeof metadata.pointsAmount === "number"
+          ? Math.round(metadata.pointsAmount)
+          : typeof planMetadata.pointsAmount === "number"
+            ? Math.round(planMetadata.pointsAmount)
+            : 0;
+      if (order.amountCents > 0 && pointsAmount > 0) {
+        rows.push({ amountCents: order.amountCents, pointsAmount });
+      }
+      return rows;
+    },
+    [],
+  );
+  const businessPointPlanSamples = plans.reduce<Array<{ amountCents: number; pointsAmount: number }>>((rows, plan) => {
+    if (plan.category === "points_pack" && typeof plan.pointsAmount === "number" && plan.pointsAmount > 0 && plan.priceCents > 0) {
+      rows.push({ amountCents: plan.priceCents, pointsAmount: plan.pointsAmount });
+    }
+    return rows;
+  }, []);
+  const businessPointUnitCents =
+    computeBusinessPointUnitCents(businessPointPricingSamples) ??
+    computeBusinessPointUnitCents(businessPointPlanSamples);
+
   const capabilityPricing: CapabilityPricingRow[] = capabilityPriceRecords.map((rule) => {
     const metadata = parseJsonObject(rule.metadata);
     return {
@@ -2668,7 +2771,7 @@ export async function getPlatformAdminOverview(
   const consumptions: ConsumptionEconomicsRow[] = enrichedConsumptionRecords.map((record) => {
     const metadata = parseJsonObject(record.metadata);
     const owner = record.userId ? ownerByUserId.get(record.userId) : null;
-    const revenueCents = Math.max(0, Math.round(record.actualAmount));
+    const revenueCents = estimateBusinessPointRevenueCents(record.actualAmount, businessPointUnitCents);
     const grossProfitCents = revenueCents - record.costCents;
     return {
       id: record.id,
@@ -2696,7 +2799,12 @@ export async function getPlatformAdminOverview(
   const usageModels = aggregateUsageRows(usageRecords, "model");
   const usageTypes = aggregateUsageTypeRows(usageRecords);
   const usageTrend = aggregateUsageTrend(usageRecords, 7);
-  const usageAnomalies = aggregateUsageAnomalies(usageRecords, enrichedReconcileConsumptionRecords, 12);
+  const usageAnomalies = aggregateUsageAnomalies(
+    usageRecords,
+    enrichedReconcileConsumptionRecords,
+    businessPointUnitCents,
+    12,
+  );
   const usageSummary: ThirdPartyUsageSummary = {
     recordedEvents: usageRecords.length,
     billableCount: usageRecords.filter((item) => item.billable).length,
@@ -2790,10 +2898,18 @@ export async function getPlatformAdminOverview(
     .reduce((sum, invoice) => sum + invoice.amountValue, 0);
   const pointsSalesCents = pointsOrders.reduce((sum, item) => sum + item.amountCents, 0);
   const settledConsumptionPoints = consumptions.reduce((sum, item) => sum + item.actualPoints, 0);
+  const settledConsumptionRevenueCents = consumptions.reduce((sum, item) => sum + item.revenueCents, 0);
   const settledConsumptionCostCents = consumptions.reduce((sum, item) => sum + item.costCents, 0);
+  const observedUsageCostCents =
+    usageSummary.currency === "CNY" ? Math.max(0, Math.round(usageSummary.costValue * 100)) : null;
+  const businessCostDisplayCents =
+    settledConsumptionCostCents > 0 ? settledConsumptionCostCents : (observedUsageCostCents ?? 0);
   const settledGrossProfitCents = consumptions.reduce((sum, item) => sum + item.grossProfitCents, 0);
+  const businessGrossProfitDisplayCents = settledConsumptionRevenueCents - businessCostDisplayCents;
   const settledGrossMarginPercent =
-    settledConsumptionPoints > 0 ? ratio(settledGrossProfitCents, settledConsumptionPoints) : null;
+    settledConsumptionRevenueCents > 0
+      ? ratio(businessGrossProfitDisplayCents, settledConsumptionRevenueCents)
+      : null;
   const unlinkedInvoiceCount = invoices.filter((invoice) => invoice.isUnlinked).length;
   const privateListingCount = listings.filter((listing) => listing.visibility !== "public").length;
   const zeroInstallListingCount = listings.filter((listing) => listing.installCount === 0).length;
@@ -2994,9 +3110,14 @@ export async function getPlatformAdminOverview(
           {
             id: "business_settled_cost",
             label: "30 天模型成本",
-            value: Math.round(settledConsumptionCostCents / 100),
+            value: Math.round(businessCostDisplayCents / 100),
             unit: "元",
-            helper: "最近 30 天已结算消耗对应的模型与推理成本",
+            helper:
+              settledConsumptionCostCents > 0
+                ? "最近 30 天已结算消耗对应的模型与推理成本"
+                : observedUsageCostCents
+                  ? "结算侧还没完整回传 costCents，先回退展示第三方已观测成本"
+                  : "最近 30 天已结算消耗对应的模型与推理成本",
           },
           {
             id: "business_gross_margin",
@@ -3304,7 +3425,7 @@ export async function getPlatformAdminObjectsDomain(
 
 export async function createPlatformOrganization(
   prisma: PrismaClient,
-  input: { name: string; ownerUserId?: string | null; type?: string },
+  input: { name: string; ownerUserId?: string | null; type?: string; planId?: string | null; seats?: number },
 ) {
   const id = createId("org");
   const slug = `${slugify(input.name) || "organization"}-${id.slice(-6)}`;
@@ -3360,7 +3481,47 @@ export async function createPlatformOrganization(
       },
     });
 
-    return { id, slug, billingAccountId, memberId };
+    let subscriptionId: string | null = null;
+    if (input.planId) {
+      const plan = await tx.plan.findUnique({
+        where: { id: input.planId },
+        select: { id: true, code: true, status: true, includedRuns: true, metadata: true },
+      });
+      if (!plan || plan.status !== "active") {
+        throw new PlatformAdminInputError("初始订阅计划不存在或未激活");
+      }
+
+      const planCategory = classifyPlan(plan.code, parseJsonObject(plan.metadata), plan.includedRuns);
+      if (planCategory === "points_pack" || planCategory === "balance_credit") {
+        throw new PlatformAdminInputError("经营点或余额商品不能作为组织初始订阅，请走充值/支付链路");
+      }
+      if (planCategory !== "platform" && planCategory !== "specialty_pack") {
+        throw new PlatformAdminInputError("当前计划不是可订阅商品，不能作为组织初始订阅");
+      }
+
+      subscriptionId = createId("sub");
+      const now = new Date();
+      await tx.subscription.create({
+        data: {
+          id: subscriptionId,
+          billingAccountId,
+          planId: plan.id,
+          status: "active",
+          seats: Math.max(1, Math.round(input.seats ?? 1)),
+          startedAt: now,
+          currentPeriodStart: now,
+          currentPeriodEnd: daysFromNow(30),
+          cancelAtPeriodEnd: false,
+          metadata: JSON.stringify({
+            source: "api",
+            kind: planCategory,
+            createdWithOrganizationId: id,
+          }),
+        },
+      });
+    }
+
+    return { id, slug, billingAccountId, memberId, subscriptionId };
   });
 }
 
@@ -3394,50 +3555,199 @@ export async function createPlatformSubscription(
 ) {
   const id = createId("sub");
   const now = new Date();
+  const [billingAccount, plan] = await Promise.all([
+    prisma.billingAccount.findUnique({
+      where: { id: input.billingAccountId },
+      select: { id: true, status: true },
+    }),
+    prisma.plan.findUnique({
+      where: { id: input.planId },
+      select: { id: true, code: true, name: true, status: true, includedRuns: true, metadata: true },
+    }),
+  ]);
 
-  await prisma.subscription.create({
-    data: {
-      id,
-      billingAccountId: input.billingAccountId,
-      planId: input.planId,
-      status: "active",
-      seats: Math.max(1, Math.round(input.seats ?? 1)),
-      startedAt: now,
-      currentPeriodStart: now,
-      currentPeriodEnd: daysFromNow(30),
-      cancelAtPeriodEnd: false,
-      metadata: JSON.stringify({ source: "api" }),
-    },
+  if (!billingAccount || billingAccount.status !== "active") {
+    throw new PlatformAdminInputError("账务账户不存在或未激活，不能创建订阅");
+  }
+  if (!plan || plan.status !== "active") {
+    throw new PlatformAdminInputError("订阅计划不存在或未激活");
+  }
+
+  const planCategory = classifyPlan(plan.code, parseJsonObject(plan.metadata), plan.includedRuns);
+  if (planCategory === "points_pack" || planCategory === "balance_credit") {
+    throw new PlatformAdminInputError("经营点或余额商品不能创建订阅，请走充值/支付链路");
+  }
+  if (planCategory !== "platform" && planCategory !== "specialty_pack") {
+    throw new PlatformAdminInputError("当前计划不是可订阅商品，不能在管理台创建订阅");
+  }
+
+  return prisma.$transaction(async (tx) => {
+    let replacedSubscriptionIds: string[] = [];
+    if (planCategory === "platform") {
+      const activeSubscriptions = await tx.subscription.findMany({
+        where: {
+          billingAccountId: input.billingAccountId,
+          status: "active",
+        },
+        select: { id: true, planId: true },
+      });
+      const activePlanIds = [...new Set(activeSubscriptions.map((item) => item.planId))];
+      if (activePlanIds.length > 0) {
+        const activePlans = await tx.plan.findMany({
+          where: { id: { in: activePlanIds } },
+          select: { id: true, code: true, includedRuns: true, metadata: true },
+        });
+        const activePlanMap = new Map(activePlans.map((item) => [item.id, item] as const));
+        replacedSubscriptionIds = activeSubscriptions
+          .filter((subscription) => {
+            const activePlan = activePlanMap.get(subscription.planId);
+            if (!activePlan) return false;
+            return (
+              classifyPlan(activePlan.code, parseJsonObject(activePlan.metadata), activePlan.includedRuns) ===
+              "platform"
+            );
+          })
+          .map((subscription) => subscription.id);
+        if (replacedSubscriptionIds.length > 0) {
+          await tx.subscription.updateMany({
+            where: { id: { in: replacedSubscriptionIds } },
+            data: {
+              status: "canceled",
+              cancelAtPeriodEnd: true,
+              updatedAt: now,
+            },
+          });
+        }
+      }
+    }
+
+    await tx.subscription.create({
+      data: {
+        id,
+        billingAccountId: input.billingAccountId,
+        planId: input.planId,
+        status: "active",
+        seats: Math.max(1, Math.round(input.seats ?? 1)),
+        startedAt: now,
+        currentPeriodStart: now,
+        currentPeriodEnd: daysFromNow(30),
+        cancelAtPeriodEnd: false,
+        metadata: JSON.stringify({
+          source: "api",
+          kind: planCategory,
+          replacedSubscriptionIds,
+        }),
+      },
+    });
+
+    return { id, replacedSubscriptionIds, planCategory };
   });
-
-  return { id };
 }
 
 export async function updatePlatformSubscription(
   prisma: PrismaClient,
   input: {
     id: string;
-    status: string;
+    status: PlatformAdminSubscriptionStatus;
     seats?: number;
     cancelAtPeriodEnd?: boolean;
   },
 ) {
-  await prisma.subscription.update({
+  if (!isPlatformAdminSubscriptionStatus(input.status)) {
+    throw new PlatformAdminInputError("订阅状态无效，仅支持 active / paused / canceled");
+  }
+
+  const existing = await prisma.subscription.findUnique({
     where: { id: input.id },
-    data: {
-      status: input.status,
-      seats: Math.max(1, Math.round(input.seats ?? 1)),
-      cancelAtPeriodEnd: Boolean(input.cancelAtPeriodEnd),
+    select: {
+      id: true,
+      billingAccountId: true,
+      planId: true,
+      seats: true,
     },
   });
+  if (!existing) {
+    throw new PlatformAdminInputError("订阅不存在");
+  }
 
-  return { id: input.id, status: input.status };
+  const plan = await prisma.plan.findUnique({
+    where: { id: existing.planId },
+    select: { id: true, code: true, includedRuns: true, metadata: true },
+  });
+  if (!plan) {
+    throw new PlatformAdminInputError("订阅关联的计划不存在");
+  }
+
+  const planCategory = classifyPlan(plan.code, parseJsonObject(plan.metadata), plan.includedRuns);
+  return prisma.$transaction(async (tx) => {
+    let replacedSubscriptionIds: string[] = [];
+    if (input.status === "active" && planCategory === "platform") {
+      const activeSubscriptions = await tx.subscription.findMany({
+        where: {
+          billingAccountId: existing.billingAccountId,
+          status: "active",
+          id: { not: input.id },
+        },
+        select: { id: true, planId: true },
+      });
+      const activePlanIds = [...new Set(activeSubscriptions.map((item) => item.planId))];
+      if (activePlanIds.length > 0) {
+        const activePlans = await tx.plan.findMany({
+          where: { id: { in: activePlanIds } },
+          select: { id: true, code: true, includedRuns: true, metadata: true },
+        });
+        const activePlanMap = new Map(activePlans.map((item) => [item.id, item] as const));
+        replacedSubscriptionIds = activeSubscriptions
+          .filter((subscription) => {
+            const activePlan = activePlanMap.get(subscription.planId);
+            if (!activePlan) return false;
+            return (
+              classifyPlan(activePlan.code, parseJsonObject(activePlan.metadata), activePlan.includedRuns) ===
+              "platform"
+            );
+          })
+          .map((subscription) => subscription.id);
+        if (replacedSubscriptionIds.length > 0) {
+          await tx.subscription.updateMany({
+            where: { id: { in: replacedSubscriptionIds } },
+            data: {
+              status: "canceled",
+              cancelAtPeriodEnd: true,
+              updatedAt: new Date(),
+            },
+          });
+        }
+      }
+    }
+
+    await tx.subscription.update({
+      where: { id: input.id },
+      data: {
+        status: input.status,
+        seats: Math.max(1, Math.round(input.seats ?? existing.seats)),
+        cancelAtPeriodEnd: Boolean(input.cancelAtPeriodEnd),
+      },
+    });
+
+    return { id: input.id, status: input.status, replacedSubscriptionIds, planCategory };
+  });
 }
 
 export async function createPlatformListing(
   prisma: PrismaClient,
-  input: { name: string; slug?: string; priceCents?: number; currency?: string; pricingModel?: string },
+  input: {
+    name: string;
+    slug?: string;
+    priceCents?: number;
+    currency?: string;
+    pricingModel?: PlatformAdminListingPricingModel;
+  },
 ) {
+  const pricingModel = normalizePlatformAdminEnumValue(input.pricingModel ?? "subscription");
+  if (!isPlatformAdminListingPricingModel(pricingModel)) {
+    throw new PlatformAdminInputError("Listing 定价模型无效，仅支持 subscription");
+  }
+
   const id = createId("listing");
   const slug =
     input.slug && input.slug.length > 0
@@ -3451,7 +3761,7 @@ export async function createPlatformListing(
       name: input.name,
       status: "active",
       visibility: "public",
-      pricingModel: input.pricingModel ?? "subscription",
+      pricingModel,
       priceCents: Math.max(0, Math.round(input.priceCents ?? 0)),
       currency: input.currency ?? "CNY",
       installCount: 0,
@@ -3479,11 +3789,18 @@ export async function updatePlatformListing(
   prisma: PrismaClient,
   input: {
     id: string;
-    status: string;
-    visibility?: string;
+    status: PlatformAdminListingStatus;
+    visibility?: PlatformAdminListingVisibility;
     priceCents?: number;
   },
 ) {
+  if (!isPlatformAdminListingStatus(input.status)) {
+    throw new PlatformAdminInputError("Listing 状态无效，仅支持 active / draft / paused");
+  }
+  if (input.visibility && !isPlatformAdminListingVisibility(input.visibility)) {
+    throw new PlatformAdminInputError("Listing 可见性无效，仅支持 public / private");
+  }
+
   await prisma.agentListing.update({
     where: { id: input.id },
     data: {
@@ -3494,6 +3811,163 @@ export async function updatePlatformListing(
   });
 
   return { id: input.id, status: input.status };
+}
+
+export async function confirmPlatformInvoice(
+  prisma: PrismaClient,
+  input: { id: string; planId?: string | null; orderNo?: string | null },
+) {
+  const invoice = await prisma.invoice.findUnique({
+    where: { id: input.id },
+    select: {
+      id: true,
+      billingAccountId: true,
+      status: true,
+      metadata: true,
+      issuedAt: true,
+      paidAt: true,
+    },
+  });
+  if (!invoice) {
+    throw new PlatformAdminInputError("发票不存在");
+  }
+
+  const currentStatus = normalizePlatformAdminEnumValue(invoice.status);
+  if (!isPlatformAdminInvoiceStatus(currentStatus)) {
+    throw new PlatformAdminInputError("发票状态异常，暂时无法确认");
+  }
+  if (currentStatus === "issued" || currentStatus === "paid") {
+    return {
+      id: invoice.id,
+      status: currentStatus,
+      issuedAt: toIso(invoice.issuedAt),
+      paidAt: toIso(invoice.paidAt),
+    };
+  }
+
+  const metadata = parseJsonObject(invoice.metadata);
+  const explicitOrderNo = typeof input.orderNo === "string" && input.orderNo.trim().length > 0 ? input.orderNo.trim() : null;
+  const explicitPlanId = typeof input.planId === "string" && input.planId.trim().length > 0 ? input.planId.trim() : null;
+  const existingOrderNo = typeof metadata.orderNo === "string" && metadata.orderNo.trim().length > 0 ? metadata.orderNo.trim() : null;
+  const existingPlanId = typeof metadata.planId === "string" && metadata.planId.trim().length > 0 ? metadata.planId.trim() : null;
+  const orderNo = explicitOrderNo ?? existingOrderNo;
+
+  const order = orderNo
+    ? await prisma.paymentOrder.findUnique({
+        where: { orderNo },
+        select: { orderNo: true, billingAccountId: true, planId: true },
+      })
+    : null;
+  if (order && order.billingAccountId !== invoice.billingAccountId) {
+    throw new PlatformAdminInputError("订单归属的账务账户与当前发票不一致，不能直接关联");
+  }
+
+  const planId = explicitPlanId ?? order?.planId ?? existingPlanId;
+  const plan = planId
+    ? await prisma.plan.findUnique({
+        where: { id: planId },
+        select: { id: true, code: true, name: true, includedRuns: true, metadata: true },
+      })
+    : null;
+  if (planId && !plan) {
+    throw new PlatformAdminInputError("归因计划不存在，无法确认发票");
+  }
+
+  if (!plan) {
+    throw new PlatformAdminInputError("请先补齐购买方案归因，再确认发票");
+  }
+
+  const planMetadata = parseJsonObject(plan.metadata);
+  const planCategory = classifyPlan(plan.code, planMetadata, plan.includedRuns);
+  const now = new Date();
+  const nextStatus: PlatformAdminInvoiceStatus = "confirmed";
+  const nextMetadata = {
+    ...metadata,
+    planId: plan.id,
+    planCode: plan.code,
+    planName: plan.name,
+    kind: inferInvoicePlanKindFromCategory(planCategory) ?? metadata.kind ?? null,
+    orderNo: orderNo ?? null,
+    confirmedAt: now.toISOString(),
+    confirmationSource: "platform_admin",
+  };
+
+  await prisma.invoice.update({
+    where: { id: input.id },
+    data: {
+      status: nextStatus,
+      metadata: JSON.stringify(nextMetadata),
+    },
+  });
+
+  return {
+    id: input.id,
+    status: nextStatus,
+    planId: plan.id,
+    orderNo: orderNo ?? null,
+    issuedAt: toIso(invoice.issuedAt),
+    paidAt: toIso(invoice.paidAt),
+  };
+}
+
+export async function issuePlatformInvoice(prisma: PrismaClient, input: { id: string }) {
+  const invoice = await prisma.invoice.findUnique({
+    where: { id: input.id },
+    select: {
+      id: true,
+      status: true,
+      metadata: true,
+      issuedAt: true,
+      paidAt: true,
+    },
+  });
+  if (!invoice) {
+    throw new PlatformAdminInputError("发票不存在");
+  }
+
+  const status = normalizePlatformAdminEnumValue(invoice.status);
+  if (!isPlatformAdminInvoiceStatus(status)) {
+    throw new PlatformAdminInputError("发票状态异常，暂时无法开票");
+  }
+  if (status === "paid" || status === "issued") {
+    return {
+      id: invoice.id,
+      status,
+      issuedAt: toIso(invoice.issuedAt),
+      paidAt: toIso(invoice.paidAt),
+    };
+  }
+  if (status === "draft") {
+    throw new PlatformAdminInputError("请先确认归因，再推进开票");
+  }
+
+  const metadata = parseJsonObject(invoice.metadata);
+  const planId = typeof metadata.planId === "string" && metadata.planId.trim().length > 0 ? metadata.planId.trim() : null;
+  const planName = typeof metadata.planName === "string" && metadata.planName.trim().length > 0 ? metadata.planName.trim() : null;
+  if (!planId || !planName) {
+    throw new PlatformAdminInputError("发票仍缺少购买方案归因，不能直接开票");
+  }
+
+  const now = new Date();
+  await prisma.invoice.update({
+    where: { id: input.id },
+    data: {
+      status: "issued",
+      issuedAt: invoice.issuedAt ?? now,
+      metadata: JSON.stringify({
+        ...metadata,
+        issuedAt: (invoice.issuedAt ?? now).toISOString(),
+        issueSource: "platform_admin",
+      }),
+    },
+  });
+
+  return {
+    id: input.id,
+    status: "issued" satisfies PlatformAdminInvoiceStatus,
+    issuedAt: toIso(invoice.issuedAt ?? now),
+    paidAt: toIso(invoice.paidAt),
+  };
 }
 
 export async function reviewLearningRecord(

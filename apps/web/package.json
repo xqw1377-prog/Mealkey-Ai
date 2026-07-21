@@ -24,6 +24,7 @@
     "@mealkey/agent-runtime": "*",
     "@mealkey/agent-sdk": "*",
     "@mealkey/agents": "*",
+    "@mealkey/business-signal-engine": "*",
     "@mealkey/core": "*",
     "@mealkey/knowledge-engine": "*",
     "@mealkey/restaurant-brain": "*",

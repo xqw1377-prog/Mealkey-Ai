@@ -228,7 +228,7 @@ export async function runCultureEngine(
   risks.push({ risk: "【文化官】文化随时间变迁，品牌需定期迭代文化叙事", severity: "R1" });
 
   const enriched = enrichVerdictWithKnowledge({
-    source: "ye_maozhong",
+    source: null,
     directionText: `${preferred.oneLiner} ${preferred.name} ${preferred.focus} ${contradiction} ${word}`,
     baseChecks: preferredRow.checks,
     baseScore: preferredRow.total,

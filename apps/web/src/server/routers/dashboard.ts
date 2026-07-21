@@ -38,6 +38,7 @@ import {
   ingestSignalsAndEvolve,
 } from "@/server/founder-layer/intelligence";
 import type { DecisionHorizonV1 } from "@/server/founder-layer/contracts/business-identity";
+import { ensureDailyRipRefresh } from "@/server/founder-layer/capability/restaurant-intelligence/ensure-daily-refresh";
 import { TRPCError } from "@trpc/server";
 
 // 兼容旧 REST 路由的 re-export
@@ -92,12 +93,33 @@ export async function resolveHomeData(
     }
   }
 
-  const profile =
+  const profileRaw =
     typeof currentProject.profile === "string"
       ? parseJsonField<Record<string, unknown>>(currentProject.profile)
       : currentProject.profile && typeof currentProject.profile === "object"
         ? (currentProject.profile as Record<string, unknown>)
         : null;
+
+  // E1：确认画像后，打开驾驶舱时节流日更（每天一次）
+  let profile = profileRaw;
+  if (includeDailyScan && ctx.ownerId && profile) {
+    try {
+      const category =
+        (typeof profile.category === "string" && profile.category) ||
+        currentProject.category ||
+        undefined;
+      const ensured = await ensureDailyRipRefresh({
+        projectId: currentProject.id,
+        ownerId: ctx.ownerId,
+        profile,
+        category: category || undefined,
+      });
+      profile = ensured.profile;
+    } catch {
+      // 日更失败不阻断驾驶舱
+    }
+  }
+
   const bi =
     profile && typeof profile.businessIdentity === "object"
       ? (profile.businessIdentity as Record<string, unknown>)
@@ -109,6 +131,30 @@ export async function resolveHomeData(
     bi?.decisionHorizon === "long"
       ? bi.decisionHorizon
       : null;
+
+  let recentDecisions: Array<{
+    id: string;
+    problem: string | null;
+    judgement: string | null;
+    outcome: string | null;
+  }> = [];
+  if (includeDailyScan) {
+    try {
+      recentDecisions = await prisma.decision.findMany({
+        where: { projectId: currentProject.id },
+        orderBy: { createdAt: "desc" },
+        take: 20,
+        select: {
+          id: true,
+          problem: true,
+          judgement: true,
+          outcome: true,
+        },
+      });
+    } catch {
+      recentDecisions = [];
+    }
+  }
 
   const scanContext = {
     projectId: currentProject.id,
@@ -132,6 +178,7 @@ export async function resolveHomeData(
       null,
     decisionHorizon,
     profile: profile || null,
+    recentDecisions,
   };
 
   return {

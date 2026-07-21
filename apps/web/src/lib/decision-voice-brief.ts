@@ -9,6 +9,10 @@ export type DecisionVoiceBrief = {
   constraints: string;
   successLooksLike: string;
   spokenTurns?: string[];
+  /** 雷达证据摘要（进决策室 Brief） */
+  evidenceSummary?: string[];
+  /** 复盘三问（D+7） */
+  reviewQuestions?: string[];
 };
 
 const STORAGE_KEY = "mk_decision_voice_brief_v1";

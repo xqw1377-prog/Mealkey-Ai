@@ -231,7 +231,7 @@ export async function runSymbolEngine(
   });
 
   const enriched = enrichVerdictWithKnowledge({
-    source: "ye_maozhong",
+    source: null,
     directionText: `${preferred.oneLiner} ${preferred.name} ${preferred.focus} ${culturalCode} ${word}`,
     baseChecks: preferredRow.checks,
     baseScore: preferredRow.total,

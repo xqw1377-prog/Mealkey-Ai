@@ -29,7 +29,13 @@ export async function POST(request: Request) {
     const user = await requirePlatformAdmin();
     const limited = await enforcePlatformAdminWriteRateLimit(request, user.id, "organizations.create");
     if (limited) return limited;
-    const body = (await request.json()) as { name?: string; ownerUserId?: string | null; type?: string };
+    const body = (await request.json()) as {
+      name?: string;
+      ownerUserId?: string | null;
+      type?: string;
+      planId?: string | null;
+      seats?: number;
+    };
     if (!body.name?.trim()) {
       return NextResponse.json({ ok: false, error: "组织名称不能为空" }, { status: 400 });
     }
@@ -38,6 +44,8 @@ export async function POST(request: Request) {
       name: body.name.trim(),
       ownerUserId: body.ownerUserId ?? null,
       type: body.type,
+      planId: typeof body.planId === "string" && body.planId.trim().length > 0 ? body.planId.trim() : null,
+      seats: typeof body.seats === "number" && Number.isFinite(body.seats) ? body.seats : undefined,
     });
 
     await recordPlatformAdminAudit(prisma, user, {
@@ -49,12 +57,15 @@ export async function POST(request: Request) {
         name: body.name.trim(),
         ownerUserId: body.ownerUserId ?? null,
         type: body.type ?? null,
+        planId: body.planId ?? null,
+        seats: typeof body.seats === "number" && Number.isFinite(body.seats) ? body.seats : null,
       },
       result: {
         id: created.id,
         slug: created.slug,
         billingAccountId: created.billingAccountId ?? null,
         memberId: created.memberId ?? null,
+        subscriptionId: created.subscriptionId ?? null,
       },
     });
 

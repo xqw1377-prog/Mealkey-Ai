@@ -38,7 +38,9 @@ describe("toDailyScanV1", () => {
 
     expect(scan.primaryCard?.kind).toBe("risk");
     expect(scan.primaryCard?.entryMode).toBe("council");
-    expect(scan.primaryCard?.href).toContain("/decision-room?topic=");
+    expect(scan.primaryCard?.href).toContain("/decision-room?");
+    expect(scan.primaryCard?.href).toContain("topic=");
+    expect(scan.primaryCard?.href).toMatch(/intake=ready|decision-room\?topic=/);
     expect(scan.secondaryCards[0]?.deferred).toBe(true);
     expect(scan.primaryCta.reason).toBe("redeision");
     expect(scan.diagnosis.restaurantName).toBe("南门小馆");
@@ -133,7 +135,9 @@ describe("toDailyScanV1", () => {
 
     expect(scan.primaryCard?.kind).toBe("opportunity");
     expect(scan.primaryCard?.entryMode).toBe("research");
-    expect(scan.primaryCard?.href).toContain("/decision-room?topic=");
+    expect(scan.primaryCard?.href).toContain("/decision-room?");
+    expect(scan.primaryCard?.href).toContain("topic=");
+    expect(scan.primaryCard?.href).toMatch(/intake=ready|decision-room\?topic=/);
     expect(scan.primaryCta.reason).toBe("open_card");
     expect(scan.primaryCta.label).toBe("进入今日决策");
     expect(scan.todayFocus.title).toBeTruthy();

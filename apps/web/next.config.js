@@ -2,6 +2,7 @@
 const nextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
+  transpilePackages: ["@mealkey/business-signal-engine"],
   async headers() {
     const securityHeaders = [
       { key: "X-Frame-Options", value: "DENY" },

@@ -12,9 +12,13 @@ import {
   recordReconcileStatus,
 } from "@/server/services/reconcile-status";
 import {
+  confirmPlatformInvoice,
   createPlatformPlan,
   createPlatformSubscription,
   getPlatformAdminBusinessDomain,
+  issuePlatformInvoice,
+  isPlatformAdminSubscriptionStatus,
+  normalizePlatformAdminEnumValue,
   parsePlatformAdminPaginationFromUrl,
   updatePlatformSubscription,
 } from "@/server/services/platform-admin.service";
@@ -141,17 +145,80 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true, subscription });
     }
 
+    if (body.action === "confirm_invoice") {
+      const limited = await enforcePlatformAdminWriteRateLimit(request, user.id, "billing.confirm_invoice");
+      if (limited) return limited;
+      const id = typeof body.id === "string" ? body.id : "";
+      const planId = typeof body.planId === "string" ? body.planId : null;
+      const orderNo = typeof body.orderNo === "string" ? body.orderNo : null;
+
+      if (!id) {
+        return NextResponse.json({ ok: false, error: "id 必填" }, { status: 400 });
+      }
+
+      const invoice = await confirmPlatformInvoice(prisma, {
+        id,
+        planId,
+        orderNo,
+      });
+
+      await recordPlatformAdminAudit(prisma, user, {
+        route: "/api/platform/admin/billing",
+        action: "invoice.confirm",
+        targetType: "invoice",
+        targetId: invoice.id,
+        input: {
+          id,
+          planId: planId ?? null,
+          orderNo: orderNo ?? null,
+        },
+        result: invoice,
+      });
+
+      return NextResponse.json({ ok: true, invoice });
+    }
+
+    if (body.action === "issue_invoice") {
+      const limited = await enforcePlatformAdminWriteRateLimit(request, user.id, "billing.issue_invoice");
+      if (limited) return limited;
+      const id = typeof body.id === "string" ? body.id : "";
+
+      if (!id) {
+        return NextResponse.json({ ok: false, error: "id 必填" }, { status: 400 });
+      }
+
+      const invoice = await issuePlatformInvoice(prisma, { id });
+
+      await recordPlatformAdminAudit(prisma, user, {
+        route: "/api/platform/admin/billing",
+        action: "invoice.issue",
+        targetType: "invoice",
+        targetId: invoice.id,
+        input: { id },
+        result: invoice,
+      });
+
+      return NextResponse.json({ ok: true, invoice });
+    }
+
     if (body.action === "update_subscription") {
       const limited = await enforcePlatformAdminWriteRateLimit(request, user.id, "billing.update_subscription");
       if (limited) return limited;
       const id = typeof body.id === "string" ? body.id : "";
-      const status = typeof body.status === "string" ? body.status : "";
-      const seats = typeof body.seats === "number" ? body.seats : undefined;
+      const status = normalizePlatformAdminEnumValue(typeof body.status === "string" ? body.status : "");
+      const seats =
+        typeof body.seats === "number" && Number.isFinite(body.seats) ? body.seats : undefined;
       const cancelAtPeriodEnd =
         typeof body.cancelAtPeriodEnd === "boolean" ? body.cancelAtPeriodEnd : false;
 
       if (!id || !status) {
         return NextResponse.json({ ok: false, error: "id 和 status 必填" }, { status: 400 });
+      }
+      if (!isPlatformAdminSubscriptionStatus(status)) {
+        return NextResponse.json(
+          { ok: false, error: "订阅状态无效，仅支持 active / paused / canceled" },
+          { status: 400 },
+        );
       }
 
       const subscription = await updatePlatformSubscription(prisma, {

@@ -3,6 +3,16 @@
  * 权威：docs/MEALKEY_DECISION_CENTER_TECHNICAL_V1.md
  */
 
+import type { BusinessRadarV1 } from "./business-radar";
+
+export type { BusinessRadarV1 } from "./business-radar";
+export type {
+  RadarChangeItemV1,
+  RadarSeverityV1,
+  OperatingHealthV1,
+  OperatingHealthDimV1,
+} from "./business-radar";
+
 export type DecisionCardTone = "red" | "yellow" | "green";
 export type DecisionCardKind = "risk" | "opportunity" | "action_bundle";
 export type DecisionEntryMode = "research" | "council" | "resume";
@@ -85,6 +95,30 @@ export type DailyScanV1 = {
   identityHint: IdentityHintV1;
   /** 经营问题池计数（非任务墙） */
   inbox: DecisionInboxScanV1;
+  /** E1：今天生意发生了什么（来自 RIP 日更差分） */
+  worldChanges?: Array<{
+    id: string;
+    kind: "review" | "competition" | "customer" | "alert";
+    title: string;
+    detail: string;
+    decisionTopic?: string;
+    href?: string;
+  }>;
+  worldScanSummary?: string;
+  /**
+   * 今日经营雷达 — Business Observer（日活入口）
+   * 变化检测 → 影响 → 建议；不做决策
+   */
+  radar?: BusinessRadarV1;
+  /** D+7 复盘到期（MVP 仪式） */
+  reviewDue?: Array<{
+    id: string;
+    decisionId: string;
+    title: string;
+    href: string;
+    daysOverdue: number;
+    questions: [string, string, string];
+  }>;
   primaryCard: DecisionCardV1 | null;
   secondaryCards: DecisionCardV1[];
   actions: Array<{ id: string; title: string; done: boolean; checkable: boolean }>;
@@ -98,7 +132,8 @@ export type DailyScanV1 = {
       | "draft"
       | "meeting"
       | "checkin"
-      | "open_card";
+      | "open_card"
+      | "d7_review";
   };
 };
 

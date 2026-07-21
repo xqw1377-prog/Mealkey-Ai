@@ -53,6 +53,7 @@ type AskConfirm = (opts: {
 export function LearningPanel({
   showSeededData,
   learningDomain,
+  derivedLearningCards,
   filteredLearningQueue,
   learningFilter,
   setLearningFilter,
@@ -72,6 +73,7 @@ export function LearningPanel({
 }: {
   showSeededData: boolean;
   learningDomain: PlatformAdminOverview["domains"]["learning"];
+  derivedLearningCards: PlatformAdminMetric[];
   filteredLearningQueue: LearningQueueRow[];
   learningFilter: LearningFilter;
   setLearningFilter: (next: LearningFilter) => void;
@@ -89,6 +91,10 @@ export function LearningPanel({
   onApproveLearning: (row: LearningQueueRow) => void;
   onRejectLearning: (row: LearningQueueRow) => void;
 }) {
+  const selectedLearningStatus = selectedLearning?.status.toLowerCase() ?? "";
+  const learningActionLocked =
+    selectedLearningStatus === "approved" || selectedLearningStatus === "rejected";
+
   return (
     <PanelShell>
       <SectionIntro
@@ -102,7 +108,7 @@ export function LearningPanel({
           description="学习复核仍保留全量认知记录，因为这里处理的是平台判断质量，而不是商品、订阅或发票对象。商业域已按真实对象过滤，学习治理域继续保持全量。"
         />
       ) : null}
-      <MetricGrid metrics={learningDomain.cards} formatMetricValue={formatMetricValue} />
+      <MetricGrid metrics={derivedLearningCards} formatMetricValue={formatMetricValue} />
       <ObjectsTable
         id="learning-review-workbench"
         eyebrow="治理工作台"
@@ -162,7 +168,7 @@ export function LearningPanel({
                   <div className="grid gap-2 xl:grid-cols-2">
                     <button
                       type="button"
-                      disabled={isPending}
+                      disabled={isPending || learningActionLocked}
                       onClick={() => {
                         askConfirm({
                           title: "批准该学习记录？",
@@ -172,11 +178,11 @@ export function LearningPanel({
                       }}
                       className="inline-flex min-h-11 items-center justify-center rounded-[14px] bg-[#181817] px-4 text-[14px] font-semibold text-white disabled:opacity-50"
                     >
-                      批准并写入学习燃料
+                      {selectedLearningStatus === "approved" ? "该记录已批准" : "批准并写入学习燃料"}
                     </button>
                     <button
                       type="button"
-                      disabled={isPending}
+                      disabled={isPending || learningActionLocked}
                       onClick={() => {
                         askConfirm({
                           title: "驳回该学习记录？",
@@ -186,8 +192,13 @@ export function LearningPanel({
                       }}
                       className="inline-flex min-h-11 items-center justify-center rounded-[14px] border border-[rgba(24,24,23,0.08)] bg-white px-4 text-[14px] font-semibold text-[#202124] disabled:opacity-50"
                     >
-                      驳回该记录
+                      {selectedLearningStatus === "rejected" ? "该记录已驳回" : "驳回该记录"}
                     </button>
+                    {learningActionLocked ? (
+                      <div className="xl:col-span-2 rounded-[14px] border border-[rgba(24,24,23,0.08)] bg-[#FCFBF8] px-3 py-3 text-[12px] leading-5 text-[#5f6368]">
+                        当前记录已经完成复核。若要重新处理，请先通过后端脚本或专门的复核重开流程，而不是在工作台重复写入。
+                      </div>
+                    ) : null}
                   </div>
                 }
               >
@@ -715,8 +726,14 @@ export function ObjectsPanel({
                     <FieldLabel>席位数</FieldLabel>
                     <input
                       value={orgWizardSeats}
-                      onChange={(event) => setOrgWizardSeats(event.target.value)}
+                      onChange={(event) => setOrgWizardSeats(event.target.value.replace(/\D+/g, ""))}
                       inputMode="numeric"
+                      autoComplete="off"
+                      onFocus={(event) => event.currentTarget.select()}
+                      onMouseUp={(event) => {
+                        event.preventDefault();
+                        event.currentTarget.select();
+                      }}
                       className="w-full rounded-[14px] border border-[rgba(24,24,23,0.08)] bg-[#FCFBF8] px-3 py-3 text-[14px] text-[#202124] outline-none"
                     />
                   </>
@@ -788,9 +805,15 @@ export function ObjectsPanel({
               <FieldLabel>价格（分）</FieldLabel>
               <input
                 value={planPrice}
-                onChange={(event) => setPlanPrice(event.target.value)}
+                onChange={(event) => setPlanPrice(event.target.value.replace(/\D+/g, ""))}
                 placeholder="29900"
                 inputMode="numeric"
+                autoComplete="off"
+                onFocus={(event) => event.currentTarget.select()}
+                onMouseUp={(event) => {
+                  event.preventDefault();
+                  event.currentTarget.select();
+                }}
                 className="w-full rounded-[14px] border border-[rgba(24,24,23,0.08)] bg-[#FCFBF8] px-3 py-3 text-[14px] text-[#202124] outline-none"
               />
             </div>
@@ -830,9 +853,15 @@ export function ObjectsPanel({
               <FieldLabel>价格（分）</FieldLabel>
               <input
                 value={listingPrice}
-                onChange={(event) => setListingPrice(event.target.value)}
+                onChange={(event) => setListingPrice(event.target.value.replace(/\D+/g, ""))}
                 placeholder="29900"
                 inputMode="numeric"
+                autoComplete="off"
+                onFocus={(event) => event.currentTarget.select()}
+                onMouseUp={(event) => {
+                  event.preventDefault();
+                  event.currentTarget.select();
+                }}
                 className="w-full rounded-[14px] border border-[rgba(24,24,23,0.08)] bg-[#FCFBF8] px-3 py-3 text-[14px] text-[#202124] outline-none"
               />
             </div>
@@ -878,9 +907,15 @@ export function ObjectsPanel({
               <FieldLabel>席位数</FieldLabel>
               <input
                 value={seats}
-                onChange={(event) => setSeats(event.target.value)}
+                onChange={(event) => setSeats(event.target.value.replace(/\D+/g, ""))}
                 placeholder="1"
                 inputMode="numeric"
+                autoComplete="off"
+                onFocus={(event) => event.currentTarget.select()}
+                onMouseUp={(event) => {
+                  event.preventDefault();
+                  event.currentTarget.select();
+                }}
                 className="w-full rounded-[14px] border border-[rgba(24,24,23,0.08)] bg-[#FCFBF8] px-3 py-3 text-[14px] text-[#202124] outline-none"
               />
             </div>

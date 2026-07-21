@@ -110,6 +110,7 @@ export type { BrandFactsInput } from "./sync-brand-facts";
 export {
   syncBusinessFactsToRestaurantBrain,
   syncMarketFactsToRestaurantBrain,
+  syncEquityFactsToRestaurantBrain,
   parseAvgTicket,
   parseUnitEconomics,
   parseStoreCount,
@@ -117,4 +118,5 @@ export {
 export type {
   BusinessFactsInput,
   MarketFactsInput,
+  EquityFactsInput,
 } from "./sync-business-facts";

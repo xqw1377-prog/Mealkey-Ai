@@ -62,28 +62,25 @@ export function CapabilityEightRadar({
   const low = sorted[sorted.length - 1];
 
   return (
-    <section className={`border-y py-6`} style={{ borderColor: line }}>
+    <section className={`border-y py-3`} style={{ borderColor: line }}>
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <div>
           <p
-            className={`text-[12px] tracking-[0.08em] ${
+            className={`text-[11px] tracking-[0.08em] ${
               atelier
-                ? "text-[11px] font-medium tracking-[0.14em] text-[#5f6b4e]"
+                ? "font-medium tracking-[0.14em] text-[#5f6b4e]"
                 : "text-[#66735E]"
             }`}
           >
-            成长 · 八维能力
-          </p>
-          <p className="mt-1 text-[15px] leading-6 text-[#6f747b]">
-            由验证与复盘投影，不是课程评分
+            八维
           </p>
         </div>
         {typeof decisionQualityTotal === "number" ? (
-          <p className="text-[13px] text-[#6f747b]">
+          <p className="text-[12px] text-[#6f747b]">
             决策质量{" "}
             <span
               className={`${
-                atelier ? "font-serif-cn text-[20px]" : "font-display text-[18px]"
+                atelier ? "font-serif-cn text-[18px]" : "font-display text-[16px]"
               } font-semibold`}
               style={{ color: ink }}
             >
@@ -93,10 +90,10 @@ export function CapabilityEightRadar({
         ) : null}
       </div>
 
-      <div className="mt-4 grid gap-5 md:grid-cols-[1.1fr_1fr] md:items-center">
-        <div className="h-[260px] w-full">
+      <div className="mt-2 grid gap-3 md:grid-cols-[1.1fr_1fr] md:items-center">
+        <div className="h-[200px] w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <RadarChart data={data} cx="50%" cy="50%" outerRadius="72%">
+            <RadarChart data={data} cx="50%" cy="50%" outerRadius="70%">
               <PolarGrid stroke="rgba(24,24,23,0.10)" />
               <PolarAngleAxis
                 dataKey="label"
@@ -121,13 +118,13 @@ export function CapabilityEightRadar({
         </div>
 
         <ul
-          className="space-y-2 text-[13px] leading-6"
+          className="space-y-1 text-[12px] leading-5"
           style={{ color: ink }}
         >
           {sorted.map((d) => (
             <li
               key={d.dim}
-              className="flex items-baseline justify-between gap-3 border-b pb-1.5 last:border-0"
+              className="flex items-baseline justify-between gap-3 border-b pb-1 last:border-0"
               style={{ borderColor: line }}
             >
               <span

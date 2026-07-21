@@ -44,6 +44,12 @@ import {
   mergeMkStatusIntoOutcome,
 } from "@/server/founder-layer/capability/decision/registry";
 import { seedDecisionArtifactsFromMeeting } from "@/server/founder-layer/capability/decision/seed-from-meeting";
+import { createExecutionFromDecision } from "@/server/founder-layer/capability/execution/create-from-decision";
+import {
+  buildCouncilDecisionSignals,
+  ingestSignalsAndEvolve,
+} from "@/server/founder-layer/intelligence";
+// Case.id ≡ MKDecision.id：开会预创建 DRAFT 见 decision-council.open
 
 function asTaskArray(raw: unknown): ValidationTask[] {
   if (!Array.isArray(raw)) return [];
@@ -110,6 +116,11 @@ export const decisionArchiveRouter = router({
             decisionTrace: z.unknown().optional(),
           })
           .optional(),
+        /**
+         * 开会时预创建的 DRAFT Decision.id（≡ caseId）
+         * 有则更新该行，保证 Case.id ≡ MKDecision.id
+         */
+        draftDecisionId: z.string().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -203,19 +214,60 @@ export const decisionArchiveRouter = router({
           ? Math.min(input.confidence, 0.55)
           : input.confidence;
 
-      const record = await createDecision(prisma, {
-        ownerId: project.owner.id,
-        projectId: project.id,
-        type: "meeting",
-        problem: input.problem,
-        observation: input.observation || `会议议题：${input.problem}`,
-        diagnosis: input.diagnosis || (oppose[0] ? `主要分歧：${oppose[0]}` : "专家讨论后形成共识"),
-        judgement: input.judgement,
-        strategy: input.strategy || input.judgement,
-        action: input.action || input.validationPlan || "按验证计划推进",
-        confidence: gatedConfidence,
-        evidence,
-      });
+      const observation =
+        input.observation || `会议议题：${input.problem}`;
+      const diagnosis =
+        input.diagnosis ||
+        (oppose[0] ? `主要分歧：${oppose[0]}` : "专家讨论后形成共识");
+      const strategy = input.strategy || input.judgement;
+      const action =
+        input.action || input.validationPlan || "按验证计划推进";
+
+      let record: { id: string };
+      if (input.draftDecisionId) {
+        const draft = await prisma.decision.findFirst({
+          where: {
+            id: input.draftDecisionId,
+            projectId: project.id,
+            ownerId: project.owner.id,
+          },
+        });
+        if (!draft) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "draftDecisionId 无效或不属于本项目",
+          });
+        }
+        record = await prisma.decision.update({
+          where: { id: draft.id },
+          data: {
+            type: "meeting",
+            problem: input.problem,
+            observation,
+            diagnosis,
+            judgement: input.judgement,
+            strategy,
+            action,
+            confidence: gatedConfidence,
+            evidence: JSON.stringify(evidence),
+          },
+          select: { id: true },
+        });
+      } else {
+        record = await createDecision(prisma, {
+          ownerId: project.owner.id,
+          projectId: project.id,
+          type: "meeting",
+          problem: input.problem,
+          observation,
+          diagnosis,
+          judgement: input.judgement,
+          strategy,
+          action,
+          confidence: gatedConfidence,
+          evidence,
+        });
+      }
 
       if (input.supersedesDecisionId) {
         const old = recentDecisions.find((d) => d.id === input.supersedesDecisionId);
@@ -372,9 +424,52 @@ export const decisionArchiveRouter = router({
         console.warn("seedDecisionArtifactsFromMeeting failed:", error);
       }
 
+      // MVP 闭环：批准后自动进入 M-EXEC（ActionPlan + Validation + D+7）
+      let autoExec: Awaited<
+        ReturnType<typeof createExecutionFromDecision>
+      > | null = null;
+      let executionError: string | null = null;
+      try {
+        autoExec = await createExecutionFromDecision(prisma, {
+          projectId: project.id,
+          ownerId: project.owner.id,
+          decisionId: record.id,
+          profile: {
+            ...profile,
+            growthPlan,
+            lastDecisionContract: decisionContract,
+            lastValidationHypothesis: planBundle.hypothesis,
+            lastProblemFingerprint: fingerprint,
+          },
+          nextActions: input.nextActions,
+        });
+      } catch (error) {
+        executionError =
+          error instanceof Error ? error.message : "自动创建执行计划失败";
+        console.warn("auto createExecutionFromDecision failed:", error);
+      }
+
       try {
         await updateProjectProfile(project.id, (prefs) => {
           const { activeMeeting: _cleared, ...restPrefs } = prefs;
+          const { suggestedNextMeeting: _clearedRedeision, ...restWithoutRedeision } =
+            restPrefs;
+
+          if (autoExec) {
+            return {
+              ...restWithoutRedeision,
+              ...autoExec.nextProfile,
+              ...(input.focusChoice ? { founderPreference: input.focusChoice } : {}),
+              lastMeetingDecisionId: record.id,
+              lastMeetingAt: new Date().toISOString(),
+              growthPlan,
+              lastDecisionContract: decisionContract,
+              lastValidationHypothesis: planBundle.hypothesis,
+              lastProblemFingerprint: fingerprint,
+            };
+          }
+
+          // 降级：执行创建失败时仍写会议行动（旧路径）
           const existingTasks = asTaskArray(restPrefs.validationTasks);
           const todayActions = buildTodayActionsFromMeetingConfirm({
             nextActions: input.nextActions,
@@ -382,8 +477,6 @@ export const decisionArchiveRouter = router({
             validationPlan: input.validationPlan,
             judgement: input.judgement,
           });
-          const { suggestedNextMeeting: _clearedRedeision, ...restWithoutRedeision } =
-            restPrefs;
           return {
             ...restWithoutRedeision,
             ...(input.focusChoice ? { founderPreference: input.focusChoice } : {}),
@@ -395,9 +488,9 @@ export const decisionArchiveRouter = router({
             lastDecisionContract: decisionContract,
             lastValidationHypothesis: planBundle.hypothesis,
             lastProblemFingerprint: fingerprint,
-            /** 覆盖开会前草稿，今日 Brief 直接读本周三动作 */
             lastActionPlan: {
               planId: `ap_meeting_${record.id}`,
+              decisionId: record.id,
               summary: clipJudgement(input.judgement),
               goals: [
                 {
@@ -454,14 +547,40 @@ export const decisionArchiveRouter = router({
       ];
       await persistFounderMemoryWrites(prisma, project.owner.id, memoryWrites);
 
+      // Evolution：与 decisionCouncil.founderDecide 对齐（签字即学习）
+      try {
+        const founderChoice =
+          input.councilTrace?.founderChoice || "接受委员会";
+        const signals = buildCouncilDecisionSignals({
+          topic: input.problem,
+          choice: founderChoice,
+          recommendedAction:
+            input.councilTrace?.recommendedAction || input.judgement,
+          caseId: record.id,
+          sessionId: input.councilTrace?.sessionId,
+        });
+        await updateProjectProfile(
+          project.id,
+          (latest) =>
+            ingestSignalsAndEvolve(latest as Record<string, unknown>, signals),
+          { ownerId: project.owner.id },
+        );
+      } catch (error) {
+        console.warn("intelligence ingest after confirmFromMeeting failed", error);
+      }
+
       return {
         decisionId: record.id,
         growthPlan,
-        validationTask,
+        validationTask: autoExec?.result.validationTask || validationTask,
         validationHypothesis: planBundle.hypothesis,
         decisionContract,
         seededOpinions: seeded.opinionCount,
         seededEvidence: seeded.evidenceCount,
+        executionStarted: Boolean(autoExec),
+        executionError,
+        actionPlanId: autoExec?.result.actionPlan.planId,
+        mkStatus: autoExec?.result.mkStatus || "APPROVED",
       };
     }),
 

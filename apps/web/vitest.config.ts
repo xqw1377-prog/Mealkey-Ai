@@ -11,6 +11,10 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      "@mealkey/business-signal-engine": path.resolve(
+        __dirname,
+        "../../packages/business-signal-engine/src/index.ts",
+      ),
     },
   },
 });

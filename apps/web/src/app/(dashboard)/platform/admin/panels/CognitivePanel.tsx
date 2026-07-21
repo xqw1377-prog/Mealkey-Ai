@@ -24,6 +24,7 @@ import {
 export function CognitivePanel({
   showSeededData,
   cognitiveDomain,
+  derivedCognitiveCards,
   formatMetricValue,
   selectedSession,
   navigateToCognitiveSession,
@@ -34,6 +35,7 @@ export function CognitivePanel({
 }: {
   showSeededData: boolean;
   cognitiveDomain: PlatformAdminOverview["domains"]["cognitive"];
+  derivedCognitiveCards: PlatformAdminMetric[];
   formatMetricValue: (metric: PlatformAdminMetric) => string;
   selectedSession: CognitiveSessionRow | null;
   navigateToCognitiveSession: (sessionId: string) => void;
@@ -99,7 +101,7 @@ export function CognitivePanel({
           description="认知内核继续展示全量会话，因为低置信、缺证据和异常 trace 属于平台级质量治理，不会随着商业对象过滤一起隐藏。"
         />
       ) : null}
-      <MetricGrid metrics={cognitiveDomain.cards} formatMetricValue={formatMetricValue} />
+      <MetricGrid metrics={derivedCognitiveCards} formatMetricValue={formatMetricValue} />
       <ObjectsTable
         id="cognitive-review-workbench"
         eyebrow="质量治理"

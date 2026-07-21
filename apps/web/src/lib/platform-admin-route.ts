@@ -2,6 +2,13 @@ import { AuthError, forbiddenResponse, unauthorizedResponse } from "./auth-helpe
 import { NextResponse } from "next/server";
 import { clientIpFromRequest, rateLimit } from "./rate-limit";
 
+export class PlatformAdminInputError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "PlatformAdminInputError";
+  }
+}
+
 export function platformAdminErrorResponse(error: unknown) {
   if (error instanceof AuthError) {
     if (error.message === "请先登录") {
@@ -9,6 +16,16 @@ export function platformAdminErrorResponse(error: unknown) {
     }
 
     return forbiddenResponse(error.message);
+  }
+
+  if (error instanceof PlatformAdminInputError) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error: error.message,
+      },
+      { status: 400 },
+    );
   }
 
   return NextResponse.json(

@@ -116,6 +116,8 @@ export function openDecisionRoom(input: {
   successLooksLike?: string;
   /** 显式确认可在仅有 stub 报告时开会 */
   allowStubReports?: boolean;
+  /** 证据缺口较多时显式确认带着缺口开会 */
+  allowGaps?: boolean;
   forceLevel?: IssueLevel;
   /** 专项会自选花名册；重大决策可强制全员 */
   roster?: CouncilRoleId[];
@@ -146,6 +148,9 @@ export function openDecisionRoom(input: {
     brief,
     substanceReportCount: substanceCount,
     allowStub: Boolean(input.allowStubReports),
+    evidenceItemCount: input.evidencePacket?.items?.length,
+    evidenceGaps: input.evidencePacket?.gaps,
+    allowGaps: Boolean(input.allowGaps),
   });
   assertAgendaReady(readiness);
 
@@ -227,6 +232,12 @@ export function openDecisionRoom(input: {
       cdoNote: `${session.cdoNote} | 已挂载 ${realCount} 份 ExpertReport${
         insightCount ? ` · MKInsight×${insightCount}` : ""
       }`,
+    };
+  }
+  if (readiness.summary && /证据/.test(readiness.summary)) {
+    session = {
+      ...session,
+      cdoNote: `${session.cdoNote} | ${readiness.summary}`,
     };
   }
 

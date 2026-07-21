@@ -1853,7 +1853,7 @@ export function PlatformAdminConsoleClient({
 
   async function refreshOverview() {
     const response = await fetch("/api/platform/admin/overview", { cache: "no-store" });
-    const body = await readJson(response);
+    const body = await readJson<PlatformAdminResponseBody>(response);
     if (body.overview) {
       mergeOverviewPatch(body);
       setSubscriptionEdits({});
@@ -2325,7 +2325,7 @@ export function PlatformAdminConsoleClient({
       domainLoading={domainLoading}
       confirmOpen={confirmOpen}
       confirmTitle={confirmTitle}
-      confirmDescription={confirmDescription}
+      confirmDescription={confirmDescription ?? ""}
       isPending={isPending}
       onCancelConfirm={() => {
         setConfirmOpen(false);

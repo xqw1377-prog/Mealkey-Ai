@@ -193,10 +193,10 @@ function analyzeConsumerFeedback(
   };
 }
 
-/** 诊断引擎 — 纯函数；零 Prisma / 零 UI */
-export async function runRestaurantDiagnosis(
+/** 诊断引擎（同步）— 纯函数；零 Prisma / 零 UI */
+export function diagnoseRestaurantSync(
   request: RestaurantDiagnosisRequest,
-): Promise<RestaurantDiagnosisResult> {
+): RestaurantDiagnosisResult {
   const horizon = request.horizon || "7d";
   const focus = request.focus || "overall";
   const evidence = request.evidence || [];
@@ -205,7 +205,9 @@ export async function runRestaurantDiagnosis(
 
   return {
     agentId: M_OPS_DIAG_AGENT_ID,
-    ok: analyzed.gaps.every((g) => g.severity !== "high") || analyzed.findings.length > 0,
+    ok:
+      analyzed.gaps.every((g) => g.severity !== "high") ||
+      analyzed.findings.length > 0,
     productName: M_OPS_DIAG_PRODUCT_NAME,
     horizon,
     focus,
@@ -215,6 +217,13 @@ export async function runRestaurantDiagnosis(
     gaps: analyzed.gaps,
     customerLens: analyzed.customerLens,
   };
+}
+
+/** async 壳 — 兼容 ToolAgentEngine / Host await */
+export async function runRestaurantDiagnosis(
+  request: RestaurantDiagnosisRequest,
+): Promise<RestaurantDiagnosisResult> {
+  return diagnoseRestaurantSync(request);
 }
 
 /** 注册进 ToolAgentRegistry 用的 Engine 外壳 */

@@ -24,6 +24,7 @@ import { billingRouter } from "./routers/billing";
 import { restaurantBrainRouter } from "./routers/restaurant-brain";
 import { decisionIntelligenceRouter } from "./routers/decision-intelligence";
 import { restaurantIntelligenceRouter } from "./routers/restaurant-intelligence";
+import { mOpsDiagRouter } from "./routers/m-ops-diag";
 
 /**
  * 根 Router — 合并所有子 Router
@@ -55,6 +56,7 @@ export const appRouter = router({
   restaurantBrain: restaurantBrainRouter,
   decisionIntelligence: decisionIntelligenceRouter,
   restaurantIntelligence: restaurantIntelligenceRouter,
+  mOpsDiag: mOpsDiagRouter,
 });
 
 export type AppRouter = typeof appRouter;

@@ -43,6 +43,7 @@ import {
   weeklyOpsToInternalFacts,
   weeklyOpsToWorldHint,
 } from "@/server/founder-layer/capability/ops-metrics/weekly-upload";
+import { collectMOpsDiagWorldChangesForScan } from "@/server/services/m-ops-diag-client";
 
 type HomeLike = {
   ownerName?: string;
@@ -595,10 +596,28 @@ export function toDailyScanV1(
       seenTitles.add(c.title);
       worldChanges.push(c);
     }
-    worldChanges = worldChanges.slice(0, 6);
   } catch {
     // ignore
   }
+
+  // L3 m-ops-diag：消费者反馈感知 → 今日雷达（有 RIP 证据才注入）
+  try {
+    const opsChanges = collectMOpsDiagWorldChangesForScan({
+      projectId,
+      profile: options.profile || null,
+      brandName: options.brandName || undefined,
+      city: options.city || undefined,
+    });
+    const seenIds = new Set(worldChanges.map((c) => c.id));
+    for (const c of opsChanges) {
+      if (seenIds.has(c.id)) continue;
+      seenIds.add(c.id);
+      worldChanges.unshift(c);
+    }
+  } catch {
+    // ignore
+  }
+  worldChanges = worldChanges.slice(0, 6);
 
   const seatSignals = (() => {
     try {

@@ -17,6 +17,21 @@ export {
 } from "./contracts";
 
 export { mOpsDiagManifest } from "./manifest";
-export { mOpsDiagEngine, runRestaurantDiagnosis } from "./engine";
+export {
+  mOpsDiagEngine,
+  diagnoseRestaurantSync,
+  runRestaurantDiagnosis,
+} from "./engine";
 export { toVerticalInsightSource, type VerticalInsightSourceDraft } from "./adapters";
 export { mockConsumerEvidence, mockDiagnosisRequest } from "./mock";
+export {
+  buildDiagnosisRequest,
+  contextFromBrainLike,
+  evidenceFromRipLike,
+  type BrainContextLike,
+  type RipEvidenceLike,
+} from "./from-context";
+export {
+  diagnosisSignalsToWorldHints,
+  type OpsDiagWorldHint,
+} from "./to-world-hints";

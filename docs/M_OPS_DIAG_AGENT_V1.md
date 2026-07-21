@@ -237,10 +237,10 @@ domain / question / evidence / unknowns
 | Phase | 交付 | 状态 |
 |-------|------|------|
 | **0** | 本文冻结 | ✅ |
-| **1** | `packages/m-ops-diag`：input → mock evidence → engine → signals | 本刀骨架 |
-| **2** | 接 Restaurant Brain 只读（品牌/门店/地址/品类） | 待开 |
-| **3** | 外采：点评 → 小红书 → 地图竞品 | 待开 |
-| **4** | 接 Daily Cockpit / 今日雷达，形成每日经营扫描 | 待开 |
+| **1** | `packages/m-ops-diag`：input → mock evidence → engine → signals | ✅ |
+| **2** | 接 Restaurant Brain / RIP 只读；Host Bridge；tRPC `mOpsDiag` | ✅ |
+| **3** | 外采：`useLive` → live-market-evidence（点评/小红书检索） | ✅（可选开关） |
+| **4** | 接 Daily Cockpit：RIP 证据 → worldChanges → 今日雷达 | ✅（有证据才注入） |
 
 ---
 

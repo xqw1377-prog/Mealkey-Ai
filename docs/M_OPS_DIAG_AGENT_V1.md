@@ -7,7 +7,8 @@
 > **日期：** 2026-07-21  
 > **归属：** MealKey Agent Ecosystem（L3 Tool Agent）  
 > **权威挂载：** `docs/AUTHORITY.md` L0  
-> **配套：** `M_OPS_DIAG_UX_V1.md` · `M_OPS_DIAG_DATA_COLLECTION_V1.md` · `M_OPS_DIAG_DIAGNOSIS_MODEL_V1.md` · `MEALKEY_TOOL_AGENT_FRAMEWORK_V1.md` · `BUSINESS_SIGNAL_ENGINE_V1.md` · `FOUNDER_OS_VERTICAL_AGENT_MKINSIGHT_ADAPTER_V1.md` · `MEALKEY_RESTAURANT_BRAIN_V1.md` · `TODAY_RADAR_EXPERIENCE_V1.md`  
+> **配套：** `M_OPS_DIAG_UX_V1.md` · `M_OPS_DIAG_DATA_COLLECTION_V1.md` · `M_OPS_DIAG_DIAGNOSIS_MODEL_V1.md` · `MEALKEY_AGENT_PROTOCOL_V1.md` · `MEALKEY_TOOL_AGENT_FRAMEWORK_V1.md` · `BUSINESS_SIGNAL_ENGINE_V1.md` · `FOUNDER_OS_VERTICAL_AGENT_MKINSIGHT_ADAPTER_V1.md` · `MEALKEY_RESTAURANT_BRAIN_V1.md` · `TODAY_RADAR_EXPERIENCE_V1.md`  
+> **协议合规样板：** 本 Agent = Agent Protocol V1 第一个垂直验证件（接协议、不接库）  
 > **代码真源：** `@mealkey/m-ops-diag` · `packages/m-ops-diag` · Host `apps/web/src/server/services/m-ops-diag-client.ts`  
 > **冲突裁决：** 与本文冲突时，以本文 + `AUTHORITY.md` 为准
 

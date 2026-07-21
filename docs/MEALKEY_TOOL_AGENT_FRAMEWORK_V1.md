@@ -3,15 +3,17 @@
 > **状态：正式冻结（Freeze）**  
 > **日期：** 2026-07-21  
 > **权威挂载：** `docs/AUTHORITY.md` L0  
-> **配套：** `MEALKEY_AGENT_ECOSYSTEM_MAP_V2.md` · `FOUNDER_OS_VERTICAL_AGENT_MKINSIGHT_ADAPTER_V1.md` · `MEALKEY_FOUNDER_OS_PERMISSION_MODEL_V2.md` · `BUSINESS_SIGNAL_ENGINE_V1.md`  
+> **配套：** `MEALKEY_AGENT_PROTOCOL_V1.md` · `MEALKEY_AGENT_ECOSYSTEM_MAP_V2.md` · `FOUNDER_OS_VERTICAL_AGENT_MKINSIGHT_ADAPTER_V1.md` · `MEALKEY_FOUNDER_OS_PERMISSION_MODEL_V2.md` · `BUSINESS_SIGNAL_ENGINE_V1.md`  
 > **代码真源：** `@mealkey/tool-agent-kit` · `packages/agents/src/founder-os/vertical-mk-insight-adapter.ts`  
-> **冲突裁决：** 与本文冲突时，以本文 + `AUTHORITY.md` 为准
+> **冲突裁决：** 生态第三方接入以 `MEALKEY_AGENT_PROTOCOL_V1` 为准；L3 四件套/四 Ports 以本文为准；战略边界以 `AUTHORITY.md` 为准
 
 ---
 
 ## 0. 一句话
 
 > **约 100 个独立 Agent = 同一套 L3 框架上的可插拔工具；可拆分运行、可组合进 MealKey；永不升格为第五顾问席。**
+
+> **生态上层：** `MEALKEY_AGENT_PROTOCOL_V1` = OS 接入契约（含第三方）；本文 = 协议在内置 L3 上的工程具体化。
 
 MealKey 不是「不断加聊天机器人」，而是：
 

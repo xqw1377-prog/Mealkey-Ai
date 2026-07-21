@@ -4,7 +4,7 @@ import {
   M_OPS_DIAG_PRODUCT_NAME,
 } from "./contracts";
 
-/** Tool Agent 身份证 — 服从 MEALKEY_TOOL_AGENT_FRAMEWORK_V1 */
+/** Tool Agent 身份证 — 服从 MEALKEY_AGENT_PROTOCOL_V1 + TOOL_AGENT_FRAMEWORK_V1 */
 export const mOpsDiagManifest: ToolAgentManifest = {
   id: M_OPS_DIAG_AGENT_ID,
   name: M_OPS_DIAG_PRODUCT_NAME,

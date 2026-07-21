@@ -36,7 +36,7 @@ export function LearningQueueTable({
 }: LearningQueueTableProps) {
   return (
     <>
-      <div className="hidden xl:block overflow-x-auto rounded-[16px] border border-[rgba(24,24,23,0.06)] bg-white">
+      <div className="hidden lg:block overflow-x-auto rounded-[16px] border border-[rgba(24,24,23,0.06)] bg-white">
         <table className="min-w-full border-collapse text-left text-[13px] text-[#202124]">
           <thead className="bg-[#F7F5EF] text-[11px] uppercase tracking-[0.08em] text-[#6f747b]">
             <tr>
@@ -99,7 +99,7 @@ export function LearningQueueTable({
           </tbody>
         </table>
       </div>
-      <div className="space-y-3 xl:hidden">
+      <div className="space-y-3 lg:hidden">
         {rows.map((item) => (
           <button
             key={item.id}
@@ -123,7 +123,7 @@ export function LearningQueueTable({
               </span>
             </div>
             <p className="mt-3 text-[12px] leading-5 text-[#6f747b]">
-              评分 {formatScore(item.score)} · 结论 {item.verdict ?? "--"} · 已等待 {item.agingDays} 天
+              评分 {formatScore(item.score)} · 结论 {item.verdict ?? "--"} · 已等待 {item.agingDays} 天 · {item.status}
             </p>
           </button>
         ))}

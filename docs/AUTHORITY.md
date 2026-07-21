@@ -11,7 +11,7 @@
 
 | 层级 | 文件 / 代码 | 管什么 | 可否改老板路径 |
 |------|-------------|--------|----------------|
-| **L0 战略收口** | `docs/MEALKEY_CORE_PRODUCT_LOOP_V1.md` · `docs/MEALKEY_MVP_90DAY_ROADMAP_V1.md` · `docs/MEALKEY_COMMERCIAL_DELIVERY_CHECKLIST_V1.md` | 产品一句·五层架构·日活判断书·停扩闸门·MVP 唯一场景·90天·**商业交付 env/验收** | **否** — 飞轮未验证前禁止新 Agent/新层；收费前必须过交付清单 |
+| **L0 战略收口** | `docs/MEALKEY_CORE_PRODUCT_LOOP_V1.md` · `docs/MEALKEY_MVP_90DAY_ROADMAP_V1.md` · `docs/MEALKEY_COMMERCIAL_DELIVERY_CHECKLIST_V1.md` · `docs/MEALKEY_PRODUCTION_DEPLOY_V1.md` | 产品一句·五层架构·日活判断书·停扩闸门·MVP 唯一场景·90天·**商业交付 env/验收**·**生产部署/域名/冒烟** | **否** — 飞轮未验证前禁止新 Agent/新层；收费前必须过交付清单；上线按部署手册 |
 | **L0 决策壁垒** | `docs/MEALKEY_DECISION_INTELLIGENCE_ENGINE_V1.md` | DIE 五对象（Signal/Case/Context/Option/Learning）· 11 步 Pipeline · Confidence Score · Brain/M-INTEL/常委/M-EXEC 接口 | **否** — 决策形成系统；≠聊天/报表；Case.id≡MKDecision.id |
 | **L0 决策证据** | `docs/MEALKEY_M_INTEL_V1.md` | M-INTEL = **Decision Evidence Engine**；State；Event→Evidence；Signal | **否** — 非爬虫/非顾问席；只产 Evidence |
 | **L1 决策上下文** | `docs/MEALKEY_DECISION_CONTEXT_V1.md` | Context 资产树；Evidence / Score / 常委输入 | **否** — 挂 Case；非 Prompt；禁止私编事实 |
@@ -45,6 +45,12 @@
 | **L0 Agent 7 日上手** | `docs/MEALKEY_AGENT_DEVELOPER_ONBOARDING_7DAY_V1.md` | Day0–7：Hello Context → Skill → Ingress → Manifest → UI → Handoff → 审核包 | 可加深样例；不得改外接硬闸门 |
 | **L0 Agent UI 框架** | `docs/MEALKEY_AGENT_UI_FRAMEWORK_V1.md` | **规范在 OS、实现外置**：双表面 · 五段旅程 · 视觉禁令 · Handoff；Core 只做今日/决策室投影 | **否** — 禁止在 apps/web 新建垂直 Agent 业务站 |
 | **L0 Agent Protocol** | `docs/MEALKEY_AGENT_PROTOCOL_V1.md` | **生态壁垒/能力标准化**：五层模型 · Capability Registry · Decision Skill · Insight L1–L5 · 五维质量 · Memory 隔离 · 能力市场 | **否** — 禁直连库/私有永久记忆；默认≤L3；禁无限自造能力；Store 服从 MVP 停扩 |
+| **L0 Agent Marketplace PRD** | `docs/MEALKEY_AGENT_MARKETPLACE_PRD_V1.md` | **开放平台产品**：`mealkey.cn` Store · 安装授权 · 分成 · 申请上架 | **否** — 安装≠下载包；API 以 External Interface 为准；禁伪 `/agent/run` 平行契约 |
+| **L0 Developer Portal** | `docs/MEALKEY_DEVELOPER_PORTAL_V1.md` | **开发者操作系统**：`developers.mealkey.cn` · 7 日路径 · Console 四步 · 三类用户 · P0–P2 | **否** — 停扩协议；文档投影不得分叉；管理员审核在 platform admin |
+| **L0 Developer Portal UI/UX** | `docs/MEALKEY_DEVELOPER_PORTAL_UI_UX_V1.md` | **第一工作台构图**：Landing · Start · 创建 · Sandbox · 提交 · Preview · Docs 三区 | **否** — P0.1/P1 服从本文；拒收码不改；禁紫套模板 |
+| **L0 Developer Portal IA/数据** | `docs/MEALKEY_DEVELOPER_PORTAL_IA_DATA_MODEL_V1.md` | **工程底座**：路由 IA · DeveloperAccount · Application · Version · SandboxRun · ReviewTask · Listing/分成连接 · 状态机 | **否** — 不污染 Brain/Decision；Gateway 唯一运行时；Capability 仅 Registry |
+| **L0 开发者宪法索引** | `docs/MEALKEY_AGENT_DEVELOPER_CONSTITUTION_INDEX_V1.md` | **第三方可读目录**：Manifest · Context · Ingress · Scope · Sandbox · Version · 提审清单 | **否** — 禁止新字段；冲突以 Protocol / External Interface 为准 |
+| **L0 M-OPS Reference** | `docs/M_OPS_AGENT_AS_REFERENCE_IMPLEMENTATION_V1.md` · 仓 `C:\Users\xqw13\M-OPS-Agent` | **生态 Hello World**：用户产品 · 开发模板 · 教材；实现外置 | **否** — 禁止诊断引擎回流 Core |
 | **L0 Tool Agent 框架** | `docs/MEALKEY_TOOL_AGENT_FRAMEWORK_V1.md` · `@mealkey/tool-agent-kit` · `tool-agents/` | **~100 L3 可拆分可组合**：四件套 · 四 Ports · Registry · Compose · 上架闸门 | **否** — 只扩 L3；禁止升格 L1 / 第七 Runtime；MVP 未过前批量上架仍受停扩闸门 |
 | **L0 经营诊断（外置指针）** | `docs/M_OPS_DIAG_EXTERNAL_POINTER_V1.md` · 仓 `C:\Users\xqw13\M-OPS-Agent` | 产品/引擎/UI/文档均在外置仓；Core 仅 Gateway + Ingress→今日 | **否** — 禁止把诊断引擎/UI 恢复进 `packages/` 或 `apps/web` 业务站 |
 | **L0 治理协议细节** | `docs/COUNCIL_PROTOCOL_V1_FREEZE.md` | 常委角色 / 投票 / veto / 会议对象 | 可加深实现；接口语义不回滚 |
@@ -96,14 +102,21 @@
 13l. **MealKey 核心产品闭环 V1 + MVP 90天路线已最终冻结**（2026-07-21）：定位=餐饮经营能力增长系统；五层 Identity→Brain→Signal→Decision→Exec/Evolution；停扩 Agent；唯一场景=单店老板日活；90天 Phase A 生命体征 / B 闭环咬合 / C 种子验证。真源：`MEALKEY_CORE_PRODUCT_LOOP_V1.md` · `MEALKEY_MVP_90DAY_ROADMAP_V1.md`。  
 13m. **MVP 闭环断点工程收口**（2026-07-21）：批准→自动 M-EXEC；D+7 复盘进雷达；restaurantContext→Signal；雷达证据进 Brief；外采诚实空态。测试 `mvp-loop-landing.test.ts`。  
 13n. **一期上线就绪审计 + P0 加固**（2026-07-21）：auto-exec 失败可感知；Council 开会预创建 DRAFT → Case.id≡MKDecision.id；D+7 双源（profile+Prisma）；confirmFromMeeting 写 Evolution。审计 Canvas：`mvp-commercial-readiness-audit`。  
-13o. **商业交付收口**（2026-07-21）：auto-exec 集成测；Promote Gate 单轨；周经营 CSV 上传→Signal；验收增加 `gate.council_stub` / `ops.external_intel`；交付清单 `MEALKEY_COMMERCIAL_DELIVERY_CHECKLIST_V1.md`。**收费 Go = Acceptance `readyForProduction` + 清单手测。**
+13o. **商业交付收口**（2026-07-21）：auto-exec 集成测；Promote Gate 单轨；周经营 CSV 上传→Signal；验收增加 `gate.council_stub` / `ops.external_intel`；交付清单 `MEALKEY_COMMERCIAL_DELIVERY_CHECKLIST_V1.md`。**收费 Go = Acceptance `readyForProduction` + 清单手测。**  
+13o2. **生产部署手册 V1**（2026-07-21）：Vercel · Postgres · S3 · Upstash · Cron · Gateway/KEK fail-closed · 域名与冒烟。真源 `MEALKEY_PRODUCTION_DEPLOY_V1.md`（配合 `POSTGRES.md` / `BLOB_STORAGE.md`）。
 13p. **经营分析中间层冻结**（2026-07-21）：雷达 ≠ 经营分析 ≠ 决策室；标准输出模板+视觉结构 `BUSINESS_ANALYSIS_OUTPUT_TEMPLATE_V1.md`；路由 `/projects/[id]/business-analysis`；决策室文案「分析已就绪」。**禁止**「今日已采齐」冒充采集、禁止「进入经营分析」直跳决策室。
 13q. **采集质量门禁**（2026-07-21）：公开检索/证据片段拒绝百科字源等非经营文本（`evidence-quality.ts`）；雷达 Signal 携带五层并默认 href→经营分析；脏证据不进分析正文。
 13r. **移动端三易三层 IA**（2026-07-21）：易学/易做/易管；全站信息深度 ≤3；今日=经营动态+值得关注+决策室入口；账户在「我的」。真源 `MOBILE_THREE_EASY_IA_V1.md`。
 13s. **拍板唯一场**（2026-07-21）：老板拍板/签字**仅决策室**；今日禁止拍板主 CTA，只允许「进入决策室」。
 13t. **变化解读主页面化**（2026-07-21）：取消经营分析二级页；今日=动态模块栏（门店/舆情/推进中）+ 本页变化解读主位；旧 `/business-analysis` 重定向 `/dashboard`。
 13u. **Tool Agent Framework V1 已冻结**（2026-07-21）：支撑约 100 个独立 L3；单元=Manifest+Engine+Ports+Bridge；合法出口仅 Signal/Insight/Work/Gap；代码 `@mealkey/tool-agent-kit`；引擎目录 `tool-agents/`。真源 `MEALKEY_TOOL_AGENT_FRAMEWORK_V1.md`。批量上架仍服从 MVP 停扩闸门。  
-13aa. **MealKey Agent Protocol V1.1 已冻结**（2026-07-21）：五层模型；Capability Registry；Decision Skill；Insight L1–L5；五维质量；Memory 隔离；能力市场。真源 `MEALKEY_AGENT_PROTOCOL_V1.md`。  
+13aa. **MealKey Agent Protocol V1.2 已冻结**（2026-07-21）：五层模型；Capability Registry；Decision Skill；Insight L1–L5；五维质量；Memory 隔离；能力市场；与 Marketplace PRD / M-OPS Reference 三文档收口。真源 `MEALKEY_AGENT_PROTOCOL_V1.md`。  
+13aa2. **MealKey Agent Marketplace PRD V1 已冻结**（2026-07-21）：开放平台产品；官网 `mealkey.cn`；Store · 安装授权 · 70/30 分成示意。真源 `MEALKEY_AGENT_MARKETPLACE_PRD_V1.md`。  
+13aa2b. **MealKey Developer Portal V1.1 已冻结**（2026-07-21）：开发者操作系统；7 日理解→上架；三类用户；Console 四步；Developer Kit。真源 `MEALKEY_DEVELOPER_PORTAL_V1.md`。  
+13aa2b2. **Developer Portal UI/UX V1.1 已冻结**（2026-07-21）：第一工作台；Hero 左右；Why 三卡；Start 三入口；Sandbox Playground。真源 `MEALKEY_DEVELOPER_PORTAL_UI_UX_V1.md`。  
+13aa2b3. **Developer Portal IA + 数据模型 V1 已冻结**（2026-07-21）：路由；五对象；lifecycle 状态机；Listing/RevenueShare 连接；`/api/developers/v1`。真源 `MEALKEY_DEVELOPER_PORTAL_IA_DATA_MODEL_V1.md`。下一刀 P0.1 + Prisma 草案 / P1 Console。  
+13aa2c. **第三方可读宪法索引 V1 已冻结**（2026-07-21）：Protocol + External Interface 目录/对照/提审清单；无新字段。真源 `MEALKEY_AGENT_DEVELOPER_CONSTITUTION_INDEX_V1.md`。  
+13aa3. **M-OPS 作为生态 Reference Implementation V1 已冻结**（2026-07-21）：Hello World 三重身份。真源 `M_OPS_AGENT_AS_REFERENCE_IMPLEMENTATION_V1.md`。  
 13ab. **Agent Architecture Principle V1 已冻结**（2026-07-21）：MealKey 不开发功能、定义能力标准；Agent 独立创造能力经协议进大脑；Core/Agent/UI 三边界；四席留 Core。真源 `MEALKEY_AGENT_ARCHITECTURE_PRINCIPLE_V1.md`。  
 13ac. **Agent Platform Architecture V1.1 已冻结**（2026-07-21）：四基建；Lifecycle；Runtime 五件套；Context Manager；Orchestra；四独立。真源 `MEALKEY_AGENT_PLATFORM_ARCHITECTURE_V1.md`。  
 13ad. **Agent 外接硬闸门**（2026-07-21）：**MealKey 仓库禁止新增任何 Agent**；接口 `MEALKEY_AGENT_EXTERNAL_INTERFACE_V1.md`；UI 框架 `MEALKEY_AGENT_UI_FRAMEWORK_V1.md`（实现外置）。  
@@ -111,9 +124,7 @@
 13af. **Agent Gateway Host P0**（2026-07-21）：`/api/v1/gateway/*`；侧车 `profile.agentGatewayIngress`。  
 13ag–13ah. **外置诊断落地**后清理（2026-07-21）：独立仓 `C:\Users\xqw13\M-OPS-Agent`；Core 删除 `packages/m-ops-diag`、`mealkey-agents/*`、进程内 bridge/router；产品文档迁至外置仓 `docs/`；MealKey 仅留 `M_OPS_DIAG_EXTERNAL_POINTER_V1.md`。  
 13v. **M-OPS-DIAG** 产品冻结原文已迁至外置仓 `M-OPS-Agent/docs/`；MealKey 指针 `M_OPS_DIAG_EXTERNAL_POINTER_V1.md`。  
-13x. **M-OPS-DIAG UX Freeze V1.0**（2026-07-21）：壁垒=「它真的懂我的店」；First Moment≤60s；采集过程感；经营画像一句话；顾客声音墙；六观察面；今日扫描卡；V1 仅 5 页。真源 `M_OPS_DIAG_UX_V1.md`。  
-13y. **M-OPS-DIAG Data Collection Freeze V1.0**（2026-07-21）：最少主动采集+最大外部感知+持续学习；Identity/Business Fact/Consumer 三层；必采 10 事实；Evidence Card 与权重表；日扫四域；Brain 落点树。真源 `M_OPS_DIAG_DATA_COLLECTION_V1.md`。  
-13z. **M-OPS-DIAG Diagnosis Model Freeze V1.1**（2026-07-21）：Restaurant Health Model；E→F→P→Diagnosis→S；Customer/Product/Competition/Operation/Brand Position/Growth；Business Impact Score；经营诊断卡；V1 仅 6 个高价值判断。真源 `M_OPS_DIAG_DIAGNOSIS_MODEL_V1.md`。**下一刀 = 《餐厅经营诊断系统 V1 AI 推理架构设计》**。  
+13x–13z. **M-OPS-DIAG UX / 采集 / 诊断模型** 原文已迁至外置仓 `C:\Users\xqw13\M-OPS-Agent\docs\`（`M_OPS_DIAG_UX_V1` · `M_OPS_DIAG_DATA_COLLECTION_V1` · `M_OPS_DIAG_DIAGNOSIS_MODEL_V1`）。MealKey 仅保留指针 `M_OPS_DIAG_EXTERNAL_POINTER_V1.md`，禁止把诊断产品文档回流本仓。  
 
 13w. **GitHub 真源 + 仓库清理**（2026-07-21）：远端 `mealkey-agent-1` 为唯一真源；禁止本地长期堆积未推送；`.vercel/` / `*.tsbuildinfo` 出库；Cursor 规则 `tool-agent-framework-v1` · `github-source-of-truth`；说明 `REPO_SYNC_AND_TOOL_AGENT_RULES_V1.md`。  
 18. **Experience Blueprint P0–P5 工程已收口（2026-07-19）**：契约 · Candidate/Inbox · Challenge/Readiness · 经营决策习惯 · M-INTEL 锚点门禁均已接线；真源 `MEALKEY_DECISION_EXPERIENCE_ENGINEERING_BLUEPRINT_V1.md`。黄金路径手测仍有效。**2026-07-21 起主线收束为 MVP 90天飞轮**（不再并行开新能力专题）。禁止 Scan 滥造 Decision、无锚点装懂外部、对外「决策人格」字样。  

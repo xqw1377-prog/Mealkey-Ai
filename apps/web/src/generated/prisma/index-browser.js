@@ -990,6 +990,80 @@ exports.Prisma.StrategyDocumentScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.DeveloperAccountScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  type: 'type',
+  displayName: 'displayName',
+  legalName: 'legalName',
+  website: 'website',
+  contactEmail: 'contactEmail',
+  direction: 'direction',
+  status: 'status',
+  verifiedAt: 'verifiedAt',
+  metadata: 'metadata',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.PartnerAgentApplicationScalarFieldEnum = {
+  id: 'id',
+  developerAccountId: 'developerAccountId',
+  agentId: 'agentId',
+  name: 'name',
+  category: 'category',
+  capabilityIds: 'capabilityIds',
+  runtimeMode: 'runtimeMode',
+  endpointUrl: 'endpointUrl',
+  webhookUrl: 'webhookUrl',
+  lifecycleStatus: 'lifecycleStatus',
+  currentVersionId: 'currentVersionId',
+  listingId: 'listingId',
+  agentProductId: 'agentProductId',
+  qualityScore: 'qualityScore',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.PartnerAgentDraftVersionScalarFieldEnum = {
+  id: 'id',
+  applicationId: 'applicationId',
+  version: 'version',
+  manifestJson: 'manifestJson',
+  skillPackageJson: 'skillPackageJson',
+  releaseChannel: 'releaseChannel',
+  demoUrl: 'demoUrl',
+  privacyNotes: 'privacyNotes',
+  pricingJson: 'pricingJson',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.PartnerSandboxRunScalarFieldEnum = {
+  id: 'id',
+  applicationId: 'applicationId',
+  versionId: 'versionId',
+  fixtureId: 'fixtureId',
+  status: 'status',
+  checksJson: 'checksJson',
+  qualityReportJson: 'qualityReportJson',
+  logText: 'logText',
+  invokeId: 'invokeId',
+  startedAt: 'startedAt',
+  finishedAt: 'finishedAt'
+};
+
+exports.Prisma.PartnerReviewTaskScalarFieldEnum = {
+  id: 'id',
+  applicationId: 'applicationId',
+  versionId: 'versionId',
+  status: 'status',
+  checklistJson: 'checklistJson',
+  reviewerUserId: 'reviewerUserId',
+  decisionNote: 'decisionNote',
+  submittedAt: 'submittedAt',
+  resolvedAt: 'resolvedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -1060,7 +1134,12 @@ exports.Prisma.ModelName = {
   Report: 'Report',
   OwnerCapability: 'OwnerCapability',
   CognitionAssessment: 'CognitionAssessment',
-  StrategyDocument: 'StrategyDocument'
+  StrategyDocument: 'StrategyDocument',
+  DeveloperAccount: 'DeveloperAccount',
+  PartnerAgentApplication: 'PartnerAgentApplication',
+  PartnerAgentDraftVersion: 'PartnerAgentDraftVersion',
+  PartnerSandboxRun: 'PartnerSandboxRun',
+  PartnerReviewTask: 'PartnerReviewTask'
 };
 
 /**

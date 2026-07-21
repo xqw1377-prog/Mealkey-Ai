@@ -47,7 +47,7 @@ export const mmktBlueprint: AgentConsultingBlueprint = {
   agentId: "m-mkt",
   productName: "市场机会",
   committeeName: "市场顾问",
-  reportTitle: "市场机会报告",
+  reportTitle: "市场机会战略报告",
   stepLabels: {
     [SixStepId.INTAKE]: { no: "01", title: "说清楚", feel: "你想判断什么" },
     [SixStepId.RESEARCH]: { no: "02", title: "调研", feel: "先看市场事实" },

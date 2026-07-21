@@ -309,6 +309,31 @@ export type CognitionAssessment = $Result.DefaultSelection<Prisma.$CognitionAsse
  * 
  */
 export type StrategyDocument = $Result.DefaultSelection<Prisma.$StrategyDocumentPayload>
+/**
+ * Model DeveloperAccount
+ * 
+ */
+export type DeveloperAccount = $Result.DefaultSelection<Prisma.$DeveloperAccountPayload>
+/**
+ * Model PartnerAgentApplication
+ * 
+ */
+export type PartnerAgentApplication = $Result.DefaultSelection<Prisma.$PartnerAgentApplicationPayload>
+/**
+ * Model PartnerAgentDraftVersion
+ * 
+ */
+export type PartnerAgentDraftVersion = $Result.DefaultSelection<Prisma.$PartnerAgentDraftVersionPayload>
+/**
+ * Model PartnerSandboxRun
+ * 
+ */
+export type PartnerSandboxRun = $Result.DefaultSelection<Prisma.$PartnerSandboxRunPayload>
+/**
+ * Model PartnerReviewTask
+ * 
+ */
+export type PartnerReviewTask = $Result.DefaultSelection<Prisma.$PartnerReviewTaskPayload>
 
 /**
  * ##  Prisma Client ʲˢ
@@ -1022,6 +1047,56 @@ export class PrismaClient<
     * ```
     */
   get strategyDocument(): Prisma.StrategyDocumentDelegate<ExtArgs>;
+
+  /**
+   * `prisma.developerAccount`: Exposes CRUD operations for the **DeveloperAccount** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more DeveloperAccounts
+    * const developerAccounts = await prisma.developerAccount.findMany()
+    * ```
+    */
+  get developerAccount(): Prisma.DeveloperAccountDelegate<ExtArgs>;
+
+  /**
+   * `prisma.partnerAgentApplication`: Exposes CRUD operations for the **PartnerAgentApplication** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more PartnerAgentApplications
+    * const partnerAgentApplications = await prisma.partnerAgentApplication.findMany()
+    * ```
+    */
+  get partnerAgentApplication(): Prisma.PartnerAgentApplicationDelegate<ExtArgs>;
+
+  /**
+   * `prisma.partnerAgentDraftVersion`: Exposes CRUD operations for the **PartnerAgentDraftVersion** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more PartnerAgentDraftVersions
+    * const partnerAgentDraftVersions = await prisma.partnerAgentDraftVersion.findMany()
+    * ```
+    */
+  get partnerAgentDraftVersion(): Prisma.PartnerAgentDraftVersionDelegate<ExtArgs>;
+
+  /**
+   * `prisma.partnerSandboxRun`: Exposes CRUD operations for the **PartnerSandboxRun** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more PartnerSandboxRuns
+    * const partnerSandboxRuns = await prisma.partnerSandboxRun.findMany()
+    * ```
+    */
+  get partnerSandboxRun(): Prisma.PartnerSandboxRunDelegate<ExtArgs>;
+
+  /**
+   * `prisma.partnerReviewTask`: Exposes CRUD operations for the **PartnerReviewTask** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more PartnerReviewTasks
+    * const partnerReviewTasks = await prisma.partnerReviewTask.findMany()
+    * ```
+    */
+  get partnerReviewTask(): Prisma.PartnerReviewTaskDelegate<ExtArgs>;
 }
 
 export namespace Prisma {
@@ -1521,7 +1596,12 @@ export namespace Prisma {
     Report: 'Report',
     OwnerCapability: 'OwnerCapability',
     CognitionAssessment: 'CognitionAssessment',
-    StrategyDocument: 'StrategyDocument'
+    StrategyDocument: 'StrategyDocument',
+    DeveloperAccount: 'DeveloperAccount',
+    PartnerAgentApplication: 'PartnerAgentApplication',
+    PartnerAgentDraftVersion: 'PartnerAgentDraftVersion',
+    PartnerSandboxRun: 'PartnerSandboxRun',
+    PartnerReviewTask: 'PartnerReviewTask'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -1537,7 +1617,7 @@ export namespace Prisma {
 
   export type TypeMap<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, ClientOptions = {}> = {
     meta: {
-      modelProps: "user" | "passwordResetToken" | "owner" | "project" | "restaurant" | "restaurantProfile" | "brandProfile" | "businessProfile" | "capabilityProfile" | "founderProfile" | "decisionRecord" | "actionRecord" | "brainLearning" | "brainEvent" | "evolutionState" | "memory" | "industryInsight" | "decision" | "decisionEvent" | "cognitiveSession" | "cognitiveTrace" | "evidenceReference" | "confidenceModel" | "mission" | "agentRun" | "capabilityModule" | "knowledgeNode" | "knowledgeCategory" | "agentProduct" | "platformEvent" | "agentTrace" | "agentOutcome" | "usageRecord" | "organization" | "organizationMember" | "billingAccount" | "plan" | "subscription" | "creditLedger" | "invoice" | "paymentOrder" | "userWallet" | "walletLedger" | "capabilityPrice" | "consumptionRecord" | "agentEntitlement" | "agentListing" | "revenueShare" | "evaluationResult" | "learningRecord" | "knowledgeEdge" | "conversation" | "message" | "assetCategory" | "asset" | "report" | "ownerCapability" | "cognitionAssessment" | "strategyDocument"
+      modelProps: "user" | "passwordResetToken" | "owner" | "project" | "restaurant" | "restaurantProfile" | "brandProfile" | "businessProfile" | "capabilityProfile" | "founderProfile" | "decisionRecord" | "actionRecord" | "brainLearning" | "brainEvent" | "evolutionState" | "memory" | "industryInsight" | "decision" | "decisionEvent" | "cognitiveSession" | "cognitiveTrace" | "evidenceReference" | "confidenceModel" | "mission" | "agentRun" | "capabilityModule" | "knowledgeNode" | "knowledgeCategory" | "agentProduct" | "platformEvent" | "agentTrace" | "agentOutcome" | "usageRecord" | "organization" | "organizationMember" | "billingAccount" | "plan" | "subscription" | "creditLedger" | "invoice" | "paymentOrder" | "userWallet" | "walletLedger" | "capabilityPrice" | "consumptionRecord" | "agentEntitlement" | "agentListing" | "revenueShare" | "evaluationResult" | "learningRecord" | "knowledgeEdge" | "conversation" | "message" | "assetCategory" | "asset" | "report" | "ownerCapability" | "cognitionAssessment" | "strategyDocument" | "developerAccount" | "partnerAgentApplication" | "partnerAgentDraftVersion" | "partnerSandboxRun" | "partnerReviewTask"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -5671,6 +5751,356 @@ export namespace Prisma {
           }
         }
       }
+      DeveloperAccount: {
+        payload: Prisma.$DeveloperAccountPayload<ExtArgs>
+        fields: Prisma.DeveloperAccountFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.DeveloperAccountFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DeveloperAccountPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.DeveloperAccountFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DeveloperAccountPayload>
+          }
+          findFirst: {
+            args: Prisma.DeveloperAccountFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DeveloperAccountPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.DeveloperAccountFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DeveloperAccountPayload>
+          }
+          findMany: {
+            args: Prisma.DeveloperAccountFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DeveloperAccountPayload>[]
+          }
+          create: {
+            args: Prisma.DeveloperAccountCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DeveloperAccountPayload>
+          }
+          createMany: {
+            args: Prisma.DeveloperAccountCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.DeveloperAccountCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DeveloperAccountPayload>[]
+          }
+          delete: {
+            args: Prisma.DeveloperAccountDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DeveloperAccountPayload>
+          }
+          update: {
+            args: Prisma.DeveloperAccountUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DeveloperAccountPayload>
+          }
+          deleteMany: {
+            args: Prisma.DeveloperAccountDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.DeveloperAccountUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.DeveloperAccountUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DeveloperAccountPayload>
+          }
+          aggregate: {
+            args: Prisma.DeveloperAccountAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateDeveloperAccount>
+          }
+          groupBy: {
+            args: Prisma.DeveloperAccountGroupByArgs<ExtArgs>
+            result: $Utils.Optional<DeveloperAccountGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.DeveloperAccountCountArgs<ExtArgs>
+            result: $Utils.Optional<DeveloperAccountCountAggregateOutputType> | number
+          }
+        }
+      }
+      PartnerAgentApplication: {
+        payload: Prisma.$PartnerAgentApplicationPayload<ExtArgs>
+        fields: Prisma.PartnerAgentApplicationFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.PartnerAgentApplicationFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PartnerAgentApplicationPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.PartnerAgentApplicationFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PartnerAgentApplicationPayload>
+          }
+          findFirst: {
+            args: Prisma.PartnerAgentApplicationFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PartnerAgentApplicationPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.PartnerAgentApplicationFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PartnerAgentApplicationPayload>
+          }
+          findMany: {
+            args: Prisma.PartnerAgentApplicationFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PartnerAgentApplicationPayload>[]
+          }
+          create: {
+            args: Prisma.PartnerAgentApplicationCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PartnerAgentApplicationPayload>
+          }
+          createMany: {
+            args: Prisma.PartnerAgentApplicationCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.PartnerAgentApplicationCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PartnerAgentApplicationPayload>[]
+          }
+          delete: {
+            args: Prisma.PartnerAgentApplicationDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PartnerAgentApplicationPayload>
+          }
+          update: {
+            args: Prisma.PartnerAgentApplicationUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PartnerAgentApplicationPayload>
+          }
+          deleteMany: {
+            args: Prisma.PartnerAgentApplicationDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.PartnerAgentApplicationUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.PartnerAgentApplicationUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PartnerAgentApplicationPayload>
+          }
+          aggregate: {
+            args: Prisma.PartnerAgentApplicationAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregatePartnerAgentApplication>
+          }
+          groupBy: {
+            args: Prisma.PartnerAgentApplicationGroupByArgs<ExtArgs>
+            result: $Utils.Optional<PartnerAgentApplicationGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.PartnerAgentApplicationCountArgs<ExtArgs>
+            result: $Utils.Optional<PartnerAgentApplicationCountAggregateOutputType> | number
+          }
+        }
+      }
+      PartnerAgentDraftVersion: {
+        payload: Prisma.$PartnerAgentDraftVersionPayload<ExtArgs>
+        fields: Prisma.PartnerAgentDraftVersionFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.PartnerAgentDraftVersionFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PartnerAgentDraftVersionPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.PartnerAgentDraftVersionFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PartnerAgentDraftVersionPayload>
+          }
+          findFirst: {
+            args: Prisma.PartnerAgentDraftVersionFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PartnerAgentDraftVersionPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.PartnerAgentDraftVersionFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PartnerAgentDraftVersionPayload>
+          }
+          findMany: {
+            args: Prisma.PartnerAgentDraftVersionFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PartnerAgentDraftVersionPayload>[]
+          }
+          create: {
+            args: Prisma.PartnerAgentDraftVersionCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PartnerAgentDraftVersionPayload>
+          }
+          createMany: {
+            args: Prisma.PartnerAgentDraftVersionCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.PartnerAgentDraftVersionCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PartnerAgentDraftVersionPayload>[]
+          }
+          delete: {
+            args: Prisma.PartnerAgentDraftVersionDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PartnerAgentDraftVersionPayload>
+          }
+          update: {
+            args: Prisma.PartnerAgentDraftVersionUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PartnerAgentDraftVersionPayload>
+          }
+          deleteMany: {
+            args: Prisma.PartnerAgentDraftVersionDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.PartnerAgentDraftVersionUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.PartnerAgentDraftVersionUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PartnerAgentDraftVersionPayload>
+          }
+          aggregate: {
+            args: Prisma.PartnerAgentDraftVersionAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregatePartnerAgentDraftVersion>
+          }
+          groupBy: {
+            args: Prisma.PartnerAgentDraftVersionGroupByArgs<ExtArgs>
+            result: $Utils.Optional<PartnerAgentDraftVersionGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.PartnerAgentDraftVersionCountArgs<ExtArgs>
+            result: $Utils.Optional<PartnerAgentDraftVersionCountAggregateOutputType> | number
+          }
+        }
+      }
+      PartnerSandboxRun: {
+        payload: Prisma.$PartnerSandboxRunPayload<ExtArgs>
+        fields: Prisma.PartnerSandboxRunFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.PartnerSandboxRunFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PartnerSandboxRunPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.PartnerSandboxRunFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PartnerSandboxRunPayload>
+          }
+          findFirst: {
+            args: Prisma.PartnerSandboxRunFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PartnerSandboxRunPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.PartnerSandboxRunFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PartnerSandboxRunPayload>
+          }
+          findMany: {
+            args: Prisma.PartnerSandboxRunFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PartnerSandboxRunPayload>[]
+          }
+          create: {
+            args: Prisma.PartnerSandboxRunCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PartnerSandboxRunPayload>
+          }
+          createMany: {
+            args: Prisma.PartnerSandboxRunCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.PartnerSandboxRunCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PartnerSandboxRunPayload>[]
+          }
+          delete: {
+            args: Prisma.PartnerSandboxRunDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PartnerSandboxRunPayload>
+          }
+          update: {
+            args: Prisma.PartnerSandboxRunUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PartnerSandboxRunPayload>
+          }
+          deleteMany: {
+            args: Prisma.PartnerSandboxRunDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.PartnerSandboxRunUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.PartnerSandboxRunUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PartnerSandboxRunPayload>
+          }
+          aggregate: {
+            args: Prisma.PartnerSandboxRunAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregatePartnerSandboxRun>
+          }
+          groupBy: {
+            args: Prisma.PartnerSandboxRunGroupByArgs<ExtArgs>
+            result: $Utils.Optional<PartnerSandboxRunGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.PartnerSandboxRunCountArgs<ExtArgs>
+            result: $Utils.Optional<PartnerSandboxRunCountAggregateOutputType> | number
+          }
+        }
+      }
+      PartnerReviewTask: {
+        payload: Prisma.$PartnerReviewTaskPayload<ExtArgs>
+        fields: Prisma.PartnerReviewTaskFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.PartnerReviewTaskFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PartnerReviewTaskPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.PartnerReviewTaskFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PartnerReviewTaskPayload>
+          }
+          findFirst: {
+            args: Prisma.PartnerReviewTaskFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PartnerReviewTaskPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.PartnerReviewTaskFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PartnerReviewTaskPayload>
+          }
+          findMany: {
+            args: Prisma.PartnerReviewTaskFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PartnerReviewTaskPayload>[]
+          }
+          create: {
+            args: Prisma.PartnerReviewTaskCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PartnerReviewTaskPayload>
+          }
+          createMany: {
+            args: Prisma.PartnerReviewTaskCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.PartnerReviewTaskCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PartnerReviewTaskPayload>[]
+          }
+          delete: {
+            args: Prisma.PartnerReviewTaskDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PartnerReviewTaskPayload>
+          }
+          update: {
+            args: Prisma.PartnerReviewTaskUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PartnerReviewTaskPayload>
+          }
+          deleteMany: {
+            args: Prisma.PartnerReviewTaskDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.PartnerReviewTaskUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.PartnerReviewTaskUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$PartnerReviewTaskPayload>
+          }
+          aggregate: {
+            args: Prisma.PartnerReviewTaskAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregatePartnerReviewTask>
+          }
+          groupBy: {
+            args: Prisma.PartnerReviewTaskGroupByArgs<ExtArgs>
+            result: $Utils.Optional<PartnerReviewTaskGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.PartnerReviewTaskCountArgs<ExtArgs>
+            result: $Utils.Optional<PartnerReviewTaskCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -6314,6 +6744,86 @@ export namespace Prisma {
    */
   export type AssetCategoryCountOutputTypeCountAssetsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: AssetWhereInput
+  }
+
+
+  /**
+   * Count Type DeveloperAccountCountOutputType
+   */
+
+  export type DeveloperAccountCountOutputType = {
+    applications: number
+  }
+
+  export type DeveloperAccountCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    applications?: boolean | DeveloperAccountCountOutputTypeCountApplicationsArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * DeveloperAccountCountOutputType without action
+   */
+  export type DeveloperAccountCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DeveloperAccountCountOutputType
+     */
+    select?: DeveloperAccountCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * DeveloperAccountCountOutputType without action
+   */
+  export type DeveloperAccountCountOutputTypeCountApplicationsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: PartnerAgentApplicationWhereInput
+  }
+
+
+  /**
+   * Count Type PartnerAgentApplicationCountOutputType
+   */
+
+  export type PartnerAgentApplicationCountOutputType = {
+    versions: number
+    sandboxRuns: number
+    reviewTasks: number
+  }
+
+  export type PartnerAgentApplicationCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    versions?: boolean | PartnerAgentApplicationCountOutputTypeCountVersionsArgs
+    sandboxRuns?: boolean | PartnerAgentApplicationCountOutputTypeCountSandboxRunsArgs
+    reviewTasks?: boolean | PartnerAgentApplicationCountOutputTypeCountReviewTasksArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * PartnerAgentApplicationCountOutputType without action
+   */
+  export type PartnerAgentApplicationCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PartnerAgentApplicationCountOutputType
+     */
+    select?: PartnerAgentApplicationCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * PartnerAgentApplicationCountOutputType without action
+   */
+  export type PartnerAgentApplicationCountOutputTypeCountVersionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: PartnerAgentDraftVersionWhereInput
+  }
+
+  /**
+   * PartnerAgentApplicationCountOutputType without action
+   */
+  export type PartnerAgentApplicationCountOutputTypeCountSandboxRunsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: PartnerSandboxRunWhereInput
+  }
+
+  /**
+   * PartnerAgentApplicationCountOutputType without action
+   */
+  export type PartnerAgentApplicationCountOutputTypeCountReviewTasksArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: PartnerReviewTaskWhereInput
   }
 
 
@@ -67051,6 +67561,5192 @@ export namespace Prisma {
 
 
   /**
+   * Model DeveloperAccount
+   */
+
+  export type AggregateDeveloperAccount = {
+    _count: DeveloperAccountCountAggregateOutputType | null
+    _min: DeveloperAccountMinAggregateOutputType | null
+    _max: DeveloperAccountMaxAggregateOutputType | null
+  }
+
+  export type DeveloperAccountMinAggregateOutputType = {
+    id: string | null
+    userId: string | null
+    type: string | null
+    displayName: string | null
+    legalName: string | null
+    website: string | null
+    contactEmail: string | null
+    direction: string | null
+    status: string | null
+    verifiedAt: Date | null
+    metadata: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type DeveloperAccountMaxAggregateOutputType = {
+    id: string | null
+    userId: string | null
+    type: string | null
+    displayName: string | null
+    legalName: string | null
+    website: string | null
+    contactEmail: string | null
+    direction: string | null
+    status: string | null
+    verifiedAt: Date | null
+    metadata: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type DeveloperAccountCountAggregateOutputType = {
+    id: number
+    userId: number
+    type: number
+    displayName: number
+    legalName: number
+    website: number
+    contactEmail: number
+    direction: number
+    status: number
+    verifiedAt: number
+    metadata: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type DeveloperAccountMinAggregateInputType = {
+    id?: true
+    userId?: true
+    type?: true
+    displayName?: true
+    legalName?: true
+    website?: true
+    contactEmail?: true
+    direction?: true
+    status?: true
+    verifiedAt?: true
+    metadata?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type DeveloperAccountMaxAggregateInputType = {
+    id?: true
+    userId?: true
+    type?: true
+    displayName?: true
+    legalName?: true
+    website?: true
+    contactEmail?: true
+    direction?: true
+    status?: true
+    verifiedAt?: true
+    metadata?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type DeveloperAccountCountAggregateInputType = {
+    id?: true
+    userId?: true
+    type?: true
+    displayName?: true
+    legalName?: true
+    website?: true
+    contactEmail?: true
+    direction?: true
+    status?: true
+    verifiedAt?: true
+    metadata?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type DeveloperAccountAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which DeveloperAccount to aggregate.
+     */
+    where?: DeveloperAccountWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of DeveloperAccounts to fetch.
+     */
+    orderBy?: DeveloperAccountOrderByWithRelationInput | DeveloperAccountOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: DeveloperAccountWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` DeveloperAccounts from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` DeveloperAccounts.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned DeveloperAccounts
+    **/
+    _count?: true | DeveloperAccountCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: DeveloperAccountMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: DeveloperAccountMaxAggregateInputType
+  }
+
+  export type GetDeveloperAccountAggregateType<T extends DeveloperAccountAggregateArgs> = {
+        [P in keyof T & keyof AggregateDeveloperAccount]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateDeveloperAccount[P]>
+      : GetScalarType<T[P], AggregateDeveloperAccount[P]>
+  }
+
+
+
+
+  export type DeveloperAccountGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: DeveloperAccountWhereInput
+    orderBy?: DeveloperAccountOrderByWithAggregationInput | DeveloperAccountOrderByWithAggregationInput[]
+    by: DeveloperAccountScalarFieldEnum[] | DeveloperAccountScalarFieldEnum
+    having?: DeveloperAccountScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: DeveloperAccountCountAggregateInputType | true
+    _min?: DeveloperAccountMinAggregateInputType
+    _max?: DeveloperAccountMaxAggregateInputType
+  }
+
+  export type DeveloperAccountGroupByOutputType = {
+    id: string
+    userId: string | null
+    type: string
+    displayName: string
+    legalName: string | null
+    website: string | null
+    contactEmail: string
+    direction: string | null
+    status: string
+    verifiedAt: Date | null
+    metadata: string | null
+    createdAt: Date
+    updatedAt: Date
+    _count: DeveloperAccountCountAggregateOutputType | null
+    _min: DeveloperAccountMinAggregateOutputType | null
+    _max: DeveloperAccountMaxAggregateOutputType | null
+  }
+
+  type GetDeveloperAccountGroupByPayload<T extends DeveloperAccountGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<DeveloperAccountGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof DeveloperAccountGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], DeveloperAccountGroupByOutputType[P]>
+            : GetScalarType<T[P], DeveloperAccountGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type DeveloperAccountSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    type?: boolean
+    displayName?: boolean
+    legalName?: boolean
+    website?: boolean
+    contactEmail?: boolean
+    direction?: boolean
+    status?: boolean
+    verifiedAt?: boolean
+    metadata?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    applications?: boolean | DeveloperAccount$applicationsArgs<ExtArgs>
+    _count?: boolean | DeveloperAccountCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["developerAccount"]>
+
+  export type DeveloperAccountSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    type?: boolean
+    displayName?: boolean
+    legalName?: boolean
+    website?: boolean
+    contactEmail?: boolean
+    direction?: boolean
+    status?: boolean
+    verifiedAt?: boolean
+    metadata?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["developerAccount"]>
+
+  export type DeveloperAccountSelectScalar = {
+    id?: boolean
+    userId?: boolean
+    type?: boolean
+    displayName?: boolean
+    legalName?: boolean
+    website?: boolean
+    contactEmail?: boolean
+    direction?: boolean
+    status?: boolean
+    verifiedAt?: boolean
+    metadata?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type DeveloperAccountInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    applications?: boolean | DeveloperAccount$applicationsArgs<ExtArgs>
+    _count?: boolean | DeveloperAccountCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type DeveloperAccountIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+
+  export type $DeveloperAccountPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "DeveloperAccount"
+    objects: {
+      applications: Prisma.$PartnerAgentApplicationPayload<ExtArgs>[]
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      userId: string | null
+      type: string
+      displayName: string
+      legalName: string | null
+      website: string | null
+      contactEmail: string
+      direction: string | null
+      status: string
+      verifiedAt: Date | null
+      metadata: string | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["developerAccount"]>
+    composites: {}
+  }
+
+  type DeveloperAccountGetPayload<S extends boolean | null | undefined | DeveloperAccountDefaultArgs> = $Result.GetResult<Prisma.$DeveloperAccountPayload, S>
+
+  type DeveloperAccountCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<DeveloperAccountFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: DeveloperAccountCountAggregateInputType | true
+    }
+
+  export interface DeveloperAccountDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['DeveloperAccount'], meta: { name: 'DeveloperAccount' } }
+    /**
+     * Find zero or one DeveloperAccount that matches the filter.
+     * @param {DeveloperAccountFindUniqueArgs} args - Arguments to find a DeveloperAccount
+     * @example
+     * // Get one DeveloperAccount
+     * const developerAccount = await prisma.developerAccount.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends DeveloperAccountFindUniqueArgs>(args: SelectSubset<T, DeveloperAccountFindUniqueArgs<ExtArgs>>): Prisma__DeveloperAccountClient<$Result.GetResult<Prisma.$DeveloperAccountPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one DeveloperAccount that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {DeveloperAccountFindUniqueOrThrowArgs} args - Arguments to find a DeveloperAccount
+     * @example
+     * // Get one DeveloperAccount
+     * const developerAccount = await prisma.developerAccount.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends DeveloperAccountFindUniqueOrThrowArgs>(args: SelectSubset<T, DeveloperAccountFindUniqueOrThrowArgs<ExtArgs>>): Prisma__DeveloperAccountClient<$Result.GetResult<Prisma.$DeveloperAccountPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first DeveloperAccount that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DeveloperAccountFindFirstArgs} args - Arguments to find a DeveloperAccount
+     * @example
+     * // Get one DeveloperAccount
+     * const developerAccount = await prisma.developerAccount.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends DeveloperAccountFindFirstArgs>(args?: SelectSubset<T, DeveloperAccountFindFirstArgs<ExtArgs>>): Prisma__DeveloperAccountClient<$Result.GetResult<Prisma.$DeveloperAccountPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first DeveloperAccount that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DeveloperAccountFindFirstOrThrowArgs} args - Arguments to find a DeveloperAccount
+     * @example
+     * // Get one DeveloperAccount
+     * const developerAccount = await prisma.developerAccount.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends DeveloperAccountFindFirstOrThrowArgs>(args?: SelectSubset<T, DeveloperAccountFindFirstOrThrowArgs<ExtArgs>>): Prisma__DeveloperAccountClient<$Result.GetResult<Prisma.$DeveloperAccountPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more DeveloperAccounts that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DeveloperAccountFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all DeveloperAccounts
+     * const developerAccounts = await prisma.developerAccount.findMany()
+     * 
+     * // Get first 10 DeveloperAccounts
+     * const developerAccounts = await prisma.developerAccount.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const developerAccountWithIdOnly = await prisma.developerAccount.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends DeveloperAccountFindManyArgs>(args?: SelectSubset<T, DeveloperAccountFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DeveloperAccountPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a DeveloperAccount.
+     * @param {DeveloperAccountCreateArgs} args - Arguments to create a DeveloperAccount.
+     * @example
+     * // Create one DeveloperAccount
+     * const DeveloperAccount = await prisma.developerAccount.create({
+     *   data: {
+     *     // ... data to create a DeveloperAccount
+     *   }
+     * })
+     * 
+     */
+    create<T extends DeveloperAccountCreateArgs>(args: SelectSubset<T, DeveloperAccountCreateArgs<ExtArgs>>): Prisma__DeveloperAccountClient<$Result.GetResult<Prisma.$DeveloperAccountPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many DeveloperAccounts.
+     * @param {DeveloperAccountCreateManyArgs} args - Arguments to create many DeveloperAccounts.
+     * @example
+     * // Create many DeveloperAccounts
+     * const developerAccount = await prisma.developerAccount.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends DeveloperAccountCreateManyArgs>(args?: SelectSubset<T, DeveloperAccountCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many DeveloperAccounts and returns the data saved in the database.
+     * @param {DeveloperAccountCreateManyAndReturnArgs} args - Arguments to create many DeveloperAccounts.
+     * @example
+     * // Create many DeveloperAccounts
+     * const developerAccount = await prisma.developerAccount.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many DeveloperAccounts and only return the `id`
+     * const developerAccountWithIdOnly = await prisma.developerAccount.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends DeveloperAccountCreateManyAndReturnArgs>(args?: SelectSubset<T, DeveloperAccountCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DeveloperAccountPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a DeveloperAccount.
+     * @param {DeveloperAccountDeleteArgs} args - Arguments to delete one DeveloperAccount.
+     * @example
+     * // Delete one DeveloperAccount
+     * const DeveloperAccount = await prisma.developerAccount.delete({
+     *   where: {
+     *     // ... filter to delete one DeveloperAccount
+     *   }
+     * })
+     * 
+     */
+    delete<T extends DeveloperAccountDeleteArgs>(args: SelectSubset<T, DeveloperAccountDeleteArgs<ExtArgs>>): Prisma__DeveloperAccountClient<$Result.GetResult<Prisma.$DeveloperAccountPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one DeveloperAccount.
+     * @param {DeveloperAccountUpdateArgs} args - Arguments to update one DeveloperAccount.
+     * @example
+     * // Update one DeveloperAccount
+     * const developerAccount = await prisma.developerAccount.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends DeveloperAccountUpdateArgs>(args: SelectSubset<T, DeveloperAccountUpdateArgs<ExtArgs>>): Prisma__DeveloperAccountClient<$Result.GetResult<Prisma.$DeveloperAccountPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more DeveloperAccounts.
+     * @param {DeveloperAccountDeleteManyArgs} args - Arguments to filter DeveloperAccounts to delete.
+     * @example
+     * // Delete a few DeveloperAccounts
+     * const { count } = await prisma.developerAccount.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends DeveloperAccountDeleteManyArgs>(args?: SelectSubset<T, DeveloperAccountDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more DeveloperAccounts.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DeveloperAccountUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many DeveloperAccounts
+     * const developerAccount = await prisma.developerAccount.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends DeveloperAccountUpdateManyArgs>(args: SelectSubset<T, DeveloperAccountUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one DeveloperAccount.
+     * @param {DeveloperAccountUpsertArgs} args - Arguments to update or create a DeveloperAccount.
+     * @example
+     * // Update or create a DeveloperAccount
+     * const developerAccount = await prisma.developerAccount.upsert({
+     *   create: {
+     *     // ... data to create a DeveloperAccount
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the DeveloperAccount we want to update
+     *   }
+     * })
+     */
+    upsert<T extends DeveloperAccountUpsertArgs>(args: SelectSubset<T, DeveloperAccountUpsertArgs<ExtArgs>>): Prisma__DeveloperAccountClient<$Result.GetResult<Prisma.$DeveloperAccountPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of DeveloperAccounts.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DeveloperAccountCountArgs} args - Arguments to filter DeveloperAccounts to count.
+     * @example
+     * // Count the number of DeveloperAccounts
+     * const count = await prisma.developerAccount.count({
+     *   where: {
+     *     // ... the filter for the DeveloperAccounts we want to count
+     *   }
+     * })
+    **/
+    count<T extends DeveloperAccountCountArgs>(
+      args?: Subset<T, DeveloperAccountCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], DeveloperAccountCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a DeveloperAccount.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DeveloperAccountAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends DeveloperAccountAggregateArgs>(args: Subset<T, DeveloperAccountAggregateArgs>): Prisma.PrismaPromise<GetDeveloperAccountAggregateType<T>>
+
+    /**
+     * Group by DeveloperAccount.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DeveloperAccountGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends DeveloperAccountGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: DeveloperAccountGroupByArgs['orderBy'] }
+        : { orderBy?: DeveloperAccountGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, DeveloperAccountGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetDeveloperAccountGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the DeveloperAccount model
+   */
+  readonly fields: DeveloperAccountFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for DeveloperAccount.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__DeveloperAccountClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    applications<T extends DeveloperAccount$applicationsArgs<ExtArgs> = {}>(args?: Subset<T, DeveloperAccount$applicationsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PartnerAgentApplicationPayload<ExtArgs>, T, "findMany"> | Null>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the DeveloperAccount model
+   */ 
+  interface DeveloperAccountFieldRefs {
+    readonly id: FieldRef<"DeveloperAccount", 'String'>
+    readonly userId: FieldRef<"DeveloperAccount", 'String'>
+    readonly type: FieldRef<"DeveloperAccount", 'String'>
+    readonly displayName: FieldRef<"DeveloperAccount", 'String'>
+    readonly legalName: FieldRef<"DeveloperAccount", 'String'>
+    readonly website: FieldRef<"DeveloperAccount", 'String'>
+    readonly contactEmail: FieldRef<"DeveloperAccount", 'String'>
+    readonly direction: FieldRef<"DeveloperAccount", 'String'>
+    readonly status: FieldRef<"DeveloperAccount", 'String'>
+    readonly verifiedAt: FieldRef<"DeveloperAccount", 'DateTime'>
+    readonly metadata: FieldRef<"DeveloperAccount", 'String'>
+    readonly createdAt: FieldRef<"DeveloperAccount", 'DateTime'>
+    readonly updatedAt: FieldRef<"DeveloperAccount", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * DeveloperAccount findUnique
+   */
+  export type DeveloperAccountFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DeveloperAccount
+     */
+    select?: DeveloperAccountSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DeveloperAccountInclude<ExtArgs> | null
+    /**
+     * Filter, which DeveloperAccount to fetch.
+     */
+    where: DeveloperAccountWhereUniqueInput
+  }
+
+  /**
+   * DeveloperAccount findUniqueOrThrow
+   */
+  export type DeveloperAccountFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DeveloperAccount
+     */
+    select?: DeveloperAccountSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DeveloperAccountInclude<ExtArgs> | null
+    /**
+     * Filter, which DeveloperAccount to fetch.
+     */
+    where: DeveloperAccountWhereUniqueInput
+  }
+
+  /**
+   * DeveloperAccount findFirst
+   */
+  export type DeveloperAccountFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DeveloperAccount
+     */
+    select?: DeveloperAccountSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DeveloperAccountInclude<ExtArgs> | null
+    /**
+     * Filter, which DeveloperAccount to fetch.
+     */
+    where?: DeveloperAccountWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of DeveloperAccounts to fetch.
+     */
+    orderBy?: DeveloperAccountOrderByWithRelationInput | DeveloperAccountOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for DeveloperAccounts.
+     */
+    cursor?: DeveloperAccountWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` DeveloperAccounts from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` DeveloperAccounts.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of DeveloperAccounts.
+     */
+    distinct?: DeveloperAccountScalarFieldEnum | DeveloperAccountScalarFieldEnum[]
+  }
+
+  /**
+   * DeveloperAccount findFirstOrThrow
+   */
+  export type DeveloperAccountFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DeveloperAccount
+     */
+    select?: DeveloperAccountSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DeveloperAccountInclude<ExtArgs> | null
+    /**
+     * Filter, which DeveloperAccount to fetch.
+     */
+    where?: DeveloperAccountWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of DeveloperAccounts to fetch.
+     */
+    orderBy?: DeveloperAccountOrderByWithRelationInput | DeveloperAccountOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for DeveloperAccounts.
+     */
+    cursor?: DeveloperAccountWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` DeveloperAccounts from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` DeveloperAccounts.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of DeveloperAccounts.
+     */
+    distinct?: DeveloperAccountScalarFieldEnum | DeveloperAccountScalarFieldEnum[]
+  }
+
+  /**
+   * DeveloperAccount findMany
+   */
+  export type DeveloperAccountFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DeveloperAccount
+     */
+    select?: DeveloperAccountSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DeveloperAccountInclude<ExtArgs> | null
+    /**
+     * Filter, which DeveloperAccounts to fetch.
+     */
+    where?: DeveloperAccountWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of DeveloperAccounts to fetch.
+     */
+    orderBy?: DeveloperAccountOrderByWithRelationInput | DeveloperAccountOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing DeveloperAccounts.
+     */
+    cursor?: DeveloperAccountWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` DeveloperAccounts from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` DeveloperAccounts.
+     */
+    skip?: number
+    distinct?: DeveloperAccountScalarFieldEnum | DeveloperAccountScalarFieldEnum[]
+  }
+
+  /**
+   * DeveloperAccount create
+   */
+  export type DeveloperAccountCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DeveloperAccount
+     */
+    select?: DeveloperAccountSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DeveloperAccountInclude<ExtArgs> | null
+    /**
+     * The data needed to create a DeveloperAccount.
+     */
+    data: XOR<DeveloperAccountCreateInput, DeveloperAccountUncheckedCreateInput>
+  }
+
+  /**
+   * DeveloperAccount createMany
+   */
+  export type DeveloperAccountCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many DeveloperAccounts.
+     */
+    data: DeveloperAccountCreateManyInput | DeveloperAccountCreateManyInput[]
+  }
+
+  /**
+   * DeveloperAccount createManyAndReturn
+   */
+  export type DeveloperAccountCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DeveloperAccount
+     */
+    select?: DeveloperAccountSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many DeveloperAccounts.
+     */
+    data: DeveloperAccountCreateManyInput | DeveloperAccountCreateManyInput[]
+  }
+
+  /**
+   * DeveloperAccount update
+   */
+  export type DeveloperAccountUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DeveloperAccount
+     */
+    select?: DeveloperAccountSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DeveloperAccountInclude<ExtArgs> | null
+    /**
+     * The data needed to update a DeveloperAccount.
+     */
+    data: XOR<DeveloperAccountUpdateInput, DeveloperAccountUncheckedUpdateInput>
+    /**
+     * Choose, which DeveloperAccount to update.
+     */
+    where: DeveloperAccountWhereUniqueInput
+  }
+
+  /**
+   * DeveloperAccount updateMany
+   */
+  export type DeveloperAccountUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update DeveloperAccounts.
+     */
+    data: XOR<DeveloperAccountUpdateManyMutationInput, DeveloperAccountUncheckedUpdateManyInput>
+    /**
+     * Filter which DeveloperAccounts to update
+     */
+    where?: DeveloperAccountWhereInput
+  }
+
+  /**
+   * DeveloperAccount upsert
+   */
+  export type DeveloperAccountUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DeveloperAccount
+     */
+    select?: DeveloperAccountSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DeveloperAccountInclude<ExtArgs> | null
+    /**
+     * The filter to search for the DeveloperAccount to update in case it exists.
+     */
+    where: DeveloperAccountWhereUniqueInput
+    /**
+     * In case the DeveloperAccount found by the `where` argument doesn't exist, create a new DeveloperAccount with this data.
+     */
+    create: XOR<DeveloperAccountCreateInput, DeveloperAccountUncheckedCreateInput>
+    /**
+     * In case the DeveloperAccount was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<DeveloperAccountUpdateInput, DeveloperAccountUncheckedUpdateInput>
+  }
+
+  /**
+   * DeveloperAccount delete
+   */
+  export type DeveloperAccountDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DeveloperAccount
+     */
+    select?: DeveloperAccountSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DeveloperAccountInclude<ExtArgs> | null
+    /**
+     * Filter which DeveloperAccount to delete.
+     */
+    where: DeveloperAccountWhereUniqueInput
+  }
+
+  /**
+   * DeveloperAccount deleteMany
+   */
+  export type DeveloperAccountDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which DeveloperAccounts to delete
+     */
+    where?: DeveloperAccountWhereInput
+  }
+
+  /**
+   * DeveloperAccount.applications
+   */
+  export type DeveloperAccount$applicationsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PartnerAgentApplication
+     */
+    select?: PartnerAgentApplicationSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PartnerAgentApplicationInclude<ExtArgs> | null
+    where?: PartnerAgentApplicationWhereInput
+    orderBy?: PartnerAgentApplicationOrderByWithRelationInput | PartnerAgentApplicationOrderByWithRelationInput[]
+    cursor?: PartnerAgentApplicationWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: PartnerAgentApplicationScalarFieldEnum | PartnerAgentApplicationScalarFieldEnum[]
+  }
+
+  /**
+   * DeveloperAccount without action
+   */
+  export type DeveloperAccountDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DeveloperAccount
+     */
+    select?: DeveloperAccountSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: DeveloperAccountInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model PartnerAgentApplication
+   */
+
+  export type AggregatePartnerAgentApplication = {
+    _count: PartnerAgentApplicationCountAggregateOutputType | null
+    _avg: PartnerAgentApplicationAvgAggregateOutputType | null
+    _sum: PartnerAgentApplicationSumAggregateOutputType | null
+    _min: PartnerAgentApplicationMinAggregateOutputType | null
+    _max: PartnerAgentApplicationMaxAggregateOutputType | null
+  }
+
+  export type PartnerAgentApplicationAvgAggregateOutputType = {
+    qualityScore: number | null
+  }
+
+  export type PartnerAgentApplicationSumAggregateOutputType = {
+    qualityScore: number | null
+  }
+
+  export type PartnerAgentApplicationMinAggregateOutputType = {
+    id: string | null
+    developerAccountId: string | null
+    agentId: string | null
+    name: string | null
+    category: string | null
+    capabilityIds: string | null
+    runtimeMode: string | null
+    endpointUrl: string | null
+    webhookUrl: string | null
+    lifecycleStatus: string | null
+    currentVersionId: string | null
+    listingId: string | null
+    agentProductId: string | null
+    qualityScore: number | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type PartnerAgentApplicationMaxAggregateOutputType = {
+    id: string | null
+    developerAccountId: string | null
+    agentId: string | null
+    name: string | null
+    category: string | null
+    capabilityIds: string | null
+    runtimeMode: string | null
+    endpointUrl: string | null
+    webhookUrl: string | null
+    lifecycleStatus: string | null
+    currentVersionId: string | null
+    listingId: string | null
+    agentProductId: string | null
+    qualityScore: number | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type PartnerAgentApplicationCountAggregateOutputType = {
+    id: number
+    developerAccountId: number
+    agentId: number
+    name: number
+    category: number
+    capabilityIds: number
+    runtimeMode: number
+    endpointUrl: number
+    webhookUrl: number
+    lifecycleStatus: number
+    currentVersionId: number
+    listingId: number
+    agentProductId: number
+    qualityScore: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type PartnerAgentApplicationAvgAggregateInputType = {
+    qualityScore?: true
+  }
+
+  export type PartnerAgentApplicationSumAggregateInputType = {
+    qualityScore?: true
+  }
+
+  export type PartnerAgentApplicationMinAggregateInputType = {
+    id?: true
+    developerAccountId?: true
+    agentId?: true
+    name?: true
+    category?: true
+    capabilityIds?: true
+    runtimeMode?: true
+    endpointUrl?: true
+    webhookUrl?: true
+    lifecycleStatus?: true
+    currentVersionId?: true
+    listingId?: true
+    agentProductId?: true
+    qualityScore?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type PartnerAgentApplicationMaxAggregateInputType = {
+    id?: true
+    developerAccountId?: true
+    agentId?: true
+    name?: true
+    category?: true
+    capabilityIds?: true
+    runtimeMode?: true
+    endpointUrl?: true
+    webhookUrl?: true
+    lifecycleStatus?: true
+    currentVersionId?: true
+    listingId?: true
+    agentProductId?: true
+    qualityScore?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type PartnerAgentApplicationCountAggregateInputType = {
+    id?: true
+    developerAccountId?: true
+    agentId?: true
+    name?: true
+    category?: true
+    capabilityIds?: true
+    runtimeMode?: true
+    endpointUrl?: true
+    webhookUrl?: true
+    lifecycleStatus?: true
+    currentVersionId?: true
+    listingId?: true
+    agentProductId?: true
+    qualityScore?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type PartnerAgentApplicationAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which PartnerAgentApplication to aggregate.
+     */
+    where?: PartnerAgentApplicationWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PartnerAgentApplications to fetch.
+     */
+    orderBy?: PartnerAgentApplicationOrderByWithRelationInput | PartnerAgentApplicationOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: PartnerAgentApplicationWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PartnerAgentApplications from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PartnerAgentApplications.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned PartnerAgentApplications
+    **/
+    _count?: true | PartnerAgentApplicationCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: PartnerAgentApplicationAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: PartnerAgentApplicationSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: PartnerAgentApplicationMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: PartnerAgentApplicationMaxAggregateInputType
+  }
+
+  export type GetPartnerAgentApplicationAggregateType<T extends PartnerAgentApplicationAggregateArgs> = {
+        [P in keyof T & keyof AggregatePartnerAgentApplication]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregatePartnerAgentApplication[P]>
+      : GetScalarType<T[P], AggregatePartnerAgentApplication[P]>
+  }
+
+
+
+
+  export type PartnerAgentApplicationGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: PartnerAgentApplicationWhereInput
+    orderBy?: PartnerAgentApplicationOrderByWithAggregationInput | PartnerAgentApplicationOrderByWithAggregationInput[]
+    by: PartnerAgentApplicationScalarFieldEnum[] | PartnerAgentApplicationScalarFieldEnum
+    having?: PartnerAgentApplicationScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: PartnerAgentApplicationCountAggregateInputType | true
+    _avg?: PartnerAgentApplicationAvgAggregateInputType
+    _sum?: PartnerAgentApplicationSumAggregateInputType
+    _min?: PartnerAgentApplicationMinAggregateInputType
+    _max?: PartnerAgentApplicationMaxAggregateInputType
+  }
+
+  export type PartnerAgentApplicationGroupByOutputType = {
+    id: string
+    developerAccountId: string
+    agentId: string
+    name: string
+    category: string
+    capabilityIds: string
+    runtimeMode: string
+    endpointUrl: string | null
+    webhookUrl: string | null
+    lifecycleStatus: string
+    currentVersionId: string | null
+    listingId: string | null
+    agentProductId: string | null
+    qualityScore: number | null
+    createdAt: Date
+    updatedAt: Date
+    _count: PartnerAgentApplicationCountAggregateOutputType | null
+    _avg: PartnerAgentApplicationAvgAggregateOutputType | null
+    _sum: PartnerAgentApplicationSumAggregateOutputType | null
+    _min: PartnerAgentApplicationMinAggregateOutputType | null
+    _max: PartnerAgentApplicationMaxAggregateOutputType | null
+  }
+
+  type GetPartnerAgentApplicationGroupByPayload<T extends PartnerAgentApplicationGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<PartnerAgentApplicationGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof PartnerAgentApplicationGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], PartnerAgentApplicationGroupByOutputType[P]>
+            : GetScalarType<T[P], PartnerAgentApplicationGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type PartnerAgentApplicationSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    developerAccountId?: boolean
+    agentId?: boolean
+    name?: boolean
+    category?: boolean
+    capabilityIds?: boolean
+    runtimeMode?: boolean
+    endpointUrl?: boolean
+    webhookUrl?: boolean
+    lifecycleStatus?: boolean
+    currentVersionId?: boolean
+    listingId?: boolean
+    agentProductId?: boolean
+    qualityScore?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    developerAccount?: boolean | DeveloperAccountDefaultArgs<ExtArgs>
+    versions?: boolean | PartnerAgentApplication$versionsArgs<ExtArgs>
+    sandboxRuns?: boolean | PartnerAgentApplication$sandboxRunsArgs<ExtArgs>
+    reviewTasks?: boolean | PartnerAgentApplication$reviewTasksArgs<ExtArgs>
+    _count?: boolean | PartnerAgentApplicationCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["partnerAgentApplication"]>
+
+  export type PartnerAgentApplicationSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    developerAccountId?: boolean
+    agentId?: boolean
+    name?: boolean
+    category?: boolean
+    capabilityIds?: boolean
+    runtimeMode?: boolean
+    endpointUrl?: boolean
+    webhookUrl?: boolean
+    lifecycleStatus?: boolean
+    currentVersionId?: boolean
+    listingId?: boolean
+    agentProductId?: boolean
+    qualityScore?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    developerAccount?: boolean | DeveloperAccountDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["partnerAgentApplication"]>
+
+  export type PartnerAgentApplicationSelectScalar = {
+    id?: boolean
+    developerAccountId?: boolean
+    agentId?: boolean
+    name?: boolean
+    category?: boolean
+    capabilityIds?: boolean
+    runtimeMode?: boolean
+    endpointUrl?: boolean
+    webhookUrl?: boolean
+    lifecycleStatus?: boolean
+    currentVersionId?: boolean
+    listingId?: boolean
+    agentProductId?: boolean
+    qualityScore?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type PartnerAgentApplicationInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    developerAccount?: boolean | DeveloperAccountDefaultArgs<ExtArgs>
+    versions?: boolean | PartnerAgentApplication$versionsArgs<ExtArgs>
+    sandboxRuns?: boolean | PartnerAgentApplication$sandboxRunsArgs<ExtArgs>
+    reviewTasks?: boolean | PartnerAgentApplication$reviewTasksArgs<ExtArgs>
+    _count?: boolean | PartnerAgentApplicationCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type PartnerAgentApplicationIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    developerAccount?: boolean | DeveloperAccountDefaultArgs<ExtArgs>
+  }
+
+  export type $PartnerAgentApplicationPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "PartnerAgentApplication"
+    objects: {
+      developerAccount: Prisma.$DeveloperAccountPayload<ExtArgs>
+      versions: Prisma.$PartnerAgentDraftVersionPayload<ExtArgs>[]
+      sandboxRuns: Prisma.$PartnerSandboxRunPayload<ExtArgs>[]
+      reviewTasks: Prisma.$PartnerReviewTaskPayload<ExtArgs>[]
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      developerAccountId: string
+      agentId: string
+      name: string
+      category: string
+      capabilityIds: string
+      runtimeMode: string
+      endpointUrl: string | null
+      webhookUrl: string | null
+      lifecycleStatus: string
+      currentVersionId: string | null
+      listingId: string | null
+      agentProductId: string | null
+      qualityScore: number | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["partnerAgentApplication"]>
+    composites: {}
+  }
+
+  type PartnerAgentApplicationGetPayload<S extends boolean | null | undefined | PartnerAgentApplicationDefaultArgs> = $Result.GetResult<Prisma.$PartnerAgentApplicationPayload, S>
+
+  type PartnerAgentApplicationCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<PartnerAgentApplicationFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: PartnerAgentApplicationCountAggregateInputType | true
+    }
+
+  export interface PartnerAgentApplicationDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['PartnerAgentApplication'], meta: { name: 'PartnerAgentApplication' } }
+    /**
+     * Find zero or one PartnerAgentApplication that matches the filter.
+     * @param {PartnerAgentApplicationFindUniqueArgs} args - Arguments to find a PartnerAgentApplication
+     * @example
+     * // Get one PartnerAgentApplication
+     * const partnerAgentApplication = await prisma.partnerAgentApplication.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends PartnerAgentApplicationFindUniqueArgs>(args: SelectSubset<T, PartnerAgentApplicationFindUniqueArgs<ExtArgs>>): Prisma__PartnerAgentApplicationClient<$Result.GetResult<Prisma.$PartnerAgentApplicationPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one PartnerAgentApplication that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {PartnerAgentApplicationFindUniqueOrThrowArgs} args - Arguments to find a PartnerAgentApplication
+     * @example
+     * // Get one PartnerAgentApplication
+     * const partnerAgentApplication = await prisma.partnerAgentApplication.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends PartnerAgentApplicationFindUniqueOrThrowArgs>(args: SelectSubset<T, PartnerAgentApplicationFindUniqueOrThrowArgs<ExtArgs>>): Prisma__PartnerAgentApplicationClient<$Result.GetResult<Prisma.$PartnerAgentApplicationPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first PartnerAgentApplication that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PartnerAgentApplicationFindFirstArgs} args - Arguments to find a PartnerAgentApplication
+     * @example
+     * // Get one PartnerAgentApplication
+     * const partnerAgentApplication = await prisma.partnerAgentApplication.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends PartnerAgentApplicationFindFirstArgs>(args?: SelectSubset<T, PartnerAgentApplicationFindFirstArgs<ExtArgs>>): Prisma__PartnerAgentApplicationClient<$Result.GetResult<Prisma.$PartnerAgentApplicationPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first PartnerAgentApplication that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PartnerAgentApplicationFindFirstOrThrowArgs} args - Arguments to find a PartnerAgentApplication
+     * @example
+     * // Get one PartnerAgentApplication
+     * const partnerAgentApplication = await prisma.partnerAgentApplication.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends PartnerAgentApplicationFindFirstOrThrowArgs>(args?: SelectSubset<T, PartnerAgentApplicationFindFirstOrThrowArgs<ExtArgs>>): Prisma__PartnerAgentApplicationClient<$Result.GetResult<Prisma.$PartnerAgentApplicationPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more PartnerAgentApplications that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PartnerAgentApplicationFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all PartnerAgentApplications
+     * const partnerAgentApplications = await prisma.partnerAgentApplication.findMany()
+     * 
+     * // Get first 10 PartnerAgentApplications
+     * const partnerAgentApplications = await prisma.partnerAgentApplication.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const partnerAgentApplicationWithIdOnly = await prisma.partnerAgentApplication.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends PartnerAgentApplicationFindManyArgs>(args?: SelectSubset<T, PartnerAgentApplicationFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PartnerAgentApplicationPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a PartnerAgentApplication.
+     * @param {PartnerAgentApplicationCreateArgs} args - Arguments to create a PartnerAgentApplication.
+     * @example
+     * // Create one PartnerAgentApplication
+     * const PartnerAgentApplication = await prisma.partnerAgentApplication.create({
+     *   data: {
+     *     // ... data to create a PartnerAgentApplication
+     *   }
+     * })
+     * 
+     */
+    create<T extends PartnerAgentApplicationCreateArgs>(args: SelectSubset<T, PartnerAgentApplicationCreateArgs<ExtArgs>>): Prisma__PartnerAgentApplicationClient<$Result.GetResult<Prisma.$PartnerAgentApplicationPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many PartnerAgentApplications.
+     * @param {PartnerAgentApplicationCreateManyArgs} args - Arguments to create many PartnerAgentApplications.
+     * @example
+     * // Create many PartnerAgentApplications
+     * const partnerAgentApplication = await prisma.partnerAgentApplication.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends PartnerAgentApplicationCreateManyArgs>(args?: SelectSubset<T, PartnerAgentApplicationCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many PartnerAgentApplications and returns the data saved in the database.
+     * @param {PartnerAgentApplicationCreateManyAndReturnArgs} args - Arguments to create many PartnerAgentApplications.
+     * @example
+     * // Create many PartnerAgentApplications
+     * const partnerAgentApplication = await prisma.partnerAgentApplication.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many PartnerAgentApplications and only return the `id`
+     * const partnerAgentApplicationWithIdOnly = await prisma.partnerAgentApplication.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends PartnerAgentApplicationCreateManyAndReturnArgs>(args?: SelectSubset<T, PartnerAgentApplicationCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PartnerAgentApplicationPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a PartnerAgentApplication.
+     * @param {PartnerAgentApplicationDeleteArgs} args - Arguments to delete one PartnerAgentApplication.
+     * @example
+     * // Delete one PartnerAgentApplication
+     * const PartnerAgentApplication = await prisma.partnerAgentApplication.delete({
+     *   where: {
+     *     // ... filter to delete one PartnerAgentApplication
+     *   }
+     * })
+     * 
+     */
+    delete<T extends PartnerAgentApplicationDeleteArgs>(args: SelectSubset<T, PartnerAgentApplicationDeleteArgs<ExtArgs>>): Prisma__PartnerAgentApplicationClient<$Result.GetResult<Prisma.$PartnerAgentApplicationPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one PartnerAgentApplication.
+     * @param {PartnerAgentApplicationUpdateArgs} args - Arguments to update one PartnerAgentApplication.
+     * @example
+     * // Update one PartnerAgentApplication
+     * const partnerAgentApplication = await prisma.partnerAgentApplication.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends PartnerAgentApplicationUpdateArgs>(args: SelectSubset<T, PartnerAgentApplicationUpdateArgs<ExtArgs>>): Prisma__PartnerAgentApplicationClient<$Result.GetResult<Prisma.$PartnerAgentApplicationPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more PartnerAgentApplications.
+     * @param {PartnerAgentApplicationDeleteManyArgs} args - Arguments to filter PartnerAgentApplications to delete.
+     * @example
+     * // Delete a few PartnerAgentApplications
+     * const { count } = await prisma.partnerAgentApplication.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends PartnerAgentApplicationDeleteManyArgs>(args?: SelectSubset<T, PartnerAgentApplicationDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more PartnerAgentApplications.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PartnerAgentApplicationUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many PartnerAgentApplications
+     * const partnerAgentApplication = await prisma.partnerAgentApplication.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends PartnerAgentApplicationUpdateManyArgs>(args: SelectSubset<T, PartnerAgentApplicationUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one PartnerAgentApplication.
+     * @param {PartnerAgentApplicationUpsertArgs} args - Arguments to update or create a PartnerAgentApplication.
+     * @example
+     * // Update or create a PartnerAgentApplication
+     * const partnerAgentApplication = await prisma.partnerAgentApplication.upsert({
+     *   create: {
+     *     // ... data to create a PartnerAgentApplication
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the PartnerAgentApplication we want to update
+     *   }
+     * })
+     */
+    upsert<T extends PartnerAgentApplicationUpsertArgs>(args: SelectSubset<T, PartnerAgentApplicationUpsertArgs<ExtArgs>>): Prisma__PartnerAgentApplicationClient<$Result.GetResult<Prisma.$PartnerAgentApplicationPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of PartnerAgentApplications.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PartnerAgentApplicationCountArgs} args - Arguments to filter PartnerAgentApplications to count.
+     * @example
+     * // Count the number of PartnerAgentApplications
+     * const count = await prisma.partnerAgentApplication.count({
+     *   where: {
+     *     // ... the filter for the PartnerAgentApplications we want to count
+     *   }
+     * })
+    **/
+    count<T extends PartnerAgentApplicationCountArgs>(
+      args?: Subset<T, PartnerAgentApplicationCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], PartnerAgentApplicationCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a PartnerAgentApplication.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PartnerAgentApplicationAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends PartnerAgentApplicationAggregateArgs>(args: Subset<T, PartnerAgentApplicationAggregateArgs>): Prisma.PrismaPromise<GetPartnerAgentApplicationAggregateType<T>>
+
+    /**
+     * Group by PartnerAgentApplication.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PartnerAgentApplicationGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends PartnerAgentApplicationGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: PartnerAgentApplicationGroupByArgs['orderBy'] }
+        : { orderBy?: PartnerAgentApplicationGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, PartnerAgentApplicationGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetPartnerAgentApplicationGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the PartnerAgentApplication model
+   */
+  readonly fields: PartnerAgentApplicationFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for PartnerAgentApplication.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__PartnerAgentApplicationClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    developerAccount<T extends DeveloperAccountDefaultArgs<ExtArgs> = {}>(args?: Subset<T, DeveloperAccountDefaultArgs<ExtArgs>>): Prisma__DeveloperAccountClient<$Result.GetResult<Prisma.$DeveloperAccountPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    versions<T extends PartnerAgentApplication$versionsArgs<ExtArgs> = {}>(args?: Subset<T, PartnerAgentApplication$versionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PartnerAgentDraftVersionPayload<ExtArgs>, T, "findMany"> | Null>
+    sandboxRuns<T extends PartnerAgentApplication$sandboxRunsArgs<ExtArgs> = {}>(args?: Subset<T, PartnerAgentApplication$sandboxRunsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PartnerSandboxRunPayload<ExtArgs>, T, "findMany"> | Null>
+    reviewTasks<T extends PartnerAgentApplication$reviewTasksArgs<ExtArgs> = {}>(args?: Subset<T, PartnerAgentApplication$reviewTasksArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PartnerReviewTaskPayload<ExtArgs>, T, "findMany"> | Null>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the PartnerAgentApplication model
+   */ 
+  interface PartnerAgentApplicationFieldRefs {
+    readonly id: FieldRef<"PartnerAgentApplication", 'String'>
+    readonly developerAccountId: FieldRef<"PartnerAgentApplication", 'String'>
+    readonly agentId: FieldRef<"PartnerAgentApplication", 'String'>
+    readonly name: FieldRef<"PartnerAgentApplication", 'String'>
+    readonly category: FieldRef<"PartnerAgentApplication", 'String'>
+    readonly capabilityIds: FieldRef<"PartnerAgentApplication", 'String'>
+    readonly runtimeMode: FieldRef<"PartnerAgentApplication", 'String'>
+    readonly endpointUrl: FieldRef<"PartnerAgentApplication", 'String'>
+    readonly webhookUrl: FieldRef<"PartnerAgentApplication", 'String'>
+    readonly lifecycleStatus: FieldRef<"PartnerAgentApplication", 'String'>
+    readonly currentVersionId: FieldRef<"PartnerAgentApplication", 'String'>
+    readonly listingId: FieldRef<"PartnerAgentApplication", 'String'>
+    readonly agentProductId: FieldRef<"PartnerAgentApplication", 'String'>
+    readonly qualityScore: FieldRef<"PartnerAgentApplication", 'Float'>
+    readonly createdAt: FieldRef<"PartnerAgentApplication", 'DateTime'>
+    readonly updatedAt: FieldRef<"PartnerAgentApplication", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * PartnerAgentApplication findUnique
+   */
+  export type PartnerAgentApplicationFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PartnerAgentApplication
+     */
+    select?: PartnerAgentApplicationSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PartnerAgentApplicationInclude<ExtArgs> | null
+    /**
+     * Filter, which PartnerAgentApplication to fetch.
+     */
+    where: PartnerAgentApplicationWhereUniqueInput
+  }
+
+  /**
+   * PartnerAgentApplication findUniqueOrThrow
+   */
+  export type PartnerAgentApplicationFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PartnerAgentApplication
+     */
+    select?: PartnerAgentApplicationSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PartnerAgentApplicationInclude<ExtArgs> | null
+    /**
+     * Filter, which PartnerAgentApplication to fetch.
+     */
+    where: PartnerAgentApplicationWhereUniqueInput
+  }
+
+  /**
+   * PartnerAgentApplication findFirst
+   */
+  export type PartnerAgentApplicationFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PartnerAgentApplication
+     */
+    select?: PartnerAgentApplicationSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PartnerAgentApplicationInclude<ExtArgs> | null
+    /**
+     * Filter, which PartnerAgentApplication to fetch.
+     */
+    where?: PartnerAgentApplicationWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PartnerAgentApplications to fetch.
+     */
+    orderBy?: PartnerAgentApplicationOrderByWithRelationInput | PartnerAgentApplicationOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for PartnerAgentApplications.
+     */
+    cursor?: PartnerAgentApplicationWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PartnerAgentApplications from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PartnerAgentApplications.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of PartnerAgentApplications.
+     */
+    distinct?: PartnerAgentApplicationScalarFieldEnum | PartnerAgentApplicationScalarFieldEnum[]
+  }
+
+  /**
+   * PartnerAgentApplication findFirstOrThrow
+   */
+  export type PartnerAgentApplicationFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PartnerAgentApplication
+     */
+    select?: PartnerAgentApplicationSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PartnerAgentApplicationInclude<ExtArgs> | null
+    /**
+     * Filter, which PartnerAgentApplication to fetch.
+     */
+    where?: PartnerAgentApplicationWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PartnerAgentApplications to fetch.
+     */
+    orderBy?: PartnerAgentApplicationOrderByWithRelationInput | PartnerAgentApplicationOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for PartnerAgentApplications.
+     */
+    cursor?: PartnerAgentApplicationWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PartnerAgentApplications from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PartnerAgentApplications.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of PartnerAgentApplications.
+     */
+    distinct?: PartnerAgentApplicationScalarFieldEnum | PartnerAgentApplicationScalarFieldEnum[]
+  }
+
+  /**
+   * PartnerAgentApplication findMany
+   */
+  export type PartnerAgentApplicationFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PartnerAgentApplication
+     */
+    select?: PartnerAgentApplicationSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PartnerAgentApplicationInclude<ExtArgs> | null
+    /**
+     * Filter, which PartnerAgentApplications to fetch.
+     */
+    where?: PartnerAgentApplicationWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PartnerAgentApplications to fetch.
+     */
+    orderBy?: PartnerAgentApplicationOrderByWithRelationInput | PartnerAgentApplicationOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing PartnerAgentApplications.
+     */
+    cursor?: PartnerAgentApplicationWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PartnerAgentApplications from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PartnerAgentApplications.
+     */
+    skip?: number
+    distinct?: PartnerAgentApplicationScalarFieldEnum | PartnerAgentApplicationScalarFieldEnum[]
+  }
+
+  /**
+   * PartnerAgentApplication create
+   */
+  export type PartnerAgentApplicationCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PartnerAgentApplication
+     */
+    select?: PartnerAgentApplicationSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PartnerAgentApplicationInclude<ExtArgs> | null
+    /**
+     * The data needed to create a PartnerAgentApplication.
+     */
+    data: XOR<PartnerAgentApplicationCreateInput, PartnerAgentApplicationUncheckedCreateInput>
+  }
+
+  /**
+   * PartnerAgentApplication createMany
+   */
+  export type PartnerAgentApplicationCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many PartnerAgentApplications.
+     */
+    data: PartnerAgentApplicationCreateManyInput | PartnerAgentApplicationCreateManyInput[]
+  }
+
+  /**
+   * PartnerAgentApplication createManyAndReturn
+   */
+  export type PartnerAgentApplicationCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PartnerAgentApplication
+     */
+    select?: PartnerAgentApplicationSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many PartnerAgentApplications.
+     */
+    data: PartnerAgentApplicationCreateManyInput | PartnerAgentApplicationCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PartnerAgentApplicationIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * PartnerAgentApplication update
+   */
+  export type PartnerAgentApplicationUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PartnerAgentApplication
+     */
+    select?: PartnerAgentApplicationSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PartnerAgentApplicationInclude<ExtArgs> | null
+    /**
+     * The data needed to update a PartnerAgentApplication.
+     */
+    data: XOR<PartnerAgentApplicationUpdateInput, PartnerAgentApplicationUncheckedUpdateInput>
+    /**
+     * Choose, which PartnerAgentApplication to update.
+     */
+    where: PartnerAgentApplicationWhereUniqueInput
+  }
+
+  /**
+   * PartnerAgentApplication updateMany
+   */
+  export type PartnerAgentApplicationUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update PartnerAgentApplications.
+     */
+    data: XOR<PartnerAgentApplicationUpdateManyMutationInput, PartnerAgentApplicationUncheckedUpdateManyInput>
+    /**
+     * Filter which PartnerAgentApplications to update
+     */
+    where?: PartnerAgentApplicationWhereInput
+  }
+
+  /**
+   * PartnerAgentApplication upsert
+   */
+  export type PartnerAgentApplicationUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PartnerAgentApplication
+     */
+    select?: PartnerAgentApplicationSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PartnerAgentApplicationInclude<ExtArgs> | null
+    /**
+     * The filter to search for the PartnerAgentApplication to update in case it exists.
+     */
+    where: PartnerAgentApplicationWhereUniqueInput
+    /**
+     * In case the PartnerAgentApplication found by the `where` argument doesn't exist, create a new PartnerAgentApplication with this data.
+     */
+    create: XOR<PartnerAgentApplicationCreateInput, PartnerAgentApplicationUncheckedCreateInput>
+    /**
+     * In case the PartnerAgentApplication was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<PartnerAgentApplicationUpdateInput, PartnerAgentApplicationUncheckedUpdateInput>
+  }
+
+  /**
+   * PartnerAgentApplication delete
+   */
+  export type PartnerAgentApplicationDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PartnerAgentApplication
+     */
+    select?: PartnerAgentApplicationSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PartnerAgentApplicationInclude<ExtArgs> | null
+    /**
+     * Filter which PartnerAgentApplication to delete.
+     */
+    where: PartnerAgentApplicationWhereUniqueInput
+  }
+
+  /**
+   * PartnerAgentApplication deleteMany
+   */
+  export type PartnerAgentApplicationDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which PartnerAgentApplications to delete
+     */
+    where?: PartnerAgentApplicationWhereInput
+  }
+
+  /**
+   * PartnerAgentApplication.versions
+   */
+  export type PartnerAgentApplication$versionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PartnerAgentDraftVersion
+     */
+    select?: PartnerAgentDraftVersionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PartnerAgentDraftVersionInclude<ExtArgs> | null
+    where?: PartnerAgentDraftVersionWhereInput
+    orderBy?: PartnerAgentDraftVersionOrderByWithRelationInput | PartnerAgentDraftVersionOrderByWithRelationInput[]
+    cursor?: PartnerAgentDraftVersionWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: PartnerAgentDraftVersionScalarFieldEnum | PartnerAgentDraftVersionScalarFieldEnum[]
+  }
+
+  /**
+   * PartnerAgentApplication.sandboxRuns
+   */
+  export type PartnerAgentApplication$sandboxRunsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PartnerSandboxRun
+     */
+    select?: PartnerSandboxRunSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PartnerSandboxRunInclude<ExtArgs> | null
+    where?: PartnerSandboxRunWhereInput
+    orderBy?: PartnerSandboxRunOrderByWithRelationInput | PartnerSandboxRunOrderByWithRelationInput[]
+    cursor?: PartnerSandboxRunWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: PartnerSandboxRunScalarFieldEnum | PartnerSandboxRunScalarFieldEnum[]
+  }
+
+  /**
+   * PartnerAgentApplication.reviewTasks
+   */
+  export type PartnerAgentApplication$reviewTasksArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PartnerReviewTask
+     */
+    select?: PartnerReviewTaskSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PartnerReviewTaskInclude<ExtArgs> | null
+    where?: PartnerReviewTaskWhereInput
+    orderBy?: PartnerReviewTaskOrderByWithRelationInput | PartnerReviewTaskOrderByWithRelationInput[]
+    cursor?: PartnerReviewTaskWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: PartnerReviewTaskScalarFieldEnum | PartnerReviewTaskScalarFieldEnum[]
+  }
+
+  /**
+   * PartnerAgentApplication without action
+   */
+  export type PartnerAgentApplicationDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PartnerAgentApplication
+     */
+    select?: PartnerAgentApplicationSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PartnerAgentApplicationInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model PartnerAgentDraftVersion
+   */
+
+  export type AggregatePartnerAgentDraftVersion = {
+    _count: PartnerAgentDraftVersionCountAggregateOutputType | null
+    _min: PartnerAgentDraftVersionMinAggregateOutputType | null
+    _max: PartnerAgentDraftVersionMaxAggregateOutputType | null
+  }
+
+  export type PartnerAgentDraftVersionMinAggregateOutputType = {
+    id: string | null
+    applicationId: string | null
+    version: string | null
+    manifestJson: string | null
+    skillPackageJson: string | null
+    releaseChannel: string | null
+    demoUrl: string | null
+    privacyNotes: string | null
+    pricingJson: string | null
+    createdAt: Date | null
+  }
+
+  export type PartnerAgentDraftVersionMaxAggregateOutputType = {
+    id: string | null
+    applicationId: string | null
+    version: string | null
+    manifestJson: string | null
+    skillPackageJson: string | null
+    releaseChannel: string | null
+    demoUrl: string | null
+    privacyNotes: string | null
+    pricingJson: string | null
+    createdAt: Date | null
+  }
+
+  export type PartnerAgentDraftVersionCountAggregateOutputType = {
+    id: number
+    applicationId: number
+    version: number
+    manifestJson: number
+    skillPackageJson: number
+    releaseChannel: number
+    demoUrl: number
+    privacyNotes: number
+    pricingJson: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type PartnerAgentDraftVersionMinAggregateInputType = {
+    id?: true
+    applicationId?: true
+    version?: true
+    manifestJson?: true
+    skillPackageJson?: true
+    releaseChannel?: true
+    demoUrl?: true
+    privacyNotes?: true
+    pricingJson?: true
+    createdAt?: true
+  }
+
+  export type PartnerAgentDraftVersionMaxAggregateInputType = {
+    id?: true
+    applicationId?: true
+    version?: true
+    manifestJson?: true
+    skillPackageJson?: true
+    releaseChannel?: true
+    demoUrl?: true
+    privacyNotes?: true
+    pricingJson?: true
+    createdAt?: true
+  }
+
+  export type PartnerAgentDraftVersionCountAggregateInputType = {
+    id?: true
+    applicationId?: true
+    version?: true
+    manifestJson?: true
+    skillPackageJson?: true
+    releaseChannel?: true
+    demoUrl?: true
+    privacyNotes?: true
+    pricingJson?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type PartnerAgentDraftVersionAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which PartnerAgentDraftVersion to aggregate.
+     */
+    where?: PartnerAgentDraftVersionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PartnerAgentDraftVersions to fetch.
+     */
+    orderBy?: PartnerAgentDraftVersionOrderByWithRelationInput | PartnerAgentDraftVersionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: PartnerAgentDraftVersionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PartnerAgentDraftVersions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PartnerAgentDraftVersions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned PartnerAgentDraftVersions
+    **/
+    _count?: true | PartnerAgentDraftVersionCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: PartnerAgentDraftVersionMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: PartnerAgentDraftVersionMaxAggregateInputType
+  }
+
+  export type GetPartnerAgentDraftVersionAggregateType<T extends PartnerAgentDraftVersionAggregateArgs> = {
+        [P in keyof T & keyof AggregatePartnerAgentDraftVersion]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregatePartnerAgentDraftVersion[P]>
+      : GetScalarType<T[P], AggregatePartnerAgentDraftVersion[P]>
+  }
+
+
+
+
+  export type PartnerAgentDraftVersionGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: PartnerAgentDraftVersionWhereInput
+    orderBy?: PartnerAgentDraftVersionOrderByWithAggregationInput | PartnerAgentDraftVersionOrderByWithAggregationInput[]
+    by: PartnerAgentDraftVersionScalarFieldEnum[] | PartnerAgentDraftVersionScalarFieldEnum
+    having?: PartnerAgentDraftVersionScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: PartnerAgentDraftVersionCountAggregateInputType | true
+    _min?: PartnerAgentDraftVersionMinAggregateInputType
+    _max?: PartnerAgentDraftVersionMaxAggregateInputType
+  }
+
+  export type PartnerAgentDraftVersionGroupByOutputType = {
+    id: string
+    applicationId: string
+    version: string
+    manifestJson: string
+    skillPackageJson: string
+    releaseChannel: string
+    demoUrl: string | null
+    privacyNotes: string | null
+    pricingJson: string | null
+    createdAt: Date
+    _count: PartnerAgentDraftVersionCountAggregateOutputType | null
+    _min: PartnerAgentDraftVersionMinAggregateOutputType | null
+    _max: PartnerAgentDraftVersionMaxAggregateOutputType | null
+  }
+
+  type GetPartnerAgentDraftVersionGroupByPayload<T extends PartnerAgentDraftVersionGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<PartnerAgentDraftVersionGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof PartnerAgentDraftVersionGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], PartnerAgentDraftVersionGroupByOutputType[P]>
+            : GetScalarType<T[P], PartnerAgentDraftVersionGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type PartnerAgentDraftVersionSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    applicationId?: boolean
+    version?: boolean
+    manifestJson?: boolean
+    skillPackageJson?: boolean
+    releaseChannel?: boolean
+    demoUrl?: boolean
+    privacyNotes?: boolean
+    pricingJson?: boolean
+    createdAt?: boolean
+    application?: boolean | PartnerAgentApplicationDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["partnerAgentDraftVersion"]>
+
+  export type PartnerAgentDraftVersionSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    applicationId?: boolean
+    version?: boolean
+    manifestJson?: boolean
+    skillPackageJson?: boolean
+    releaseChannel?: boolean
+    demoUrl?: boolean
+    privacyNotes?: boolean
+    pricingJson?: boolean
+    createdAt?: boolean
+    application?: boolean | PartnerAgentApplicationDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["partnerAgentDraftVersion"]>
+
+  export type PartnerAgentDraftVersionSelectScalar = {
+    id?: boolean
+    applicationId?: boolean
+    version?: boolean
+    manifestJson?: boolean
+    skillPackageJson?: boolean
+    releaseChannel?: boolean
+    demoUrl?: boolean
+    privacyNotes?: boolean
+    pricingJson?: boolean
+    createdAt?: boolean
+  }
+
+  export type PartnerAgentDraftVersionInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    application?: boolean | PartnerAgentApplicationDefaultArgs<ExtArgs>
+  }
+  export type PartnerAgentDraftVersionIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    application?: boolean | PartnerAgentApplicationDefaultArgs<ExtArgs>
+  }
+
+  export type $PartnerAgentDraftVersionPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "PartnerAgentDraftVersion"
+    objects: {
+      application: Prisma.$PartnerAgentApplicationPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      applicationId: string
+      version: string
+      manifestJson: string
+      skillPackageJson: string
+      releaseChannel: string
+      demoUrl: string | null
+      privacyNotes: string | null
+      pricingJson: string | null
+      createdAt: Date
+    }, ExtArgs["result"]["partnerAgentDraftVersion"]>
+    composites: {}
+  }
+
+  type PartnerAgentDraftVersionGetPayload<S extends boolean | null | undefined | PartnerAgentDraftVersionDefaultArgs> = $Result.GetResult<Prisma.$PartnerAgentDraftVersionPayload, S>
+
+  type PartnerAgentDraftVersionCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<PartnerAgentDraftVersionFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: PartnerAgentDraftVersionCountAggregateInputType | true
+    }
+
+  export interface PartnerAgentDraftVersionDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['PartnerAgentDraftVersion'], meta: { name: 'PartnerAgentDraftVersion' } }
+    /**
+     * Find zero or one PartnerAgentDraftVersion that matches the filter.
+     * @param {PartnerAgentDraftVersionFindUniqueArgs} args - Arguments to find a PartnerAgentDraftVersion
+     * @example
+     * // Get one PartnerAgentDraftVersion
+     * const partnerAgentDraftVersion = await prisma.partnerAgentDraftVersion.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends PartnerAgentDraftVersionFindUniqueArgs>(args: SelectSubset<T, PartnerAgentDraftVersionFindUniqueArgs<ExtArgs>>): Prisma__PartnerAgentDraftVersionClient<$Result.GetResult<Prisma.$PartnerAgentDraftVersionPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one PartnerAgentDraftVersion that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {PartnerAgentDraftVersionFindUniqueOrThrowArgs} args - Arguments to find a PartnerAgentDraftVersion
+     * @example
+     * // Get one PartnerAgentDraftVersion
+     * const partnerAgentDraftVersion = await prisma.partnerAgentDraftVersion.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends PartnerAgentDraftVersionFindUniqueOrThrowArgs>(args: SelectSubset<T, PartnerAgentDraftVersionFindUniqueOrThrowArgs<ExtArgs>>): Prisma__PartnerAgentDraftVersionClient<$Result.GetResult<Prisma.$PartnerAgentDraftVersionPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first PartnerAgentDraftVersion that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PartnerAgentDraftVersionFindFirstArgs} args - Arguments to find a PartnerAgentDraftVersion
+     * @example
+     * // Get one PartnerAgentDraftVersion
+     * const partnerAgentDraftVersion = await prisma.partnerAgentDraftVersion.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends PartnerAgentDraftVersionFindFirstArgs>(args?: SelectSubset<T, PartnerAgentDraftVersionFindFirstArgs<ExtArgs>>): Prisma__PartnerAgentDraftVersionClient<$Result.GetResult<Prisma.$PartnerAgentDraftVersionPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first PartnerAgentDraftVersion that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PartnerAgentDraftVersionFindFirstOrThrowArgs} args - Arguments to find a PartnerAgentDraftVersion
+     * @example
+     * // Get one PartnerAgentDraftVersion
+     * const partnerAgentDraftVersion = await prisma.partnerAgentDraftVersion.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends PartnerAgentDraftVersionFindFirstOrThrowArgs>(args?: SelectSubset<T, PartnerAgentDraftVersionFindFirstOrThrowArgs<ExtArgs>>): Prisma__PartnerAgentDraftVersionClient<$Result.GetResult<Prisma.$PartnerAgentDraftVersionPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more PartnerAgentDraftVersions that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PartnerAgentDraftVersionFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all PartnerAgentDraftVersions
+     * const partnerAgentDraftVersions = await prisma.partnerAgentDraftVersion.findMany()
+     * 
+     * // Get first 10 PartnerAgentDraftVersions
+     * const partnerAgentDraftVersions = await prisma.partnerAgentDraftVersion.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const partnerAgentDraftVersionWithIdOnly = await prisma.partnerAgentDraftVersion.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends PartnerAgentDraftVersionFindManyArgs>(args?: SelectSubset<T, PartnerAgentDraftVersionFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PartnerAgentDraftVersionPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a PartnerAgentDraftVersion.
+     * @param {PartnerAgentDraftVersionCreateArgs} args - Arguments to create a PartnerAgentDraftVersion.
+     * @example
+     * // Create one PartnerAgentDraftVersion
+     * const PartnerAgentDraftVersion = await prisma.partnerAgentDraftVersion.create({
+     *   data: {
+     *     // ... data to create a PartnerAgentDraftVersion
+     *   }
+     * })
+     * 
+     */
+    create<T extends PartnerAgentDraftVersionCreateArgs>(args: SelectSubset<T, PartnerAgentDraftVersionCreateArgs<ExtArgs>>): Prisma__PartnerAgentDraftVersionClient<$Result.GetResult<Prisma.$PartnerAgentDraftVersionPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many PartnerAgentDraftVersions.
+     * @param {PartnerAgentDraftVersionCreateManyArgs} args - Arguments to create many PartnerAgentDraftVersions.
+     * @example
+     * // Create many PartnerAgentDraftVersions
+     * const partnerAgentDraftVersion = await prisma.partnerAgentDraftVersion.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends PartnerAgentDraftVersionCreateManyArgs>(args?: SelectSubset<T, PartnerAgentDraftVersionCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many PartnerAgentDraftVersions and returns the data saved in the database.
+     * @param {PartnerAgentDraftVersionCreateManyAndReturnArgs} args - Arguments to create many PartnerAgentDraftVersions.
+     * @example
+     * // Create many PartnerAgentDraftVersions
+     * const partnerAgentDraftVersion = await prisma.partnerAgentDraftVersion.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many PartnerAgentDraftVersions and only return the `id`
+     * const partnerAgentDraftVersionWithIdOnly = await prisma.partnerAgentDraftVersion.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends PartnerAgentDraftVersionCreateManyAndReturnArgs>(args?: SelectSubset<T, PartnerAgentDraftVersionCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PartnerAgentDraftVersionPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a PartnerAgentDraftVersion.
+     * @param {PartnerAgentDraftVersionDeleteArgs} args - Arguments to delete one PartnerAgentDraftVersion.
+     * @example
+     * // Delete one PartnerAgentDraftVersion
+     * const PartnerAgentDraftVersion = await prisma.partnerAgentDraftVersion.delete({
+     *   where: {
+     *     // ... filter to delete one PartnerAgentDraftVersion
+     *   }
+     * })
+     * 
+     */
+    delete<T extends PartnerAgentDraftVersionDeleteArgs>(args: SelectSubset<T, PartnerAgentDraftVersionDeleteArgs<ExtArgs>>): Prisma__PartnerAgentDraftVersionClient<$Result.GetResult<Prisma.$PartnerAgentDraftVersionPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one PartnerAgentDraftVersion.
+     * @param {PartnerAgentDraftVersionUpdateArgs} args - Arguments to update one PartnerAgentDraftVersion.
+     * @example
+     * // Update one PartnerAgentDraftVersion
+     * const partnerAgentDraftVersion = await prisma.partnerAgentDraftVersion.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends PartnerAgentDraftVersionUpdateArgs>(args: SelectSubset<T, PartnerAgentDraftVersionUpdateArgs<ExtArgs>>): Prisma__PartnerAgentDraftVersionClient<$Result.GetResult<Prisma.$PartnerAgentDraftVersionPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more PartnerAgentDraftVersions.
+     * @param {PartnerAgentDraftVersionDeleteManyArgs} args - Arguments to filter PartnerAgentDraftVersions to delete.
+     * @example
+     * // Delete a few PartnerAgentDraftVersions
+     * const { count } = await prisma.partnerAgentDraftVersion.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends PartnerAgentDraftVersionDeleteManyArgs>(args?: SelectSubset<T, PartnerAgentDraftVersionDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more PartnerAgentDraftVersions.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PartnerAgentDraftVersionUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many PartnerAgentDraftVersions
+     * const partnerAgentDraftVersion = await prisma.partnerAgentDraftVersion.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends PartnerAgentDraftVersionUpdateManyArgs>(args: SelectSubset<T, PartnerAgentDraftVersionUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one PartnerAgentDraftVersion.
+     * @param {PartnerAgentDraftVersionUpsertArgs} args - Arguments to update or create a PartnerAgentDraftVersion.
+     * @example
+     * // Update or create a PartnerAgentDraftVersion
+     * const partnerAgentDraftVersion = await prisma.partnerAgentDraftVersion.upsert({
+     *   create: {
+     *     // ... data to create a PartnerAgentDraftVersion
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the PartnerAgentDraftVersion we want to update
+     *   }
+     * })
+     */
+    upsert<T extends PartnerAgentDraftVersionUpsertArgs>(args: SelectSubset<T, PartnerAgentDraftVersionUpsertArgs<ExtArgs>>): Prisma__PartnerAgentDraftVersionClient<$Result.GetResult<Prisma.$PartnerAgentDraftVersionPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of PartnerAgentDraftVersions.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PartnerAgentDraftVersionCountArgs} args - Arguments to filter PartnerAgentDraftVersions to count.
+     * @example
+     * // Count the number of PartnerAgentDraftVersions
+     * const count = await prisma.partnerAgentDraftVersion.count({
+     *   where: {
+     *     // ... the filter for the PartnerAgentDraftVersions we want to count
+     *   }
+     * })
+    **/
+    count<T extends PartnerAgentDraftVersionCountArgs>(
+      args?: Subset<T, PartnerAgentDraftVersionCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], PartnerAgentDraftVersionCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a PartnerAgentDraftVersion.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PartnerAgentDraftVersionAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends PartnerAgentDraftVersionAggregateArgs>(args: Subset<T, PartnerAgentDraftVersionAggregateArgs>): Prisma.PrismaPromise<GetPartnerAgentDraftVersionAggregateType<T>>
+
+    /**
+     * Group by PartnerAgentDraftVersion.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PartnerAgentDraftVersionGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends PartnerAgentDraftVersionGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: PartnerAgentDraftVersionGroupByArgs['orderBy'] }
+        : { orderBy?: PartnerAgentDraftVersionGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, PartnerAgentDraftVersionGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetPartnerAgentDraftVersionGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the PartnerAgentDraftVersion model
+   */
+  readonly fields: PartnerAgentDraftVersionFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for PartnerAgentDraftVersion.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__PartnerAgentDraftVersionClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    application<T extends PartnerAgentApplicationDefaultArgs<ExtArgs> = {}>(args?: Subset<T, PartnerAgentApplicationDefaultArgs<ExtArgs>>): Prisma__PartnerAgentApplicationClient<$Result.GetResult<Prisma.$PartnerAgentApplicationPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the PartnerAgentDraftVersion model
+   */ 
+  interface PartnerAgentDraftVersionFieldRefs {
+    readonly id: FieldRef<"PartnerAgentDraftVersion", 'String'>
+    readonly applicationId: FieldRef<"PartnerAgentDraftVersion", 'String'>
+    readonly version: FieldRef<"PartnerAgentDraftVersion", 'String'>
+    readonly manifestJson: FieldRef<"PartnerAgentDraftVersion", 'String'>
+    readonly skillPackageJson: FieldRef<"PartnerAgentDraftVersion", 'String'>
+    readonly releaseChannel: FieldRef<"PartnerAgentDraftVersion", 'String'>
+    readonly demoUrl: FieldRef<"PartnerAgentDraftVersion", 'String'>
+    readonly privacyNotes: FieldRef<"PartnerAgentDraftVersion", 'String'>
+    readonly pricingJson: FieldRef<"PartnerAgentDraftVersion", 'String'>
+    readonly createdAt: FieldRef<"PartnerAgentDraftVersion", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * PartnerAgentDraftVersion findUnique
+   */
+  export type PartnerAgentDraftVersionFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PartnerAgentDraftVersion
+     */
+    select?: PartnerAgentDraftVersionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PartnerAgentDraftVersionInclude<ExtArgs> | null
+    /**
+     * Filter, which PartnerAgentDraftVersion to fetch.
+     */
+    where: PartnerAgentDraftVersionWhereUniqueInput
+  }
+
+  /**
+   * PartnerAgentDraftVersion findUniqueOrThrow
+   */
+  export type PartnerAgentDraftVersionFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PartnerAgentDraftVersion
+     */
+    select?: PartnerAgentDraftVersionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PartnerAgentDraftVersionInclude<ExtArgs> | null
+    /**
+     * Filter, which PartnerAgentDraftVersion to fetch.
+     */
+    where: PartnerAgentDraftVersionWhereUniqueInput
+  }
+
+  /**
+   * PartnerAgentDraftVersion findFirst
+   */
+  export type PartnerAgentDraftVersionFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PartnerAgentDraftVersion
+     */
+    select?: PartnerAgentDraftVersionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PartnerAgentDraftVersionInclude<ExtArgs> | null
+    /**
+     * Filter, which PartnerAgentDraftVersion to fetch.
+     */
+    where?: PartnerAgentDraftVersionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PartnerAgentDraftVersions to fetch.
+     */
+    orderBy?: PartnerAgentDraftVersionOrderByWithRelationInput | PartnerAgentDraftVersionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for PartnerAgentDraftVersions.
+     */
+    cursor?: PartnerAgentDraftVersionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PartnerAgentDraftVersions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PartnerAgentDraftVersions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of PartnerAgentDraftVersions.
+     */
+    distinct?: PartnerAgentDraftVersionScalarFieldEnum | PartnerAgentDraftVersionScalarFieldEnum[]
+  }
+
+  /**
+   * PartnerAgentDraftVersion findFirstOrThrow
+   */
+  export type PartnerAgentDraftVersionFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PartnerAgentDraftVersion
+     */
+    select?: PartnerAgentDraftVersionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PartnerAgentDraftVersionInclude<ExtArgs> | null
+    /**
+     * Filter, which PartnerAgentDraftVersion to fetch.
+     */
+    where?: PartnerAgentDraftVersionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PartnerAgentDraftVersions to fetch.
+     */
+    orderBy?: PartnerAgentDraftVersionOrderByWithRelationInput | PartnerAgentDraftVersionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for PartnerAgentDraftVersions.
+     */
+    cursor?: PartnerAgentDraftVersionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PartnerAgentDraftVersions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PartnerAgentDraftVersions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of PartnerAgentDraftVersions.
+     */
+    distinct?: PartnerAgentDraftVersionScalarFieldEnum | PartnerAgentDraftVersionScalarFieldEnum[]
+  }
+
+  /**
+   * PartnerAgentDraftVersion findMany
+   */
+  export type PartnerAgentDraftVersionFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PartnerAgentDraftVersion
+     */
+    select?: PartnerAgentDraftVersionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PartnerAgentDraftVersionInclude<ExtArgs> | null
+    /**
+     * Filter, which PartnerAgentDraftVersions to fetch.
+     */
+    where?: PartnerAgentDraftVersionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PartnerAgentDraftVersions to fetch.
+     */
+    orderBy?: PartnerAgentDraftVersionOrderByWithRelationInput | PartnerAgentDraftVersionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing PartnerAgentDraftVersions.
+     */
+    cursor?: PartnerAgentDraftVersionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PartnerAgentDraftVersions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PartnerAgentDraftVersions.
+     */
+    skip?: number
+    distinct?: PartnerAgentDraftVersionScalarFieldEnum | PartnerAgentDraftVersionScalarFieldEnum[]
+  }
+
+  /**
+   * PartnerAgentDraftVersion create
+   */
+  export type PartnerAgentDraftVersionCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PartnerAgentDraftVersion
+     */
+    select?: PartnerAgentDraftVersionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PartnerAgentDraftVersionInclude<ExtArgs> | null
+    /**
+     * The data needed to create a PartnerAgentDraftVersion.
+     */
+    data: XOR<PartnerAgentDraftVersionCreateInput, PartnerAgentDraftVersionUncheckedCreateInput>
+  }
+
+  /**
+   * PartnerAgentDraftVersion createMany
+   */
+  export type PartnerAgentDraftVersionCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many PartnerAgentDraftVersions.
+     */
+    data: PartnerAgentDraftVersionCreateManyInput | PartnerAgentDraftVersionCreateManyInput[]
+  }
+
+  /**
+   * PartnerAgentDraftVersion createManyAndReturn
+   */
+  export type PartnerAgentDraftVersionCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PartnerAgentDraftVersion
+     */
+    select?: PartnerAgentDraftVersionSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many PartnerAgentDraftVersions.
+     */
+    data: PartnerAgentDraftVersionCreateManyInput | PartnerAgentDraftVersionCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PartnerAgentDraftVersionIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * PartnerAgentDraftVersion update
+   */
+  export type PartnerAgentDraftVersionUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PartnerAgentDraftVersion
+     */
+    select?: PartnerAgentDraftVersionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PartnerAgentDraftVersionInclude<ExtArgs> | null
+    /**
+     * The data needed to update a PartnerAgentDraftVersion.
+     */
+    data: XOR<PartnerAgentDraftVersionUpdateInput, PartnerAgentDraftVersionUncheckedUpdateInput>
+    /**
+     * Choose, which PartnerAgentDraftVersion to update.
+     */
+    where: PartnerAgentDraftVersionWhereUniqueInput
+  }
+
+  /**
+   * PartnerAgentDraftVersion updateMany
+   */
+  export type PartnerAgentDraftVersionUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update PartnerAgentDraftVersions.
+     */
+    data: XOR<PartnerAgentDraftVersionUpdateManyMutationInput, PartnerAgentDraftVersionUncheckedUpdateManyInput>
+    /**
+     * Filter which PartnerAgentDraftVersions to update
+     */
+    where?: PartnerAgentDraftVersionWhereInput
+  }
+
+  /**
+   * PartnerAgentDraftVersion upsert
+   */
+  export type PartnerAgentDraftVersionUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PartnerAgentDraftVersion
+     */
+    select?: PartnerAgentDraftVersionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PartnerAgentDraftVersionInclude<ExtArgs> | null
+    /**
+     * The filter to search for the PartnerAgentDraftVersion to update in case it exists.
+     */
+    where: PartnerAgentDraftVersionWhereUniqueInput
+    /**
+     * In case the PartnerAgentDraftVersion found by the `where` argument doesn't exist, create a new PartnerAgentDraftVersion with this data.
+     */
+    create: XOR<PartnerAgentDraftVersionCreateInput, PartnerAgentDraftVersionUncheckedCreateInput>
+    /**
+     * In case the PartnerAgentDraftVersion was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<PartnerAgentDraftVersionUpdateInput, PartnerAgentDraftVersionUncheckedUpdateInput>
+  }
+
+  /**
+   * PartnerAgentDraftVersion delete
+   */
+  export type PartnerAgentDraftVersionDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PartnerAgentDraftVersion
+     */
+    select?: PartnerAgentDraftVersionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PartnerAgentDraftVersionInclude<ExtArgs> | null
+    /**
+     * Filter which PartnerAgentDraftVersion to delete.
+     */
+    where: PartnerAgentDraftVersionWhereUniqueInput
+  }
+
+  /**
+   * PartnerAgentDraftVersion deleteMany
+   */
+  export type PartnerAgentDraftVersionDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which PartnerAgentDraftVersions to delete
+     */
+    where?: PartnerAgentDraftVersionWhereInput
+  }
+
+  /**
+   * PartnerAgentDraftVersion without action
+   */
+  export type PartnerAgentDraftVersionDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PartnerAgentDraftVersion
+     */
+    select?: PartnerAgentDraftVersionSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PartnerAgentDraftVersionInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model PartnerSandboxRun
+   */
+
+  export type AggregatePartnerSandboxRun = {
+    _count: PartnerSandboxRunCountAggregateOutputType | null
+    _min: PartnerSandboxRunMinAggregateOutputType | null
+    _max: PartnerSandboxRunMaxAggregateOutputType | null
+  }
+
+  export type PartnerSandboxRunMinAggregateOutputType = {
+    id: string | null
+    applicationId: string | null
+    versionId: string | null
+    fixtureId: string | null
+    status: string | null
+    checksJson: string | null
+    qualityReportJson: string | null
+    logText: string | null
+    invokeId: string | null
+    startedAt: Date | null
+    finishedAt: Date | null
+  }
+
+  export type PartnerSandboxRunMaxAggregateOutputType = {
+    id: string | null
+    applicationId: string | null
+    versionId: string | null
+    fixtureId: string | null
+    status: string | null
+    checksJson: string | null
+    qualityReportJson: string | null
+    logText: string | null
+    invokeId: string | null
+    startedAt: Date | null
+    finishedAt: Date | null
+  }
+
+  export type PartnerSandboxRunCountAggregateOutputType = {
+    id: number
+    applicationId: number
+    versionId: number
+    fixtureId: number
+    status: number
+    checksJson: number
+    qualityReportJson: number
+    logText: number
+    invokeId: number
+    startedAt: number
+    finishedAt: number
+    _all: number
+  }
+
+
+  export type PartnerSandboxRunMinAggregateInputType = {
+    id?: true
+    applicationId?: true
+    versionId?: true
+    fixtureId?: true
+    status?: true
+    checksJson?: true
+    qualityReportJson?: true
+    logText?: true
+    invokeId?: true
+    startedAt?: true
+    finishedAt?: true
+  }
+
+  export type PartnerSandboxRunMaxAggregateInputType = {
+    id?: true
+    applicationId?: true
+    versionId?: true
+    fixtureId?: true
+    status?: true
+    checksJson?: true
+    qualityReportJson?: true
+    logText?: true
+    invokeId?: true
+    startedAt?: true
+    finishedAt?: true
+  }
+
+  export type PartnerSandboxRunCountAggregateInputType = {
+    id?: true
+    applicationId?: true
+    versionId?: true
+    fixtureId?: true
+    status?: true
+    checksJson?: true
+    qualityReportJson?: true
+    logText?: true
+    invokeId?: true
+    startedAt?: true
+    finishedAt?: true
+    _all?: true
+  }
+
+  export type PartnerSandboxRunAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which PartnerSandboxRun to aggregate.
+     */
+    where?: PartnerSandboxRunWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PartnerSandboxRuns to fetch.
+     */
+    orderBy?: PartnerSandboxRunOrderByWithRelationInput | PartnerSandboxRunOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: PartnerSandboxRunWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PartnerSandboxRuns from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PartnerSandboxRuns.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned PartnerSandboxRuns
+    **/
+    _count?: true | PartnerSandboxRunCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: PartnerSandboxRunMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: PartnerSandboxRunMaxAggregateInputType
+  }
+
+  export type GetPartnerSandboxRunAggregateType<T extends PartnerSandboxRunAggregateArgs> = {
+        [P in keyof T & keyof AggregatePartnerSandboxRun]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregatePartnerSandboxRun[P]>
+      : GetScalarType<T[P], AggregatePartnerSandboxRun[P]>
+  }
+
+
+
+
+  export type PartnerSandboxRunGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: PartnerSandboxRunWhereInput
+    orderBy?: PartnerSandboxRunOrderByWithAggregationInput | PartnerSandboxRunOrderByWithAggregationInput[]
+    by: PartnerSandboxRunScalarFieldEnum[] | PartnerSandboxRunScalarFieldEnum
+    having?: PartnerSandboxRunScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: PartnerSandboxRunCountAggregateInputType | true
+    _min?: PartnerSandboxRunMinAggregateInputType
+    _max?: PartnerSandboxRunMaxAggregateInputType
+  }
+
+  export type PartnerSandboxRunGroupByOutputType = {
+    id: string
+    applicationId: string
+    versionId: string
+    fixtureId: string
+    status: string
+    checksJson: string
+    qualityReportJson: string | null
+    logText: string | null
+    invokeId: string | null
+    startedAt: Date
+    finishedAt: Date | null
+    _count: PartnerSandboxRunCountAggregateOutputType | null
+    _min: PartnerSandboxRunMinAggregateOutputType | null
+    _max: PartnerSandboxRunMaxAggregateOutputType | null
+  }
+
+  type GetPartnerSandboxRunGroupByPayload<T extends PartnerSandboxRunGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<PartnerSandboxRunGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof PartnerSandboxRunGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], PartnerSandboxRunGroupByOutputType[P]>
+            : GetScalarType<T[P], PartnerSandboxRunGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type PartnerSandboxRunSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    applicationId?: boolean
+    versionId?: boolean
+    fixtureId?: boolean
+    status?: boolean
+    checksJson?: boolean
+    qualityReportJson?: boolean
+    logText?: boolean
+    invokeId?: boolean
+    startedAt?: boolean
+    finishedAt?: boolean
+    application?: boolean | PartnerAgentApplicationDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["partnerSandboxRun"]>
+
+  export type PartnerSandboxRunSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    applicationId?: boolean
+    versionId?: boolean
+    fixtureId?: boolean
+    status?: boolean
+    checksJson?: boolean
+    qualityReportJson?: boolean
+    logText?: boolean
+    invokeId?: boolean
+    startedAt?: boolean
+    finishedAt?: boolean
+    application?: boolean | PartnerAgentApplicationDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["partnerSandboxRun"]>
+
+  export type PartnerSandboxRunSelectScalar = {
+    id?: boolean
+    applicationId?: boolean
+    versionId?: boolean
+    fixtureId?: boolean
+    status?: boolean
+    checksJson?: boolean
+    qualityReportJson?: boolean
+    logText?: boolean
+    invokeId?: boolean
+    startedAt?: boolean
+    finishedAt?: boolean
+  }
+
+  export type PartnerSandboxRunInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    application?: boolean | PartnerAgentApplicationDefaultArgs<ExtArgs>
+  }
+  export type PartnerSandboxRunIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    application?: boolean | PartnerAgentApplicationDefaultArgs<ExtArgs>
+  }
+
+  export type $PartnerSandboxRunPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "PartnerSandboxRun"
+    objects: {
+      application: Prisma.$PartnerAgentApplicationPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      applicationId: string
+      versionId: string
+      fixtureId: string
+      status: string
+      checksJson: string
+      qualityReportJson: string | null
+      logText: string | null
+      invokeId: string | null
+      startedAt: Date
+      finishedAt: Date | null
+    }, ExtArgs["result"]["partnerSandboxRun"]>
+    composites: {}
+  }
+
+  type PartnerSandboxRunGetPayload<S extends boolean | null | undefined | PartnerSandboxRunDefaultArgs> = $Result.GetResult<Prisma.$PartnerSandboxRunPayload, S>
+
+  type PartnerSandboxRunCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<PartnerSandboxRunFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: PartnerSandboxRunCountAggregateInputType | true
+    }
+
+  export interface PartnerSandboxRunDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['PartnerSandboxRun'], meta: { name: 'PartnerSandboxRun' } }
+    /**
+     * Find zero or one PartnerSandboxRun that matches the filter.
+     * @param {PartnerSandboxRunFindUniqueArgs} args - Arguments to find a PartnerSandboxRun
+     * @example
+     * // Get one PartnerSandboxRun
+     * const partnerSandboxRun = await prisma.partnerSandboxRun.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends PartnerSandboxRunFindUniqueArgs>(args: SelectSubset<T, PartnerSandboxRunFindUniqueArgs<ExtArgs>>): Prisma__PartnerSandboxRunClient<$Result.GetResult<Prisma.$PartnerSandboxRunPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one PartnerSandboxRun that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {PartnerSandboxRunFindUniqueOrThrowArgs} args - Arguments to find a PartnerSandboxRun
+     * @example
+     * // Get one PartnerSandboxRun
+     * const partnerSandboxRun = await prisma.partnerSandboxRun.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends PartnerSandboxRunFindUniqueOrThrowArgs>(args: SelectSubset<T, PartnerSandboxRunFindUniqueOrThrowArgs<ExtArgs>>): Prisma__PartnerSandboxRunClient<$Result.GetResult<Prisma.$PartnerSandboxRunPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first PartnerSandboxRun that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PartnerSandboxRunFindFirstArgs} args - Arguments to find a PartnerSandboxRun
+     * @example
+     * // Get one PartnerSandboxRun
+     * const partnerSandboxRun = await prisma.partnerSandboxRun.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends PartnerSandboxRunFindFirstArgs>(args?: SelectSubset<T, PartnerSandboxRunFindFirstArgs<ExtArgs>>): Prisma__PartnerSandboxRunClient<$Result.GetResult<Prisma.$PartnerSandboxRunPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first PartnerSandboxRun that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PartnerSandboxRunFindFirstOrThrowArgs} args - Arguments to find a PartnerSandboxRun
+     * @example
+     * // Get one PartnerSandboxRun
+     * const partnerSandboxRun = await prisma.partnerSandboxRun.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends PartnerSandboxRunFindFirstOrThrowArgs>(args?: SelectSubset<T, PartnerSandboxRunFindFirstOrThrowArgs<ExtArgs>>): Prisma__PartnerSandboxRunClient<$Result.GetResult<Prisma.$PartnerSandboxRunPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more PartnerSandboxRuns that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PartnerSandboxRunFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all PartnerSandboxRuns
+     * const partnerSandboxRuns = await prisma.partnerSandboxRun.findMany()
+     * 
+     * // Get first 10 PartnerSandboxRuns
+     * const partnerSandboxRuns = await prisma.partnerSandboxRun.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const partnerSandboxRunWithIdOnly = await prisma.partnerSandboxRun.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends PartnerSandboxRunFindManyArgs>(args?: SelectSubset<T, PartnerSandboxRunFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PartnerSandboxRunPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a PartnerSandboxRun.
+     * @param {PartnerSandboxRunCreateArgs} args - Arguments to create a PartnerSandboxRun.
+     * @example
+     * // Create one PartnerSandboxRun
+     * const PartnerSandboxRun = await prisma.partnerSandboxRun.create({
+     *   data: {
+     *     // ... data to create a PartnerSandboxRun
+     *   }
+     * })
+     * 
+     */
+    create<T extends PartnerSandboxRunCreateArgs>(args: SelectSubset<T, PartnerSandboxRunCreateArgs<ExtArgs>>): Prisma__PartnerSandboxRunClient<$Result.GetResult<Prisma.$PartnerSandboxRunPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many PartnerSandboxRuns.
+     * @param {PartnerSandboxRunCreateManyArgs} args - Arguments to create many PartnerSandboxRuns.
+     * @example
+     * // Create many PartnerSandboxRuns
+     * const partnerSandboxRun = await prisma.partnerSandboxRun.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends PartnerSandboxRunCreateManyArgs>(args?: SelectSubset<T, PartnerSandboxRunCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many PartnerSandboxRuns and returns the data saved in the database.
+     * @param {PartnerSandboxRunCreateManyAndReturnArgs} args - Arguments to create many PartnerSandboxRuns.
+     * @example
+     * // Create many PartnerSandboxRuns
+     * const partnerSandboxRun = await prisma.partnerSandboxRun.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many PartnerSandboxRuns and only return the `id`
+     * const partnerSandboxRunWithIdOnly = await prisma.partnerSandboxRun.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends PartnerSandboxRunCreateManyAndReturnArgs>(args?: SelectSubset<T, PartnerSandboxRunCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PartnerSandboxRunPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a PartnerSandboxRun.
+     * @param {PartnerSandboxRunDeleteArgs} args - Arguments to delete one PartnerSandboxRun.
+     * @example
+     * // Delete one PartnerSandboxRun
+     * const PartnerSandboxRun = await prisma.partnerSandboxRun.delete({
+     *   where: {
+     *     // ... filter to delete one PartnerSandboxRun
+     *   }
+     * })
+     * 
+     */
+    delete<T extends PartnerSandboxRunDeleteArgs>(args: SelectSubset<T, PartnerSandboxRunDeleteArgs<ExtArgs>>): Prisma__PartnerSandboxRunClient<$Result.GetResult<Prisma.$PartnerSandboxRunPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one PartnerSandboxRun.
+     * @param {PartnerSandboxRunUpdateArgs} args - Arguments to update one PartnerSandboxRun.
+     * @example
+     * // Update one PartnerSandboxRun
+     * const partnerSandboxRun = await prisma.partnerSandboxRun.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends PartnerSandboxRunUpdateArgs>(args: SelectSubset<T, PartnerSandboxRunUpdateArgs<ExtArgs>>): Prisma__PartnerSandboxRunClient<$Result.GetResult<Prisma.$PartnerSandboxRunPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more PartnerSandboxRuns.
+     * @param {PartnerSandboxRunDeleteManyArgs} args - Arguments to filter PartnerSandboxRuns to delete.
+     * @example
+     * // Delete a few PartnerSandboxRuns
+     * const { count } = await prisma.partnerSandboxRun.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends PartnerSandboxRunDeleteManyArgs>(args?: SelectSubset<T, PartnerSandboxRunDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more PartnerSandboxRuns.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PartnerSandboxRunUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many PartnerSandboxRuns
+     * const partnerSandboxRun = await prisma.partnerSandboxRun.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends PartnerSandboxRunUpdateManyArgs>(args: SelectSubset<T, PartnerSandboxRunUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one PartnerSandboxRun.
+     * @param {PartnerSandboxRunUpsertArgs} args - Arguments to update or create a PartnerSandboxRun.
+     * @example
+     * // Update or create a PartnerSandboxRun
+     * const partnerSandboxRun = await prisma.partnerSandboxRun.upsert({
+     *   create: {
+     *     // ... data to create a PartnerSandboxRun
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the PartnerSandboxRun we want to update
+     *   }
+     * })
+     */
+    upsert<T extends PartnerSandboxRunUpsertArgs>(args: SelectSubset<T, PartnerSandboxRunUpsertArgs<ExtArgs>>): Prisma__PartnerSandboxRunClient<$Result.GetResult<Prisma.$PartnerSandboxRunPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of PartnerSandboxRuns.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PartnerSandboxRunCountArgs} args - Arguments to filter PartnerSandboxRuns to count.
+     * @example
+     * // Count the number of PartnerSandboxRuns
+     * const count = await prisma.partnerSandboxRun.count({
+     *   where: {
+     *     // ... the filter for the PartnerSandboxRuns we want to count
+     *   }
+     * })
+    **/
+    count<T extends PartnerSandboxRunCountArgs>(
+      args?: Subset<T, PartnerSandboxRunCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], PartnerSandboxRunCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a PartnerSandboxRun.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PartnerSandboxRunAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends PartnerSandboxRunAggregateArgs>(args: Subset<T, PartnerSandboxRunAggregateArgs>): Prisma.PrismaPromise<GetPartnerSandboxRunAggregateType<T>>
+
+    /**
+     * Group by PartnerSandboxRun.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PartnerSandboxRunGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends PartnerSandboxRunGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: PartnerSandboxRunGroupByArgs['orderBy'] }
+        : { orderBy?: PartnerSandboxRunGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, PartnerSandboxRunGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetPartnerSandboxRunGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the PartnerSandboxRun model
+   */
+  readonly fields: PartnerSandboxRunFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for PartnerSandboxRun.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__PartnerSandboxRunClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    application<T extends PartnerAgentApplicationDefaultArgs<ExtArgs> = {}>(args?: Subset<T, PartnerAgentApplicationDefaultArgs<ExtArgs>>): Prisma__PartnerAgentApplicationClient<$Result.GetResult<Prisma.$PartnerAgentApplicationPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the PartnerSandboxRun model
+   */ 
+  interface PartnerSandboxRunFieldRefs {
+    readonly id: FieldRef<"PartnerSandboxRun", 'String'>
+    readonly applicationId: FieldRef<"PartnerSandboxRun", 'String'>
+    readonly versionId: FieldRef<"PartnerSandboxRun", 'String'>
+    readonly fixtureId: FieldRef<"PartnerSandboxRun", 'String'>
+    readonly status: FieldRef<"PartnerSandboxRun", 'String'>
+    readonly checksJson: FieldRef<"PartnerSandboxRun", 'String'>
+    readonly qualityReportJson: FieldRef<"PartnerSandboxRun", 'String'>
+    readonly logText: FieldRef<"PartnerSandboxRun", 'String'>
+    readonly invokeId: FieldRef<"PartnerSandboxRun", 'String'>
+    readonly startedAt: FieldRef<"PartnerSandboxRun", 'DateTime'>
+    readonly finishedAt: FieldRef<"PartnerSandboxRun", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * PartnerSandboxRun findUnique
+   */
+  export type PartnerSandboxRunFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PartnerSandboxRun
+     */
+    select?: PartnerSandboxRunSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PartnerSandboxRunInclude<ExtArgs> | null
+    /**
+     * Filter, which PartnerSandboxRun to fetch.
+     */
+    where: PartnerSandboxRunWhereUniqueInput
+  }
+
+  /**
+   * PartnerSandboxRun findUniqueOrThrow
+   */
+  export type PartnerSandboxRunFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PartnerSandboxRun
+     */
+    select?: PartnerSandboxRunSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PartnerSandboxRunInclude<ExtArgs> | null
+    /**
+     * Filter, which PartnerSandboxRun to fetch.
+     */
+    where: PartnerSandboxRunWhereUniqueInput
+  }
+
+  /**
+   * PartnerSandboxRun findFirst
+   */
+  export type PartnerSandboxRunFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PartnerSandboxRun
+     */
+    select?: PartnerSandboxRunSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PartnerSandboxRunInclude<ExtArgs> | null
+    /**
+     * Filter, which PartnerSandboxRun to fetch.
+     */
+    where?: PartnerSandboxRunWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PartnerSandboxRuns to fetch.
+     */
+    orderBy?: PartnerSandboxRunOrderByWithRelationInput | PartnerSandboxRunOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for PartnerSandboxRuns.
+     */
+    cursor?: PartnerSandboxRunWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PartnerSandboxRuns from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PartnerSandboxRuns.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of PartnerSandboxRuns.
+     */
+    distinct?: PartnerSandboxRunScalarFieldEnum | PartnerSandboxRunScalarFieldEnum[]
+  }
+
+  /**
+   * PartnerSandboxRun findFirstOrThrow
+   */
+  export type PartnerSandboxRunFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PartnerSandboxRun
+     */
+    select?: PartnerSandboxRunSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PartnerSandboxRunInclude<ExtArgs> | null
+    /**
+     * Filter, which PartnerSandboxRun to fetch.
+     */
+    where?: PartnerSandboxRunWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PartnerSandboxRuns to fetch.
+     */
+    orderBy?: PartnerSandboxRunOrderByWithRelationInput | PartnerSandboxRunOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for PartnerSandboxRuns.
+     */
+    cursor?: PartnerSandboxRunWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PartnerSandboxRuns from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PartnerSandboxRuns.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of PartnerSandboxRuns.
+     */
+    distinct?: PartnerSandboxRunScalarFieldEnum | PartnerSandboxRunScalarFieldEnum[]
+  }
+
+  /**
+   * PartnerSandboxRun findMany
+   */
+  export type PartnerSandboxRunFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PartnerSandboxRun
+     */
+    select?: PartnerSandboxRunSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PartnerSandboxRunInclude<ExtArgs> | null
+    /**
+     * Filter, which PartnerSandboxRuns to fetch.
+     */
+    where?: PartnerSandboxRunWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PartnerSandboxRuns to fetch.
+     */
+    orderBy?: PartnerSandboxRunOrderByWithRelationInput | PartnerSandboxRunOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing PartnerSandboxRuns.
+     */
+    cursor?: PartnerSandboxRunWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PartnerSandboxRuns from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PartnerSandboxRuns.
+     */
+    skip?: number
+    distinct?: PartnerSandboxRunScalarFieldEnum | PartnerSandboxRunScalarFieldEnum[]
+  }
+
+  /**
+   * PartnerSandboxRun create
+   */
+  export type PartnerSandboxRunCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PartnerSandboxRun
+     */
+    select?: PartnerSandboxRunSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PartnerSandboxRunInclude<ExtArgs> | null
+    /**
+     * The data needed to create a PartnerSandboxRun.
+     */
+    data: XOR<PartnerSandboxRunCreateInput, PartnerSandboxRunUncheckedCreateInput>
+  }
+
+  /**
+   * PartnerSandboxRun createMany
+   */
+  export type PartnerSandboxRunCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many PartnerSandboxRuns.
+     */
+    data: PartnerSandboxRunCreateManyInput | PartnerSandboxRunCreateManyInput[]
+  }
+
+  /**
+   * PartnerSandboxRun createManyAndReturn
+   */
+  export type PartnerSandboxRunCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PartnerSandboxRun
+     */
+    select?: PartnerSandboxRunSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many PartnerSandboxRuns.
+     */
+    data: PartnerSandboxRunCreateManyInput | PartnerSandboxRunCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PartnerSandboxRunIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * PartnerSandboxRun update
+   */
+  export type PartnerSandboxRunUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PartnerSandboxRun
+     */
+    select?: PartnerSandboxRunSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PartnerSandboxRunInclude<ExtArgs> | null
+    /**
+     * The data needed to update a PartnerSandboxRun.
+     */
+    data: XOR<PartnerSandboxRunUpdateInput, PartnerSandboxRunUncheckedUpdateInput>
+    /**
+     * Choose, which PartnerSandboxRun to update.
+     */
+    where: PartnerSandboxRunWhereUniqueInput
+  }
+
+  /**
+   * PartnerSandboxRun updateMany
+   */
+  export type PartnerSandboxRunUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update PartnerSandboxRuns.
+     */
+    data: XOR<PartnerSandboxRunUpdateManyMutationInput, PartnerSandboxRunUncheckedUpdateManyInput>
+    /**
+     * Filter which PartnerSandboxRuns to update
+     */
+    where?: PartnerSandboxRunWhereInput
+  }
+
+  /**
+   * PartnerSandboxRun upsert
+   */
+  export type PartnerSandboxRunUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PartnerSandboxRun
+     */
+    select?: PartnerSandboxRunSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PartnerSandboxRunInclude<ExtArgs> | null
+    /**
+     * The filter to search for the PartnerSandboxRun to update in case it exists.
+     */
+    where: PartnerSandboxRunWhereUniqueInput
+    /**
+     * In case the PartnerSandboxRun found by the `where` argument doesn't exist, create a new PartnerSandboxRun with this data.
+     */
+    create: XOR<PartnerSandboxRunCreateInput, PartnerSandboxRunUncheckedCreateInput>
+    /**
+     * In case the PartnerSandboxRun was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<PartnerSandboxRunUpdateInput, PartnerSandboxRunUncheckedUpdateInput>
+  }
+
+  /**
+   * PartnerSandboxRun delete
+   */
+  export type PartnerSandboxRunDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PartnerSandboxRun
+     */
+    select?: PartnerSandboxRunSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PartnerSandboxRunInclude<ExtArgs> | null
+    /**
+     * Filter which PartnerSandboxRun to delete.
+     */
+    where: PartnerSandboxRunWhereUniqueInput
+  }
+
+  /**
+   * PartnerSandboxRun deleteMany
+   */
+  export type PartnerSandboxRunDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which PartnerSandboxRuns to delete
+     */
+    where?: PartnerSandboxRunWhereInput
+  }
+
+  /**
+   * PartnerSandboxRun without action
+   */
+  export type PartnerSandboxRunDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PartnerSandboxRun
+     */
+    select?: PartnerSandboxRunSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PartnerSandboxRunInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model PartnerReviewTask
+   */
+
+  export type AggregatePartnerReviewTask = {
+    _count: PartnerReviewTaskCountAggregateOutputType | null
+    _min: PartnerReviewTaskMinAggregateOutputType | null
+    _max: PartnerReviewTaskMaxAggregateOutputType | null
+  }
+
+  export type PartnerReviewTaskMinAggregateOutputType = {
+    id: string | null
+    applicationId: string | null
+    versionId: string | null
+    status: string | null
+    checklistJson: string | null
+    reviewerUserId: string | null
+    decisionNote: string | null
+    submittedAt: Date | null
+    resolvedAt: Date | null
+  }
+
+  export type PartnerReviewTaskMaxAggregateOutputType = {
+    id: string | null
+    applicationId: string | null
+    versionId: string | null
+    status: string | null
+    checklistJson: string | null
+    reviewerUserId: string | null
+    decisionNote: string | null
+    submittedAt: Date | null
+    resolvedAt: Date | null
+  }
+
+  export type PartnerReviewTaskCountAggregateOutputType = {
+    id: number
+    applicationId: number
+    versionId: number
+    status: number
+    checklistJson: number
+    reviewerUserId: number
+    decisionNote: number
+    submittedAt: number
+    resolvedAt: number
+    _all: number
+  }
+
+
+  export type PartnerReviewTaskMinAggregateInputType = {
+    id?: true
+    applicationId?: true
+    versionId?: true
+    status?: true
+    checklistJson?: true
+    reviewerUserId?: true
+    decisionNote?: true
+    submittedAt?: true
+    resolvedAt?: true
+  }
+
+  export type PartnerReviewTaskMaxAggregateInputType = {
+    id?: true
+    applicationId?: true
+    versionId?: true
+    status?: true
+    checklistJson?: true
+    reviewerUserId?: true
+    decisionNote?: true
+    submittedAt?: true
+    resolvedAt?: true
+  }
+
+  export type PartnerReviewTaskCountAggregateInputType = {
+    id?: true
+    applicationId?: true
+    versionId?: true
+    status?: true
+    checklistJson?: true
+    reviewerUserId?: true
+    decisionNote?: true
+    submittedAt?: true
+    resolvedAt?: true
+    _all?: true
+  }
+
+  export type PartnerReviewTaskAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which PartnerReviewTask to aggregate.
+     */
+    where?: PartnerReviewTaskWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PartnerReviewTasks to fetch.
+     */
+    orderBy?: PartnerReviewTaskOrderByWithRelationInput | PartnerReviewTaskOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: PartnerReviewTaskWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PartnerReviewTasks from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PartnerReviewTasks.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned PartnerReviewTasks
+    **/
+    _count?: true | PartnerReviewTaskCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: PartnerReviewTaskMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: PartnerReviewTaskMaxAggregateInputType
+  }
+
+  export type GetPartnerReviewTaskAggregateType<T extends PartnerReviewTaskAggregateArgs> = {
+        [P in keyof T & keyof AggregatePartnerReviewTask]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregatePartnerReviewTask[P]>
+      : GetScalarType<T[P], AggregatePartnerReviewTask[P]>
+  }
+
+
+
+
+  export type PartnerReviewTaskGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: PartnerReviewTaskWhereInput
+    orderBy?: PartnerReviewTaskOrderByWithAggregationInput | PartnerReviewTaskOrderByWithAggregationInput[]
+    by: PartnerReviewTaskScalarFieldEnum[] | PartnerReviewTaskScalarFieldEnum
+    having?: PartnerReviewTaskScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: PartnerReviewTaskCountAggregateInputType | true
+    _min?: PartnerReviewTaskMinAggregateInputType
+    _max?: PartnerReviewTaskMaxAggregateInputType
+  }
+
+  export type PartnerReviewTaskGroupByOutputType = {
+    id: string
+    applicationId: string
+    versionId: string
+    status: string
+    checklistJson: string
+    reviewerUserId: string | null
+    decisionNote: string | null
+    submittedAt: Date
+    resolvedAt: Date | null
+    _count: PartnerReviewTaskCountAggregateOutputType | null
+    _min: PartnerReviewTaskMinAggregateOutputType | null
+    _max: PartnerReviewTaskMaxAggregateOutputType | null
+  }
+
+  type GetPartnerReviewTaskGroupByPayload<T extends PartnerReviewTaskGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<PartnerReviewTaskGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof PartnerReviewTaskGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], PartnerReviewTaskGroupByOutputType[P]>
+            : GetScalarType<T[P], PartnerReviewTaskGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type PartnerReviewTaskSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    applicationId?: boolean
+    versionId?: boolean
+    status?: boolean
+    checklistJson?: boolean
+    reviewerUserId?: boolean
+    decisionNote?: boolean
+    submittedAt?: boolean
+    resolvedAt?: boolean
+    application?: boolean | PartnerAgentApplicationDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["partnerReviewTask"]>
+
+  export type PartnerReviewTaskSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    applicationId?: boolean
+    versionId?: boolean
+    status?: boolean
+    checklistJson?: boolean
+    reviewerUserId?: boolean
+    decisionNote?: boolean
+    submittedAt?: boolean
+    resolvedAt?: boolean
+    application?: boolean | PartnerAgentApplicationDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["partnerReviewTask"]>
+
+  export type PartnerReviewTaskSelectScalar = {
+    id?: boolean
+    applicationId?: boolean
+    versionId?: boolean
+    status?: boolean
+    checklistJson?: boolean
+    reviewerUserId?: boolean
+    decisionNote?: boolean
+    submittedAt?: boolean
+    resolvedAt?: boolean
+  }
+
+  export type PartnerReviewTaskInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    application?: boolean | PartnerAgentApplicationDefaultArgs<ExtArgs>
+  }
+  export type PartnerReviewTaskIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    application?: boolean | PartnerAgentApplicationDefaultArgs<ExtArgs>
+  }
+
+  export type $PartnerReviewTaskPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "PartnerReviewTask"
+    objects: {
+      application: Prisma.$PartnerAgentApplicationPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      applicationId: string
+      versionId: string
+      status: string
+      checklistJson: string
+      reviewerUserId: string | null
+      decisionNote: string | null
+      submittedAt: Date
+      resolvedAt: Date | null
+    }, ExtArgs["result"]["partnerReviewTask"]>
+    composites: {}
+  }
+
+  type PartnerReviewTaskGetPayload<S extends boolean | null | undefined | PartnerReviewTaskDefaultArgs> = $Result.GetResult<Prisma.$PartnerReviewTaskPayload, S>
+
+  type PartnerReviewTaskCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = 
+    Omit<PartnerReviewTaskFindManyArgs, 'select' | 'include' | 'distinct'> & {
+      select?: PartnerReviewTaskCountAggregateInputType | true
+    }
+
+  export interface PartnerReviewTaskDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['PartnerReviewTask'], meta: { name: 'PartnerReviewTask' } }
+    /**
+     * Find zero or one PartnerReviewTask that matches the filter.
+     * @param {PartnerReviewTaskFindUniqueArgs} args - Arguments to find a PartnerReviewTask
+     * @example
+     * // Get one PartnerReviewTask
+     * const partnerReviewTask = await prisma.partnerReviewTask.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends PartnerReviewTaskFindUniqueArgs>(args: SelectSubset<T, PartnerReviewTaskFindUniqueArgs<ExtArgs>>): Prisma__PartnerReviewTaskClient<$Result.GetResult<Prisma.$PartnerReviewTaskPayload<ExtArgs>, T, "findUnique"> | null, null, ExtArgs>
+
+    /**
+     * Find one PartnerReviewTask that matches the filter or throw an error with `error.code='P2025'` 
+     * if no matches were found.
+     * @param {PartnerReviewTaskFindUniqueOrThrowArgs} args - Arguments to find a PartnerReviewTask
+     * @example
+     * // Get one PartnerReviewTask
+     * const partnerReviewTask = await prisma.partnerReviewTask.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends PartnerReviewTaskFindUniqueOrThrowArgs>(args: SelectSubset<T, PartnerReviewTaskFindUniqueOrThrowArgs<ExtArgs>>): Prisma__PartnerReviewTaskClient<$Result.GetResult<Prisma.$PartnerReviewTaskPayload<ExtArgs>, T, "findUniqueOrThrow">, never, ExtArgs>
+
+    /**
+     * Find the first PartnerReviewTask that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PartnerReviewTaskFindFirstArgs} args - Arguments to find a PartnerReviewTask
+     * @example
+     * // Get one PartnerReviewTask
+     * const partnerReviewTask = await prisma.partnerReviewTask.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends PartnerReviewTaskFindFirstArgs>(args?: SelectSubset<T, PartnerReviewTaskFindFirstArgs<ExtArgs>>): Prisma__PartnerReviewTaskClient<$Result.GetResult<Prisma.$PartnerReviewTaskPayload<ExtArgs>, T, "findFirst"> | null, null, ExtArgs>
+
+    /**
+     * Find the first PartnerReviewTask that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PartnerReviewTaskFindFirstOrThrowArgs} args - Arguments to find a PartnerReviewTask
+     * @example
+     * // Get one PartnerReviewTask
+     * const partnerReviewTask = await prisma.partnerReviewTask.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends PartnerReviewTaskFindFirstOrThrowArgs>(args?: SelectSubset<T, PartnerReviewTaskFindFirstOrThrowArgs<ExtArgs>>): Prisma__PartnerReviewTaskClient<$Result.GetResult<Prisma.$PartnerReviewTaskPayload<ExtArgs>, T, "findFirstOrThrow">, never, ExtArgs>
+
+    /**
+     * Find zero or more PartnerReviewTasks that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PartnerReviewTaskFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all PartnerReviewTasks
+     * const partnerReviewTasks = await prisma.partnerReviewTask.findMany()
+     * 
+     * // Get first 10 PartnerReviewTasks
+     * const partnerReviewTasks = await prisma.partnerReviewTask.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const partnerReviewTaskWithIdOnly = await prisma.partnerReviewTask.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends PartnerReviewTaskFindManyArgs>(args?: SelectSubset<T, PartnerReviewTaskFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PartnerReviewTaskPayload<ExtArgs>, T, "findMany">>
+
+    /**
+     * Create a PartnerReviewTask.
+     * @param {PartnerReviewTaskCreateArgs} args - Arguments to create a PartnerReviewTask.
+     * @example
+     * // Create one PartnerReviewTask
+     * const PartnerReviewTask = await prisma.partnerReviewTask.create({
+     *   data: {
+     *     // ... data to create a PartnerReviewTask
+     *   }
+     * })
+     * 
+     */
+    create<T extends PartnerReviewTaskCreateArgs>(args: SelectSubset<T, PartnerReviewTaskCreateArgs<ExtArgs>>): Prisma__PartnerReviewTaskClient<$Result.GetResult<Prisma.$PartnerReviewTaskPayload<ExtArgs>, T, "create">, never, ExtArgs>
+
+    /**
+     * Create many PartnerReviewTasks.
+     * @param {PartnerReviewTaskCreateManyArgs} args - Arguments to create many PartnerReviewTasks.
+     * @example
+     * // Create many PartnerReviewTasks
+     * const partnerReviewTask = await prisma.partnerReviewTask.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends PartnerReviewTaskCreateManyArgs>(args?: SelectSubset<T, PartnerReviewTaskCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many PartnerReviewTasks and returns the data saved in the database.
+     * @param {PartnerReviewTaskCreateManyAndReturnArgs} args - Arguments to create many PartnerReviewTasks.
+     * @example
+     * // Create many PartnerReviewTasks
+     * const partnerReviewTask = await prisma.partnerReviewTask.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many PartnerReviewTasks and only return the `id`
+     * const partnerReviewTaskWithIdOnly = await prisma.partnerReviewTask.createManyAndReturn({ 
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends PartnerReviewTaskCreateManyAndReturnArgs>(args?: SelectSubset<T, PartnerReviewTaskCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PartnerReviewTaskPayload<ExtArgs>, T, "createManyAndReturn">>
+
+    /**
+     * Delete a PartnerReviewTask.
+     * @param {PartnerReviewTaskDeleteArgs} args - Arguments to delete one PartnerReviewTask.
+     * @example
+     * // Delete one PartnerReviewTask
+     * const PartnerReviewTask = await prisma.partnerReviewTask.delete({
+     *   where: {
+     *     // ... filter to delete one PartnerReviewTask
+     *   }
+     * })
+     * 
+     */
+    delete<T extends PartnerReviewTaskDeleteArgs>(args: SelectSubset<T, PartnerReviewTaskDeleteArgs<ExtArgs>>): Prisma__PartnerReviewTaskClient<$Result.GetResult<Prisma.$PartnerReviewTaskPayload<ExtArgs>, T, "delete">, never, ExtArgs>
+
+    /**
+     * Update one PartnerReviewTask.
+     * @param {PartnerReviewTaskUpdateArgs} args - Arguments to update one PartnerReviewTask.
+     * @example
+     * // Update one PartnerReviewTask
+     * const partnerReviewTask = await prisma.partnerReviewTask.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends PartnerReviewTaskUpdateArgs>(args: SelectSubset<T, PartnerReviewTaskUpdateArgs<ExtArgs>>): Prisma__PartnerReviewTaskClient<$Result.GetResult<Prisma.$PartnerReviewTaskPayload<ExtArgs>, T, "update">, never, ExtArgs>
+
+    /**
+     * Delete zero or more PartnerReviewTasks.
+     * @param {PartnerReviewTaskDeleteManyArgs} args - Arguments to filter PartnerReviewTasks to delete.
+     * @example
+     * // Delete a few PartnerReviewTasks
+     * const { count } = await prisma.partnerReviewTask.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends PartnerReviewTaskDeleteManyArgs>(args?: SelectSubset<T, PartnerReviewTaskDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more PartnerReviewTasks.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PartnerReviewTaskUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many PartnerReviewTasks
+     * const partnerReviewTask = await prisma.partnerReviewTask.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends PartnerReviewTaskUpdateManyArgs>(args: SelectSubset<T, PartnerReviewTaskUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one PartnerReviewTask.
+     * @param {PartnerReviewTaskUpsertArgs} args - Arguments to update or create a PartnerReviewTask.
+     * @example
+     * // Update or create a PartnerReviewTask
+     * const partnerReviewTask = await prisma.partnerReviewTask.upsert({
+     *   create: {
+     *     // ... data to create a PartnerReviewTask
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the PartnerReviewTask we want to update
+     *   }
+     * })
+     */
+    upsert<T extends PartnerReviewTaskUpsertArgs>(args: SelectSubset<T, PartnerReviewTaskUpsertArgs<ExtArgs>>): Prisma__PartnerReviewTaskClient<$Result.GetResult<Prisma.$PartnerReviewTaskPayload<ExtArgs>, T, "upsert">, never, ExtArgs>
+
+
+    /**
+     * Count the number of PartnerReviewTasks.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PartnerReviewTaskCountArgs} args - Arguments to filter PartnerReviewTasks to count.
+     * @example
+     * // Count the number of PartnerReviewTasks
+     * const count = await prisma.partnerReviewTask.count({
+     *   where: {
+     *     // ... the filter for the PartnerReviewTasks we want to count
+     *   }
+     * })
+    **/
+    count<T extends PartnerReviewTaskCountArgs>(
+      args?: Subset<T, PartnerReviewTaskCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], PartnerReviewTaskCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a PartnerReviewTask.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PartnerReviewTaskAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends PartnerReviewTaskAggregateArgs>(args: Subset<T, PartnerReviewTaskAggregateArgs>): Prisma.PrismaPromise<GetPartnerReviewTaskAggregateType<T>>
+
+    /**
+     * Group by PartnerReviewTask.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {PartnerReviewTaskGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends PartnerReviewTaskGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: PartnerReviewTaskGroupByArgs['orderBy'] }
+        : { orderBy?: PartnerReviewTaskGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, PartnerReviewTaskGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetPartnerReviewTaskGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the PartnerReviewTask model
+   */
+  readonly fields: PartnerReviewTaskFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for PartnerReviewTask.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__PartnerReviewTaskClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    application<T extends PartnerAgentApplicationDefaultArgs<ExtArgs> = {}>(args?: Subset<T, PartnerAgentApplicationDefaultArgs<ExtArgs>>): Prisma__PartnerAgentApplicationClient<$Result.GetResult<Prisma.$PartnerAgentApplicationPayload<ExtArgs>, T, "findUniqueOrThrow"> | Null, Null, ExtArgs>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the PartnerReviewTask model
+   */ 
+  interface PartnerReviewTaskFieldRefs {
+    readonly id: FieldRef<"PartnerReviewTask", 'String'>
+    readonly applicationId: FieldRef<"PartnerReviewTask", 'String'>
+    readonly versionId: FieldRef<"PartnerReviewTask", 'String'>
+    readonly status: FieldRef<"PartnerReviewTask", 'String'>
+    readonly checklistJson: FieldRef<"PartnerReviewTask", 'String'>
+    readonly reviewerUserId: FieldRef<"PartnerReviewTask", 'String'>
+    readonly decisionNote: FieldRef<"PartnerReviewTask", 'String'>
+    readonly submittedAt: FieldRef<"PartnerReviewTask", 'DateTime'>
+    readonly resolvedAt: FieldRef<"PartnerReviewTask", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * PartnerReviewTask findUnique
+   */
+  export type PartnerReviewTaskFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PartnerReviewTask
+     */
+    select?: PartnerReviewTaskSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PartnerReviewTaskInclude<ExtArgs> | null
+    /**
+     * Filter, which PartnerReviewTask to fetch.
+     */
+    where: PartnerReviewTaskWhereUniqueInput
+  }
+
+  /**
+   * PartnerReviewTask findUniqueOrThrow
+   */
+  export type PartnerReviewTaskFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PartnerReviewTask
+     */
+    select?: PartnerReviewTaskSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PartnerReviewTaskInclude<ExtArgs> | null
+    /**
+     * Filter, which PartnerReviewTask to fetch.
+     */
+    where: PartnerReviewTaskWhereUniqueInput
+  }
+
+  /**
+   * PartnerReviewTask findFirst
+   */
+  export type PartnerReviewTaskFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PartnerReviewTask
+     */
+    select?: PartnerReviewTaskSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PartnerReviewTaskInclude<ExtArgs> | null
+    /**
+     * Filter, which PartnerReviewTask to fetch.
+     */
+    where?: PartnerReviewTaskWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PartnerReviewTasks to fetch.
+     */
+    orderBy?: PartnerReviewTaskOrderByWithRelationInput | PartnerReviewTaskOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for PartnerReviewTasks.
+     */
+    cursor?: PartnerReviewTaskWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PartnerReviewTasks from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PartnerReviewTasks.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of PartnerReviewTasks.
+     */
+    distinct?: PartnerReviewTaskScalarFieldEnum | PartnerReviewTaskScalarFieldEnum[]
+  }
+
+  /**
+   * PartnerReviewTask findFirstOrThrow
+   */
+  export type PartnerReviewTaskFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PartnerReviewTask
+     */
+    select?: PartnerReviewTaskSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PartnerReviewTaskInclude<ExtArgs> | null
+    /**
+     * Filter, which PartnerReviewTask to fetch.
+     */
+    where?: PartnerReviewTaskWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PartnerReviewTasks to fetch.
+     */
+    orderBy?: PartnerReviewTaskOrderByWithRelationInput | PartnerReviewTaskOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for PartnerReviewTasks.
+     */
+    cursor?: PartnerReviewTaskWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PartnerReviewTasks from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PartnerReviewTasks.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of PartnerReviewTasks.
+     */
+    distinct?: PartnerReviewTaskScalarFieldEnum | PartnerReviewTaskScalarFieldEnum[]
+  }
+
+  /**
+   * PartnerReviewTask findMany
+   */
+  export type PartnerReviewTaskFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PartnerReviewTask
+     */
+    select?: PartnerReviewTaskSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PartnerReviewTaskInclude<ExtArgs> | null
+    /**
+     * Filter, which PartnerReviewTasks to fetch.
+     */
+    where?: PartnerReviewTaskWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of PartnerReviewTasks to fetch.
+     */
+    orderBy?: PartnerReviewTaskOrderByWithRelationInput | PartnerReviewTaskOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing PartnerReviewTasks.
+     */
+    cursor?: PartnerReviewTaskWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` PartnerReviewTasks from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` PartnerReviewTasks.
+     */
+    skip?: number
+    distinct?: PartnerReviewTaskScalarFieldEnum | PartnerReviewTaskScalarFieldEnum[]
+  }
+
+  /**
+   * PartnerReviewTask create
+   */
+  export type PartnerReviewTaskCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PartnerReviewTask
+     */
+    select?: PartnerReviewTaskSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PartnerReviewTaskInclude<ExtArgs> | null
+    /**
+     * The data needed to create a PartnerReviewTask.
+     */
+    data: XOR<PartnerReviewTaskCreateInput, PartnerReviewTaskUncheckedCreateInput>
+  }
+
+  /**
+   * PartnerReviewTask createMany
+   */
+  export type PartnerReviewTaskCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many PartnerReviewTasks.
+     */
+    data: PartnerReviewTaskCreateManyInput | PartnerReviewTaskCreateManyInput[]
+  }
+
+  /**
+   * PartnerReviewTask createManyAndReturn
+   */
+  export type PartnerReviewTaskCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PartnerReviewTask
+     */
+    select?: PartnerReviewTaskSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * The data used to create many PartnerReviewTasks.
+     */
+    data: PartnerReviewTaskCreateManyInput | PartnerReviewTaskCreateManyInput[]
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PartnerReviewTaskIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * PartnerReviewTask update
+   */
+  export type PartnerReviewTaskUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PartnerReviewTask
+     */
+    select?: PartnerReviewTaskSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PartnerReviewTaskInclude<ExtArgs> | null
+    /**
+     * The data needed to update a PartnerReviewTask.
+     */
+    data: XOR<PartnerReviewTaskUpdateInput, PartnerReviewTaskUncheckedUpdateInput>
+    /**
+     * Choose, which PartnerReviewTask to update.
+     */
+    where: PartnerReviewTaskWhereUniqueInput
+  }
+
+  /**
+   * PartnerReviewTask updateMany
+   */
+  export type PartnerReviewTaskUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update PartnerReviewTasks.
+     */
+    data: XOR<PartnerReviewTaskUpdateManyMutationInput, PartnerReviewTaskUncheckedUpdateManyInput>
+    /**
+     * Filter which PartnerReviewTasks to update
+     */
+    where?: PartnerReviewTaskWhereInput
+  }
+
+  /**
+   * PartnerReviewTask upsert
+   */
+  export type PartnerReviewTaskUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PartnerReviewTask
+     */
+    select?: PartnerReviewTaskSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PartnerReviewTaskInclude<ExtArgs> | null
+    /**
+     * The filter to search for the PartnerReviewTask to update in case it exists.
+     */
+    where: PartnerReviewTaskWhereUniqueInput
+    /**
+     * In case the PartnerReviewTask found by the `where` argument doesn't exist, create a new PartnerReviewTask with this data.
+     */
+    create: XOR<PartnerReviewTaskCreateInput, PartnerReviewTaskUncheckedCreateInput>
+    /**
+     * In case the PartnerReviewTask was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<PartnerReviewTaskUpdateInput, PartnerReviewTaskUncheckedUpdateInput>
+  }
+
+  /**
+   * PartnerReviewTask delete
+   */
+  export type PartnerReviewTaskDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PartnerReviewTask
+     */
+    select?: PartnerReviewTaskSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PartnerReviewTaskInclude<ExtArgs> | null
+    /**
+     * Filter which PartnerReviewTask to delete.
+     */
+    where: PartnerReviewTaskWhereUniqueInput
+  }
+
+  /**
+   * PartnerReviewTask deleteMany
+   */
+  export type PartnerReviewTaskDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which PartnerReviewTasks to delete
+     */
+    where?: PartnerReviewTaskWhereInput
+  }
+
+  /**
+   * PartnerReviewTask without action
+   */
+  export type PartnerReviewTaskDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the PartnerReviewTask
+     */
+    select?: PartnerReviewTaskSelect<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PartnerReviewTaskInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -68107,6 +73803,95 @@ export namespace Prisma {
   };
 
   export type StrategyDocumentScalarFieldEnum = (typeof StrategyDocumentScalarFieldEnum)[keyof typeof StrategyDocumentScalarFieldEnum]
+
+
+  export const DeveloperAccountScalarFieldEnum: {
+    id: 'id',
+    userId: 'userId',
+    type: 'type',
+    displayName: 'displayName',
+    legalName: 'legalName',
+    website: 'website',
+    contactEmail: 'contactEmail',
+    direction: 'direction',
+    status: 'status',
+    verifiedAt: 'verifiedAt',
+    metadata: 'metadata',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type DeveloperAccountScalarFieldEnum = (typeof DeveloperAccountScalarFieldEnum)[keyof typeof DeveloperAccountScalarFieldEnum]
+
+
+  export const PartnerAgentApplicationScalarFieldEnum: {
+    id: 'id',
+    developerAccountId: 'developerAccountId',
+    agentId: 'agentId',
+    name: 'name',
+    category: 'category',
+    capabilityIds: 'capabilityIds',
+    runtimeMode: 'runtimeMode',
+    endpointUrl: 'endpointUrl',
+    webhookUrl: 'webhookUrl',
+    lifecycleStatus: 'lifecycleStatus',
+    currentVersionId: 'currentVersionId',
+    listingId: 'listingId',
+    agentProductId: 'agentProductId',
+    qualityScore: 'qualityScore',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type PartnerAgentApplicationScalarFieldEnum = (typeof PartnerAgentApplicationScalarFieldEnum)[keyof typeof PartnerAgentApplicationScalarFieldEnum]
+
+
+  export const PartnerAgentDraftVersionScalarFieldEnum: {
+    id: 'id',
+    applicationId: 'applicationId',
+    version: 'version',
+    manifestJson: 'manifestJson',
+    skillPackageJson: 'skillPackageJson',
+    releaseChannel: 'releaseChannel',
+    demoUrl: 'demoUrl',
+    privacyNotes: 'privacyNotes',
+    pricingJson: 'pricingJson',
+    createdAt: 'createdAt'
+  };
+
+  export type PartnerAgentDraftVersionScalarFieldEnum = (typeof PartnerAgentDraftVersionScalarFieldEnum)[keyof typeof PartnerAgentDraftVersionScalarFieldEnum]
+
+
+  export const PartnerSandboxRunScalarFieldEnum: {
+    id: 'id',
+    applicationId: 'applicationId',
+    versionId: 'versionId',
+    fixtureId: 'fixtureId',
+    status: 'status',
+    checksJson: 'checksJson',
+    qualityReportJson: 'qualityReportJson',
+    logText: 'logText',
+    invokeId: 'invokeId',
+    startedAt: 'startedAt',
+    finishedAt: 'finishedAt'
+  };
+
+  export type PartnerSandboxRunScalarFieldEnum = (typeof PartnerSandboxRunScalarFieldEnum)[keyof typeof PartnerSandboxRunScalarFieldEnum]
+
+
+  export const PartnerReviewTaskScalarFieldEnum: {
+    id: 'id',
+    applicationId: 'applicationId',
+    versionId: 'versionId',
+    status: 'status',
+    checklistJson: 'checklistJson',
+    reviewerUserId: 'reviewerUserId',
+    decisionNote: 'decisionNote',
+    submittedAt: 'submittedAt',
+    resolvedAt: 'resolvedAt'
+  };
+
+  export type PartnerReviewTaskScalarFieldEnum = (typeof PartnerReviewTaskScalarFieldEnum)[keyof typeof PartnerReviewTaskScalarFieldEnum]
 
 
   export const SortOrder: {
@@ -73540,6 +79325,463 @@ export namespace Prisma {
     projectId?: StringNullableWithAggregatesFilter<"StrategyDocument"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"StrategyDocument"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"StrategyDocument"> | Date | string
+  }
+
+  export type DeveloperAccountWhereInput = {
+    AND?: DeveloperAccountWhereInput | DeveloperAccountWhereInput[]
+    OR?: DeveloperAccountWhereInput[]
+    NOT?: DeveloperAccountWhereInput | DeveloperAccountWhereInput[]
+    id?: StringFilter<"DeveloperAccount"> | string
+    userId?: StringNullableFilter<"DeveloperAccount"> | string | null
+    type?: StringFilter<"DeveloperAccount"> | string
+    displayName?: StringFilter<"DeveloperAccount"> | string
+    legalName?: StringNullableFilter<"DeveloperAccount"> | string | null
+    website?: StringNullableFilter<"DeveloperAccount"> | string | null
+    contactEmail?: StringFilter<"DeveloperAccount"> | string
+    direction?: StringNullableFilter<"DeveloperAccount"> | string | null
+    status?: StringFilter<"DeveloperAccount"> | string
+    verifiedAt?: DateTimeNullableFilter<"DeveloperAccount"> | Date | string | null
+    metadata?: StringNullableFilter<"DeveloperAccount"> | string | null
+    createdAt?: DateTimeFilter<"DeveloperAccount"> | Date | string
+    updatedAt?: DateTimeFilter<"DeveloperAccount"> | Date | string
+    applications?: PartnerAgentApplicationListRelationFilter
+  }
+
+  export type DeveloperAccountOrderByWithRelationInput = {
+    id?: SortOrder
+    userId?: SortOrderInput | SortOrder
+    type?: SortOrder
+    displayName?: SortOrder
+    legalName?: SortOrderInput | SortOrder
+    website?: SortOrderInput | SortOrder
+    contactEmail?: SortOrder
+    direction?: SortOrderInput | SortOrder
+    status?: SortOrder
+    verifiedAt?: SortOrderInput | SortOrder
+    metadata?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    applications?: PartnerAgentApplicationOrderByRelationAggregateInput
+  }
+
+  export type DeveloperAccountWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: DeveloperAccountWhereInput | DeveloperAccountWhereInput[]
+    OR?: DeveloperAccountWhereInput[]
+    NOT?: DeveloperAccountWhereInput | DeveloperAccountWhereInput[]
+    userId?: StringNullableFilter<"DeveloperAccount"> | string | null
+    type?: StringFilter<"DeveloperAccount"> | string
+    displayName?: StringFilter<"DeveloperAccount"> | string
+    legalName?: StringNullableFilter<"DeveloperAccount"> | string | null
+    website?: StringNullableFilter<"DeveloperAccount"> | string | null
+    contactEmail?: StringFilter<"DeveloperAccount"> | string
+    direction?: StringNullableFilter<"DeveloperAccount"> | string | null
+    status?: StringFilter<"DeveloperAccount"> | string
+    verifiedAt?: DateTimeNullableFilter<"DeveloperAccount"> | Date | string | null
+    metadata?: StringNullableFilter<"DeveloperAccount"> | string | null
+    createdAt?: DateTimeFilter<"DeveloperAccount"> | Date | string
+    updatedAt?: DateTimeFilter<"DeveloperAccount"> | Date | string
+    applications?: PartnerAgentApplicationListRelationFilter
+  }, "id">
+
+  export type DeveloperAccountOrderByWithAggregationInput = {
+    id?: SortOrder
+    userId?: SortOrderInput | SortOrder
+    type?: SortOrder
+    displayName?: SortOrder
+    legalName?: SortOrderInput | SortOrder
+    website?: SortOrderInput | SortOrder
+    contactEmail?: SortOrder
+    direction?: SortOrderInput | SortOrder
+    status?: SortOrder
+    verifiedAt?: SortOrderInput | SortOrder
+    metadata?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: DeveloperAccountCountOrderByAggregateInput
+    _max?: DeveloperAccountMaxOrderByAggregateInput
+    _min?: DeveloperAccountMinOrderByAggregateInput
+  }
+
+  export type DeveloperAccountScalarWhereWithAggregatesInput = {
+    AND?: DeveloperAccountScalarWhereWithAggregatesInput | DeveloperAccountScalarWhereWithAggregatesInput[]
+    OR?: DeveloperAccountScalarWhereWithAggregatesInput[]
+    NOT?: DeveloperAccountScalarWhereWithAggregatesInput | DeveloperAccountScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"DeveloperAccount"> | string
+    userId?: StringNullableWithAggregatesFilter<"DeveloperAccount"> | string | null
+    type?: StringWithAggregatesFilter<"DeveloperAccount"> | string
+    displayName?: StringWithAggregatesFilter<"DeveloperAccount"> | string
+    legalName?: StringNullableWithAggregatesFilter<"DeveloperAccount"> | string | null
+    website?: StringNullableWithAggregatesFilter<"DeveloperAccount"> | string | null
+    contactEmail?: StringWithAggregatesFilter<"DeveloperAccount"> | string
+    direction?: StringNullableWithAggregatesFilter<"DeveloperAccount"> | string | null
+    status?: StringWithAggregatesFilter<"DeveloperAccount"> | string
+    verifiedAt?: DateTimeNullableWithAggregatesFilter<"DeveloperAccount"> | Date | string | null
+    metadata?: StringNullableWithAggregatesFilter<"DeveloperAccount"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"DeveloperAccount"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"DeveloperAccount"> | Date | string
+  }
+
+  export type PartnerAgentApplicationWhereInput = {
+    AND?: PartnerAgentApplicationWhereInput | PartnerAgentApplicationWhereInput[]
+    OR?: PartnerAgentApplicationWhereInput[]
+    NOT?: PartnerAgentApplicationWhereInput | PartnerAgentApplicationWhereInput[]
+    id?: StringFilter<"PartnerAgentApplication"> | string
+    developerAccountId?: StringFilter<"PartnerAgentApplication"> | string
+    agentId?: StringFilter<"PartnerAgentApplication"> | string
+    name?: StringFilter<"PartnerAgentApplication"> | string
+    category?: StringFilter<"PartnerAgentApplication"> | string
+    capabilityIds?: StringFilter<"PartnerAgentApplication"> | string
+    runtimeMode?: StringFilter<"PartnerAgentApplication"> | string
+    endpointUrl?: StringNullableFilter<"PartnerAgentApplication"> | string | null
+    webhookUrl?: StringNullableFilter<"PartnerAgentApplication"> | string | null
+    lifecycleStatus?: StringFilter<"PartnerAgentApplication"> | string
+    currentVersionId?: StringNullableFilter<"PartnerAgentApplication"> | string | null
+    listingId?: StringNullableFilter<"PartnerAgentApplication"> | string | null
+    agentProductId?: StringNullableFilter<"PartnerAgentApplication"> | string | null
+    qualityScore?: FloatNullableFilter<"PartnerAgentApplication"> | number | null
+    createdAt?: DateTimeFilter<"PartnerAgentApplication"> | Date | string
+    updatedAt?: DateTimeFilter<"PartnerAgentApplication"> | Date | string
+    developerAccount?: XOR<DeveloperAccountRelationFilter, DeveloperAccountWhereInput>
+    versions?: PartnerAgentDraftVersionListRelationFilter
+    sandboxRuns?: PartnerSandboxRunListRelationFilter
+    reviewTasks?: PartnerReviewTaskListRelationFilter
+  }
+
+  export type PartnerAgentApplicationOrderByWithRelationInput = {
+    id?: SortOrder
+    developerAccountId?: SortOrder
+    agentId?: SortOrder
+    name?: SortOrder
+    category?: SortOrder
+    capabilityIds?: SortOrder
+    runtimeMode?: SortOrder
+    endpointUrl?: SortOrderInput | SortOrder
+    webhookUrl?: SortOrderInput | SortOrder
+    lifecycleStatus?: SortOrder
+    currentVersionId?: SortOrderInput | SortOrder
+    listingId?: SortOrderInput | SortOrder
+    agentProductId?: SortOrderInput | SortOrder
+    qualityScore?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    developerAccount?: DeveloperAccountOrderByWithRelationInput
+    versions?: PartnerAgentDraftVersionOrderByRelationAggregateInput
+    sandboxRuns?: PartnerSandboxRunOrderByRelationAggregateInput
+    reviewTasks?: PartnerReviewTaskOrderByRelationAggregateInput
+  }
+
+  export type PartnerAgentApplicationWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    agentId?: string
+    AND?: PartnerAgentApplicationWhereInput | PartnerAgentApplicationWhereInput[]
+    OR?: PartnerAgentApplicationWhereInput[]
+    NOT?: PartnerAgentApplicationWhereInput | PartnerAgentApplicationWhereInput[]
+    developerAccountId?: StringFilter<"PartnerAgentApplication"> | string
+    name?: StringFilter<"PartnerAgentApplication"> | string
+    category?: StringFilter<"PartnerAgentApplication"> | string
+    capabilityIds?: StringFilter<"PartnerAgentApplication"> | string
+    runtimeMode?: StringFilter<"PartnerAgentApplication"> | string
+    endpointUrl?: StringNullableFilter<"PartnerAgentApplication"> | string | null
+    webhookUrl?: StringNullableFilter<"PartnerAgentApplication"> | string | null
+    lifecycleStatus?: StringFilter<"PartnerAgentApplication"> | string
+    currentVersionId?: StringNullableFilter<"PartnerAgentApplication"> | string | null
+    listingId?: StringNullableFilter<"PartnerAgentApplication"> | string | null
+    agentProductId?: StringNullableFilter<"PartnerAgentApplication"> | string | null
+    qualityScore?: FloatNullableFilter<"PartnerAgentApplication"> | number | null
+    createdAt?: DateTimeFilter<"PartnerAgentApplication"> | Date | string
+    updatedAt?: DateTimeFilter<"PartnerAgentApplication"> | Date | string
+    developerAccount?: XOR<DeveloperAccountRelationFilter, DeveloperAccountWhereInput>
+    versions?: PartnerAgentDraftVersionListRelationFilter
+    sandboxRuns?: PartnerSandboxRunListRelationFilter
+    reviewTasks?: PartnerReviewTaskListRelationFilter
+  }, "id" | "agentId">
+
+  export type PartnerAgentApplicationOrderByWithAggregationInput = {
+    id?: SortOrder
+    developerAccountId?: SortOrder
+    agentId?: SortOrder
+    name?: SortOrder
+    category?: SortOrder
+    capabilityIds?: SortOrder
+    runtimeMode?: SortOrder
+    endpointUrl?: SortOrderInput | SortOrder
+    webhookUrl?: SortOrderInput | SortOrder
+    lifecycleStatus?: SortOrder
+    currentVersionId?: SortOrderInput | SortOrder
+    listingId?: SortOrderInput | SortOrder
+    agentProductId?: SortOrderInput | SortOrder
+    qualityScore?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: PartnerAgentApplicationCountOrderByAggregateInput
+    _avg?: PartnerAgentApplicationAvgOrderByAggregateInput
+    _max?: PartnerAgentApplicationMaxOrderByAggregateInput
+    _min?: PartnerAgentApplicationMinOrderByAggregateInput
+    _sum?: PartnerAgentApplicationSumOrderByAggregateInput
+  }
+
+  export type PartnerAgentApplicationScalarWhereWithAggregatesInput = {
+    AND?: PartnerAgentApplicationScalarWhereWithAggregatesInput | PartnerAgentApplicationScalarWhereWithAggregatesInput[]
+    OR?: PartnerAgentApplicationScalarWhereWithAggregatesInput[]
+    NOT?: PartnerAgentApplicationScalarWhereWithAggregatesInput | PartnerAgentApplicationScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"PartnerAgentApplication"> | string
+    developerAccountId?: StringWithAggregatesFilter<"PartnerAgentApplication"> | string
+    agentId?: StringWithAggregatesFilter<"PartnerAgentApplication"> | string
+    name?: StringWithAggregatesFilter<"PartnerAgentApplication"> | string
+    category?: StringWithAggregatesFilter<"PartnerAgentApplication"> | string
+    capabilityIds?: StringWithAggregatesFilter<"PartnerAgentApplication"> | string
+    runtimeMode?: StringWithAggregatesFilter<"PartnerAgentApplication"> | string
+    endpointUrl?: StringNullableWithAggregatesFilter<"PartnerAgentApplication"> | string | null
+    webhookUrl?: StringNullableWithAggregatesFilter<"PartnerAgentApplication"> | string | null
+    lifecycleStatus?: StringWithAggregatesFilter<"PartnerAgentApplication"> | string
+    currentVersionId?: StringNullableWithAggregatesFilter<"PartnerAgentApplication"> | string | null
+    listingId?: StringNullableWithAggregatesFilter<"PartnerAgentApplication"> | string | null
+    agentProductId?: StringNullableWithAggregatesFilter<"PartnerAgentApplication"> | string | null
+    qualityScore?: FloatNullableWithAggregatesFilter<"PartnerAgentApplication"> | number | null
+    createdAt?: DateTimeWithAggregatesFilter<"PartnerAgentApplication"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"PartnerAgentApplication"> | Date | string
+  }
+
+  export type PartnerAgentDraftVersionWhereInput = {
+    AND?: PartnerAgentDraftVersionWhereInput | PartnerAgentDraftVersionWhereInput[]
+    OR?: PartnerAgentDraftVersionWhereInput[]
+    NOT?: PartnerAgentDraftVersionWhereInput | PartnerAgentDraftVersionWhereInput[]
+    id?: StringFilter<"PartnerAgentDraftVersion"> | string
+    applicationId?: StringFilter<"PartnerAgentDraftVersion"> | string
+    version?: StringFilter<"PartnerAgentDraftVersion"> | string
+    manifestJson?: StringFilter<"PartnerAgentDraftVersion"> | string
+    skillPackageJson?: StringFilter<"PartnerAgentDraftVersion"> | string
+    releaseChannel?: StringFilter<"PartnerAgentDraftVersion"> | string
+    demoUrl?: StringNullableFilter<"PartnerAgentDraftVersion"> | string | null
+    privacyNotes?: StringNullableFilter<"PartnerAgentDraftVersion"> | string | null
+    pricingJson?: StringNullableFilter<"PartnerAgentDraftVersion"> | string | null
+    createdAt?: DateTimeFilter<"PartnerAgentDraftVersion"> | Date | string
+    application?: XOR<PartnerAgentApplicationRelationFilter, PartnerAgentApplicationWhereInput>
+  }
+
+  export type PartnerAgentDraftVersionOrderByWithRelationInput = {
+    id?: SortOrder
+    applicationId?: SortOrder
+    version?: SortOrder
+    manifestJson?: SortOrder
+    skillPackageJson?: SortOrder
+    releaseChannel?: SortOrder
+    demoUrl?: SortOrderInput | SortOrder
+    privacyNotes?: SortOrderInput | SortOrder
+    pricingJson?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    application?: PartnerAgentApplicationOrderByWithRelationInput
+  }
+
+  export type PartnerAgentDraftVersionWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    applicationId_version?: PartnerAgentDraftVersionApplicationIdVersionCompoundUniqueInput
+    AND?: PartnerAgentDraftVersionWhereInput | PartnerAgentDraftVersionWhereInput[]
+    OR?: PartnerAgentDraftVersionWhereInput[]
+    NOT?: PartnerAgentDraftVersionWhereInput | PartnerAgentDraftVersionWhereInput[]
+    applicationId?: StringFilter<"PartnerAgentDraftVersion"> | string
+    version?: StringFilter<"PartnerAgentDraftVersion"> | string
+    manifestJson?: StringFilter<"PartnerAgentDraftVersion"> | string
+    skillPackageJson?: StringFilter<"PartnerAgentDraftVersion"> | string
+    releaseChannel?: StringFilter<"PartnerAgentDraftVersion"> | string
+    demoUrl?: StringNullableFilter<"PartnerAgentDraftVersion"> | string | null
+    privacyNotes?: StringNullableFilter<"PartnerAgentDraftVersion"> | string | null
+    pricingJson?: StringNullableFilter<"PartnerAgentDraftVersion"> | string | null
+    createdAt?: DateTimeFilter<"PartnerAgentDraftVersion"> | Date | string
+    application?: XOR<PartnerAgentApplicationRelationFilter, PartnerAgentApplicationWhereInput>
+  }, "id" | "applicationId_version">
+
+  export type PartnerAgentDraftVersionOrderByWithAggregationInput = {
+    id?: SortOrder
+    applicationId?: SortOrder
+    version?: SortOrder
+    manifestJson?: SortOrder
+    skillPackageJson?: SortOrder
+    releaseChannel?: SortOrder
+    demoUrl?: SortOrderInput | SortOrder
+    privacyNotes?: SortOrderInput | SortOrder
+    pricingJson?: SortOrderInput | SortOrder
+    createdAt?: SortOrder
+    _count?: PartnerAgentDraftVersionCountOrderByAggregateInput
+    _max?: PartnerAgentDraftVersionMaxOrderByAggregateInput
+    _min?: PartnerAgentDraftVersionMinOrderByAggregateInput
+  }
+
+  export type PartnerAgentDraftVersionScalarWhereWithAggregatesInput = {
+    AND?: PartnerAgentDraftVersionScalarWhereWithAggregatesInput | PartnerAgentDraftVersionScalarWhereWithAggregatesInput[]
+    OR?: PartnerAgentDraftVersionScalarWhereWithAggregatesInput[]
+    NOT?: PartnerAgentDraftVersionScalarWhereWithAggregatesInput | PartnerAgentDraftVersionScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"PartnerAgentDraftVersion"> | string
+    applicationId?: StringWithAggregatesFilter<"PartnerAgentDraftVersion"> | string
+    version?: StringWithAggregatesFilter<"PartnerAgentDraftVersion"> | string
+    manifestJson?: StringWithAggregatesFilter<"PartnerAgentDraftVersion"> | string
+    skillPackageJson?: StringWithAggregatesFilter<"PartnerAgentDraftVersion"> | string
+    releaseChannel?: StringWithAggregatesFilter<"PartnerAgentDraftVersion"> | string
+    demoUrl?: StringNullableWithAggregatesFilter<"PartnerAgentDraftVersion"> | string | null
+    privacyNotes?: StringNullableWithAggregatesFilter<"PartnerAgentDraftVersion"> | string | null
+    pricingJson?: StringNullableWithAggregatesFilter<"PartnerAgentDraftVersion"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"PartnerAgentDraftVersion"> | Date | string
+  }
+
+  export type PartnerSandboxRunWhereInput = {
+    AND?: PartnerSandboxRunWhereInput | PartnerSandboxRunWhereInput[]
+    OR?: PartnerSandboxRunWhereInput[]
+    NOT?: PartnerSandboxRunWhereInput | PartnerSandboxRunWhereInput[]
+    id?: StringFilter<"PartnerSandboxRun"> | string
+    applicationId?: StringFilter<"PartnerSandboxRun"> | string
+    versionId?: StringFilter<"PartnerSandboxRun"> | string
+    fixtureId?: StringFilter<"PartnerSandboxRun"> | string
+    status?: StringFilter<"PartnerSandboxRun"> | string
+    checksJson?: StringFilter<"PartnerSandboxRun"> | string
+    qualityReportJson?: StringNullableFilter<"PartnerSandboxRun"> | string | null
+    logText?: StringNullableFilter<"PartnerSandboxRun"> | string | null
+    invokeId?: StringNullableFilter<"PartnerSandboxRun"> | string | null
+    startedAt?: DateTimeFilter<"PartnerSandboxRun"> | Date | string
+    finishedAt?: DateTimeNullableFilter<"PartnerSandboxRun"> | Date | string | null
+    application?: XOR<PartnerAgentApplicationRelationFilter, PartnerAgentApplicationWhereInput>
+  }
+
+  export type PartnerSandboxRunOrderByWithRelationInput = {
+    id?: SortOrder
+    applicationId?: SortOrder
+    versionId?: SortOrder
+    fixtureId?: SortOrder
+    status?: SortOrder
+    checksJson?: SortOrder
+    qualityReportJson?: SortOrderInput | SortOrder
+    logText?: SortOrderInput | SortOrder
+    invokeId?: SortOrderInput | SortOrder
+    startedAt?: SortOrder
+    finishedAt?: SortOrderInput | SortOrder
+    application?: PartnerAgentApplicationOrderByWithRelationInput
+  }
+
+  export type PartnerSandboxRunWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: PartnerSandboxRunWhereInput | PartnerSandboxRunWhereInput[]
+    OR?: PartnerSandboxRunWhereInput[]
+    NOT?: PartnerSandboxRunWhereInput | PartnerSandboxRunWhereInput[]
+    applicationId?: StringFilter<"PartnerSandboxRun"> | string
+    versionId?: StringFilter<"PartnerSandboxRun"> | string
+    fixtureId?: StringFilter<"PartnerSandboxRun"> | string
+    status?: StringFilter<"PartnerSandboxRun"> | string
+    checksJson?: StringFilter<"PartnerSandboxRun"> | string
+    qualityReportJson?: StringNullableFilter<"PartnerSandboxRun"> | string | null
+    logText?: StringNullableFilter<"PartnerSandboxRun"> | string | null
+    invokeId?: StringNullableFilter<"PartnerSandboxRun"> | string | null
+    startedAt?: DateTimeFilter<"PartnerSandboxRun"> | Date | string
+    finishedAt?: DateTimeNullableFilter<"PartnerSandboxRun"> | Date | string | null
+    application?: XOR<PartnerAgentApplicationRelationFilter, PartnerAgentApplicationWhereInput>
+  }, "id">
+
+  export type PartnerSandboxRunOrderByWithAggregationInput = {
+    id?: SortOrder
+    applicationId?: SortOrder
+    versionId?: SortOrder
+    fixtureId?: SortOrder
+    status?: SortOrder
+    checksJson?: SortOrder
+    qualityReportJson?: SortOrderInput | SortOrder
+    logText?: SortOrderInput | SortOrder
+    invokeId?: SortOrderInput | SortOrder
+    startedAt?: SortOrder
+    finishedAt?: SortOrderInput | SortOrder
+    _count?: PartnerSandboxRunCountOrderByAggregateInput
+    _max?: PartnerSandboxRunMaxOrderByAggregateInput
+    _min?: PartnerSandboxRunMinOrderByAggregateInput
+  }
+
+  export type PartnerSandboxRunScalarWhereWithAggregatesInput = {
+    AND?: PartnerSandboxRunScalarWhereWithAggregatesInput | PartnerSandboxRunScalarWhereWithAggregatesInput[]
+    OR?: PartnerSandboxRunScalarWhereWithAggregatesInput[]
+    NOT?: PartnerSandboxRunScalarWhereWithAggregatesInput | PartnerSandboxRunScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"PartnerSandboxRun"> | string
+    applicationId?: StringWithAggregatesFilter<"PartnerSandboxRun"> | string
+    versionId?: StringWithAggregatesFilter<"PartnerSandboxRun"> | string
+    fixtureId?: StringWithAggregatesFilter<"PartnerSandboxRun"> | string
+    status?: StringWithAggregatesFilter<"PartnerSandboxRun"> | string
+    checksJson?: StringWithAggregatesFilter<"PartnerSandboxRun"> | string
+    qualityReportJson?: StringNullableWithAggregatesFilter<"PartnerSandboxRun"> | string | null
+    logText?: StringNullableWithAggregatesFilter<"PartnerSandboxRun"> | string | null
+    invokeId?: StringNullableWithAggregatesFilter<"PartnerSandboxRun"> | string | null
+    startedAt?: DateTimeWithAggregatesFilter<"PartnerSandboxRun"> | Date | string
+    finishedAt?: DateTimeNullableWithAggregatesFilter<"PartnerSandboxRun"> | Date | string | null
+  }
+
+  export type PartnerReviewTaskWhereInput = {
+    AND?: PartnerReviewTaskWhereInput | PartnerReviewTaskWhereInput[]
+    OR?: PartnerReviewTaskWhereInput[]
+    NOT?: PartnerReviewTaskWhereInput | PartnerReviewTaskWhereInput[]
+    id?: StringFilter<"PartnerReviewTask"> | string
+    applicationId?: StringFilter<"PartnerReviewTask"> | string
+    versionId?: StringFilter<"PartnerReviewTask"> | string
+    status?: StringFilter<"PartnerReviewTask"> | string
+    checklistJson?: StringFilter<"PartnerReviewTask"> | string
+    reviewerUserId?: StringNullableFilter<"PartnerReviewTask"> | string | null
+    decisionNote?: StringNullableFilter<"PartnerReviewTask"> | string | null
+    submittedAt?: DateTimeFilter<"PartnerReviewTask"> | Date | string
+    resolvedAt?: DateTimeNullableFilter<"PartnerReviewTask"> | Date | string | null
+    application?: XOR<PartnerAgentApplicationRelationFilter, PartnerAgentApplicationWhereInput>
+  }
+
+  export type PartnerReviewTaskOrderByWithRelationInput = {
+    id?: SortOrder
+    applicationId?: SortOrder
+    versionId?: SortOrder
+    status?: SortOrder
+    checklistJson?: SortOrder
+    reviewerUserId?: SortOrderInput | SortOrder
+    decisionNote?: SortOrderInput | SortOrder
+    submittedAt?: SortOrder
+    resolvedAt?: SortOrderInput | SortOrder
+    application?: PartnerAgentApplicationOrderByWithRelationInput
+  }
+
+  export type PartnerReviewTaskWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: PartnerReviewTaskWhereInput | PartnerReviewTaskWhereInput[]
+    OR?: PartnerReviewTaskWhereInput[]
+    NOT?: PartnerReviewTaskWhereInput | PartnerReviewTaskWhereInput[]
+    applicationId?: StringFilter<"PartnerReviewTask"> | string
+    versionId?: StringFilter<"PartnerReviewTask"> | string
+    status?: StringFilter<"PartnerReviewTask"> | string
+    checklistJson?: StringFilter<"PartnerReviewTask"> | string
+    reviewerUserId?: StringNullableFilter<"PartnerReviewTask"> | string | null
+    decisionNote?: StringNullableFilter<"PartnerReviewTask"> | string | null
+    submittedAt?: DateTimeFilter<"PartnerReviewTask"> | Date | string
+    resolvedAt?: DateTimeNullableFilter<"PartnerReviewTask"> | Date | string | null
+    application?: XOR<PartnerAgentApplicationRelationFilter, PartnerAgentApplicationWhereInput>
+  }, "id">
+
+  export type PartnerReviewTaskOrderByWithAggregationInput = {
+    id?: SortOrder
+    applicationId?: SortOrder
+    versionId?: SortOrder
+    status?: SortOrder
+    checklistJson?: SortOrder
+    reviewerUserId?: SortOrderInput | SortOrder
+    decisionNote?: SortOrderInput | SortOrder
+    submittedAt?: SortOrder
+    resolvedAt?: SortOrderInput | SortOrder
+    _count?: PartnerReviewTaskCountOrderByAggregateInput
+    _max?: PartnerReviewTaskMaxOrderByAggregateInput
+    _min?: PartnerReviewTaskMinOrderByAggregateInput
+  }
+
+  export type PartnerReviewTaskScalarWhereWithAggregatesInput = {
+    AND?: PartnerReviewTaskScalarWhereWithAggregatesInput | PartnerReviewTaskScalarWhereWithAggregatesInput[]
+    OR?: PartnerReviewTaskScalarWhereWithAggregatesInput[]
+    NOT?: PartnerReviewTaskScalarWhereWithAggregatesInput | PartnerReviewTaskScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"PartnerReviewTask"> | string
+    applicationId?: StringWithAggregatesFilter<"PartnerReviewTask"> | string
+    versionId?: StringWithAggregatesFilter<"PartnerReviewTask"> | string
+    status?: StringWithAggregatesFilter<"PartnerReviewTask"> | string
+    checklistJson?: StringWithAggregatesFilter<"PartnerReviewTask"> | string
+    reviewerUserId?: StringNullableWithAggregatesFilter<"PartnerReviewTask"> | string | null
+    decisionNote?: StringNullableWithAggregatesFilter<"PartnerReviewTask"> | string | null
+    submittedAt?: DateTimeWithAggregatesFilter<"PartnerReviewTask"> | Date | string
+    resolvedAt?: DateTimeNullableWithAggregatesFilter<"PartnerReviewTask"> | Date | string | null
   }
 
   export type UserCreateInput = {
@@ -79753,6 +85995,536 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type DeveloperAccountCreateInput = {
+    id?: string
+    userId?: string | null
+    type: string
+    displayName: string
+    legalName?: string | null
+    website?: string | null
+    contactEmail: string
+    direction?: string | null
+    status?: string
+    verifiedAt?: Date | string | null
+    metadata?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    applications?: PartnerAgentApplicationCreateNestedManyWithoutDeveloperAccountInput
+  }
+
+  export type DeveloperAccountUncheckedCreateInput = {
+    id?: string
+    userId?: string | null
+    type: string
+    displayName: string
+    legalName?: string | null
+    website?: string | null
+    contactEmail: string
+    direction?: string | null
+    status?: string
+    verifiedAt?: Date | string | null
+    metadata?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    applications?: PartnerAgentApplicationUncheckedCreateNestedManyWithoutDeveloperAccountInput
+  }
+
+  export type DeveloperAccountUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: NullableStringFieldUpdateOperationsInput | string | null
+    type?: StringFieldUpdateOperationsInput | string
+    displayName?: StringFieldUpdateOperationsInput | string
+    legalName?: NullableStringFieldUpdateOperationsInput | string | null
+    website?: NullableStringFieldUpdateOperationsInput | string | null
+    contactEmail?: StringFieldUpdateOperationsInput | string
+    direction?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    verifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    metadata?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    applications?: PartnerAgentApplicationUpdateManyWithoutDeveloperAccountNestedInput
+  }
+
+  export type DeveloperAccountUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: NullableStringFieldUpdateOperationsInput | string | null
+    type?: StringFieldUpdateOperationsInput | string
+    displayName?: StringFieldUpdateOperationsInput | string
+    legalName?: NullableStringFieldUpdateOperationsInput | string | null
+    website?: NullableStringFieldUpdateOperationsInput | string | null
+    contactEmail?: StringFieldUpdateOperationsInput | string
+    direction?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    verifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    metadata?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    applications?: PartnerAgentApplicationUncheckedUpdateManyWithoutDeveloperAccountNestedInput
+  }
+
+  export type DeveloperAccountCreateManyInput = {
+    id?: string
+    userId?: string | null
+    type: string
+    displayName: string
+    legalName?: string | null
+    website?: string | null
+    contactEmail: string
+    direction?: string | null
+    status?: string
+    verifiedAt?: Date | string | null
+    metadata?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type DeveloperAccountUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: NullableStringFieldUpdateOperationsInput | string | null
+    type?: StringFieldUpdateOperationsInput | string
+    displayName?: StringFieldUpdateOperationsInput | string
+    legalName?: NullableStringFieldUpdateOperationsInput | string | null
+    website?: NullableStringFieldUpdateOperationsInput | string | null
+    contactEmail?: StringFieldUpdateOperationsInput | string
+    direction?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    verifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    metadata?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type DeveloperAccountUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: NullableStringFieldUpdateOperationsInput | string | null
+    type?: StringFieldUpdateOperationsInput | string
+    displayName?: StringFieldUpdateOperationsInput | string
+    legalName?: NullableStringFieldUpdateOperationsInput | string | null
+    website?: NullableStringFieldUpdateOperationsInput | string | null
+    contactEmail?: StringFieldUpdateOperationsInput | string
+    direction?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    verifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    metadata?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PartnerAgentApplicationCreateInput = {
+    id?: string
+    agentId: string
+    name: string
+    category: string
+    capabilityIds?: string
+    runtimeMode?: string
+    endpointUrl?: string | null
+    webhookUrl?: string | null
+    lifecycleStatus?: string
+    currentVersionId?: string | null
+    listingId?: string | null
+    agentProductId?: string | null
+    qualityScore?: number | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    developerAccount: DeveloperAccountCreateNestedOneWithoutApplicationsInput
+    versions?: PartnerAgentDraftVersionCreateNestedManyWithoutApplicationInput
+    sandboxRuns?: PartnerSandboxRunCreateNestedManyWithoutApplicationInput
+    reviewTasks?: PartnerReviewTaskCreateNestedManyWithoutApplicationInput
+  }
+
+  export type PartnerAgentApplicationUncheckedCreateInput = {
+    id?: string
+    developerAccountId: string
+    agentId: string
+    name: string
+    category: string
+    capabilityIds?: string
+    runtimeMode?: string
+    endpointUrl?: string | null
+    webhookUrl?: string | null
+    lifecycleStatus?: string
+    currentVersionId?: string | null
+    listingId?: string | null
+    agentProductId?: string | null
+    qualityScore?: number | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    versions?: PartnerAgentDraftVersionUncheckedCreateNestedManyWithoutApplicationInput
+    sandboxRuns?: PartnerSandboxRunUncheckedCreateNestedManyWithoutApplicationInput
+    reviewTasks?: PartnerReviewTaskUncheckedCreateNestedManyWithoutApplicationInput
+  }
+
+  export type PartnerAgentApplicationUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    agentId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    category?: StringFieldUpdateOperationsInput | string
+    capabilityIds?: StringFieldUpdateOperationsInput | string
+    runtimeMode?: StringFieldUpdateOperationsInput | string
+    endpointUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    webhookUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    lifecycleStatus?: StringFieldUpdateOperationsInput | string
+    currentVersionId?: NullableStringFieldUpdateOperationsInput | string | null
+    listingId?: NullableStringFieldUpdateOperationsInput | string | null
+    agentProductId?: NullableStringFieldUpdateOperationsInput | string | null
+    qualityScore?: NullableFloatFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    developerAccount?: DeveloperAccountUpdateOneRequiredWithoutApplicationsNestedInput
+    versions?: PartnerAgentDraftVersionUpdateManyWithoutApplicationNestedInput
+    sandboxRuns?: PartnerSandboxRunUpdateManyWithoutApplicationNestedInput
+    reviewTasks?: PartnerReviewTaskUpdateManyWithoutApplicationNestedInput
+  }
+
+  export type PartnerAgentApplicationUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    developerAccountId?: StringFieldUpdateOperationsInput | string
+    agentId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    category?: StringFieldUpdateOperationsInput | string
+    capabilityIds?: StringFieldUpdateOperationsInput | string
+    runtimeMode?: StringFieldUpdateOperationsInput | string
+    endpointUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    webhookUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    lifecycleStatus?: StringFieldUpdateOperationsInput | string
+    currentVersionId?: NullableStringFieldUpdateOperationsInput | string | null
+    listingId?: NullableStringFieldUpdateOperationsInput | string | null
+    agentProductId?: NullableStringFieldUpdateOperationsInput | string | null
+    qualityScore?: NullableFloatFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    versions?: PartnerAgentDraftVersionUncheckedUpdateManyWithoutApplicationNestedInput
+    sandboxRuns?: PartnerSandboxRunUncheckedUpdateManyWithoutApplicationNestedInput
+    reviewTasks?: PartnerReviewTaskUncheckedUpdateManyWithoutApplicationNestedInput
+  }
+
+  export type PartnerAgentApplicationCreateManyInput = {
+    id?: string
+    developerAccountId: string
+    agentId: string
+    name: string
+    category: string
+    capabilityIds?: string
+    runtimeMode?: string
+    endpointUrl?: string | null
+    webhookUrl?: string | null
+    lifecycleStatus?: string
+    currentVersionId?: string | null
+    listingId?: string | null
+    agentProductId?: string | null
+    qualityScore?: number | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type PartnerAgentApplicationUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    agentId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    category?: StringFieldUpdateOperationsInput | string
+    capabilityIds?: StringFieldUpdateOperationsInput | string
+    runtimeMode?: StringFieldUpdateOperationsInput | string
+    endpointUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    webhookUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    lifecycleStatus?: StringFieldUpdateOperationsInput | string
+    currentVersionId?: NullableStringFieldUpdateOperationsInput | string | null
+    listingId?: NullableStringFieldUpdateOperationsInput | string | null
+    agentProductId?: NullableStringFieldUpdateOperationsInput | string | null
+    qualityScore?: NullableFloatFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PartnerAgentApplicationUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    developerAccountId?: StringFieldUpdateOperationsInput | string
+    agentId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    category?: StringFieldUpdateOperationsInput | string
+    capabilityIds?: StringFieldUpdateOperationsInput | string
+    runtimeMode?: StringFieldUpdateOperationsInput | string
+    endpointUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    webhookUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    lifecycleStatus?: StringFieldUpdateOperationsInput | string
+    currentVersionId?: NullableStringFieldUpdateOperationsInput | string | null
+    listingId?: NullableStringFieldUpdateOperationsInput | string | null
+    agentProductId?: NullableStringFieldUpdateOperationsInput | string | null
+    qualityScore?: NullableFloatFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PartnerAgentDraftVersionCreateInput = {
+    id?: string
+    version: string
+    manifestJson: string
+    skillPackageJson?: string
+    releaseChannel?: string
+    demoUrl?: string | null
+    privacyNotes?: string | null
+    pricingJson?: string | null
+    createdAt?: Date | string
+    application: PartnerAgentApplicationCreateNestedOneWithoutVersionsInput
+  }
+
+  export type PartnerAgentDraftVersionUncheckedCreateInput = {
+    id?: string
+    applicationId: string
+    version: string
+    manifestJson: string
+    skillPackageJson?: string
+    releaseChannel?: string
+    demoUrl?: string | null
+    privacyNotes?: string | null
+    pricingJson?: string | null
+    createdAt?: Date | string
+  }
+
+  export type PartnerAgentDraftVersionUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    version?: StringFieldUpdateOperationsInput | string
+    manifestJson?: StringFieldUpdateOperationsInput | string
+    skillPackageJson?: StringFieldUpdateOperationsInput | string
+    releaseChannel?: StringFieldUpdateOperationsInput | string
+    demoUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    privacyNotes?: NullableStringFieldUpdateOperationsInput | string | null
+    pricingJson?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    application?: PartnerAgentApplicationUpdateOneRequiredWithoutVersionsNestedInput
+  }
+
+  export type PartnerAgentDraftVersionUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    applicationId?: StringFieldUpdateOperationsInput | string
+    version?: StringFieldUpdateOperationsInput | string
+    manifestJson?: StringFieldUpdateOperationsInput | string
+    skillPackageJson?: StringFieldUpdateOperationsInput | string
+    releaseChannel?: StringFieldUpdateOperationsInput | string
+    demoUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    privacyNotes?: NullableStringFieldUpdateOperationsInput | string | null
+    pricingJson?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PartnerAgentDraftVersionCreateManyInput = {
+    id?: string
+    applicationId: string
+    version: string
+    manifestJson: string
+    skillPackageJson?: string
+    releaseChannel?: string
+    demoUrl?: string | null
+    privacyNotes?: string | null
+    pricingJson?: string | null
+    createdAt?: Date | string
+  }
+
+  export type PartnerAgentDraftVersionUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    version?: StringFieldUpdateOperationsInput | string
+    manifestJson?: StringFieldUpdateOperationsInput | string
+    skillPackageJson?: StringFieldUpdateOperationsInput | string
+    releaseChannel?: StringFieldUpdateOperationsInput | string
+    demoUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    privacyNotes?: NullableStringFieldUpdateOperationsInput | string | null
+    pricingJson?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PartnerAgentDraftVersionUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    applicationId?: StringFieldUpdateOperationsInput | string
+    version?: StringFieldUpdateOperationsInput | string
+    manifestJson?: StringFieldUpdateOperationsInput | string
+    skillPackageJson?: StringFieldUpdateOperationsInput | string
+    releaseChannel?: StringFieldUpdateOperationsInput | string
+    demoUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    privacyNotes?: NullableStringFieldUpdateOperationsInput | string | null
+    pricingJson?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PartnerSandboxRunCreateInput = {
+    id?: string
+    versionId: string
+    fixtureId: string
+    status: string
+    checksJson?: string
+    qualityReportJson?: string | null
+    logText?: string | null
+    invokeId?: string | null
+    startedAt?: Date | string
+    finishedAt?: Date | string | null
+    application: PartnerAgentApplicationCreateNestedOneWithoutSandboxRunsInput
+  }
+
+  export type PartnerSandboxRunUncheckedCreateInput = {
+    id?: string
+    applicationId: string
+    versionId: string
+    fixtureId: string
+    status: string
+    checksJson?: string
+    qualityReportJson?: string | null
+    logText?: string | null
+    invokeId?: string | null
+    startedAt?: Date | string
+    finishedAt?: Date | string | null
+  }
+
+  export type PartnerSandboxRunUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    versionId?: StringFieldUpdateOperationsInput | string
+    fixtureId?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    checksJson?: StringFieldUpdateOperationsInput | string
+    qualityReportJson?: NullableStringFieldUpdateOperationsInput | string | null
+    logText?: NullableStringFieldUpdateOperationsInput | string | null
+    invokeId?: NullableStringFieldUpdateOperationsInput | string | null
+    startedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    finishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    application?: PartnerAgentApplicationUpdateOneRequiredWithoutSandboxRunsNestedInput
+  }
+
+  export type PartnerSandboxRunUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    applicationId?: StringFieldUpdateOperationsInput | string
+    versionId?: StringFieldUpdateOperationsInput | string
+    fixtureId?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    checksJson?: StringFieldUpdateOperationsInput | string
+    qualityReportJson?: NullableStringFieldUpdateOperationsInput | string | null
+    logText?: NullableStringFieldUpdateOperationsInput | string | null
+    invokeId?: NullableStringFieldUpdateOperationsInput | string | null
+    startedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    finishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type PartnerSandboxRunCreateManyInput = {
+    id?: string
+    applicationId: string
+    versionId: string
+    fixtureId: string
+    status: string
+    checksJson?: string
+    qualityReportJson?: string | null
+    logText?: string | null
+    invokeId?: string | null
+    startedAt?: Date | string
+    finishedAt?: Date | string | null
+  }
+
+  export type PartnerSandboxRunUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    versionId?: StringFieldUpdateOperationsInput | string
+    fixtureId?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    checksJson?: StringFieldUpdateOperationsInput | string
+    qualityReportJson?: NullableStringFieldUpdateOperationsInput | string | null
+    logText?: NullableStringFieldUpdateOperationsInput | string | null
+    invokeId?: NullableStringFieldUpdateOperationsInput | string | null
+    startedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    finishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type PartnerSandboxRunUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    applicationId?: StringFieldUpdateOperationsInput | string
+    versionId?: StringFieldUpdateOperationsInput | string
+    fixtureId?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    checksJson?: StringFieldUpdateOperationsInput | string
+    qualityReportJson?: NullableStringFieldUpdateOperationsInput | string | null
+    logText?: NullableStringFieldUpdateOperationsInput | string | null
+    invokeId?: NullableStringFieldUpdateOperationsInput | string | null
+    startedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    finishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type PartnerReviewTaskCreateInput = {
+    id?: string
+    versionId: string
+    status?: string
+    checklistJson?: string
+    reviewerUserId?: string | null
+    decisionNote?: string | null
+    submittedAt?: Date | string
+    resolvedAt?: Date | string | null
+    application: PartnerAgentApplicationCreateNestedOneWithoutReviewTasksInput
+  }
+
+  export type PartnerReviewTaskUncheckedCreateInput = {
+    id?: string
+    applicationId: string
+    versionId: string
+    status?: string
+    checklistJson?: string
+    reviewerUserId?: string | null
+    decisionNote?: string | null
+    submittedAt?: Date | string
+    resolvedAt?: Date | string | null
+  }
+
+  export type PartnerReviewTaskUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    versionId?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    checklistJson?: StringFieldUpdateOperationsInput | string
+    reviewerUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    decisionNote?: NullableStringFieldUpdateOperationsInput | string | null
+    submittedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    resolvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    application?: PartnerAgentApplicationUpdateOneRequiredWithoutReviewTasksNestedInput
+  }
+
+  export type PartnerReviewTaskUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    applicationId?: StringFieldUpdateOperationsInput | string
+    versionId?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    checklistJson?: StringFieldUpdateOperationsInput | string
+    reviewerUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    decisionNote?: NullableStringFieldUpdateOperationsInput | string | null
+    submittedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    resolvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type PartnerReviewTaskCreateManyInput = {
+    id?: string
+    applicationId: string
+    versionId: string
+    status?: string
+    checklistJson?: string
+    reviewerUserId?: string | null
+    decisionNote?: string | null
+    submittedAt?: Date | string
+    resolvedAt?: Date | string | null
+  }
+
+  export type PartnerReviewTaskUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    versionId?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    checklistJson?: StringFieldUpdateOperationsInput | string
+    reviewerUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    decisionNote?: NullableStringFieldUpdateOperationsInput | string | null
+    submittedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    resolvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type PartnerReviewTaskUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    applicationId?: StringFieldUpdateOperationsInput | string
+    versionId?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    checklistJson?: StringFieldUpdateOperationsInput | string
+    reviewerUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    decisionNote?: NullableStringFieldUpdateOperationsInput | string | null
+    submittedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    resolvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
   export type StringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[]
@@ -83348,6 +90120,291 @@ export namespace Prisma {
     version?: SortOrder
   }
 
+  export type PartnerAgentApplicationListRelationFilter = {
+    every?: PartnerAgentApplicationWhereInput
+    some?: PartnerAgentApplicationWhereInput
+    none?: PartnerAgentApplicationWhereInput
+  }
+
+  export type PartnerAgentApplicationOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type DeveloperAccountCountOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    type?: SortOrder
+    displayName?: SortOrder
+    legalName?: SortOrder
+    website?: SortOrder
+    contactEmail?: SortOrder
+    direction?: SortOrder
+    status?: SortOrder
+    verifiedAt?: SortOrder
+    metadata?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type DeveloperAccountMaxOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    type?: SortOrder
+    displayName?: SortOrder
+    legalName?: SortOrder
+    website?: SortOrder
+    contactEmail?: SortOrder
+    direction?: SortOrder
+    status?: SortOrder
+    verifiedAt?: SortOrder
+    metadata?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type DeveloperAccountMinOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    type?: SortOrder
+    displayName?: SortOrder
+    legalName?: SortOrder
+    website?: SortOrder
+    contactEmail?: SortOrder
+    direction?: SortOrder
+    status?: SortOrder
+    verifiedAt?: SortOrder
+    metadata?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type DeveloperAccountRelationFilter = {
+    is?: DeveloperAccountWhereInput
+    isNot?: DeveloperAccountWhereInput
+  }
+
+  export type PartnerAgentDraftVersionListRelationFilter = {
+    every?: PartnerAgentDraftVersionWhereInput
+    some?: PartnerAgentDraftVersionWhereInput
+    none?: PartnerAgentDraftVersionWhereInput
+  }
+
+  export type PartnerSandboxRunListRelationFilter = {
+    every?: PartnerSandboxRunWhereInput
+    some?: PartnerSandboxRunWhereInput
+    none?: PartnerSandboxRunWhereInput
+  }
+
+  export type PartnerReviewTaskListRelationFilter = {
+    every?: PartnerReviewTaskWhereInput
+    some?: PartnerReviewTaskWhereInput
+    none?: PartnerReviewTaskWhereInput
+  }
+
+  export type PartnerAgentDraftVersionOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type PartnerSandboxRunOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type PartnerReviewTaskOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type PartnerAgentApplicationCountOrderByAggregateInput = {
+    id?: SortOrder
+    developerAccountId?: SortOrder
+    agentId?: SortOrder
+    name?: SortOrder
+    category?: SortOrder
+    capabilityIds?: SortOrder
+    runtimeMode?: SortOrder
+    endpointUrl?: SortOrder
+    webhookUrl?: SortOrder
+    lifecycleStatus?: SortOrder
+    currentVersionId?: SortOrder
+    listingId?: SortOrder
+    agentProductId?: SortOrder
+    qualityScore?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type PartnerAgentApplicationAvgOrderByAggregateInput = {
+    qualityScore?: SortOrder
+  }
+
+  export type PartnerAgentApplicationMaxOrderByAggregateInput = {
+    id?: SortOrder
+    developerAccountId?: SortOrder
+    agentId?: SortOrder
+    name?: SortOrder
+    category?: SortOrder
+    capabilityIds?: SortOrder
+    runtimeMode?: SortOrder
+    endpointUrl?: SortOrder
+    webhookUrl?: SortOrder
+    lifecycleStatus?: SortOrder
+    currentVersionId?: SortOrder
+    listingId?: SortOrder
+    agentProductId?: SortOrder
+    qualityScore?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type PartnerAgentApplicationMinOrderByAggregateInput = {
+    id?: SortOrder
+    developerAccountId?: SortOrder
+    agentId?: SortOrder
+    name?: SortOrder
+    category?: SortOrder
+    capabilityIds?: SortOrder
+    runtimeMode?: SortOrder
+    endpointUrl?: SortOrder
+    webhookUrl?: SortOrder
+    lifecycleStatus?: SortOrder
+    currentVersionId?: SortOrder
+    listingId?: SortOrder
+    agentProductId?: SortOrder
+    qualityScore?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type PartnerAgentApplicationSumOrderByAggregateInput = {
+    qualityScore?: SortOrder
+  }
+
+  export type PartnerAgentApplicationRelationFilter = {
+    is?: PartnerAgentApplicationWhereInput
+    isNot?: PartnerAgentApplicationWhereInput
+  }
+
+  export type PartnerAgentDraftVersionApplicationIdVersionCompoundUniqueInput = {
+    applicationId: string
+    version: string
+  }
+
+  export type PartnerAgentDraftVersionCountOrderByAggregateInput = {
+    id?: SortOrder
+    applicationId?: SortOrder
+    version?: SortOrder
+    manifestJson?: SortOrder
+    skillPackageJson?: SortOrder
+    releaseChannel?: SortOrder
+    demoUrl?: SortOrder
+    privacyNotes?: SortOrder
+    pricingJson?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type PartnerAgentDraftVersionMaxOrderByAggregateInput = {
+    id?: SortOrder
+    applicationId?: SortOrder
+    version?: SortOrder
+    manifestJson?: SortOrder
+    skillPackageJson?: SortOrder
+    releaseChannel?: SortOrder
+    demoUrl?: SortOrder
+    privacyNotes?: SortOrder
+    pricingJson?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type PartnerAgentDraftVersionMinOrderByAggregateInput = {
+    id?: SortOrder
+    applicationId?: SortOrder
+    version?: SortOrder
+    manifestJson?: SortOrder
+    skillPackageJson?: SortOrder
+    releaseChannel?: SortOrder
+    demoUrl?: SortOrder
+    privacyNotes?: SortOrder
+    pricingJson?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type PartnerSandboxRunCountOrderByAggregateInput = {
+    id?: SortOrder
+    applicationId?: SortOrder
+    versionId?: SortOrder
+    fixtureId?: SortOrder
+    status?: SortOrder
+    checksJson?: SortOrder
+    qualityReportJson?: SortOrder
+    logText?: SortOrder
+    invokeId?: SortOrder
+    startedAt?: SortOrder
+    finishedAt?: SortOrder
+  }
+
+  export type PartnerSandboxRunMaxOrderByAggregateInput = {
+    id?: SortOrder
+    applicationId?: SortOrder
+    versionId?: SortOrder
+    fixtureId?: SortOrder
+    status?: SortOrder
+    checksJson?: SortOrder
+    qualityReportJson?: SortOrder
+    logText?: SortOrder
+    invokeId?: SortOrder
+    startedAt?: SortOrder
+    finishedAt?: SortOrder
+  }
+
+  export type PartnerSandboxRunMinOrderByAggregateInput = {
+    id?: SortOrder
+    applicationId?: SortOrder
+    versionId?: SortOrder
+    fixtureId?: SortOrder
+    status?: SortOrder
+    checksJson?: SortOrder
+    qualityReportJson?: SortOrder
+    logText?: SortOrder
+    invokeId?: SortOrder
+    startedAt?: SortOrder
+    finishedAt?: SortOrder
+  }
+
+  export type PartnerReviewTaskCountOrderByAggregateInput = {
+    id?: SortOrder
+    applicationId?: SortOrder
+    versionId?: SortOrder
+    status?: SortOrder
+    checklistJson?: SortOrder
+    reviewerUserId?: SortOrder
+    decisionNote?: SortOrder
+    submittedAt?: SortOrder
+    resolvedAt?: SortOrder
+  }
+
+  export type PartnerReviewTaskMaxOrderByAggregateInput = {
+    id?: SortOrder
+    applicationId?: SortOrder
+    versionId?: SortOrder
+    status?: SortOrder
+    checklistJson?: SortOrder
+    reviewerUserId?: SortOrder
+    decisionNote?: SortOrder
+    submittedAt?: SortOrder
+    resolvedAt?: SortOrder
+  }
+
+  export type PartnerReviewTaskMinOrderByAggregateInput = {
+    id?: SortOrder
+    applicationId?: SortOrder
+    versionId?: SortOrder
+    status?: SortOrder
+    checklistJson?: SortOrder
+    reviewerUserId?: SortOrder
+    decisionNote?: SortOrder
+    submittedAt?: SortOrder
+    resolvedAt?: SortOrder
+  }
+
   export type OwnerCreateNestedOneWithoutUserInput = {
     create?: XOR<OwnerCreateWithoutUserInput, OwnerUncheckedCreateWithoutUserInput>
     connectOrCreate?: OwnerCreateOrConnectWithoutUserInput
@@ -85470,6 +92527,230 @@ export namespace Prisma {
     upsert?: OwnerUpsertWithoutStrategiesInput
     connect?: OwnerWhereUniqueInput
     update?: XOR<XOR<OwnerUpdateToOneWithWhereWithoutStrategiesInput, OwnerUpdateWithoutStrategiesInput>, OwnerUncheckedUpdateWithoutStrategiesInput>
+  }
+
+  export type PartnerAgentApplicationCreateNestedManyWithoutDeveloperAccountInput = {
+    create?: XOR<PartnerAgentApplicationCreateWithoutDeveloperAccountInput, PartnerAgentApplicationUncheckedCreateWithoutDeveloperAccountInput> | PartnerAgentApplicationCreateWithoutDeveloperAccountInput[] | PartnerAgentApplicationUncheckedCreateWithoutDeveloperAccountInput[]
+    connectOrCreate?: PartnerAgentApplicationCreateOrConnectWithoutDeveloperAccountInput | PartnerAgentApplicationCreateOrConnectWithoutDeveloperAccountInput[]
+    createMany?: PartnerAgentApplicationCreateManyDeveloperAccountInputEnvelope
+    connect?: PartnerAgentApplicationWhereUniqueInput | PartnerAgentApplicationWhereUniqueInput[]
+  }
+
+  export type PartnerAgentApplicationUncheckedCreateNestedManyWithoutDeveloperAccountInput = {
+    create?: XOR<PartnerAgentApplicationCreateWithoutDeveloperAccountInput, PartnerAgentApplicationUncheckedCreateWithoutDeveloperAccountInput> | PartnerAgentApplicationCreateWithoutDeveloperAccountInput[] | PartnerAgentApplicationUncheckedCreateWithoutDeveloperAccountInput[]
+    connectOrCreate?: PartnerAgentApplicationCreateOrConnectWithoutDeveloperAccountInput | PartnerAgentApplicationCreateOrConnectWithoutDeveloperAccountInput[]
+    createMany?: PartnerAgentApplicationCreateManyDeveloperAccountInputEnvelope
+    connect?: PartnerAgentApplicationWhereUniqueInput | PartnerAgentApplicationWhereUniqueInput[]
+  }
+
+  export type PartnerAgentApplicationUpdateManyWithoutDeveloperAccountNestedInput = {
+    create?: XOR<PartnerAgentApplicationCreateWithoutDeveloperAccountInput, PartnerAgentApplicationUncheckedCreateWithoutDeveloperAccountInput> | PartnerAgentApplicationCreateWithoutDeveloperAccountInput[] | PartnerAgentApplicationUncheckedCreateWithoutDeveloperAccountInput[]
+    connectOrCreate?: PartnerAgentApplicationCreateOrConnectWithoutDeveloperAccountInput | PartnerAgentApplicationCreateOrConnectWithoutDeveloperAccountInput[]
+    upsert?: PartnerAgentApplicationUpsertWithWhereUniqueWithoutDeveloperAccountInput | PartnerAgentApplicationUpsertWithWhereUniqueWithoutDeveloperAccountInput[]
+    createMany?: PartnerAgentApplicationCreateManyDeveloperAccountInputEnvelope
+    set?: PartnerAgentApplicationWhereUniqueInput | PartnerAgentApplicationWhereUniqueInput[]
+    disconnect?: PartnerAgentApplicationWhereUniqueInput | PartnerAgentApplicationWhereUniqueInput[]
+    delete?: PartnerAgentApplicationWhereUniqueInput | PartnerAgentApplicationWhereUniqueInput[]
+    connect?: PartnerAgentApplicationWhereUniqueInput | PartnerAgentApplicationWhereUniqueInput[]
+    update?: PartnerAgentApplicationUpdateWithWhereUniqueWithoutDeveloperAccountInput | PartnerAgentApplicationUpdateWithWhereUniqueWithoutDeveloperAccountInput[]
+    updateMany?: PartnerAgentApplicationUpdateManyWithWhereWithoutDeveloperAccountInput | PartnerAgentApplicationUpdateManyWithWhereWithoutDeveloperAccountInput[]
+    deleteMany?: PartnerAgentApplicationScalarWhereInput | PartnerAgentApplicationScalarWhereInput[]
+  }
+
+  export type PartnerAgentApplicationUncheckedUpdateManyWithoutDeveloperAccountNestedInput = {
+    create?: XOR<PartnerAgentApplicationCreateWithoutDeveloperAccountInput, PartnerAgentApplicationUncheckedCreateWithoutDeveloperAccountInput> | PartnerAgentApplicationCreateWithoutDeveloperAccountInput[] | PartnerAgentApplicationUncheckedCreateWithoutDeveloperAccountInput[]
+    connectOrCreate?: PartnerAgentApplicationCreateOrConnectWithoutDeveloperAccountInput | PartnerAgentApplicationCreateOrConnectWithoutDeveloperAccountInput[]
+    upsert?: PartnerAgentApplicationUpsertWithWhereUniqueWithoutDeveloperAccountInput | PartnerAgentApplicationUpsertWithWhereUniqueWithoutDeveloperAccountInput[]
+    createMany?: PartnerAgentApplicationCreateManyDeveloperAccountInputEnvelope
+    set?: PartnerAgentApplicationWhereUniqueInput | PartnerAgentApplicationWhereUniqueInput[]
+    disconnect?: PartnerAgentApplicationWhereUniqueInput | PartnerAgentApplicationWhereUniqueInput[]
+    delete?: PartnerAgentApplicationWhereUniqueInput | PartnerAgentApplicationWhereUniqueInput[]
+    connect?: PartnerAgentApplicationWhereUniqueInput | PartnerAgentApplicationWhereUniqueInput[]
+    update?: PartnerAgentApplicationUpdateWithWhereUniqueWithoutDeveloperAccountInput | PartnerAgentApplicationUpdateWithWhereUniqueWithoutDeveloperAccountInput[]
+    updateMany?: PartnerAgentApplicationUpdateManyWithWhereWithoutDeveloperAccountInput | PartnerAgentApplicationUpdateManyWithWhereWithoutDeveloperAccountInput[]
+    deleteMany?: PartnerAgentApplicationScalarWhereInput | PartnerAgentApplicationScalarWhereInput[]
+  }
+
+  export type DeveloperAccountCreateNestedOneWithoutApplicationsInput = {
+    create?: XOR<DeveloperAccountCreateWithoutApplicationsInput, DeveloperAccountUncheckedCreateWithoutApplicationsInput>
+    connectOrCreate?: DeveloperAccountCreateOrConnectWithoutApplicationsInput
+    connect?: DeveloperAccountWhereUniqueInput
+  }
+
+  export type PartnerAgentDraftVersionCreateNestedManyWithoutApplicationInput = {
+    create?: XOR<PartnerAgentDraftVersionCreateWithoutApplicationInput, PartnerAgentDraftVersionUncheckedCreateWithoutApplicationInput> | PartnerAgentDraftVersionCreateWithoutApplicationInput[] | PartnerAgentDraftVersionUncheckedCreateWithoutApplicationInput[]
+    connectOrCreate?: PartnerAgentDraftVersionCreateOrConnectWithoutApplicationInput | PartnerAgentDraftVersionCreateOrConnectWithoutApplicationInput[]
+    createMany?: PartnerAgentDraftVersionCreateManyApplicationInputEnvelope
+    connect?: PartnerAgentDraftVersionWhereUniqueInput | PartnerAgentDraftVersionWhereUniqueInput[]
+  }
+
+  export type PartnerSandboxRunCreateNestedManyWithoutApplicationInput = {
+    create?: XOR<PartnerSandboxRunCreateWithoutApplicationInput, PartnerSandboxRunUncheckedCreateWithoutApplicationInput> | PartnerSandboxRunCreateWithoutApplicationInput[] | PartnerSandboxRunUncheckedCreateWithoutApplicationInput[]
+    connectOrCreate?: PartnerSandboxRunCreateOrConnectWithoutApplicationInput | PartnerSandboxRunCreateOrConnectWithoutApplicationInput[]
+    createMany?: PartnerSandboxRunCreateManyApplicationInputEnvelope
+    connect?: PartnerSandboxRunWhereUniqueInput | PartnerSandboxRunWhereUniqueInput[]
+  }
+
+  export type PartnerReviewTaskCreateNestedManyWithoutApplicationInput = {
+    create?: XOR<PartnerReviewTaskCreateWithoutApplicationInput, PartnerReviewTaskUncheckedCreateWithoutApplicationInput> | PartnerReviewTaskCreateWithoutApplicationInput[] | PartnerReviewTaskUncheckedCreateWithoutApplicationInput[]
+    connectOrCreate?: PartnerReviewTaskCreateOrConnectWithoutApplicationInput | PartnerReviewTaskCreateOrConnectWithoutApplicationInput[]
+    createMany?: PartnerReviewTaskCreateManyApplicationInputEnvelope
+    connect?: PartnerReviewTaskWhereUniqueInput | PartnerReviewTaskWhereUniqueInput[]
+  }
+
+  export type PartnerAgentDraftVersionUncheckedCreateNestedManyWithoutApplicationInput = {
+    create?: XOR<PartnerAgentDraftVersionCreateWithoutApplicationInput, PartnerAgentDraftVersionUncheckedCreateWithoutApplicationInput> | PartnerAgentDraftVersionCreateWithoutApplicationInput[] | PartnerAgentDraftVersionUncheckedCreateWithoutApplicationInput[]
+    connectOrCreate?: PartnerAgentDraftVersionCreateOrConnectWithoutApplicationInput | PartnerAgentDraftVersionCreateOrConnectWithoutApplicationInput[]
+    createMany?: PartnerAgentDraftVersionCreateManyApplicationInputEnvelope
+    connect?: PartnerAgentDraftVersionWhereUniqueInput | PartnerAgentDraftVersionWhereUniqueInput[]
+  }
+
+  export type PartnerSandboxRunUncheckedCreateNestedManyWithoutApplicationInput = {
+    create?: XOR<PartnerSandboxRunCreateWithoutApplicationInput, PartnerSandboxRunUncheckedCreateWithoutApplicationInput> | PartnerSandboxRunCreateWithoutApplicationInput[] | PartnerSandboxRunUncheckedCreateWithoutApplicationInput[]
+    connectOrCreate?: PartnerSandboxRunCreateOrConnectWithoutApplicationInput | PartnerSandboxRunCreateOrConnectWithoutApplicationInput[]
+    createMany?: PartnerSandboxRunCreateManyApplicationInputEnvelope
+    connect?: PartnerSandboxRunWhereUniqueInput | PartnerSandboxRunWhereUniqueInput[]
+  }
+
+  export type PartnerReviewTaskUncheckedCreateNestedManyWithoutApplicationInput = {
+    create?: XOR<PartnerReviewTaskCreateWithoutApplicationInput, PartnerReviewTaskUncheckedCreateWithoutApplicationInput> | PartnerReviewTaskCreateWithoutApplicationInput[] | PartnerReviewTaskUncheckedCreateWithoutApplicationInput[]
+    connectOrCreate?: PartnerReviewTaskCreateOrConnectWithoutApplicationInput | PartnerReviewTaskCreateOrConnectWithoutApplicationInput[]
+    createMany?: PartnerReviewTaskCreateManyApplicationInputEnvelope
+    connect?: PartnerReviewTaskWhereUniqueInput | PartnerReviewTaskWhereUniqueInput[]
+  }
+
+  export type DeveloperAccountUpdateOneRequiredWithoutApplicationsNestedInput = {
+    create?: XOR<DeveloperAccountCreateWithoutApplicationsInput, DeveloperAccountUncheckedCreateWithoutApplicationsInput>
+    connectOrCreate?: DeveloperAccountCreateOrConnectWithoutApplicationsInput
+    upsert?: DeveloperAccountUpsertWithoutApplicationsInput
+    connect?: DeveloperAccountWhereUniqueInput
+    update?: XOR<XOR<DeveloperAccountUpdateToOneWithWhereWithoutApplicationsInput, DeveloperAccountUpdateWithoutApplicationsInput>, DeveloperAccountUncheckedUpdateWithoutApplicationsInput>
+  }
+
+  export type PartnerAgentDraftVersionUpdateManyWithoutApplicationNestedInput = {
+    create?: XOR<PartnerAgentDraftVersionCreateWithoutApplicationInput, PartnerAgentDraftVersionUncheckedCreateWithoutApplicationInput> | PartnerAgentDraftVersionCreateWithoutApplicationInput[] | PartnerAgentDraftVersionUncheckedCreateWithoutApplicationInput[]
+    connectOrCreate?: PartnerAgentDraftVersionCreateOrConnectWithoutApplicationInput | PartnerAgentDraftVersionCreateOrConnectWithoutApplicationInput[]
+    upsert?: PartnerAgentDraftVersionUpsertWithWhereUniqueWithoutApplicationInput | PartnerAgentDraftVersionUpsertWithWhereUniqueWithoutApplicationInput[]
+    createMany?: PartnerAgentDraftVersionCreateManyApplicationInputEnvelope
+    set?: PartnerAgentDraftVersionWhereUniqueInput | PartnerAgentDraftVersionWhereUniqueInput[]
+    disconnect?: PartnerAgentDraftVersionWhereUniqueInput | PartnerAgentDraftVersionWhereUniqueInput[]
+    delete?: PartnerAgentDraftVersionWhereUniqueInput | PartnerAgentDraftVersionWhereUniqueInput[]
+    connect?: PartnerAgentDraftVersionWhereUniqueInput | PartnerAgentDraftVersionWhereUniqueInput[]
+    update?: PartnerAgentDraftVersionUpdateWithWhereUniqueWithoutApplicationInput | PartnerAgentDraftVersionUpdateWithWhereUniqueWithoutApplicationInput[]
+    updateMany?: PartnerAgentDraftVersionUpdateManyWithWhereWithoutApplicationInput | PartnerAgentDraftVersionUpdateManyWithWhereWithoutApplicationInput[]
+    deleteMany?: PartnerAgentDraftVersionScalarWhereInput | PartnerAgentDraftVersionScalarWhereInput[]
+  }
+
+  export type PartnerSandboxRunUpdateManyWithoutApplicationNestedInput = {
+    create?: XOR<PartnerSandboxRunCreateWithoutApplicationInput, PartnerSandboxRunUncheckedCreateWithoutApplicationInput> | PartnerSandboxRunCreateWithoutApplicationInput[] | PartnerSandboxRunUncheckedCreateWithoutApplicationInput[]
+    connectOrCreate?: PartnerSandboxRunCreateOrConnectWithoutApplicationInput | PartnerSandboxRunCreateOrConnectWithoutApplicationInput[]
+    upsert?: PartnerSandboxRunUpsertWithWhereUniqueWithoutApplicationInput | PartnerSandboxRunUpsertWithWhereUniqueWithoutApplicationInput[]
+    createMany?: PartnerSandboxRunCreateManyApplicationInputEnvelope
+    set?: PartnerSandboxRunWhereUniqueInput | PartnerSandboxRunWhereUniqueInput[]
+    disconnect?: PartnerSandboxRunWhereUniqueInput | PartnerSandboxRunWhereUniqueInput[]
+    delete?: PartnerSandboxRunWhereUniqueInput | PartnerSandboxRunWhereUniqueInput[]
+    connect?: PartnerSandboxRunWhereUniqueInput | PartnerSandboxRunWhereUniqueInput[]
+    update?: PartnerSandboxRunUpdateWithWhereUniqueWithoutApplicationInput | PartnerSandboxRunUpdateWithWhereUniqueWithoutApplicationInput[]
+    updateMany?: PartnerSandboxRunUpdateManyWithWhereWithoutApplicationInput | PartnerSandboxRunUpdateManyWithWhereWithoutApplicationInput[]
+    deleteMany?: PartnerSandboxRunScalarWhereInput | PartnerSandboxRunScalarWhereInput[]
+  }
+
+  export type PartnerReviewTaskUpdateManyWithoutApplicationNestedInput = {
+    create?: XOR<PartnerReviewTaskCreateWithoutApplicationInput, PartnerReviewTaskUncheckedCreateWithoutApplicationInput> | PartnerReviewTaskCreateWithoutApplicationInput[] | PartnerReviewTaskUncheckedCreateWithoutApplicationInput[]
+    connectOrCreate?: PartnerReviewTaskCreateOrConnectWithoutApplicationInput | PartnerReviewTaskCreateOrConnectWithoutApplicationInput[]
+    upsert?: PartnerReviewTaskUpsertWithWhereUniqueWithoutApplicationInput | PartnerReviewTaskUpsertWithWhereUniqueWithoutApplicationInput[]
+    createMany?: PartnerReviewTaskCreateManyApplicationInputEnvelope
+    set?: PartnerReviewTaskWhereUniqueInput | PartnerReviewTaskWhereUniqueInput[]
+    disconnect?: PartnerReviewTaskWhereUniqueInput | PartnerReviewTaskWhereUniqueInput[]
+    delete?: PartnerReviewTaskWhereUniqueInput | PartnerReviewTaskWhereUniqueInput[]
+    connect?: PartnerReviewTaskWhereUniqueInput | PartnerReviewTaskWhereUniqueInput[]
+    update?: PartnerReviewTaskUpdateWithWhereUniqueWithoutApplicationInput | PartnerReviewTaskUpdateWithWhereUniqueWithoutApplicationInput[]
+    updateMany?: PartnerReviewTaskUpdateManyWithWhereWithoutApplicationInput | PartnerReviewTaskUpdateManyWithWhereWithoutApplicationInput[]
+    deleteMany?: PartnerReviewTaskScalarWhereInput | PartnerReviewTaskScalarWhereInput[]
+  }
+
+  export type PartnerAgentDraftVersionUncheckedUpdateManyWithoutApplicationNestedInput = {
+    create?: XOR<PartnerAgentDraftVersionCreateWithoutApplicationInput, PartnerAgentDraftVersionUncheckedCreateWithoutApplicationInput> | PartnerAgentDraftVersionCreateWithoutApplicationInput[] | PartnerAgentDraftVersionUncheckedCreateWithoutApplicationInput[]
+    connectOrCreate?: PartnerAgentDraftVersionCreateOrConnectWithoutApplicationInput | PartnerAgentDraftVersionCreateOrConnectWithoutApplicationInput[]
+    upsert?: PartnerAgentDraftVersionUpsertWithWhereUniqueWithoutApplicationInput | PartnerAgentDraftVersionUpsertWithWhereUniqueWithoutApplicationInput[]
+    createMany?: PartnerAgentDraftVersionCreateManyApplicationInputEnvelope
+    set?: PartnerAgentDraftVersionWhereUniqueInput | PartnerAgentDraftVersionWhereUniqueInput[]
+    disconnect?: PartnerAgentDraftVersionWhereUniqueInput | PartnerAgentDraftVersionWhereUniqueInput[]
+    delete?: PartnerAgentDraftVersionWhereUniqueInput | PartnerAgentDraftVersionWhereUniqueInput[]
+    connect?: PartnerAgentDraftVersionWhereUniqueInput | PartnerAgentDraftVersionWhereUniqueInput[]
+    update?: PartnerAgentDraftVersionUpdateWithWhereUniqueWithoutApplicationInput | PartnerAgentDraftVersionUpdateWithWhereUniqueWithoutApplicationInput[]
+    updateMany?: PartnerAgentDraftVersionUpdateManyWithWhereWithoutApplicationInput | PartnerAgentDraftVersionUpdateManyWithWhereWithoutApplicationInput[]
+    deleteMany?: PartnerAgentDraftVersionScalarWhereInput | PartnerAgentDraftVersionScalarWhereInput[]
+  }
+
+  export type PartnerSandboxRunUncheckedUpdateManyWithoutApplicationNestedInput = {
+    create?: XOR<PartnerSandboxRunCreateWithoutApplicationInput, PartnerSandboxRunUncheckedCreateWithoutApplicationInput> | PartnerSandboxRunCreateWithoutApplicationInput[] | PartnerSandboxRunUncheckedCreateWithoutApplicationInput[]
+    connectOrCreate?: PartnerSandboxRunCreateOrConnectWithoutApplicationInput | PartnerSandboxRunCreateOrConnectWithoutApplicationInput[]
+    upsert?: PartnerSandboxRunUpsertWithWhereUniqueWithoutApplicationInput | PartnerSandboxRunUpsertWithWhereUniqueWithoutApplicationInput[]
+    createMany?: PartnerSandboxRunCreateManyApplicationInputEnvelope
+    set?: PartnerSandboxRunWhereUniqueInput | PartnerSandboxRunWhereUniqueInput[]
+    disconnect?: PartnerSandboxRunWhereUniqueInput | PartnerSandboxRunWhereUniqueInput[]
+    delete?: PartnerSandboxRunWhereUniqueInput | PartnerSandboxRunWhereUniqueInput[]
+    connect?: PartnerSandboxRunWhereUniqueInput | PartnerSandboxRunWhereUniqueInput[]
+    update?: PartnerSandboxRunUpdateWithWhereUniqueWithoutApplicationInput | PartnerSandboxRunUpdateWithWhereUniqueWithoutApplicationInput[]
+    updateMany?: PartnerSandboxRunUpdateManyWithWhereWithoutApplicationInput | PartnerSandboxRunUpdateManyWithWhereWithoutApplicationInput[]
+    deleteMany?: PartnerSandboxRunScalarWhereInput | PartnerSandboxRunScalarWhereInput[]
+  }
+
+  export type PartnerReviewTaskUncheckedUpdateManyWithoutApplicationNestedInput = {
+    create?: XOR<PartnerReviewTaskCreateWithoutApplicationInput, PartnerReviewTaskUncheckedCreateWithoutApplicationInput> | PartnerReviewTaskCreateWithoutApplicationInput[] | PartnerReviewTaskUncheckedCreateWithoutApplicationInput[]
+    connectOrCreate?: PartnerReviewTaskCreateOrConnectWithoutApplicationInput | PartnerReviewTaskCreateOrConnectWithoutApplicationInput[]
+    upsert?: PartnerReviewTaskUpsertWithWhereUniqueWithoutApplicationInput | PartnerReviewTaskUpsertWithWhereUniqueWithoutApplicationInput[]
+    createMany?: PartnerReviewTaskCreateManyApplicationInputEnvelope
+    set?: PartnerReviewTaskWhereUniqueInput | PartnerReviewTaskWhereUniqueInput[]
+    disconnect?: PartnerReviewTaskWhereUniqueInput | PartnerReviewTaskWhereUniqueInput[]
+    delete?: PartnerReviewTaskWhereUniqueInput | PartnerReviewTaskWhereUniqueInput[]
+    connect?: PartnerReviewTaskWhereUniqueInput | PartnerReviewTaskWhereUniqueInput[]
+    update?: PartnerReviewTaskUpdateWithWhereUniqueWithoutApplicationInput | PartnerReviewTaskUpdateWithWhereUniqueWithoutApplicationInput[]
+    updateMany?: PartnerReviewTaskUpdateManyWithWhereWithoutApplicationInput | PartnerReviewTaskUpdateManyWithWhereWithoutApplicationInput[]
+    deleteMany?: PartnerReviewTaskScalarWhereInput | PartnerReviewTaskScalarWhereInput[]
+  }
+
+  export type PartnerAgentApplicationCreateNestedOneWithoutVersionsInput = {
+    create?: XOR<PartnerAgentApplicationCreateWithoutVersionsInput, PartnerAgentApplicationUncheckedCreateWithoutVersionsInput>
+    connectOrCreate?: PartnerAgentApplicationCreateOrConnectWithoutVersionsInput
+    connect?: PartnerAgentApplicationWhereUniqueInput
+  }
+
+  export type PartnerAgentApplicationUpdateOneRequiredWithoutVersionsNestedInput = {
+    create?: XOR<PartnerAgentApplicationCreateWithoutVersionsInput, PartnerAgentApplicationUncheckedCreateWithoutVersionsInput>
+    connectOrCreate?: PartnerAgentApplicationCreateOrConnectWithoutVersionsInput
+    upsert?: PartnerAgentApplicationUpsertWithoutVersionsInput
+    connect?: PartnerAgentApplicationWhereUniqueInput
+    update?: XOR<XOR<PartnerAgentApplicationUpdateToOneWithWhereWithoutVersionsInput, PartnerAgentApplicationUpdateWithoutVersionsInput>, PartnerAgentApplicationUncheckedUpdateWithoutVersionsInput>
+  }
+
+  export type PartnerAgentApplicationCreateNestedOneWithoutSandboxRunsInput = {
+    create?: XOR<PartnerAgentApplicationCreateWithoutSandboxRunsInput, PartnerAgentApplicationUncheckedCreateWithoutSandboxRunsInput>
+    connectOrCreate?: PartnerAgentApplicationCreateOrConnectWithoutSandboxRunsInput
+    connect?: PartnerAgentApplicationWhereUniqueInput
+  }
+
+  export type PartnerAgentApplicationUpdateOneRequiredWithoutSandboxRunsNestedInput = {
+    create?: XOR<PartnerAgentApplicationCreateWithoutSandboxRunsInput, PartnerAgentApplicationUncheckedCreateWithoutSandboxRunsInput>
+    connectOrCreate?: PartnerAgentApplicationCreateOrConnectWithoutSandboxRunsInput
+    upsert?: PartnerAgentApplicationUpsertWithoutSandboxRunsInput
+    connect?: PartnerAgentApplicationWhereUniqueInput
+    update?: XOR<XOR<PartnerAgentApplicationUpdateToOneWithWhereWithoutSandboxRunsInput, PartnerAgentApplicationUpdateWithoutSandboxRunsInput>, PartnerAgentApplicationUncheckedUpdateWithoutSandboxRunsInput>
+  }
+
+  export type PartnerAgentApplicationCreateNestedOneWithoutReviewTasksInput = {
+    create?: XOR<PartnerAgentApplicationCreateWithoutReviewTasksInput, PartnerAgentApplicationUncheckedCreateWithoutReviewTasksInput>
+    connectOrCreate?: PartnerAgentApplicationCreateOrConnectWithoutReviewTasksInput
+    connect?: PartnerAgentApplicationWhereUniqueInput
+  }
+
+  export type PartnerAgentApplicationUpdateOneRequiredWithoutReviewTasksNestedInput = {
+    create?: XOR<PartnerAgentApplicationCreateWithoutReviewTasksInput, PartnerAgentApplicationUncheckedCreateWithoutReviewTasksInput>
+    connectOrCreate?: PartnerAgentApplicationCreateOrConnectWithoutReviewTasksInput
+    upsert?: PartnerAgentApplicationUpsertWithoutReviewTasksInput
+    connect?: PartnerAgentApplicationWhereUniqueInput
+    update?: XOR<XOR<PartnerAgentApplicationUpdateToOneWithWhereWithoutReviewTasksInput, PartnerAgentApplicationUpdateWithoutReviewTasksInput>, PartnerAgentApplicationUncheckedUpdateWithoutReviewTasksInput>
   }
 
   export type NestedStringFilter<$PrismaModel = never> = {
@@ -92016,6 +99297,670 @@ export namespace Prisma {
     assets?: AssetUncheckedUpdateManyWithoutOwnerNestedInput
   }
 
+  export type PartnerAgentApplicationCreateWithoutDeveloperAccountInput = {
+    id?: string
+    agentId: string
+    name: string
+    category: string
+    capabilityIds?: string
+    runtimeMode?: string
+    endpointUrl?: string | null
+    webhookUrl?: string | null
+    lifecycleStatus?: string
+    currentVersionId?: string | null
+    listingId?: string | null
+    agentProductId?: string | null
+    qualityScore?: number | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    versions?: PartnerAgentDraftVersionCreateNestedManyWithoutApplicationInput
+    sandboxRuns?: PartnerSandboxRunCreateNestedManyWithoutApplicationInput
+    reviewTasks?: PartnerReviewTaskCreateNestedManyWithoutApplicationInput
+  }
+
+  export type PartnerAgentApplicationUncheckedCreateWithoutDeveloperAccountInput = {
+    id?: string
+    agentId: string
+    name: string
+    category: string
+    capabilityIds?: string
+    runtimeMode?: string
+    endpointUrl?: string | null
+    webhookUrl?: string | null
+    lifecycleStatus?: string
+    currentVersionId?: string | null
+    listingId?: string | null
+    agentProductId?: string | null
+    qualityScore?: number | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    versions?: PartnerAgentDraftVersionUncheckedCreateNestedManyWithoutApplicationInput
+    sandboxRuns?: PartnerSandboxRunUncheckedCreateNestedManyWithoutApplicationInput
+    reviewTasks?: PartnerReviewTaskUncheckedCreateNestedManyWithoutApplicationInput
+  }
+
+  export type PartnerAgentApplicationCreateOrConnectWithoutDeveloperAccountInput = {
+    where: PartnerAgentApplicationWhereUniqueInput
+    create: XOR<PartnerAgentApplicationCreateWithoutDeveloperAccountInput, PartnerAgentApplicationUncheckedCreateWithoutDeveloperAccountInput>
+  }
+
+  export type PartnerAgentApplicationCreateManyDeveloperAccountInputEnvelope = {
+    data: PartnerAgentApplicationCreateManyDeveloperAccountInput | PartnerAgentApplicationCreateManyDeveloperAccountInput[]
+  }
+
+  export type PartnerAgentApplicationUpsertWithWhereUniqueWithoutDeveloperAccountInput = {
+    where: PartnerAgentApplicationWhereUniqueInput
+    update: XOR<PartnerAgentApplicationUpdateWithoutDeveloperAccountInput, PartnerAgentApplicationUncheckedUpdateWithoutDeveloperAccountInput>
+    create: XOR<PartnerAgentApplicationCreateWithoutDeveloperAccountInput, PartnerAgentApplicationUncheckedCreateWithoutDeveloperAccountInput>
+  }
+
+  export type PartnerAgentApplicationUpdateWithWhereUniqueWithoutDeveloperAccountInput = {
+    where: PartnerAgentApplicationWhereUniqueInput
+    data: XOR<PartnerAgentApplicationUpdateWithoutDeveloperAccountInput, PartnerAgentApplicationUncheckedUpdateWithoutDeveloperAccountInput>
+  }
+
+  export type PartnerAgentApplicationUpdateManyWithWhereWithoutDeveloperAccountInput = {
+    where: PartnerAgentApplicationScalarWhereInput
+    data: XOR<PartnerAgentApplicationUpdateManyMutationInput, PartnerAgentApplicationUncheckedUpdateManyWithoutDeveloperAccountInput>
+  }
+
+  export type PartnerAgentApplicationScalarWhereInput = {
+    AND?: PartnerAgentApplicationScalarWhereInput | PartnerAgentApplicationScalarWhereInput[]
+    OR?: PartnerAgentApplicationScalarWhereInput[]
+    NOT?: PartnerAgentApplicationScalarWhereInput | PartnerAgentApplicationScalarWhereInput[]
+    id?: StringFilter<"PartnerAgentApplication"> | string
+    developerAccountId?: StringFilter<"PartnerAgentApplication"> | string
+    agentId?: StringFilter<"PartnerAgentApplication"> | string
+    name?: StringFilter<"PartnerAgentApplication"> | string
+    category?: StringFilter<"PartnerAgentApplication"> | string
+    capabilityIds?: StringFilter<"PartnerAgentApplication"> | string
+    runtimeMode?: StringFilter<"PartnerAgentApplication"> | string
+    endpointUrl?: StringNullableFilter<"PartnerAgentApplication"> | string | null
+    webhookUrl?: StringNullableFilter<"PartnerAgentApplication"> | string | null
+    lifecycleStatus?: StringFilter<"PartnerAgentApplication"> | string
+    currentVersionId?: StringNullableFilter<"PartnerAgentApplication"> | string | null
+    listingId?: StringNullableFilter<"PartnerAgentApplication"> | string | null
+    agentProductId?: StringNullableFilter<"PartnerAgentApplication"> | string | null
+    qualityScore?: FloatNullableFilter<"PartnerAgentApplication"> | number | null
+    createdAt?: DateTimeFilter<"PartnerAgentApplication"> | Date | string
+    updatedAt?: DateTimeFilter<"PartnerAgentApplication"> | Date | string
+  }
+
+  export type DeveloperAccountCreateWithoutApplicationsInput = {
+    id?: string
+    userId?: string | null
+    type: string
+    displayName: string
+    legalName?: string | null
+    website?: string | null
+    contactEmail: string
+    direction?: string | null
+    status?: string
+    verifiedAt?: Date | string | null
+    metadata?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type DeveloperAccountUncheckedCreateWithoutApplicationsInput = {
+    id?: string
+    userId?: string | null
+    type: string
+    displayName: string
+    legalName?: string | null
+    website?: string | null
+    contactEmail: string
+    direction?: string | null
+    status?: string
+    verifiedAt?: Date | string | null
+    metadata?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type DeveloperAccountCreateOrConnectWithoutApplicationsInput = {
+    where: DeveloperAccountWhereUniqueInput
+    create: XOR<DeveloperAccountCreateWithoutApplicationsInput, DeveloperAccountUncheckedCreateWithoutApplicationsInput>
+  }
+
+  export type PartnerAgentDraftVersionCreateWithoutApplicationInput = {
+    id?: string
+    version: string
+    manifestJson: string
+    skillPackageJson?: string
+    releaseChannel?: string
+    demoUrl?: string | null
+    privacyNotes?: string | null
+    pricingJson?: string | null
+    createdAt?: Date | string
+  }
+
+  export type PartnerAgentDraftVersionUncheckedCreateWithoutApplicationInput = {
+    id?: string
+    version: string
+    manifestJson: string
+    skillPackageJson?: string
+    releaseChannel?: string
+    demoUrl?: string | null
+    privacyNotes?: string | null
+    pricingJson?: string | null
+    createdAt?: Date | string
+  }
+
+  export type PartnerAgentDraftVersionCreateOrConnectWithoutApplicationInput = {
+    where: PartnerAgentDraftVersionWhereUniqueInput
+    create: XOR<PartnerAgentDraftVersionCreateWithoutApplicationInput, PartnerAgentDraftVersionUncheckedCreateWithoutApplicationInput>
+  }
+
+  export type PartnerAgentDraftVersionCreateManyApplicationInputEnvelope = {
+    data: PartnerAgentDraftVersionCreateManyApplicationInput | PartnerAgentDraftVersionCreateManyApplicationInput[]
+  }
+
+  export type PartnerSandboxRunCreateWithoutApplicationInput = {
+    id?: string
+    versionId: string
+    fixtureId: string
+    status: string
+    checksJson?: string
+    qualityReportJson?: string | null
+    logText?: string | null
+    invokeId?: string | null
+    startedAt?: Date | string
+    finishedAt?: Date | string | null
+  }
+
+  export type PartnerSandboxRunUncheckedCreateWithoutApplicationInput = {
+    id?: string
+    versionId: string
+    fixtureId: string
+    status: string
+    checksJson?: string
+    qualityReportJson?: string | null
+    logText?: string | null
+    invokeId?: string | null
+    startedAt?: Date | string
+    finishedAt?: Date | string | null
+  }
+
+  export type PartnerSandboxRunCreateOrConnectWithoutApplicationInput = {
+    where: PartnerSandboxRunWhereUniqueInput
+    create: XOR<PartnerSandboxRunCreateWithoutApplicationInput, PartnerSandboxRunUncheckedCreateWithoutApplicationInput>
+  }
+
+  export type PartnerSandboxRunCreateManyApplicationInputEnvelope = {
+    data: PartnerSandboxRunCreateManyApplicationInput | PartnerSandboxRunCreateManyApplicationInput[]
+  }
+
+  export type PartnerReviewTaskCreateWithoutApplicationInput = {
+    id?: string
+    versionId: string
+    status?: string
+    checklistJson?: string
+    reviewerUserId?: string | null
+    decisionNote?: string | null
+    submittedAt?: Date | string
+    resolvedAt?: Date | string | null
+  }
+
+  export type PartnerReviewTaskUncheckedCreateWithoutApplicationInput = {
+    id?: string
+    versionId: string
+    status?: string
+    checklistJson?: string
+    reviewerUserId?: string | null
+    decisionNote?: string | null
+    submittedAt?: Date | string
+    resolvedAt?: Date | string | null
+  }
+
+  export type PartnerReviewTaskCreateOrConnectWithoutApplicationInput = {
+    where: PartnerReviewTaskWhereUniqueInput
+    create: XOR<PartnerReviewTaskCreateWithoutApplicationInput, PartnerReviewTaskUncheckedCreateWithoutApplicationInput>
+  }
+
+  export type PartnerReviewTaskCreateManyApplicationInputEnvelope = {
+    data: PartnerReviewTaskCreateManyApplicationInput | PartnerReviewTaskCreateManyApplicationInput[]
+  }
+
+  export type DeveloperAccountUpsertWithoutApplicationsInput = {
+    update: XOR<DeveloperAccountUpdateWithoutApplicationsInput, DeveloperAccountUncheckedUpdateWithoutApplicationsInput>
+    create: XOR<DeveloperAccountCreateWithoutApplicationsInput, DeveloperAccountUncheckedCreateWithoutApplicationsInput>
+    where?: DeveloperAccountWhereInput
+  }
+
+  export type DeveloperAccountUpdateToOneWithWhereWithoutApplicationsInput = {
+    where?: DeveloperAccountWhereInput
+    data: XOR<DeveloperAccountUpdateWithoutApplicationsInput, DeveloperAccountUncheckedUpdateWithoutApplicationsInput>
+  }
+
+  export type DeveloperAccountUpdateWithoutApplicationsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: NullableStringFieldUpdateOperationsInput | string | null
+    type?: StringFieldUpdateOperationsInput | string
+    displayName?: StringFieldUpdateOperationsInput | string
+    legalName?: NullableStringFieldUpdateOperationsInput | string | null
+    website?: NullableStringFieldUpdateOperationsInput | string | null
+    contactEmail?: StringFieldUpdateOperationsInput | string
+    direction?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    verifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    metadata?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type DeveloperAccountUncheckedUpdateWithoutApplicationsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: NullableStringFieldUpdateOperationsInput | string | null
+    type?: StringFieldUpdateOperationsInput | string
+    displayName?: StringFieldUpdateOperationsInput | string
+    legalName?: NullableStringFieldUpdateOperationsInput | string | null
+    website?: NullableStringFieldUpdateOperationsInput | string | null
+    contactEmail?: StringFieldUpdateOperationsInput | string
+    direction?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: StringFieldUpdateOperationsInput | string
+    verifiedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    metadata?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PartnerAgentDraftVersionUpsertWithWhereUniqueWithoutApplicationInput = {
+    where: PartnerAgentDraftVersionWhereUniqueInput
+    update: XOR<PartnerAgentDraftVersionUpdateWithoutApplicationInput, PartnerAgentDraftVersionUncheckedUpdateWithoutApplicationInput>
+    create: XOR<PartnerAgentDraftVersionCreateWithoutApplicationInput, PartnerAgentDraftVersionUncheckedCreateWithoutApplicationInput>
+  }
+
+  export type PartnerAgentDraftVersionUpdateWithWhereUniqueWithoutApplicationInput = {
+    where: PartnerAgentDraftVersionWhereUniqueInput
+    data: XOR<PartnerAgentDraftVersionUpdateWithoutApplicationInput, PartnerAgentDraftVersionUncheckedUpdateWithoutApplicationInput>
+  }
+
+  export type PartnerAgentDraftVersionUpdateManyWithWhereWithoutApplicationInput = {
+    where: PartnerAgentDraftVersionScalarWhereInput
+    data: XOR<PartnerAgentDraftVersionUpdateManyMutationInput, PartnerAgentDraftVersionUncheckedUpdateManyWithoutApplicationInput>
+  }
+
+  export type PartnerAgentDraftVersionScalarWhereInput = {
+    AND?: PartnerAgentDraftVersionScalarWhereInput | PartnerAgentDraftVersionScalarWhereInput[]
+    OR?: PartnerAgentDraftVersionScalarWhereInput[]
+    NOT?: PartnerAgentDraftVersionScalarWhereInput | PartnerAgentDraftVersionScalarWhereInput[]
+    id?: StringFilter<"PartnerAgentDraftVersion"> | string
+    applicationId?: StringFilter<"PartnerAgentDraftVersion"> | string
+    version?: StringFilter<"PartnerAgentDraftVersion"> | string
+    manifestJson?: StringFilter<"PartnerAgentDraftVersion"> | string
+    skillPackageJson?: StringFilter<"PartnerAgentDraftVersion"> | string
+    releaseChannel?: StringFilter<"PartnerAgentDraftVersion"> | string
+    demoUrl?: StringNullableFilter<"PartnerAgentDraftVersion"> | string | null
+    privacyNotes?: StringNullableFilter<"PartnerAgentDraftVersion"> | string | null
+    pricingJson?: StringNullableFilter<"PartnerAgentDraftVersion"> | string | null
+    createdAt?: DateTimeFilter<"PartnerAgentDraftVersion"> | Date | string
+  }
+
+  export type PartnerSandboxRunUpsertWithWhereUniqueWithoutApplicationInput = {
+    where: PartnerSandboxRunWhereUniqueInput
+    update: XOR<PartnerSandboxRunUpdateWithoutApplicationInput, PartnerSandboxRunUncheckedUpdateWithoutApplicationInput>
+    create: XOR<PartnerSandboxRunCreateWithoutApplicationInput, PartnerSandboxRunUncheckedCreateWithoutApplicationInput>
+  }
+
+  export type PartnerSandboxRunUpdateWithWhereUniqueWithoutApplicationInput = {
+    where: PartnerSandboxRunWhereUniqueInput
+    data: XOR<PartnerSandboxRunUpdateWithoutApplicationInput, PartnerSandboxRunUncheckedUpdateWithoutApplicationInput>
+  }
+
+  export type PartnerSandboxRunUpdateManyWithWhereWithoutApplicationInput = {
+    where: PartnerSandboxRunScalarWhereInput
+    data: XOR<PartnerSandboxRunUpdateManyMutationInput, PartnerSandboxRunUncheckedUpdateManyWithoutApplicationInput>
+  }
+
+  export type PartnerSandboxRunScalarWhereInput = {
+    AND?: PartnerSandboxRunScalarWhereInput | PartnerSandboxRunScalarWhereInput[]
+    OR?: PartnerSandboxRunScalarWhereInput[]
+    NOT?: PartnerSandboxRunScalarWhereInput | PartnerSandboxRunScalarWhereInput[]
+    id?: StringFilter<"PartnerSandboxRun"> | string
+    applicationId?: StringFilter<"PartnerSandboxRun"> | string
+    versionId?: StringFilter<"PartnerSandboxRun"> | string
+    fixtureId?: StringFilter<"PartnerSandboxRun"> | string
+    status?: StringFilter<"PartnerSandboxRun"> | string
+    checksJson?: StringFilter<"PartnerSandboxRun"> | string
+    qualityReportJson?: StringNullableFilter<"PartnerSandboxRun"> | string | null
+    logText?: StringNullableFilter<"PartnerSandboxRun"> | string | null
+    invokeId?: StringNullableFilter<"PartnerSandboxRun"> | string | null
+    startedAt?: DateTimeFilter<"PartnerSandboxRun"> | Date | string
+    finishedAt?: DateTimeNullableFilter<"PartnerSandboxRun"> | Date | string | null
+  }
+
+  export type PartnerReviewTaskUpsertWithWhereUniqueWithoutApplicationInput = {
+    where: PartnerReviewTaskWhereUniqueInput
+    update: XOR<PartnerReviewTaskUpdateWithoutApplicationInput, PartnerReviewTaskUncheckedUpdateWithoutApplicationInput>
+    create: XOR<PartnerReviewTaskCreateWithoutApplicationInput, PartnerReviewTaskUncheckedCreateWithoutApplicationInput>
+  }
+
+  export type PartnerReviewTaskUpdateWithWhereUniqueWithoutApplicationInput = {
+    where: PartnerReviewTaskWhereUniqueInput
+    data: XOR<PartnerReviewTaskUpdateWithoutApplicationInput, PartnerReviewTaskUncheckedUpdateWithoutApplicationInput>
+  }
+
+  export type PartnerReviewTaskUpdateManyWithWhereWithoutApplicationInput = {
+    where: PartnerReviewTaskScalarWhereInput
+    data: XOR<PartnerReviewTaskUpdateManyMutationInput, PartnerReviewTaskUncheckedUpdateManyWithoutApplicationInput>
+  }
+
+  export type PartnerReviewTaskScalarWhereInput = {
+    AND?: PartnerReviewTaskScalarWhereInput | PartnerReviewTaskScalarWhereInput[]
+    OR?: PartnerReviewTaskScalarWhereInput[]
+    NOT?: PartnerReviewTaskScalarWhereInput | PartnerReviewTaskScalarWhereInput[]
+    id?: StringFilter<"PartnerReviewTask"> | string
+    applicationId?: StringFilter<"PartnerReviewTask"> | string
+    versionId?: StringFilter<"PartnerReviewTask"> | string
+    status?: StringFilter<"PartnerReviewTask"> | string
+    checklistJson?: StringFilter<"PartnerReviewTask"> | string
+    reviewerUserId?: StringNullableFilter<"PartnerReviewTask"> | string | null
+    decisionNote?: StringNullableFilter<"PartnerReviewTask"> | string | null
+    submittedAt?: DateTimeFilter<"PartnerReviewTask"> | Date | string
+    resolvedAt?: DateTimeNullableFilter<"PartnerReviewTask"> | Date | string | null
+  }
+
+  export type PartnerAgentApplicationCreateWithoutVersionsInput = {
+    id?: string
+    agentId: string
+    name: string
+    category: string
+    capabilityIds?: string
+    runtimeMode?: string
+    endpointUrl?: string | null
+    webhookUrl?: string | null
+    lifecycleStatus?: string
+    currentVersionId?: string | null
+    listingId?: string | null
+    agentProductId?: string | null
+    qualityScore?: number | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    developerAccount: DeveloperAccountCreateNestedOneWithoutApplicationsInput
+    sandboxRuns?: PartnerSandboxRunCreateNestedManyWithoutApplicationInput
+    reviewTasks?: PartnerReviewTaskCreateNestedManyWithoutApplicationInput
+  }
+
+  export type PartnerAgentApplicationUncheckedCreateWithoutVersionsInput = {
+    id?: string
+    developerAccountId: string
+    agentId: string
+    name: string
+    category: string
+    capabilityIds?: string
+    runtimeMode?: string
+    endpointUrl?: string | null
+    webhookUrl?: string | null
+    lifecycleStatus?: string
+    currentVersionId?: string | null
+    listingId?: string | null
+    agentProductId?: string | null
+    qualityScore?: number | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    sandboxRuns?: PartnerSandboxRunUncheckedCreateNestedManyWithoutApplicationInput
+    reviewTasks?: PartnerReviewTaskUncheckedCreateNestedManyWithoutApplicationInput
+  }
+
+  export type PartnerAgentApplicationCreateOrConnectWithoutVersionsInput = {
+    where: PartnerAgentApplicationWhereUniqueInput
+    create: XOR<PartnerAgentApplicationCreateWithoutVersionsInput, PartnerAgentApplicationUncheckedCreateWithoutVersionsInput>
+  }
+
+  export type PartnerAgentApplicationUpsertWithoutVersionsInput = {
+    update: XOR<PartnerAgentApplicationUpdateWithoutVersionsInput, PartnerAgentApplicationUncheckedUpdateWithoutVersionsInput>
+    create: XOR<PartnerAgentApplicationCreateWithoutVersionsInput, PartnerAgentApplicationUncheckedCreateWithoutVersionsInput>
+    where?: PartnerAgentApplicationWhereInput
+  }
+
+  export type PartnerAgentApplicationUpdateToOneWithWhereWithoutVersionsInput = {
+    where?: PartnerAgentApplicationWhereInput
+    data: XOR<PartnerAgentApplicationUpdateWithoutVersionsInput, PartnerAgentApplicationUncheckedUpdateWithoutVersionsInput>
+  }
+
+  export type PartnerAgentApplicationUpdateWithoutVersionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    agentId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    category?: StringFieldUpdateOperationsInput | string
+    capabilityIds?: StringFieldUpdateOperationsInput | string
+    runtimeMode?: StringFieldUpdateOperationsInput | string
+    endpointUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    webhookUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    lifecycleStatus?: StringFieldUpdateOperationsInput | string
+    currentVersionId?: NullableStringFieldUpdateOperationsInput | string | null
+    listingId?: NullableStringFieldUpdateOperationsInput | string | null
+    agentProductId?: NullableStringFieldUpdateOperationsInput | string | null
+    qualityScore?: NullableFloatFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    developerAccount?: DeveloperAccountUpdateOneRequiredWithoutApplicationsNestedInput
+    sandboxRuns?: PartnerSandboxRunUpdateManyWithoutApplicationNestedInput
+    reviewTasks?: PartnerReviewTaskUpdateManyWithoutApplicationNestedInput
+  }
+
+  export type PartnerAgentApplicationUncheckedUpdateWithoutVersionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    developerAccountId?: StringFieldUpdateOperationsInput | string
+    agentId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    category?: StringFieldUpdateOperationsInput | string
+    capabilityIds?: StringFieldUpdateOperationsInput | string
+    runtimeMode?: StringFieldUpdateOperationsInput | string
+    endpointUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    webhookUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    lifecycleStatus?: StringFieldUpdateOperationsInput | string
+    currentVersionId?: NullableStringFieldUpdateOperationsInput | string | null
+    listingId?: NullableStringFieldUpdateOperationsInput | string | null
+    agentProductId?: NullableStringFieldUpdateOperationsInput | string | null
+    qualityScore?: NullableFloatFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    sandboxRuns?: PartnerSandboxRunUncheckedUpdateManyWithoutApplicationNestedInput
+    reviewTasks?: PartnerReviewTaskUncheckedUpdateManyWithoutApplicationNestedInput
+  }
+
+  export type PartnerAgentApplicationCreateWithoutSandboxRunsInput = {
+    id?: string
+    agentId: string
+    name: string
+    category: string
+    capabilityIds?: string
+    runtimeMode?: string
+    endpointUrl?: string | null
+    webhookUrl?: string | null
+    lifecycleStatus?: string
+    currentVersionId?: string | null
+    listingId?: string | null
+    agentProductId?: string | null
+    qualityScore?: number | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    developerAccount: DeveloperAccountCreateNestedOneWithoutApplicationsInput
+    versions?: PartnerAgentDraftVersionCreateNestedManyWithoutApplicationInput
+    reviewTasks?: PartnerReviewTaskCreateNestedManyWithoutApplicationInput
+  }
+
+  export type PartnerAgentApplicationUncheckedCreateWithoutSandboxRunsInput = {
+    id?: string
+    developerAccountId: string
+    agentId: string
+    name: string
+    category: string
+    capabilityIds?: string
+    runtimeMode?: string
+    endpointUrl?: string | null
+    webhookUrl?: string | null
+    lifecycleStatus?: string
+    currentVersionId?: string | null
+    listingId?: string | null
+    agentProductId?: string | null
+    qualityScore?: number | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    versions?: PartnerAgentDraftVersionUncheckedCreateNestedManyWithoutApplicationInput
+    reviewTasks?: PartnerReviewTaskUncheckedCreateNestedManyWithoutApplicationInput
+  }
+
+  export type PartnerAgentApplicationCreateOrConnectWithoutSandboxRunsInput = {
+    where: PartnerAgentApplicationWhereUniqueInput
+    create: XOR<PartnerAgentApplicationCreateWithoutSandboxRunsInput, PartnerAgentApplicationUncheckedCreateWithoutSandboxRunsInput>
+  }
+
+  export type PartnerAgentApplicationUpsertWithoutSandboxRunsInput = {
+    update: XOR<PartnerAgentApplicationUpdateWithoutSandboxRunsInput, PartnerAgentApplicationUncheckedUpdateWithoutSandboxRunsInput>
+    create: XOR<PartnerAgentApplicationCreateWithoutSandboxRunsInput, PartnerAgentApplicationUncheckedCreateWithoutSandboxRunsInput>
+    where?: PartnerAgentApplicationWhereInput
+  }
+
+  export type PartnerAgentApplicationUpdateToOneWithWhereWithoutSandboxRunsInput = {
+    where?: PartnerAgentApplicationWhereInput
+    data: XOR<PartnerAgentApplicationUpdateWithoutSandboxRunsInput, PartnerAgentApplicationUncheckedUpdateWithoutSandboxRunsInput>
+  }
+
+  export type PartnerAgentApplicationUpdateWithoutSandboxRunsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    agentId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    category?: StringFieldUpdateOperationsInput | string
+    capabilityIds?: StringFieldUpdateOperationsInput | string
+    runtimeMode?: StringFieldUpdateOperationsInput | string
+    endpointUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    webhookUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    lifecycleStatus?: StringFieldUpdateOperationsInput | string
+    currentVersionId?: NullableStringFieldUpdateOperationsInput | string | null
+    listingId?: NullableStringFieldUpdateOperationsInput | string | null
+    agentProductId?: NullableStringFieldUpdateOperationsInput | string | null
+    qualityScore?: NullableFloatFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    developerAccount?: DeveloperAccountUpdateOneRequiredWithoutApplicationsNestedInput
+    versions?: PartnerAgentDraftVersionUpdateManyWithoutApplicationNestedInput
+    reviewTasks?: PartnerReviewTaskUpdateManyWithoutApplicationNestedInput
+  }
+
+  export type PartnerAgentApplicationUncheckedUpdateWithoutSandboxRunsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    developerAccountId?: StringFieldUpdateOperationsInput | string
+    agentId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    category?: StringFieldUpdateOperationsInput | string
+    capabilityIds?: StringFieldUpdateOperationsInput | string
+    runtimeMode?: StringFieldUpdateOperationsInput | string
+    endpointUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    webhookUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    lifecycleStatus?: StringFieldUpdateOperationsInput | string
+    currentVersionId?: NullableStringFieldUpdateOperationsInput | string | null
+    listingId?: NullableStringFieldUpdateOperationsInput | string | null
+    agentProductId?: NullableStringFieldUpdateOperationsInput | string | null
+    qualityScore?: NullableFloatFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    versions?: PartnerAgentDraftVersionUncheckedUpdateManyWithoutApplicationNestedInput
+    reviewTasks?: PartnerReviewTaskUncheckedUpdateManyWithoutApplicationNestedInput
+  }
+
+  export type PartnerAgentApplicationCreateWithoutReviewTasksInput = {
+    id?: string
+    agentId: string
+    name: string
+    category: string
+    capabilityIds?: string
+    runtimeMode?: string
+    endpointUrl?: string | null
+    webhookUrl?: string | null
+    lifecycleStatus?: string
+    currentVersionId?: string | null
+    listingId?: string | null
+    agentProductId?: string | null
+    qualityScore?: number | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    developerAccount: DeveloperAccountCreateNestedOneWithoutApplicationsInput
+    versions?: PartnerAgentDraftVersionCreateNestedManyWithoutApplicationInput
+    sandboxRuns?: PartnerSandboxRunCreateNestedManyWithoutApplicationInput
+  }
+
+  export type PartnerAgentApplicationUncheckedCreateWithoutReviewTasksInput = {
+    id?: string
+    developerAccountId: string
+    agentId: string
+    name: string
+    category: string
+    capabilityIds?: string
+    runtimeMode?: string
+    endpointUrl?: string | null
+    webhookUrl?: string | null
+    lifecycleStatus?: string
+    currentVersionId?: string | null
+    listingId?: string | null
+    agentProductId?: string | null
+    qualityScore?: number | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    versions?: PartnerAgentDraftVersionUncheckedCreateNestedManyWithoutApplicationInput
+    sandboxRuns?: PartnerSandboxRunUncheckedCreateNestedManyWithoutApplicationInput
+  }
+
+  export type PartnerAgentApplicationCreateOrConnectWithoutReviewTasksInput = {
+    where: PartnerAgentApplicationWhereUniqueInput
+    create: XOR<PartnerAgentApplicationCreateWithoutReviewTasksInput, PartnerAgentApplicationUncheckedCreateWithoutReviewTasksInput>
+  }
+
+  export type PartnerAgentApplicationUpsertWithoutReviewTasksInput = {
+    update: XOR<PartnerAgentApplicationUpdateWithoutReviewTasksInput, PartnerAgentApplicationUncheckedUpdateWithoutReviewTasksInput>
+    create: XOR<PartnerAgentApplicationCreateWithoutReviewTasksInput, PartnerAgentApplicationUncheckedCreateWithoutReviewTasksInput>
+    where?: PartnerAgentApplicationWhereInput
+  }
+
+  export type PartnerAgentApplicationUpdateToOneWithWhereWithoutReviewTasksInput = {
+    where?: PartnerAgentApplicationWhereInput
+    data: XOR<PartnerAgentApplicationUpdateWithoutReviewTasksInput, PartnerAgentApplicationUncheckedUpdateWithoutReviewTasksInput>
+  }
+
+  export type PartnerAgentApplicationUpdateWithoutReviewTasksInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    agentId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    category?: StringFieldUpdateOperationsInput | string
+    capabilityIds?: StringFieldUpdateOperationsInput | string
+    runtimeMode?: StringFieldUpdateOperationsInput | string
+    endpointUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    webhookUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    lifecycleStatus?: StringFieldUpdateOperationsInput | string
+    currentVersionId?: NullableStringFieldUpdateOperationsInput | string | null
+    listingId?: NullableStringFieldUpdateOperationsInput | string | null
+    agentProductId?: NullableStringFieldUpdateOperationsInput | string | null
+    qualityScore?: NullableFloatFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    developerAccount?: DeveloperAccountUpdateOneRequiredWithoutApplicationsNestedInput
+    versions?: PartnerAgentDraftVersionUpdateManyWithoutApplicationNestedInput
+    sandboxRuns?: PartnerSandboxRunUpdateManyWithoutApplicationNestedInput
+  }
+
+  export type PartnerAgentApplicationUncheckedUpdateWithoutReviewTasksInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    developerAccountId?: StringFieldUpdateOperationsInput | string
+    agentId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    category?: StringFieldUpdateOperationsInput | string
+    capabilityIds?: StringFieldUpdateOperationsInput | string
+    runtimeMode?: StringFieldUpdateOperationsInput | string
+    endpointUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    webhookUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    lifecycleStatus?: StringFieldUpdateOperationsInput | string
+    currentVersionId?: NullableStringFieldUpdateOperationsInput | string | null
+    listingId?: NullableStringFieldUpdateOperationsInput | string | null
+    agentProductId?: NullableStringFieldUpdateOperationsInput | string | null
+    qualityScore?: NullableFloatFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    versions?: PartnerAgentDraftVersionUncheckedUpdateManyWithoutApplicationNestedInput
+    sandboxRuns?: PartnerSandboxRunUncheckedUpdateManyWithoutApplicationNestedInput
+  }
+
   export type ConversationCreateManyUserInput = {
     id?: string
     projectId?: string | null
@@ -93860,6 +101805,228 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type PartnerAgentApplicationCreateManyDeveloperAccountInput = {
+    id?: string
+    agentId: string
+    name: string
+    category: string
+    capabilityIds?: string
+    runtimeMode?: string
+    endpointUrl?: string | null
+    webhookUrl?: string | null
+    lifecycleStatus?: string
+    currentVersionId?: string | null
+    listingId?: string | null
+    agentProductId?: string | null
+    qualityScore?: number | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type PartnerAgentApplicationUpdateWithoutDeveloperAccountInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    agentId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    category?: StringFieldUpdateOperationsInput | string
+    capabilityIds?: StringFieldUpdateOperationsInput | string
+    runtimeMode?: StringFieldUpdateOperationsInput | string
+    endpointUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    webhookUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    lifecycleStatus?: StringFieldUpdateOperationsInput | string
+    currentVersionId?: NullableStringFieldUpdateOperationsInput | string | null
+    listingId?: NullableStringFieldUpdateOperationsInput | string | null
+    agentProductId?: NullableStringFieldUpdateOperationsInput | string | null
+    qualityScore?: NullableFloatFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    versions?: PartnerAgentDraftVersionUpdateManyWithoutApplicationNestedInput
+    sandboxRuns?: PartnerSandboxRunUpdateManyWithoutApplicationNestedInput
+    reviewTasks?: PartnerReviewTaskUpdateManyWithoutApplicationNestedInput
+  }
+
+  export type PartnerAgentApplicationUncheckedUpdateWithoutDeveloperAccountInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    agentId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    category?: StringFieldUpdateOperationsInput | string
+    capabilityIds?: StringFieldUpdateOperationsInput | string
+    runtimeMode?: StringFieldUpdateOperationsInput | string
+    endpointUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    webhookUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    lifecycleStatus?: StringFieldUpdateOperationsInput | string
+    currentVersionId?: NullableStringFieldUpdateOperationsInput | string | null
+    listingId?: NullableStringFieldUpdateOperationsInput | string | null
+    agentProductId?: NullableStringFieldUpdateOperationsInput | string | null
+    qualityScore?: NullableFloatFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    versions?: PartnerAgentDraftVersionUncheckedUpdateManyWithoutApplicationNestedInput
+    sandboxRuns?: PartnerSandboxRunUncheckedUpdateManyWithoutApplicationNestedInput
+    reviewTasks?: PartnerReviewTaskUncheckedUpdateManyWithoutApplicationNestedInput
+  }
+
+  export type PartnerAgentApplicationUncheckedUpdateManyWithoutDeveloperAccountInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    agentId?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    category?: StringFieldUpdateOperationsInput | string
+    capabilityIds?: StringFieldUpdateOperationsInput | string
+    runtimeMode?: StringFieldUpdateOperationsInput | string
+    endpointUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    webhookUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    lifecycleStatus?: StringFieldUpdateOperationsInput | string
+    currentVersionId?: NullableStringFieldUpdateOperationsInput | string | null
+    listingId?: NullableStringFieldUpdateOperationsInput | string | null
+    agentProductId?: NullableStringFieldUpdateOperationsInput | string | null
+    qualityScore?: NullableFloatFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PartnerAgentDraftVersionCreateManyApplicationInput = {
+    id?: string
+    version: string
+    manifestJson: string
+    skillPackageJson?: string
+    releaseChannel?: string
+    demoUrl?: string | null
+    privacyNotes?: string | null
+    pricingJson?: string | null
+    createdAt?: Date | string
+  }
+
+  export type PartnerSandboxRunCreateManyApplicationInput = {
+    id?: string
+    versionId: string
+    fixtureId: string
+    status: string
+    checksJson?: string
+    qualityReportJson?: string | null
+    logText?: string | null
+    invokeId?: string | null
+    startedAt?: Date | string
+    finishedAt?: Date | string | null
+  }
+
+  export type PartnerReviewTaskCreateManyApplicationInput = {
+    id?: string
+    versionId: string
+    status?: string
+    checklistJson?: string
+    reviewerUserId?: string | null
+    decisionNote?: string | null
+    submittedAt?: Date | string
+    resolvedAt?: Date | string | null
+  }
+
+  export type PartnerAgentDraftVersionUpdateWithoutApplicationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    version?: StringFieldUpdateOperationsInput | string
+    manifestJson?: StringFieldUpdateOperationsInput | string
+    skillPackageJson?: StringFieldUpdateOperationsInput | string
+    releaseChannel?: StringFieldUpdateOperationsInput | string
+    demoUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    privacyNotes?: NullableStringFieldUpdateOperationsInput | string | null
+    pricingJson?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PartnerAgentDraftVersionUncheckedUpdateWithoutApplicationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    version?: StringFieldUpdateOperationsInput | string
+    manifestJson?: StringFieldUpdateOperationsInput | string
+    skillPackageJson?: StringFieldUpdateOperationsInput | string
+    releaseChannel?: StringFieldUpdateOperationsInput | string
+    demoUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    privacyNotes?: NullableStringFieldUpdateOperationsInput | string | null
+    pricingJson?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PartnerAgentDraftVersionUncheckedUpdateManyWithoutApplicationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    version?: StringFieldUpdateOperationsInput | string
+    manifestJson?: StringFieldUpdateOperationsInput | string
+    skillPackageJson?: StringFieldUpdateOperationsInput | string
+    releaseChannel?: StringFieldUpdateOperationsInput | string
+    demoUrl?: NullableStringFieldUpdateOperationsInput | string | null
+    privacyNotes?: NullableStringFieldUpdateOperationsInput | string | null
+    pricingJson?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PartnerSandboxRunUpdateWithoutApplicationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    versionId?: StringFieldUpdateOperationsInput | string
+    fixtureId?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    checksJson?: StringFieldUpdateOperationsInput | string
+    qualityReportJson?: NullableStringFieldUpdateOperationsInput | string | null
+    logText?: NullableStringFieldUpdateOperationsInput | string | null
+    invokeId?: NullableStringFieldUpdateOperationsInput | string | null
+    startedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    finishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type PartnerSandboxRunUncheckedUpdateWithoutApplicationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    versionId?: StringFieldUpdateOperationsInput | string
+    fixtureId?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    checksJson?: StringFieldUpdateOperationsInput | string
+    qualityReportJson?: NullableStringFieldUpdateOperationsInput | string | null
+    logText?: NullableStringFieldUpdateOperationsInput | string | null
+    invokeId?: NullableStringFieldUpdateOperationsInput | string | null
+    startedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    finishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type PartnerSandboxRunUncheckedUpdateManyWithoutApplicationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    versionId?: StringFieldUpdateOperationsInput | string
+    fixtureId?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    checksJson?: StringFieldUpdateOperationsInput | string
+    qualityReportJson?: NullableStringFieldUpdateOperationsInput | string | null
+    logText?: NullableStringFieldUpdateOperationsInput | string | null
+    invokeId?: NullableStringFieldUpdateOperationsInput | string | null
+    startedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    finishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type PartnerReviewTaskUpdateWithoutApplicationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    versionId?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    checklistJson?: StringFieldUpdateOperationsInput | string
+    reviewerUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    decisionNote?: NullableStringFieldUpdateOperationsInput | string | null
+    submittedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    resolvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type PartnerReviewTaskUncheckedUpdateWithoutApplicationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    versionId?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    checklistJson?: StringFieldUpdateOperationsInput | string
+    reviewerUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    decisionNote?: NullableStringFieldUpdateOperationsInput | string | null
+    submittedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    resolvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type PartnerReviewTaskUncheckedUpdateManyWithoutApplicationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    versionId?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    checklistJson?: StringFieldUpdateOperationsInput | string
+    reviewerUserId?: NullableStringFieldUpdateOperationsInput | string | null
+    decisionNote?: NullableStringFieldUpdateOperationsInput | string | null
+    submittedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    resolvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
 
 
   /**
@@ -93905,6 +102072,14 @@ export namespace Prisma {
      * @deprecated Use AssetCategoryCountOutputTypeDefaultArgs instead
      */
     export type AssetCategoryCountOutputTypeArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = AssetCategoryCountOutputTypeDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use DeveloperAccountCountOutputTypeDefaultArgs instead
+     */
+    export type DeveloperAccountCountOutputTypeArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = DeveloperAccountCountOutputTypeDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use PartnerAgentApplicationCountOutputTypeDefaultArgs instead
+     */
+    export type PartnerAgentApplicationCountOutputTypeArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = PartnerAgentApplicationCountOutputTypeDefaultArgs<ExtArgs>
     /**
      * @deprecated Use UserDefaultArgs instead
      */
@@ -94141,6 +102316,26 @@ export namespace Prisma {
      * @deprecated Use StrategyDocumentDefaultArgs instead
      */
     export type StrategyDocumentArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = StrategyDocumentDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use DeveloperAccountDefaultArgs instead
+     */
+    export type DeveloperAccountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = DeveloperAccountDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use PartnerAgentApplicationDefaultArgs instead
+     */
+    export type PartnerAgentApplicationArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = PartnerAgentApplicationDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use PartnerAgentDraftVersionDefaultArgs instead
+     */
+    export type PartnerAgentDraftVersionArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = PartnerAgentDraftVersionDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use PartnerSandboxRunDefaultArgs instead
+     */
+    export type PartnerSandboxRunArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = PartnerSandboxRunDefaultArgs<ExtArgs>
+    /**
+     * @deprecated Use PartnerReviewTaskDefaultArgs instead
+     */
+    export type PartnerReviewTaskArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = PartnerReviewTaskDefaultArgs<ExtArgs>
 
   /**
    * Batch Payload for updateMany & deleteMany & createMany

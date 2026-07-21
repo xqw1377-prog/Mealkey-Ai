@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { MKBrand } from "@/components/brand/MKBrand";
 import { PRODUCT_BRAND } from "@/lib/product-brand";
 
 export default function HomePage() {
   return (
     <main className="relative min-h-[100dvh] overflow-hidden text-[#171717]">
-      {/* 全幅氛围：一层构图，非平板底 */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 bg-[#e7ebe3]"
@@ -22,7 +22,6 @@ export default function HomePage() {
         aria-hidden="true"
         className="pointer-events-none absolute inset-x-0 bottom-0 h-[42%] bg-[linear-gradient(180deg,transparent_0%,rgba(23,23,23,0.04)_40%,rgba(23,23,23,0.08)_100%)]"
       />
-      {/* 右侧弱视觉锚：决策轨迹，不抢品牌 */}
       <svg
         aria-hidden="true"
         className="pointer-events-none absolute -right-6 top-[22%] h-[46vh] w-[46vh] opacity-[0.11] md:right-[6%] md:top-[18%] md:opacity-[0.14]"
@@ -42,54 +41,9 @@ export default function HomePage() {
       </svg>
 
       <div className="relative mx-auto flex min-h-[100dvh] w-full max-w-xl flex-col justify-between px-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-[max(1.5rem,env(safe-area-inset-top))] md:max-w-2xl md:px-10 md:pb-10 md:pt-10">
-        {/* 上区：品牌 + 一句主张 + CTA，成一块构图 */}
         <div className="flex flex-1 flex-col justify-center py-6 md:py-10">
           <header className="mpnt-rise">
-            <div className="inline-flex items-start gap-3.5 md:gap-4">
-              <div
-                className="relative mt-1 h-12 w-12 shrink-0 overflow-hidden rounded-[16px] border border-[rgba(24,24,23,0.08)] bg-[#171717] text-white shadow-[0_16px_36px_rgba(24,24,23,0.12)] md:h-14 md:w-14 md:rounded-[18px]"
-                aria-hidden="true"
-              >
-                <svg
-                  viewBox="0 0 48 48"
-                  className="h-full w-full"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <circle
-                    cx="31"
-                    cy="14"
-                    r="3.5"
-                    fill="#F6F3ED"
-                    fillOpacity="0.95"
-                  />
-                  <path
-                    d="M14 31V17.5L21.5 27L29 17.5V31"
-                    stroke="#F6F3ED"
-                    strokeWidth="2.2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M26 27.5H36"
-                    stroke="#77805F"
-                    strokeWidth="2.2"
-                    strokeLinecap="round"
-                  />
-                </svg>
-              </div>
-              <div className="min-w-0 pt-0.5">
-                <h1 className="font-display text-[40px] font-semibold leading-[1.05] tracking-[-0.05em] text-[#171717] md:text-[52px]">
-                  {PRODUCT_BRAND.nameZh}
-                </h1>
-                <p className="mt-1.5 text-[14px] font-medium tracking-[0.08em] text-[#66735E] md:text-[15px]">
-                  {PRODUCT_BRAND.nameEn}
-                </p>
-                <p className="mt-2 text-[13px] leading-5 tracking-[0.02em] text-[#5f655c] md:text-[14px]">
-                  {PRODUCT_BRAND.positioning}
-                </p>
-              </div>
-            </div>
+            <MKBrand size="landing" />
           </header>
 
           <section className="mpnt-rise mpnt-rise-delay-1 mt-10 max-w-md space-y-4 md:mt-12 md:space-y-5">
@@ -105,23 +59,41 @@ export default function HomePage() {
 
           <div className="mpnt-rise mpnt-rise-delay-2 mt-9 flex w-full max-w-md flex-col gap-3 sm:mt-10 sm:flex-row sm:items-stretch">
             <Link
-              href="/register"
+              href="/store"
               className="btn-primary min-h-12 w-full flex-1 touch-manipulation justify-center text-[15px]"
             >
-              <span>开始使用</span>
+              <span>浏览 Store</span>
               <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
-              href="/login"
+              href="/developers"
               className="btn-secondary min-h-12 w-full flex-1 touch-manipulation justify-center text-[15px]"
             >
-              <span>登录</span>
+              <span>开发者</span>
             </Link>
           </div>
+          <p className="mpnt-rise mpnt-rise-delay-2 mt-3 text-[12px] text-[#6f747b]">
+            已有账号？
+            <Link href="/login" className="ml-1 underline-offset-2 hover:underline">
+              登录经营台
+            </Link>
+            <span className="mx-2 text-[rgba(24,24,23,0.2)]">·</span>
+            <Link href="/developers/console" className="underline-offset-2 hover:underline">
+              Console
+            </Link>
+          </p>
         </div>
 
         <footer className="mpnt-rise mpnt-rise-delay-3 shrink-0 pt-4 text-[12px] leading-5 tracking-[0.04em] text-[#6f747b]">
           {PRODUCT_BRAND.nameZh} · {PRODUCT_BRAND.nameEn}
+          <span className="mx-2 text-[rgba(24,24,23,0.2)]">·</span>
+          <Link href="/store" className="underline-offset-2 hover:underline">
+            Store
+          </Link>
+          <span className="mx-2 text-[rgba(24,24,23,0.2)]">·</span>
+          <Link href="/developers" className="underline-offset-2 hover:underline">
+            Developers
+          </Link>
         </footer>
       </div>
     </main>

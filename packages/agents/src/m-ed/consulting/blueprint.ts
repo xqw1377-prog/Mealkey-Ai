@@ -55,7 +55,7 @@ export const medBlueprint: AgentConsultingBlueprint = {
   agentId: "m-ed",
   productName: "组织与股权",
   committeeName: "组织顾问",
-  reportTitle: "股权方案报告",
+  reportTitle: "股权战略设计报告",
   stepLabels: {
     [SixStepId.INTAKE]: { no: "01", title: "说清楚", feel: "结构卡在哪" },
     [SixStepId.RESEARCH]: { no: "02", title: "体检", feel: "先看股权现状" },

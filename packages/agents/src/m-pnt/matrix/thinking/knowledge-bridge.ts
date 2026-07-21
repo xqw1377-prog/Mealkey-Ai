@@ -24,7 +24,15 @@ export function enrichVerdictWithKnowledge(input: {
 } {
   if (!input.source) {
     return {
-      checks: input.baseChecks,
+      checks: [
+        ...input.baseChecks,
+        {
+          law: "蒸馏知识检验",
+          pass: true,
+          delta: 0,
+          note: "本席尚无独立蒸馏规则集，沿用启发式商规（未借用他派加分）",
+        },
+      ],
       score: Math.max(0, Math.min(100, Math.round(input.baseScore))),
       trace: [
         ...input.trace,
@@ -37,12 +45,23 @@ export function enrichVerdictWithKnowledge(input: {
   }
 
   const matched = matchRulesToText(input.source, input.directionText, 6);
-  const distilled = rulesToLawChecks(matched, input.directionText).map((c) => ({
-    law: `蒸馏·${c.law}`,
-    pass: c.pass,
-    delta: Math.max(-15, Math.min(15, Math.round(c.delta / 2))),
-    note: c.note,
-  }));
+  const distilled = [
+    ...rulesToLawChecks(matched, input.directionText).map((c) => ({
+      law: `蒸馏·${c.law}`,
+      pass: c.pass,
+      delta: Math.max(-15, Math.min(15, Math.round(c.delta / 2))),
+      note: c.note,
+    })),
+  ];
+  // 未命中规则时仍保留蒸馏维度，避免 dossier 只剩启发式商规名
+  if (!distilled.length) {
+    distilled.push({
+      law: "蒸馏·启发式沿用",
+      pass: true,
+      delta: 0,
+      note: "未命中特定规则，沿用启发式商规",
+    });
+  }
 
   const distilledDelta = distilled.reduce((s, c) => s + c.delta, 0);
   const score = Math.max(

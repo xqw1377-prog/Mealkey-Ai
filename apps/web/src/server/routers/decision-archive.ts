@@ -10,6 +10,7 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { router, protectedProcedure } from "../trpc";
 import { prisma } from "@/lib/prisma";
+import { createLogger } from "@/lib/logger";
 import { validateProfile } from "@/lib/profile-schema";
 import { createDecision } from "@/server/services/agent-os.service";
 import { buildGrowthPlan } from "@/lib/onboarding-interview";
@@ -50,6 +51,8 @@ import {
   ingestSignalsAndEvolve,
 } from "@/server/founder-layer/intelligence";
 // Case.id ≡ MKDecision.id：开会预创建 DRAFT 见 decision-council.open
+
+const log = createLogger("decision-archive");
 
 function asTaskArray(raw: unknown): ValidationTask[] {
   if (!Array.isArray(raw)) return [];
@@ -395,8 +398,20 @@ export const decisionArchiveRouter = router({
 
       await prisma.decision.update({
         where: { id: record.id },
-        data: { outcome: outcomeWithMk },
+        data: { outcome: outcomeWithMk, projectId: project.id },
       });
+
+      // 会议刚写入的 Decision 快照：下游 seed/exec 不再二次 findFirst 丢关联
+      const decisionRow = {
+        id: record.id,
+        projectId: project.id,
+        problem: input.problem,
+        judgement: input.judgement,
+        action,
+        outcome: outcomeWithMk,
+        confidence: gatedConfidence,
+        evidence: JSON.stringify(evidence),
+      };
 
       await emitDecisionRuntimeEvent(prisma, {
         decisionId: record.id,
@@ -411,17 +426,19 @@ export const decisionArchiveRouter = router({
       });
 
       // Decision Runtime：会议意见/证据落入 MKDecision（Execution 仍由本流程写 lastActionPlan）
-      let seeded = { opinionCount: 0, evidenceCount: 0 };
+      let seeded = { opinionCount: 0, evidenceCount: 0, outcome: outcomeWithMk };
       try {
         seeded = await seedDecisionArtifactsFromMeeting(prisma, {
           decisionId: record.id,
           projectId: project.id,
+          decisionRow,
           supportClaims: support,
           opposeClaims: oppose,
           expertOpinions: input.expertOpinions,
         });
+        decisionRow.outcome = seeded.outcome;
       } catch (error) {
-        console.warn("seedDecisionArtifactsFromMeeting failed:", error);
+        log.warn("seedDecisionArtifactsFromMeeting failed", { error: String(error) });
       }
 
       // MVP 闭环：批准后自动进入 M-EXEC（ActionPlan + Validation + D+7）
@@ -434,6 +451,7 @@ export const decisionArchiveRouter = router({
           projectId: project.id,
           ownerId: project.owner.id,
           decisionId: record.id,
+          decisionRow,
           profile: {
             ...profile,
             growthPlan,
@@ -446,8 +464,20 @@ export const decisionArchiveRouter = router({
       } catch (error) {
         executionError =
           error instanceof Error ? error.message : "自动创建执行计划失败";
-        console.warn("auto createExecutionFromDecision failed:", error);
+        log.warn("auto createExecutionFromDecision failed", { error: String(error) });
       }
+
+      // Evolution 信号与 lastActionPlan 同一次写回，避免二次 CAS 读到旧 profile 冲掉行动
+      const founderChoice =
+        input.councilTrace?.founderChoice || "接受委员会";
+      const intelligenceSignals = buildCouncilDecisionSignals({
+        topic: input.problem,
+        choice: founderChoice,
+        recommendedAction:
+          input.councilTrace?.recommendedAction || input.judgement,
+        caseId: record.id,
+        sessionId: input.councilTrace?.sessionId,
+      });
 
       try {
         await updateProjectProfile(project.id, (prefs) => {
@@ -455,8 +485,9 @@ export const decisionArchiveRouter = router({
           const { suggestedNextMeeting: _clearedRedeision, ...restWithoutRedeision } =
             restPrefs;
 
+          let next: Record<string, unknown>;
           if (autoExec) {
-            return {
+            next = {
               ...restWithoutRedeision,
               ...autoExec.nextProfile,
               ...(input.focusChoice ? { founderPreference: input.focusChoice } : {}),
@@ -467,45 +498,52 @@ export const decisionArchiveRouter = router({
               lastValidationHypothesis: planBundle.hypothesis,
               lastProblemFingerprint: fingerprint,
             };
+          } else {
+            // 降级：执行创建失败时仍写会议行动（旧路径）
+            const existingTasks = asTaskArray(restPrefs.validationTasks);
+            const todayActions = buildTodayActionsFromMeetingConfirm({
+              nextActions: input.nextActions,
+              action: input.action,
+              validationPlan: input.validationPlan,
+              judgement: input.judgement,
+            });
+            next = {
+              ...restWithoutRedeision,
+              ...(input.focusChoice ? { founderPreference: input.focusChoice } : {}),
+              lastMeetingDecisionId: record.id,
+              lastMeetingAt: new Date().toISOString(),
+              growthPlan,
+              validationTasks: upsertValidationTask(existingTasks, validationTask),
+              activeValidationTaskId: validationTask.id,
+              lastDecisionContract: decisionContract,
+              lastValidationHypothesis: planBundle.hypothesis,
+              lastProblemFingerprint: fingerprint,
+              lastActionPlan: {
+                planId: `ap_meeting_${record.id}`,
+                decisionId: record.id,
+                summary: clipJudgement(input.judgement),
+                goals: [
+                  {
+                    goalId: `g_week_${record.id}`,
+                    title: clipJudgement(input.judgement, 80),
+                    horizonDays: 7,
+                  },
+                ],
+                actions: todayActions,
+                alignmentNotes: input.focusChoice
+                  ? [`创始人关注：${input.focusChoice}`]
+                  : [],
+                validationTaskId: validationTask.id,
+              },
+            };
           }
 
-          // 降级：执行创建失败时仍写会议行动（旧路径）
-          const existingTasks = asTaskArray(restPrefs.validationTasks);
-          const todayActions = buildTodayActionsFromMeetingConfirm({
-            nextActions: input.nextActions,
-            action: input.action,
-            validationPlan: input.validationPlan,
-            judgement: input.judgement,
-          });
-          return {
-            ...restWithoutRedeision,
-            ...(input.focusChoice ? { founderPreference: input.focusChoice } : {}),
-            lastMeetingDecisionId: record.id,
-            lastMeetingAt: new Date().toISOString(),
-            growthPlan,
-            validationTasks: upsertValidationTask(existingTasks, validationTask),
-            activeValidationTaskId: validationTask.id,
-            lastDecisionContract: decisionContract,
-            lastValidationHypothesis: planBundle.hypothesis,
-            lastProblemFingerprint: fingerprint,
-            lastActionPlan: {
-              planId: `ap_meeting_${record.id}`,
-              decisionId: record.id,
-              summary: clipJudgement(input.judgement),
-              goals: [
-                {
-                  goalId: `g_week_${record.id}`,
-                  title: clipJudgement(input.judgement, 80),
-                  horizonDays: 7,
-                },
-              ],
-              actions: todayActions,
-              alignmentNotes: input.focusChoice
-                ? [`创始人关注：${input.focusChoice}`]
-                : [],
-              validationTaskId: validationTask.id,
-            },
-          };
+          try {
+            return ingestSignalsAndEvolve(next, intelligenceSignals);
+          } catch (error) {
+            log.warn("intelligence ingest after confirmFromMeeting failed", { error: String(error) });
+            return next;
+          }
         });
       } catch (error) {
         const conflict = toProfileConflictTRPC(error);
@@ -546,28 +584,6 @@ export const decisionArchiveRouter = router({
         },
       ];
       await persistFounderMemoryWrites(prisma, project.owner.id, memoryWrites);
-
-      // Evolution：与 decisionCouncil.founderDecide 对齐（签字即学习）
-      try {
-        const founderChoice =
-          input.councilTrace?.founderChoice || "接受委员会";
-        const signals = buildCouncilDecisionSignals({
-          topic: input.problem,
-          choice: founderChoice,
-          recommendedAction:
-            input.councilTrace?.recommendedAction || input.judgement,
-          caseId: record.id,
-          sessionId: input.councilTrace?.sessionId,
-        });
-        await updateProjectProfile(
-          project.id,
-          (latest) =>
-            ingestSignalsAndEvolve(latest as Record<string, unknown>, signals),
-          { ownerId: project.owner.id },
-        );
-      } catch (error) {
-        console.warn("intelligence ingest after confirmFromMeeting failed", error);
-      }
 
       return {
         decisionId: record.id,

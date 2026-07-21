@@ -5,6 +5,9 @@
  * 本文件提供 Zod schema 用于关键读取路径的类型安全。
  */
 import { z } from "zod";
+import { createLogger } from "@/lib/logger";
+
+const log = createLogger("profile-schema");
 
 // ─── 品牌定位 (M-PNT) ───
 
@@ -180,7 +183,7 @@ export function validateProfile(raw: string | null | undefined): ProjectProfile 
     if (typeof parsed !== "object" || parsed === null) return {};
     return ProjectProfileSchema.parse(parsed);
   } catch {
-    console.warn("[profile-schema] profile JSON 校验失败，使用空对象兜底");
+    log.warn("profile JSON 校验失败，使用空对象兜底");
     return {};
   }
 }

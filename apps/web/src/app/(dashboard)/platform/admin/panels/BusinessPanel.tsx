@@ -222,7 +222,7 @@ export function BusinessPanel({
         <ObjectsTable
           id="business-third-party-summary"
           title="第三方耗用摘要"
-          description="这层直接来自 UsageRecord，不依赖经营点是否完成结算。先看第三方真实耗用，再看经营结算有没有回传到同一口径。"
+          description="只统计可归因的真实 UsageRecord（有 Tokens / 成本 / Provider / Model）。文档样例、fixture，以及 token=0 且无供应商信息的空壳 agent_run 不会进入本层。"
         >
           <div className="grid gap-2 xl:grid-cols-4">
             <DetailField label="30 天记录数" value={`${formatNumber(visibleBusinessUsageSummary.recordedEvents)} 条`} />
@@ -261,7 +261,7 @@ export function BusinessPanel({
               rows={visibleBusinessUsageTypes}
               options={{
                 emptyTitle: "还没有可聚合的 usageType",
-                emptyDescription: "当前最近 30 天还没有可用的 UsageRecord，usageType 分层暂时为空。",
+                emptyDescription: "最近 30 天没有可归因的第三方耗用（需有 Tokens / 成本 / Provider / Model）。空壳 agent_run 与演示事件不会展示。",
                 secondaryLabel: "覆盖资源",
               }}
               formatDate={formatDate}

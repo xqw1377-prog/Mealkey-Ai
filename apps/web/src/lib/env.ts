@@ -71,6 +71,35 @@ export const env = createEnv({
     /** 生产显式允许沙箱收款（默认禁止） */
     PAYMENT_ALLOW_SANDBOX: z.string().optional(),
     PAYMENT_MODE: z.enum(["live", "sandbox"]).optional(),
+    /** Gateway / Agent 密钥（生产强制） */
+    MK_AGENT_SECRET_KEK: isProd
+      ? z
+          .string()
+          .min(16, "生产必须配置至少 16 位 MK_AGENT_SECRET_KEK")
+          .refine(
+            (v) => v !== "mk-sandbox-agent-secret",
+            "MK_AGENT_SECRET_KEK 禁止使用默认值",
+          )
+      : z.string().optional(),
+    MK_AGENT_SANDBOX_SECRET: isProd
+      ? z
+          .string()
+          .min(16, "生产必须配置 MK_AGENT_SANDBOX_SECRET 或使用 REGISTRY_JSON")
+          .optional()
+          .refine(
+            (v) =>
+              Boolean(process.env.MK_AGENT_REGISTRY_JSON?.trim()) ||
+              (Boolean(v) && v !== "mk-sandbox-agent-secret"),
+            "生产必须配置非默认 MK_AGENT_SANDBOX_SECRET，或 MK_AGENT_REGISTRY_JSON",
+          )
+      : z.string().optional(),
+    MK_AGENT_REGISTRY_JSON: z.string().optional(),
+    MK_GATEWAY_USER_TOKENS: isProd
+      ? z.string().min(8, "生产必须配置 MK_GATEWAY_USER_TOKENS")
+      : z.string().optional(),
+    MK_GATEWAY_SKIP_INSTALL_CHECK: z.string().optional(),
+    MK_GATEWAY_DEV_OPEN: z.string().optional(),
+    MK_GATEWAY_ALLOW_SANDBOX_TOKEN: z.string().optional(),
   },
   client: {
     NEXT_PUBLIC_APP_URL: z.string().url().optional(),
@@ -96,6 +125,13 @@ export const env = createEnv({
     CRON_SECRET: process.env.CRON_SECRET,
     PAYMENT_ALLOW_SANDBOX: process.env.PAYMENT_ALLOW_SANDBOX,
     PAYMENT_MODE: process.env.PAYMENT_MODE as "live" | "sandbox" | undefined,
+    MK_AGENT_SECRET_KEK: process.env.MK_AGENT_SECRET_KEK,
+    MK_AGENT_SANDBOX_SECRET: process.env.MK_AGENT_SANDBOX_SECRET,
+    MK_AGENT_REGISTRY_JSON: process.env.MK_AGENT_REGISTRY_JSON,
+    MK_GATEWAY_USER_TOKENS: process.env.MK_GATEWAY_USER_TOKENS,
+    MK_GATEWAY_SKIP_INSTALL_CHECK: process.env.MK_GATEWAY_SKIP_INSTALL_CHECK,
+    MK_GATEWAY_DEV_OPEN: process.env.MK_GATEWAY_DEV_OPEN,
+    MK_GATEWAY_ALLOW_SANDBOX_TOKEN: process.env.MK_GATEWAY_ALLOW_SANDBOX_TOKEN,
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
   },
   skipValidation: process.env.SKIP_ENV_VALIDATION === "1",

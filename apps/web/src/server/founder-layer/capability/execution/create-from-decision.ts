@@ -58,6 +58,16 @@ export async function createExecutionFromDecision(
     profile: Record<string, unknown>;
     /** 覆盖今日动作标题 */
     nextActions?: string[];
+    /** 会议刚写入的 Decision 快照，避免二次 findFirst 丢关联 */
+    decisionRow?: {
+      id: string;
+      projectId?: string | null;
+      problem: string;
+      judgement: string;
+      action?: string | null;
+      outcome?: string | null;
+      confidence?: number | null;
+    };
   },
 ): Promise<{
   result: CreateExecutionFromDecisionResult;
@@ -65,10 +75,44 @@ export async function createExecutionFromDecision(
 }> {
   const decisionId = assertPrismaDecisionId(input.decisionId);
 
-  const row = await prisma.decision.findFirst({
-    where: { id: decisionId, projectId: input.projectId },
-  });
+  let row = input.decisionRow?.id === decisionId
+    ? {
+        id: input.decisionRow.id,
+        projectId: input.decisionRow.projectId ?? input.projectId,
+        problem: input.decisionRow.problem,
+        judgement: input.decisionRow.judgement,
+        action: input.decisionRow.action ?? null,
+        outcome: input.decisionRow.outcome ?? null,
+        confidence: input.decisionRow.confidence ?? null,
+      }
+    : await prisma.decision.findFirst({
+        where: { id: decisionId, projectId: input.projectId },
+      });
+
   if (!row) {
+    const orphan = await prisma.decision.findFirst({
+      where: { id: decisionId },
+    });
+    if (!orphan) {
+      throw new Error("决策不存在或不属于本项目");
+    }
+    if (orphan.projectId && orphan.projectId !== input.projectId) {
+      throw new Error("决策不存在或不属于本项目");
+    }
+    row = orphan.projectId
+      ? orphan
+      : await prisma.decision.update({
+          where: { id: decisionId },
+          data: { projectId: input.projectId },
+        });
+  }
+
+  if (!row.projectId) {
+    row = await prisma.decision.update({
+      where: { id: decisionId },
+      data: { projectId: input.projectId },
+    });
+  } else if (row.projectId !== input.projectId) {
     throw new Error("决策不存在或不属于本项目");
   }
 
@@ -86,8 +130,8 @@ export async function createExecutionFromDecision(
     decisionId,
     problem: row.problem,
     judgement: row.judgement,
-    action: row.action,
-    validationPlan: row.action,
+    action: row.action ?? undefined,
+    validationPlan: row.action ?? undefined,
     hypothesisStatement: (() => {
       try {
         const o = row.outcome ? JSON.parse(row.outcome) : {};
@@ -115,7 +159,7 @@ export async function createExecutionFromDecision(
 
   const todayActions = buildTodayActionsFromMeetingConfirm({
     nextActions: input.nextActions,
-    action: row.action,
+    action: row.action ?? undefined,
     validationPlan: planBundle.hypothesis.statement,
     judgement: row.judgement,
   });

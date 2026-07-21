@@ -42,8 +42,9 @@
 | `@mealkey/agents` | 活跃 | **Agent 产品矩阵**: LaunchAgent（开店顾问） | agent-sdk |
 | `@mealkey/knowledge-engine` | 活跃 | **知识引擎**（存储无关接口） | 无 |
 | `@mealkey/memory-engine` | 活跃 | **记忆引擎**（存储无关接口） | 无 |
-| ~~`@mealkey/agent-core`~~ | ❌ 已废弃 | 请使用 agent-runtime + core | — |
-| ~~`@mealkey/shared-types`~~ | ❌ 已废弃 | 请使用 agent-sdk | — |
+| `@mealkey/restaurant-brain` | 活跃 | **餐厅经营大脑** | — |
+| `@mealkey/business-signal-engine` | 活跃 | **经营信号引擎** | — |
+| `@mealkey/tool-agent-kit` | 活跃 | **L3 Tool Agent 框架** | — |
 | `@mealkey/web` | ✅ 活跃 | Next.js 前端应用 | agent-sdk, core, agent-runtime, agents |
 
 ## 7 Frozen Protocols
@@ -96,6 +97,8 @@ npm run dev
 ```
 
 生产 / 本地基建：
+- [docs/MEALKEY_PRODUCTION_DEPLOY_V1.md](docs/MEALKEY_PRODUCTION_DEPLOY_V1.md) — **上线与部署手册**（推荐先读）
+- [docs/MEALKEY_COMMERCIAL_DELIVERY_CHECKLIST_V1.md](docs/MEALKEY_COMMERCIAL_DELIVERY_CHECKLIST_V1.md) — 收费前产品验收
 - [docs/POSTGRES.md](docs/POSTGRES.md) — SQLite → PostgreSQL
 - [docs/BLOB_STORAGE.md](docs/BLOB_STORAGE.md) — 本地 / S3 / MinIO
 - CI：`.github/workflows/ci.yml`（typecheck · lint · test · build · postgres smoke）

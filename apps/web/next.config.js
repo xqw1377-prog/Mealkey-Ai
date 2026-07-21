@@ -14,9 +14,9 @@ const nextConfig = {
       },
       {
         key: "Content-Security-Policy",
-        // Next.js 仍需 inline；生产可后续切 nonce。禁止 object/embed 降低上传 XSS 面
+        // 生产环境应切换为 nonce 策略；当前移除 unsafe-eval 降低风险
         value:
-          "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://api.deepseek.com; object-src 'none'; base-uri 'self'; frame-ancestors 'none';",
+          "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://api.deepseek.com; object-src 'none'; base-uri 'self'; frame-ancestors 'none';",
       },
     ];
 

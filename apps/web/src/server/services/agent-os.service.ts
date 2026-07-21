@@ -11,7 +11,10 @@
  */
 
 import type { PrismaClient } from "@/generated/prisma";
+import { createLogger } from "@/lib/logger";
 import { safeParseJson } from "@mealkey/agent-sdk";
+
+const log = createLogger("agent-os");
 
 type DecisionEvidence = {
   source: string;
@@ -536,7 +539,7 @@ export async function createDecision(
       evidence: data.evidence,
     });
   } catch (error) {
-    console.warn("Persisting cognitive kernel snapshot failed:", error);
+    log.warn("Persisting cognitive kernel snapshot failed", { error: String(error) });
   }
 
   // Restaurant Brain：Decision → DecisionRecord 关联（不复制完整决策正文）
@@ -554,7 +557,7 @@ export async function createDecision(
         judgementSummary: data.judgement,
       });
     } catch (error) {
-      console.warn("Restaurant Brain decision writeback failed:", error);
+      log.warn("Restaurant Brain decision writeback failed", { error: String(error) });
     }
   }
 

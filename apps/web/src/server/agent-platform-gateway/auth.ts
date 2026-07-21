@@ -1,6 +1,8 @@
 import crypto from "node:crypto";
-import { resolveAgent } from "./registry";
+import { resolveAgentAsync } from "./registry";
 import { GatewayError, type RegisteredAgentV1 } from "./types";
+
+export { assertInstalled, getInstallStatus, isPlatformBuiltinAgent } from "./install-gate";
 
 /** Align with @mealkey/agent-sdk/platform sign payload */
 export function buildSignaturePayload(input: {
@@ -33,19 +35,19 @@ export function signAgentRequest(
     .digest("hex");
 }
 
-export function verifyAgentSignature(input: {
+export async function verifyAgentSignature(input: {
   method: string;
   path: string;
   body: string;
   agentId: string | null;
   timestamp: string | null;
   signature: string | null;
-}): RegisteredAgentV1 {
+}): Promise<RegisteredAgentV1> {
   if (!input.agentId || !input.timestamp || !input.signature) {
     throw new GatewayError("AUTH_EXPIRED", "缺少 Agent 签名头", 401);
   }
 
-  const agent = resolveAgent(input.agentId);
+  const agent = await resolveAgentAsync(input.agentId);
   if (!agent) {
     throw new GatewayError("AUTH_EXPIRED", `未知 Agent: ${input.agentId}`, 401);
   }
@@ -72,14 +74,20 @@ export function verifyAgentSignature(input: {
   return agent;
 }
 
-/**
- * V1 用户委托：Bearer sandbox* | 环境白名单 | 开发放行
- * 生产须配置 MK_GATEWAY_USER_TOKENS（逗号分隔）
- */
-export function verifyUserAccessToken(authHeader: string | null): {
+export type GatewayUserAccess = {
   token: string;
   mode: "sandbox" | "listed" | "dev_open";
-} {
+  /** listed Token 可选绑定 ownerId（配置格式 token|ownerId） */
+  ownerId: string | null;
+};
+
+/**
+ * V1 用户委托：
+ * - sandbox*：仅非生产，或显式 MK_GATEWAY_ALLOW_SANDBOX_TOKEN=1
+ * - MK_GATEWAY_USER_TOKENS：逗号分隔；支持 `token` 或 `token|ownerId`
+ * - dev_open：仅非生产（生产忽略 MK_GATEWAY_DEV_OPEN）
+ */
+export function verifyUserAccessToken(authHeader: string | null): GatewayUserAccess {
   const token = authHeader?.startsWith("Bearer ")
     ? authHeader.slice(7).trim()
     : "";
@@ -87,38 +95,33 @@ export function verifyUserAccessToken(authHeader: string | null): {
     throw new GatewayError("AUTH_EXPIRED", "缺少用户委托 Token", 401);
   }
 
+  const isProd = process.env.NODE_ENV === "production";
+
   if (token === "sandbox" || token.startsWith("sandbox_")) {
-    return { token, mode: "sandbox" };
+    if (isProd && process.env.MK_GATEWAY_ALLOW_SANDBOX_TOKEN !== "1") {
+      throw new GatewayError("AUTH_EXPIRED", "生产环境禁用 sandbox Token", 401);
+    }
+    return { token, mode: "sandbox", ownerId: null };
   }
 
   const listed = (process.env.MK_GATEWAY_USER_TOKENS ?? "")
     .split(",")
     .map((s) => s.trim())
     .filter(Boolean);
-  if (listed.includes(token)) {
-    return { token, mode: "listed" };
+
+  for (const entry of listed) {
+    const pipe = entry.indexOf("|");
+    const entryToken = pipe >= 0 ? entry.slice(0, pipe) : entry;
+    const ownerId = pipe >= 0 ? entry.slice(pipe + 1).trim() || null : null;
+    if (entryToken === token) {
+      return { token, mode: "listed", ownerId };
+    }
   }
 
-  if (
-    process.env.NODE_ENV !== "production" ||
-    process.env.MK_GATEWAY_DEV_OPEN === "1"
-  ) {
-    return { token, mode: "dev_open" };
+  // 生产绝不因 DEV_OPEN 放行任意 Bearer
+  if (!isProd) {
+    return { token, mode: "dev_open", ownerId: null };
   }
 
   throw new GatewayError("AUTH_EXPIRED", "用户委托 Token 无效", 401);
-}
-
-/** V1：sandbox/dev 默认已安装；listed 视为已授权 Manifest 声明 scopes */
-export function assertInstalled(input: {
-  agentId: string;
-  restaurantId: string;
-  userMode: "sandbox" | "listed" | "dev_open";
-}): void {
-  if (!input.restaurantId.trim()) {
-    throw new GatewayError("SCOPE_DENIED", "restaurantId 必填", 403);
-  }
-  // 安装表工程后置；V1 凭 Token 模式放行已注册 Agent
-  void input.agentId;
-  void input.userMode;
 }

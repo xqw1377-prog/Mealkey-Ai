@@ -84,6 +84,16 @@ export function OperatingShell({ children }: OperatingShellProps) {
     brands?.activeBrand?.brandName || profileBrand || currentProject?.name || null;
 
   if (isPlatformSurface) {
+    // 管理控制台自带左侧固定导航，外层不再叠顶栏
+    if (pathname.startsWith("/platform/admin")) {
+      return (
+        <div className="min-h-screen bg-[#f7f6f2] text-[#202124]">
+          <InAppBrowserBanner variant="sticky" />
+          <main className="relative">{children}</main>
+        </div>
+      );
+    }
+
     return (
       <div className="min-h-screen bg-[#f7f6f2] text-[#202124]">
         <div className="pointer-events-none fixed inset-0 mk-shell-surface" />
@@ -95,9 +105,7 @@ export function OperatingShell({ children }: OperatingShellProps) {
                 {platformAccess.loading
                   ? "平台"
                   : platformAccess.isAdmin
-                    ? pathname.startsWith("/platform/admin")
-                      ? "平台管理控制台"
-                      : "平台运行观测"
+                    ? "平台运行观测"
                     : "平台权限受限"}
               </p>
             </div>
@@ -116,11 +124,7 @@ export function OperatingShell({ children }: OperatingShellProps) {
                   </a>
                   <a
                     href="/platform/admin"
-                    className={`inline-flex min-h-9 items-center rounded-[12px] px-3 text-[13px] font-medium ${
-                      pathname.startsWith("/platform/admin")
-                        ? "bg-[#181817] text-white"
-                        : "border border-[rgba(24,24,23,0.08)] bg-white text-[#5f6368]"
-                    }`}
+                    className="inline-flex min-h-9 items-center rounded-[12px] border border-[rgba(24,24,23,0.08)] bg-white px-3 text-[13px] font-medium text-[#5f6368]"
                   >
                     管理控制台
                   </a>

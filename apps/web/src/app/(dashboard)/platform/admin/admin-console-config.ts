@@ -43,25 +43,25 @@ export const NAV_SECTIONS: Array<{
   {
     id: "cockpit",
     title: "驾驶舱",
-    description: "先看全局态势与优先级",
+    description: "全局态势",
     panels: ["overview"],
   },
   {
     id: "operations",
-    title: "经营分析",
-    description: "围绕收入、耗用、分润与结构",
+    title: "经营",
+    description: "收入与分润",
     panels: ["business", "marketplace"],
   },
   {
     id: "governance",
-    title: "质量治理",
-    description: "复核学习质量与认知稳定性",
+    title: "治理",
+    description: "学习与认知",
     panels: ["learning", "cognitive"],
   },
   {
     id: "objects",
-    title: "对象操作",
-    description: "集中处理组织、计划与账户",
+    title: "对象",
+    description: "组织与计划",
     panels: ["objects"],
   },
 ];

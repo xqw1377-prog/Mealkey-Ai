@@ -132,6 +132,19 @@ async function applyFactMutation(prisma: PrismaClient | Prisma.TransactionClient
     }
 
     case "usage.recorded": {
+      const eventId = String(event.eventId || "").toLowerCase();
+      if (
+        eventId.includes("demo") ||
+        eventId.includes("fixture") ||
+        eventId.includes("sample") ||
+        eventId.includes("fake")
+      ) {
+        throw new PlatformEventError(
+          "DEMO_USAGE_REJECTED",
+          "拒绝写入演示/样例 usage 事件；管理台耗用只接受真实计量。",
+        );
+      }
+
       const payload = event.payload as {
         usageType: string;
         provider?: string;

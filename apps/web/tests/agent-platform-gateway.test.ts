@@ -17,7 +17,7 @@ const agent: RegisteredAgentV1 = {
 };
 
 describe("agent-platform-gateway", () => {
-  it("HMAC 签名可校验（对齐 SDK payload）", () => {
+  it("HMAC 签名可校验（对齐 SDK payload）", async () => {
     const timestamp = String(Date.now());
     const path = "/v1/gateway/ingress";
     const body = JSON.stringify({ restaurantId: "r1", invokeId: "i1", items: [] });
@@ -29,7 +29,7 @@ describe("agent-platform-gateway", () => {
       agentId: agent.agentId,
     });
     process.env.MK_AGENT_SANDBOX_SECRET = agent.clientSecret;
-    const resolved = verifyAgentSignature({
+    const resolved = await verifyAgentSignature({
       method: "POST",
       path,
       body,
@@ -171,5 +171,11 @@ describe("agent-platform-gateway", () => {
       agent,
     });
     expect(work.rejected[0]?.code).toBe("LEVEL_EXCEEDED");
+  });
+
+  it("安装门禁：partner.* 非内置；restaurant-diagnosis 为平台内置", async () => {
+    const { isPlatformBuiltinAgent } = await import("@/server/agent-platform-gateway");
+    expect(isPlatformBuiltinAgent("partner.acme.diagnosis")).toBe(false);
+    expect(isPlatformBuiltinAgent("restaurant-diagnosis")).toBe(true);
   });
 });

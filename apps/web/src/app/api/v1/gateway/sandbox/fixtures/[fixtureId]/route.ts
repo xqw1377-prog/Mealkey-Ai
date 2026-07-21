@@ -13,7 +13,7 @@ export async function GET(
   try {
     const { fixtureId } = await ctx.params;
     const path = gatewayPathFromUrl(request.url);
-    verifyAgentSignature({
+    await verifyAgentSignature({
       method: "GET",
       path,
       body: "",

@@ -1,5 +1,6 @@
 import type { StreamChunk, MKContext } from "@mealkey/agent-sdk";
 import type { PrismaClient } from "@/generated/prisma";
+import { createLogger } from "@/lib/logger";
 import { buildMKContext } from "./chief-agent.factory";
 import {
   createAgentRun,
@@ -16,6 +17,8 @@ import {
 import { withFounderMarketContext } from "@/lib/founder-decision-snapshot";
 import { polishAdvisorJudgement } from "./llm-polish";
 import { injectDomainKnowledge, withKnowledgeMessage } from "@/server/knowledge/inject-domain";
+
+const log = createLogger("m-mkt");
 
 export const mMktManifest = {
   id: "m-mkt",
@@ -824,7 +827,7 @@ export async function previewMMktSnapshot(input: {
       });
     }
   } catch (error) {
-    console.warn("[Founder-MMKT] 真实引擎不可用，降级启发式:", (error as Error)?.message);
+    log.warn("[Founder-MMKT] 真实引擎不可用，降级启发式", { error: (error as Error)?.message });
   }
 
   const baseContext = {

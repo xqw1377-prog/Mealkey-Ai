@@ -9,3 +9,16 @@ coverage
 *.tsbuildinfo
 apps/web/.next
 apps/web/prisma/dev.db
+
+# 不需要部署到生产的内容
+tests/
+scripts/
+docs/
+founder-os/
+agents/
+tool-agents/
+*.traineddata
+$null
+temp_find.txt
+files.txt
+TEST_REPORT.md

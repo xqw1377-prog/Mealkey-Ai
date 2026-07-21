@@ -15,7 +15,7 @@ export async function POST(request: Request) {
   try {
     const rawBody = await request.text();
     const path = gatewayPathFromUrl(request.url);
-    const agent = verifyAgentSignature({
+    const agent = await verifyAgentSignature({
       method: "POST",
       path,
       body: rawBody,
@@ -44,10 +44,11 @@ export async function POST(request: Request) {
     }
     body.agentId = agent.agentId;
 
-    assertInstalled({
+    await assertInstalled({
       agentId: agent.agentId,
       restaurantId: body.restaurantId,
       userMode: user.mode,
+      ownerId: user.ownerId,
     });
 
     let prior = new Set<string>();

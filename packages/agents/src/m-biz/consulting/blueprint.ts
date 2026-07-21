@@ -55,7 +55,7 @@ export const mbizBlueprint: AgentConsultingBlueprint = {
   agentId: "m-biz",
   productName: "商业模式",
   committeeName: "商业顾问",
-  reportTitle: "商业模式报告",
+  reportTitle: "商业模式战略报告",
   stepLabels: {
     [SixStepId.INTAKE]: { no: "01", title: "说清楚", feel: "生意卡在哪" },
     [SixStepId.RESEARCH]: { no: "02", title: "体检", feel: "先看赚钱逻辑" },

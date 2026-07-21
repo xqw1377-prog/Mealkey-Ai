@@ -257,7 +257,10 @@ export function buildAiJudgement(task: ValidationTask): string {
 export function createValidationPlanFromDecision(
   input: CreateValidationTaskInput,
 ): ValidationPlanBundle {
-  const decisionId = assertPrismaDecisionId(input.decisionId);
+  const rawDecisionId = String(input.decisionId || "").trim();
+  const decisionId = input.allowRuntimeDecisionId
+    ? rawDecisionId || buildId("RT")
+    : assertPrismaDecisionId(input.decisionId);
   const now = new Date().toISOString();
   const horizonDays = input.horizonDays ?? 90;
   const hypothesis = buildHypothesis({ ...input, decisionId });

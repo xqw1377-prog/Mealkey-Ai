@@ -4,9 +4,13 @@
 > **状态：正式冻结（Freeze）**  
 > **日期：** 2026-07-21  
 > **权威挂载：** `docs/AUTHORITY.md` L0  
+> **官网 / Gateway 宿主：** `https://mealkey.cn`（本地开发除外）  
 > **原则：** `MEALKEY_AGENT_ARCHITECTURE_PRINCIPLE_V1.md`  
 > **平台：** `MEALKEY_AGENT_PLATFORM_ARCHITECTURE_V1.md`（V1.1：四基建 · Runtime · Context Manager · Orchestra）  
 > **协议：** `MEALKEY_AGENT_PROTOCOL_V1.md`  
+> **商城产品：** `MEALKEY_AGENT_MARKETPLACE_PRD_V1.md`  
+> **开发者机场：** `MEALKEY_DEVELOPER_PORTAL_V1.md` · `https://developers.mealkey.cn`  
+> **第三方可读索引（无新字段）：** `MEALKEY_AGENT_DEVELOPER_CONSTITUTION_INDEX_V1.md`  
 > **一句话：** **MealKey 仓库不再新增任何 Agent；一切新能力仅以外接 Agent 经本接口接入。**  
 
 ---
@@ -341,11 +345,13 @@ Core **已删除** `packages/m-ops-diag`、进程内 bridge、monorepo 内 `meal
 
 | 逻辑 | `apps/web/src/server/agent-platform-gateway/` |
 |------|-----------------------------------------------|
-| HTTP | `/api/v1/gateway/context/restaurant/[id]` · `/api/v1/gateway/ingress` · `/api/v1/gateway/agents/[id]/install` · `/api/v1/gateway/sandbox/fixtures/[id]` |
+| HTTP | `/api/v1/gateway/context/restaurant/[id]` · `/api/v1/gateway/ingress` · `/api/v1/gateway/agents/[id]/install` · `/api/v1/gateway/sandbox/fixtures/[id]` · `/api/v1/gateway/sandbox/invoke` |
 | SDK baseUrl | `{origin}/api`（签名 path 仍为 `/v1/gateway/...`） |
 | 测试 | `apps/web/tests/agent-platform-gateway.test.ts` |
 
-V1 用户 Token：`Bearer sandbox` / `sandbox_*` / `MK_GATEWAY_USER_TOKENS`；Agent 密钥：`MK_AGENT_SANDBOX_SECRET` 或 `MK_AGENT_REGISTRY_JSON`。
+V1 用户 Token：`Bearer sandbox` / `sandbox_*` / `MK_GATEWAY_USER_TOKENS`；Agent 密钥：`MK_AGENT_SANDBOX_SECRET` 或 `MK_AGENT_REGISTRY_JSON`；已发布伙伴 Agent 从 `clientSecretEnc` 解密验签。
+
+**安装硬闸（2026-07-21）：** Context / Ingress 调用 `assertInstalled`：生产禁用万能 `sandbox` Token（除非 `MK_GATEWAY_ALLOW_SANDBOX_TOKEN=1`）；`partner.*` 与生产内置 Agent 须 Entitlement；listed Token 支持 `token|ownerId` 绑定餐厅 Owner。应急旁路 `MK_GATEWAY_SKIP_INSTALL_CHECK` **仅非生产**。生产必须：`MK_AGENT_SECRET_KEK`、`MK_AGENT_SANDBOX_SECRET`（非默认）或 `MK_AGENT_REGISTRY_JSON`、`MK_GATEWAY_USER_TOKENS`。
 
 ---
 
@@ -356,3 +362,4 @@ V1 用户 Token：`Bearer sandbox` / `sandbox_*` / `MK_GATEWAY_USER_TOKENS`；Ag
 | V1.0 | 2026-07-21 | 禁 Core 新增 Agent；Context/Ingress/认证/拒收码/SDK 边界/投影规则 |
 | V1.0+ | 2026-07-21 | Host Gateway 路由与 registry/sandbox 落点 |
 | V1.0++ | 2026-07-21 | 外置仓落点 `C:\Users\xqw13\M-OPS-Agent` |
+| V1.0+++ | 2026-07-21 | 安装硬闸 + 已发布伙伴 registry 解密 |

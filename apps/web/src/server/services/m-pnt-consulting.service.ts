@@ -3,6 +3,7 @@
  * 持久化：project.profile.mPntBrandProject
  */
 import { prisma } from "@/lib/prisma";
+import { createLogger } from "@/lib/logger";
 import { resolveActiveBrand } from "@/lib/brand-registry";
 import { validateProfile } from "@/lib/profile-schema";
 import { updateProjectProfile } from "@/server/services/project-profile";
@@ -118,6 +119,8 @@ import {
 import type { TheoryLLMAdapter } from "../../../../../packages/agents/src/m-pnt/matrix/types";
 import { tryCreateSharedLlmAdapter } from "./llm-polish";
 import { getWebSearch } from "@mealkey/knowledge-engine";
+
+const log = createLogger("m-pnt-consulting");
 
 const PROFILE_KEY = "mPntBrandProject";
 const INTERVIEW_KEY = "mPntBriefInterview";
@@ -2104,7 +2107,7 @@ export async function confirmStrategyReportStep(userId: string, projectId: strin
         typeof stmt.thatValue === "string" ? stmt.thatValue : null,
     });
   } catch (error) {
-    console.warn("Restaurant Brain consulting DNA sync failed:", error);
+    log.warn("Restaurant Brain consulting DNA sync failed", { error: String(error) });
   }
 
   return {

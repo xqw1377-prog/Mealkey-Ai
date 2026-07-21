@@ -4,7 +4,7 @@
 > **状态：正式冻结（Freeze）** — **规范输出；实现外置**  
 > **日期：** 2026-07-21  
 > **权威挂载：** `docs/AUTHORITY.md` L0  
-> **配套：** `MEALKEY_AGENT_EXTERNAL_INTERFACE_V1.md` · `MEALKEY_AGENT_PROTOCOL_V1.md` · `MOBILE_THREE_EASY_IA_V1.md` · `M_OPS_DIAG_UX_V1.md`（诊断样板体验）  
+> **配套：** `MEALKEY_AGENT_EXTERNAL_INTERFACE_V1.md` · `MEALKEY_AGENT_PROTOCOL_V1.md` · `MOBILE_THREE_EASY_IA_V1.md` · 外置仓 `M-OPS-Agent` 诊断 UX（见 `M_OPS_DIAG_EXTERNAL_POINTER_V1.md`）  
 > **一句话：** MealKey 输出 Agent 的 **UI 与视觉级交互框架**；**页面实现不在 MealKey 仓内新增**，由各 Agent 独立产品落地。  
 
 ---
@@ -27,7 +27,7 @@
 ```text
 ┌──────────────── Agent Surface（外置）────────────────┐
 │  能力转化 · First Moment · 专业工作流 · 报告 · 支付   │
-│  例：经营诊断五页旅程（见 M_OPS_DIAG_UX_V1）         │
+│  例：经营诊断五页旅程（外置 M-OPS-Agent UX）         │
 └──────────────────────────┬───────────────────────────┘
                            │ SSO / 深链 / Ingress
 ┌──────────────── OS Surface（MealKey）────────────────┐
@@ -60,7 +60,7 @@ L2 详情/证据/历史（可折叠）
 | **Diagnosis Card** | Top-1 风险/机会（L1–L3） | 拍板 CTA、战略终局 |
 | **Handoff** | 「回 MealKey 今日 / 进决策室」 | 在 Agent 内签字批准 |
 
-诊断类样板细节：以 `M_OPS_DIAG_UX_V1.md` 为准（实现于外置仓）。
+诊断类样板细节：以外置仓 `M-OPS-Agent/docs` 为准（本仓仅指针 `M_OPS_DIAG_EXTERNAL_POINTER_V1.md`）。
 
 ---
 

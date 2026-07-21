@@ -5,11 +5,14 @@
 
 import type { AgentRestaurantContext, DnaPatchPropose } from "@mealkey/restaurant-brain";
 import type { RestaurantBrainContextSlice } from "@mealkey/agent-sdk";
+import { createLogger } from "@/lib/logger";
 import type { PrismaClient } from "@/generated/prisma";
 import {
   createRestaurantBrainService,
   PrismaRestaurantBrainService,
 } from "./prisma-service";
+
+const log = createLogger("restaurant-brain");
 
 export { PrismaRestaurantBrainService, createRestaurantBrainService };
 
@@ -69,7 +72,7 @@ export async function loadRestaurantBrainSlice(
     const ctx = await brain.loadAgentContext(input);
     return toRestaurantBrainContextSlice(ctx, snapshot.restaurant.id);
   } catch (error) {
-    console.warn("Restaurant Brain context load failed:", error);
+    log.warn("Restaurant Brain context load failed", { error: String(error) });
     return null;
   }
 }

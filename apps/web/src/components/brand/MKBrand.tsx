@@ -5,13 +5,52 @@ import { PRODUCT_BRAND } from "@/lib/product-brand";
 
 type MKBrandProps = {
   compact?: boolean;
-  /** 首页等场景：品牌名升到英雄级 */
-  size?: "default" | "hero";
+  /** 首页等场景：品牌名升到英雄级；landing = 营销站首屏 */
+  size?: "default" | "hero" | "landing";
   showTagline?: boolean;
   className?: string;
   /** 默认：餐饮经营能力增长系统；compact 默认不显示；传 null/"" 可隐藏 */
   subtitle?: string | null;
 };
+
+/** 与看板一致的餐启标（深底方标 + 决策轨迹图标） */
+export function MKBrandMark({
+  className,
+}: {
+  className?: string;
+}) {
+  return (
+    <div
+      className={cn(
+        "relative shrink-0 overflow-hidden border border-[rgba(24,24,23,0.08)] bg-[#171717] text-white",
+        className,
+      )}
+      aria-hidden="true"
+    >
+      <svg
+        viewBox="0 0 48 48"
+        className="h-full w-full"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <circle cx="31" cy="14" r="3.5" fill="#F6F3ED" fillOpacity="0.95" />
+        <path
+          d="M14 31V17.5L21.5 27L29 17.5V31"
+          stroke="#F6F3ED"
+          strokeWidth="2.2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M26 27.5H36"
+          stroke="#77805F"
+          strokeWidth="2.2"
+          strokeLinecap="round"
+        />
+      </svg>
+    </div>
+  );
+}
 
 export function MKBrand({
   compact = false,
@@ -21,6 +60,7 @@ export function MKBrand({
   subtitle,
 }: MKBrandProps) {
   const hero = size === "hero";
+  const landing = size === "landing";
   const resolvedSubtitle =
     subtitle === undefined
       ? compact
@@ -31,48 +71,34 @@ export function MKBrand({
   return (
     <div
       className={cn(
-        // hero：顶对齐，避免图标相对三行文案上下「悬空」
         "inline-flex",
-        hero ? "items-start gap-3" : "items-center gap-3",
+        hero || landing ? "items-start gap-3.5 md:gap-4" : "items-center gap-3",
         className,
       )}
     >
-      <div
+      <MKBrandMark
         className={cn(
-          "relative shrink-0 overflow-hidden border border-[rgba(24,24,23,0.08)] bg-[#171717] text-white",
-          hero
-            ? "mt-0.5 h-11 w-11 rounded-[14px] shadow-[0_12px_28px_rgba(24,24,23,0.10)]"
-            : compact
-              ? "h-10 w-10 rounded-[14px]"
-              : "h-12 w-12 rounded-[18px] shadow-[0_14px_30px_rgba(24,24,23,0.10)]",
+          landing
+            ? "mt-1 h-12 w-12 rounded-[16px] shadow-[0_16px_36px_rgba(24,24,23,0.12)] md:h-14 md:w-14 md:rounded-[18px]"
+            : hero
+              ? "mt-0.5 h-11 w-11 rounded-[14px] shadow-[0_12px_28px_rgba(24,24,23,0.10)]"
+              : compact
+                ? "h-10 w-10 rounded-[14px]"
+                : "h-12 w-12 rounded-[18px] shadow-[0_14px_30px_rgba(24,24,23,0.10)]",
         )}
-        aria-hidden="true"
-      >
-        <svg
-          viewBox="0 0 48 48"
-          className="h-full w-full"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <circle cx="31" cy="14" r="3.5" fill="#F6F3ED" fillOpacity="0.95" />
-          <path
-            d="M14 31V17.5L21.5 27L29 17.5V31"
-            stroke="#F6F3ED"
-            strokeWidth="2.2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <path
-            d="M26 27.5H36"
-            stroke="#77805F"
-            strokeWidth="2.2"
-            strokeLinecap="round"
-          />
-        </svg>
-      </div>
+      />
 
-      <div className="min-w-0">
-        {hero ? (
+      <div className={cn("min-w-0", landing && "pt-0.5")}>
+        {landing ? (
+          <div className="flex flex-col items-start">
+            <p className="font-display text-[40px] font-semibold leading-[1.05] tracking-[-0.05em] text-[#171717] md:text-[52px]">
+              {PRODUCT_BRAND.nameZh}
+            </p>
+            <p className="mt-1.5 text-[14px] font-medium tracking-[0.08em] text-[#66735E] md:text-[15px]">
+              {PRODUCT_BRAND.nameEn}
+            </p>
+          </div>
+        ) : hero ? (
           <div className="flex flex-col items-start gap-0.5">
             <p className="text-[22px] font-semibold leading-none tracking-[-0.03em] text-[#171717]">
               {PRODUCT_BRAND.nameZh}
@@ -106,10 +132,12 @@ export function MKBrand({
         {resolvedSubtitle ? (
           <p
             className={cn(
-              "tracking-[0.02em] text-[#6f747b]",
-              hero
-                ? "mt-1.5 text-[12px] leading-5"
-                : "mt-0.5 truncate text-[12px] leading-5",
+              "tracking-[0.02em]",
+              landing
+                ? "mt-2 text-[13px] leading-5 text-[#5f655c] md:text-[14px]"
+                : hero
+                  ? "mt-1.5 text-[12px] leading-5 text-[#6f747b]"
+                  : "mt-0.5 truncate text-[12px] leading-5 text-[#6f747b]",
             )}
           >
             {resolvedSubtitle}

@@ -2,7 +2,8 @@
 
 > **状态：正式冻结** · 2026-07-21  
 > **用途：** 种子上线 / 收费演示前的强制验收  
-> **权威：** `docs/AUTHORITY.md` · 管理台 `buildProductAcceptanceReport`
+> **权威：** `docs/AUTHORITY.md` · 管理台 `buildProductAcceptanceReport`  
+> **部署运维：** `docs/MEALKEY_PRODUCTION_DEPLOY_V1.md`（环境变量全集 · Vercel · 冒烟 · 回滚）
 
 ---
 
@@ -18,6 +19,8 @@
 ---
 
 ## 一、环境变量（生产必须核对）
+
+> 完整部署变量表（含 Gateway / Cron / S3 / 禁止旁路）见 **`MEALKEY_PRODUCTION_DEPLOY_V1.md` §2**。下表为商业交付最小子集。
 
 | 变量 | 要求 | 失败时行为 |
 |------|------|------------|

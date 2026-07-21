@@ -54,7 +54,12 @@ agents/**/.coverage
 agents/**/htmlcov/
 agents/**/node_modules/
 
-# Temp
+# Temp / local junk
 temp_find.txt
+files.txt
+TEST_REPORT.md
+$null
+apps/web/vitest-report.json
+apps/web/src/generated/prisma/*.tmp*
 apps/web/prisma/dev.db
 apps/web/prisma/dev.db-journal

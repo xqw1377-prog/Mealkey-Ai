@@ -70,13 +70,14 @@ export class ExecutionAgent implements CapabilityAgent {
       contract?.intent ||
       "带条件推进";
     const chosen = decisionPack?.chosen || "带条件推进";
-    // 铁律：Validation/Action 外键只用 Prisma Decision.id；禁止 packId / 临时 dec_
-    const decisionId =
+    // 铁律：持久化外键只用 Prisma Decision.id；Capability 草稿可用合约临时 id
+    const persistedDecisionId =
       tryPrismaDecisionId(contract?.decisionId) ||
       tryPrismaDecisionId(
         (request as { persistedDecisionId?: string }).persistedDecisionId,
       ) ||
       null;
+    const decisionId = persistedDecisionId;
 
     // Goal Engine
     const goals: ActionPlan["goals"] = [];
@@ -226,7 +227,7 @@ export class ExecutionAgent implements CapabilityAgent {
       }
     }
 
-    // Validation OS — 仅在有持久 decisionId 时创建（否则只出 ActionPlan 草稿）
+    // Validation OS — Capability 环路始终产出 taskId；持久化外键仅挂 Prisma id
     let validationTask: ValidationTask | undefined;
     let validationHypothesis: string | undefined;
     const parentEvidenceIds = (kernel.evidencePack?.nodes || [])
@@ -234,10 +235,17 @@ export class ExecutionAgent implements CapabilityAgent {
       .filter(Boolean)
       .slice(0, 12);
 
-    if (decisionId) {
+    const runtimeDecisionId =
+      persistedDecisionId ||
+      (typeof contract?.decisionId === "string" && contract.decisionId.trim()
+        ? contract.decisionId.trim()
+        : buildId("VDEC"));
+
+    if (decisionPack || contract) {
       const planBundle = createValidationPlanFromDecision({
         projectId: request.projectId,
-        decisionId,
+        decisionId: runtimeDecisionId,
+        allowRuntimeDecisionId: !persistedDecisionId,
         problem: request.mission.question,
         judgement: strategy,
         validationPlan:
@@ -288,7 +296,7 @@ export class ExecutionAgent implements CapabilityAgent {
       summary: clip(
         decisionId
           ? `推动计划：${goals[0]?.title || chosen} · ${finalActions.length} 项行动 · 验证任务已生成`
-          : `推动计划：${goals[0]?.title || chosen} · ${finalActions.length} 项行动（待绑定已批准 Decision）`,
+          : `推动计划：${goals[0]?.title || chosen} · ${finalActions.length} 项行动（验证草稿已生成，待绑定已批准 Decision）`,
         120,
       ),
       createdAt: new Date().toISOString(),

@@ -1,8 +1,8 @@
 /**
- * 钱包服务 — UserWallet 读写
- * 经营点余额、预留、结算、充值
+ * 钱包服务 — UserWallet 读写（预扣/结算/释放均走 CAS updateMany）
  */
 import type { Prisma, PrismaClient } from "@/generated/prisma";
+import { appendWalletLedger, type WalletLedgerType } from "./ledger.service";
 
 type WalletPrisma = PrismaClient | Prisma.TransactionClient;
 
@@ -16,7 +16,7 @@ function findWalletDelegate(prisma: WalletPrisma) {
   if (
     typeof candidate.findUnique !== "function" ||
     typeof candidate.create !== "function" ||
-    typeof candidate.update !== "function"
+    (typeof candidate.update !== "function" && typeof candidate.updateMany !== "function")
   ) {
     return null;
   }
@@ -77,14 +77,31 @@ export async function creditWalletPoints(
   },
 ) {
   const wallet = await ensureUserWallet(prisma, input.userId);
-  const newBalance = wallet.balance + Math.max(0, Math.trunc(input.amount));
+  const amount = Math.max(0, Math.trunc(input.amount));
+  const newBalance = wallet.balance + amount;
   if (!findWalletDelegate(prisma)) {
     return { ...wallet, balance: newBalance };
   }
-  return prisma.userWallet.update({
-    where: { id: wallet.id },
-    data: { balance: newBalance },
+
+  const cas = await prisma.userWallet.updateMany({
+    where: { id: wallet.id, status: "active", balance: wallet.balance },
+    data: { balance: { increment: amount } },
   });
+  if (cas.count === 0) {
+    throw new Error("经营点账户更新冲突，请重试");
+  }
+  const updated = await prisma.userWallet.findUniqueOrThrow({ where: { id: wallet.id } });
+  await appendWalletLedger(prisma as PrismaClient, {
+    userId: input.userId,
+    walletId: updated.id,
+    amount,
+    balanceAfter: updated.balance,
+    type: (input.type as WalletLedgerType) || "ADJUST",
+    reason: input.reason,
+    referenceId: input.referenceId,
+    metadata: input.metadata,
+  });
+  return updated;
 }
 
 export async function reserveWalletPoints(
@@ -99,18 +116,62 @@ export async function reserveWalletPoints(
 ) {
   const wallet = await ensureUserWallet(prisma, input.userId);
   const amount = Math.max(0, Math.trunc(input.amount));
-  if (wallet.balance < amount) {
+  if (amount <= 0) return wallet;
+
+  if (!findWalletDelegate(prisma)) {
+    if (wallet.balance < amount) throw new Error("当前经营点不足");
+    return {
+      ...wallet,
+      balance: wallet.balance - amount,
+      frozenAmount: (wallet.frozenAmount ?? 0) + amount,
+    };
+  }
+
+  // 幂等：同一 referenceId 已 RESERVE 则直接返回当前钱包
+  if (input.referenceId) {
+    const runtimePrisma = prisma as unknown as Record<string, unknown>;
+    if (runtimePrisma.walletLedger && typeof runtimePrisma.walletLedger === "object") {
+      const existing = await prisma.walletLedger.findFirst({
+        where: {
+          userId: input.userId,
+          referenceId: input.referenceId,
+          type: "RESERVE",
+        },
+        orderBy: { createdAt: "desc" },
+      });
+      if (existing) {
+        return prisma.userWallet.findUniqueOrThrow({ where: { id: wallet.id } });
+      }
+    }
+  }
+
+  const cas = await prisma.userWallet.updateMany({
+    where: {
+      id: wallet.id,
+      status: "active",
+      balance: { gte: amount },
+    },
+    data: {
+      balance: { decrement: amount },
+      frozenAmount: { increment: amount },
+    },
+  });
+  if (cas.count === 0) {
     throw new Error("当前经营点不足");
   }
-  const newBalance = wallet.balance - amount;
-  const newFrozen = (wallet.frozenAmount ?? 0) + amount;
-  if (!findWalletDelegate(prisma)) {
-    return { ...wallet, balance: newBalance, frozenAmount: newFrozen };
-  }
-  return prisma.userWallet.update({
-    where: { id: wallet.id },
-    data: { balance: newBalance, frozenAmount: newFrozen },
+
+  const updated = await prisma.userWallet.findUniqueOrThrow({ where: { id: wallet.id } });
+  await appendWalletLedger(prisma as PrismaClient, {
+    userId: input.userId,
+    walletId: updated.id,
+    amount: -amount,
+    balanceAfter: updated.balance,
+    type: "RESERVE",
+    reason: input.reason,
+    referenceId: input.referenceId,
+    metadata: input.metadata,
   });
+  return updated;
 }
 
 export async function settleWalletReservation(
@@ -128,15 +189,64 @@ export async function settleWalletReservation(
   const reserved = Math.max(0, Math.trunc(input.reservedAmount));
   const actual = Math.max(0, Math.min(Math.trunc(input.actualAmount), reserved));
   const refund = reserved - actual;
-  const newFrozen = (wallet.frozenAmount ?? 0) - reserved;
-  const newBalance = wallet.balance + refund;
+
   if (!findWalletDelegate(prisma)) {
-    return { ...wallet, balance: newBalance, frozenAmount: Math.max(0, newFrozen) };
+    return {
+      ...wallet,
+      balance: wallet.balance + refund,
+      frozenAmount: Math.max(0, (wallet.frozenAmount ?? 0) - reserved),
+    };
   }
-  return prisma.userWallet.update({
-    where: { id: wallet.id },
-    data: { balance: newBalance, frozenAmount: Math.max(0, newFrozen) },
+
+  if (input.referenceId) {
+    const runtimePrisma = prisma as unknown as Record<string, unknown>;
+    if (runtimePrisma.walletLedger && typeof runtimePrisma.walletLedger === "object") {
+      const existing = await prisma.walletLedger.findFirst({
+        where: {
+          userId: input.userId,
+          referenceId: input.referenceId,
+          type: "SETTLE",
+        },
+      });
+      if (existing) {
+        return prisma.userWallet.findUniqueOrThrow({ where: { id: wallet.id } });
+      }
+    }
+  }
+
+  const cas = await prisma.userWallet.updateMany({
+    where: {
+      id: wallet.id,
+      status: "active",
+      frozenAmount: { gte: reserved },
+    },
+    data: {
+      frozenAmount: { decrement: reserved },
+      balance: { increment: refund },
+      totalConsumed: { increment: actual },
+    },
   });
+  if (cas.count === 0) {
+    throw new Error("预扣金额异常或经营点不足");
+  }
+
+  const updated = await prisma.userWallet.findUniqueOrThrow({ where: { id: wallet.id } });
+  await appendWalletLedger(prisma as PrismaClient, {
+    userId: input.userId,
+    walletId: updated.id,
+    amount: -actual,
+    balanceAfter: updated.balance,
+    type: "SETTLE",
+    reason: input.reason,
+    referenceId: input.referenceId,
+    metadata: {
+      ...(input.metadata ?? {}),
+      reserved,
+      actual,
+      refund,
+    },
+  });
+  return updated;
 }
 
 export async function releaseWalletReservation(
@@ -151,13 +261,41 @@ export async function releaseWalletReservation(
 ) {
   const wallet = await ensureUserWallet(prisma, input.userId);
   const amount = Math.max(0, Math.trunc(input.amount));
-  const newFrozen = Math.max(0, (wallet.frozenAmount ?? 0) - amount);
-  const newBalance = wallet.balance + amount;
+  if (amount <= 0) return wallet;
+
   if (!findWalletDelegate(prisma)) {
-    return { ...wallet, balance: newBalance, frozenAmount: newFrozen };
+    return {
+      ...wallet,
+      balance: wallet.balance + amount,
+      frozenAmount: Math.max(0, (wallet.frozenAmount ?? 0) - amount),
+    };
   }
-  return prisma.userWallet.update({
-    where: { id: wallet.id },
-    data: { balance: newBalance, frozenAmount: newFrozen },
+
+  const cas = await prisma.userWallet.updateMany({
+    where: {
+      id: wallet.id,
+      status: "active",
+      frozenAmount: { gte: amount },
+    },
+    data: {
+      frozenAmount: { decrement: amount },
+      balance: { increment: amount },
+    },
   });
+  if (cas.count === 0) {
+    throw new Error("预扣金额异常或经营点不足");
+  }
+
+  const updated = await prisma.userWallet.findUniqueOrThrow({ where: { id: wallet.id } });
+  await appendWalletLedger(prisma as PrismaClient, {
+    userId: input.userId,
+    walletId: updated.id,
+    amount,
+    balanceAfter: updated.balance,
+    type: "RELEASE",
+    reason: input.reason,
+    referenceId: input.referenceId,
+    metadata: input.metadata,
+  });
+  return updated;
 }

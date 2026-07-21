@@ -40,6 +40,7 @@ export function formatDate(value: string | null | undefined) {
 }
 
 export function readPersistedSeededFilter() {
+  // 商用默认：仅看真实对象。演示样本需用户显式打开。
   if (typeof window === "undefined") return false;
   try {
     return window.localStorage.getItem(SEEDED_FILTER_STORAGE_KEY) === "1";

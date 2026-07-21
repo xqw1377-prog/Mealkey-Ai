@@ -5,6 +5,7 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { router, protectedProcedure } from "../trpc";
 import { prisma } from "@/lib/prisma";
+import { createLogger } from "@/lib/logger";
 import { validateProfile } from "@/lib/profile-schema";
 import {
   toProfileConflictTRPC,
@@ -31,6 +32,8 @@ async function requireProject(userId: string, projectId: string) {
   }
   return project;
 }
+
+const log = createLogger("decision-intelligence");
 
 export const decisionIntelligenceRouter = router({
   /** 打开/复用「第二家店」Decision Case */
@@ -146,7 +149,7 @@ export const decisionIntelligenceRouter = router({
           );
           executionStarted = true;
         } catch (execErr) {
-          console.warn("auto commitExpansionExecution failed:", execErr);
+          log.warn("auto commitExpansionExecution failed", { error: String(execErr) });
         }
 
         return { ...decided, executionStarted };

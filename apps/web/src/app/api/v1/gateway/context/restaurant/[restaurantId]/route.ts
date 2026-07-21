@@ -18,7 +18,7 @@ export async function GET(
   try {
     const { restaurantId } = await ctx.params;
     const path = gatewayPathFromUrl(request.url);
-    const agent = verifyAgentSignature({
+    const agent = await verifyAgentSignature({
       method: "GET",
       path,
       body: "",
@@ -27,10 +27,11 @@ export async function GET(
       signature: request.headers.get("x-signature"),
     });
     const user = verifyUserAccessToken(request.headers.get("authorization"));
-    assertInstalled({
+    await assertInstalled({
       agentId: agent.agentId,
       restaurantId,
       userMode: user.mode,
+      ownerId: user.ownerId,
     });
 
     const url = new URL(request.url);

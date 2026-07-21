@@ -1,13 +1,20 @@
 # MealKey Agent Protocol V1（餐启 Agent 协议 · 冻结）
 
-> **版本：** V1.1  
+> **版本：** V1.2  
 > **状态：正式冻结（Freeze）** — 生态规则，不只是技术接口  
 > **日期：** 2026-07-21  
 > **权威挂载：** `docs/AUTHORITY.md` L0  
+> **官网：** `https://mealkey.cn`  
 > **产品一句：** MealKey 不是开发一堆 Agent，而是定义餐饮经营 Agent 操作系统；本协议把「能力」标准化，防止生态变成 AI 应用垃圾场。  
-> **配套：** `MEALKEY_AGENT_ARCHITECTURE_PRINCIPLE_V1.md` · `MEALKEY_AGENT_PLATFORM_ARCHITECTURE_V1.md` · `MEALKEY_TOOL_AGENT_FRAMEWORK_V1.md` · `MEALKEY_AGENT_ECOSYSTEM_MAP_V2.md` · `M_OPS_DIAG_EXTERNAL_POINTER_V1.md`（诊断外置指针）  
+> **三文档收口（生态下一层）：**  
+> 1. **本文** — 第三方 Agent 技术与能力标准化（Protocol · 宪法）  
+> 2. `MEALKEY_AGENT_MARKETPLACE_PRD_V1.md` — Agent 商城与开放平台（老板侧）  
+> 3. `M_OPS_AGENT_AS_REFERENCE_IMPLEMENTATION_V1.md` — 第一个官方样板（Hello World）  
+> **开发者机场（产品）：** `MEALKEY_DEVELOPER_PORTAL_V1.md` · `https://developers.mealkey.cn`  
+> **线级接入面：** `MEALKEY_AGENT_EXTERNAL_INTERFACE_V1.md`（Gateway · Context · Ingress）  
+> **配套：** `MEALKEY_AGENT_ARCHITECTURE_PRINCIPLE_V1.md` · `MEALKEY_AGENT_PLATFORM_ARCHITECTURE_V1.md` · `MEALKEY_TOOL_AGENT_FRAMEWORK_V1.md` · `MEALKEY_AGENT_ECOSYSTEM_MAP_V2.md` · `M_OPS_DIAG_EXTERNAL_POINTER_V1.md`  
 > **代码落点（演进）：** `@mealkey/tool-agent-kit` · `@mealkey/agent-sdk` · Host Bridge  
-> **冲突裁决：** 生态规则以本文为准；L3 四件套/四 Ports 以 Tool Agent Framework 为准；战略边界以 AUTHORITY 为准  
+> **冲突裁决：** 生态规则以本文为准；商城 UX/商业化以 Marketplace PRD 为准；L3 四件套以 Tool Agent Framework 为准；HTTP 形状以 External Interface 为准；战略边界以 AUTHORITY 为准  
 
 ---
 
@@ -348,7 +355,9 @@ Sandbox ≥ 70 · Live ≥ 80 · 抽检失败降级/下架。
 
 ### 10.1 不是应用商店
 
-> 餐饮 **能力市场**：老板购买的是能力，不是下载 App。
+> 餐饮 **能力市场**：老板购买的是能力，不是下载 App。  
+> **产品真源：** `MEALKEY_AGENT_MARKETPLACE_PRD_V1.md`（Store · Developer Center · 安装 · 分成）。  
+> **域名：** `mealkey.cn`（Store）· `mealkey.cn/developers`（开发者中心）。
 
 例（价格示意，不冻结数字）：
 
@@ -364,13 +373,15 @@ Sandbox ≥ 70 · Live ≥ 80 · 抽检失败降级/下架。
 注册 Manifest + Skill Package
   → 能力挂载审核（Registry）
   → Sandbox（标准模拟餐厅）
-  → 发布能力市场
-  → 用户按门店安装/订阅
+  → 发布能力市场（Published）
+  → 用户按门店安装/订阅（非下载安装包）
 ```
+
+官方 / 第三方 / 企业私有三类供给，均服从同一 Protocol；供给节奏服从 MVP 停扩闸门。
 
 ### 10.3 平台收入钩子
 
-抽佣 · Brain/M-INTEL 调用计费 · 企业版接入。  
+抽佣（V1 示意开发者 70% / 平台 30%）· Brain/M-INTEL 调用计费 · 企业版接入。  
 具体费率商务定；协议冻结 `billable` + 计量点。
 
 ---
@@ -402,11 +413,12 @@ Host.invoke → 鉴权 → Context 切片 → 调度 Engine
 
 | 模式 | 说明 |
 |------|------|
-| inprocess | 内置包（当前 m-ops-diag） |
-| cloud_https | 第三方云；签名 Context；只回 Ports |
+| inprocess | 仅历史/过渡；**新能力禁止**以此在 Core 新增 Agent |
+| cloud_https | **默认**：外置云 Agent；经 Gateway 租用 Context；只回 Ports |
 | enterprise_local | 企业私有 Runtime |
 
-远程：禁止回调内部读库 API。V1 工程优先 inprocess。
+远程：禁止回调内部读库 API。  
+**官方样板 M-OPS 已外置（cloud_https）**；见 `M_OPS_AGENT_AS_REFERENCE_IMPLEMENTATION_V1.md`。
 
 ---
 
@@ -422,7 +434,10 @@ Host.invoke → 鉴权 → Context 切片 → 调度 Engine
 
 ---
 
-## 14. 合规样板：m-ops-diag（冻结）
+## 14. 合规样板：m-ops-diag / M-OPS-Agent（冻结）
+
+> 完整「用户产品 · 开发模板 · 教材」定义见 `M_OPS_AGENT_AS_REFERENCE_IMPLEMENTATION_V1.md`。  
+> 实现仓：`C:\Users\xqw13\M-OPS-Agent`（禁止回流 Core）。
 
 覆盖闭环验证：
 
@@ -462,9 +477,10 @@ Host.invoke → 鉴权 → Context 切片 → 调度 Engine
 
 下一刀：
 
-# 《Agent 运行时与第三方开发者接入流程》
+# Developer Portal：P0.1 UI + Prisma 草案（按 IA）
 
-> 拿到 SDK 后 **7 天内**如何做出可上架 Agent？
+> UI/UX V1.1 · IA/数据模型 V1 已冻  
+> **停扩协议**；对象落库不得污染 Brain/Decision；Publish 接既有 Listing。
 
 并行：诊断 Agent 按**独立产品形状**推进（Gateway 语义），禁止在 Core 再堆业务 Agent。
 
@@ -476,3 +492,5 @@ Host.invoke → 鉴权 → Context 切片 → 调度 Engine
 |------|------|------|
 | V1.0 | 2026-07-21 | Manifest · MKContext · Ports · Permission · Runtime · Quality · Store |
 | V1.1 | 2026-07-21 | 五层模型 · Capability Registry · Decision Skill · Insight L1–L5 · 五维质量 · Memory 隔离 · 能力市场 · Version Strategy · 下一刀=开发者接入流程 |
+| V1.2 | 2026-07-21 | 三文档收口 · mealkey.cn · Marketplace PRD 挂钩 · M-OPS=Reference Implementation · cloud_https 默认 |
+| V1.2+ | 2026-07-21 | 下一刀改为 Portal P0；宪法索引独立成文 |

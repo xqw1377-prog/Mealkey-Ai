@@ -6,6 +6,7 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { router, protectedProcedure } from "../trpc";
 import { prisma } from "@/lib/prisma";
+import { createLogger } from "@/lib/logger";
 import {
   advanceDecisionRoomToBoard,
   advanceDecisionRoomToDebate,
@@ -65,6 +66,8 @@ import {
   toProfileConflictTRPC,
   updateProjectProfile,
 } from "@/server/services/project-profile";
+
+const log = createLogger("decision-council");
 
 const roleSchema = z.enum([
   "CSO", "CMO", "CBO", "BMO", "CFO", "COO", "CRO",
@@ -404,7 +407,7 @@ export const decisionCouncilRouter = router({
         const conflict = toProfileConflictTRPC(error);
         if (conflict) throw conflict;
         // 进化失败不阻断裁决主流程
-        console.warn("intelligence ingest after founderDecide failed", error);
+        log.warn("intelligence ingest after founderDecide failed", { error: String(error) });
       }
 
       return serializeSession(session);

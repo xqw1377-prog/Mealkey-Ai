@@ -3,6 +3,7 @@
  */
 
 import type { PrismaClient } from "@/generated/prisma";
+import { createLogger } from "@/lib/logger";
 import {
   parseActiveCouncilDraft,
   type ActiveCouncilDraft,
@@ -13,6 +14,8 @@ import {
   updateProjectProfile,
 } from "@/server/services/project-profile";
 import type { CouncilMeetingSession } from "../../../../../../packages/agents/src/founder-os";
+
+const log = createLogger("council-draft");
 
 function clip(text: string, max: number): string {
   const t = (text || "").trim();
@@ -105,7 +108,7 @@ export async function saveActiveCouncilDraft(
     const conflict = toProfileConflictTRPC(error);
     if (conflict) throw conflict;
     // 草稿失败不阻断主流程
-    console.warn("saveActiveCouncilDraft failed", error);
+    log.warn("saveActiveCouncilDraft failed", { error: String(error) });
   }
 }
 
@@ -126,7 +129,7 @@ export async function clearActiveCouncilDraft(
       { ownerId: input.ownerId },
     );
   } catch (error) {
-    console.warn("clearActiveCouncilDraft failed", error);
+    log.warn("clearActiveCouncilDraft failed", { error: String(error) });
   }
 }
 

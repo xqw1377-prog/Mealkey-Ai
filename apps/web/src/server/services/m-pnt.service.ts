@@ -28,6 +28,7 @@
 
 import type { StreamChunk, MKContext, MKDecision } from "@mealkey/agent-sdk";
 import type { PrismaClient } from "@/generated/prisma";
+import { createLogger } from "@/lib/logger";
 import {
   MPntAgent,
   runMPnt,
@@ -70,6 +71,8 @@ import {
   type ReviewQueueItem,
 } from "@/lib/positioning-review";
 import { withFounderPositioningContext } from "@/lib/founder-decision-snapshot";
+
+const log = createLogger("m-pnt");
 
 export type MPntMetaChunk = {
   type: "meta";
@@ -1000,7 +1003,7 @@ export async function syncProjectPositioning(
           : null,
     });
   } catch (error) {
-    console.warn("Restaurant Brain brand DNA sync failed:", error);
+    log.warn("Restaurant Brain brand DNA sync failed", { error: String(error) });
   }
 
   return previous;

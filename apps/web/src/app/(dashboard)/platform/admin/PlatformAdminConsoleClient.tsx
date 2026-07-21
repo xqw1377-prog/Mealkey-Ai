@@ -18,6 +18,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 
+import type { PartnerReviewQueueItem } from "@/lib/developers/publish-service";
 import type {
   BillingAccountRow,
   InvoiceRow,
@@ -96,7 +97,11 @@ type PlatformAdminResponseBody = {
   marketplace?: PlatformAdminOverview["domains"]["marketplace"];
   objects?: PlatformAdminOverview["domains"]["objects"];
   objectsListings?: ListingRow[];
-  learningRecord?: { id: string; status: string };
+  learningRecord?: {
+    id: string;
+    status: string;
+    memoryResult?: { ok: boolean; memoryId?: string; error?: string } | null;
+  };
   organization?: { id: string; slug?: string };
   subscription?: { id: string; status?: string; replacedSubscriptionIds?: string[] };
   invoice?: {
@@ -119,6 +124,15 @@ function PanelLoading() {
   );
 }
 
+function isChunkLoadError(error: unknown) {
+  if (!(error instanceof Error)) return false;
+  return (
+    error.name === "ChunkLoadError" ||
+    /Loading chunk .+ failed/i.test(error.message) ||
+    /Failed to fetch dynamically imported module/i.test(error.message)
+  );
+}
+
 function dynamicPanel<TProps extends object, TModule>(
   loader: () => Promise<TModule>,
   pick: (module: TModule) => ComponentType<TProps>,
@@ -128,9 +142,23 @@ function dynamicPanel<TProps extends object, TModule>(
     for (let attempt = 0; attempt < 2; attempt += 1) {
       try {
         const loadedModule = await loader();
+        if (typeof window !== "undefined") {
+          sessionStorage.removeItem("mk-admin-chunk-reload");
+        }
         return pick(loadedModule);
       } catch (error) {
         lastError = error;
+        // Dev HMR / .next 重建后常见：旧 chunk URL 404。硬刷新一次拉新清单。
+        if (
+          attempt === 0 &&
+          typeof window !== "undefined" &&
+          isChunkLoadError(error) &&
+          !sessionStorage.getItem("mk-admin-chunk-reload")
+        ) {
+          sessionStorage.setItem("mk-admin-chunk-reload", "1");
+          window.location.reload();
+          return PanelLoading;
+        }
         if (attempt === 1) {
           throw error;
         }
@@ -147,8 +175,8 @@ const OverviewPanel = dynamicPanel(() => import("./panels/OverviewPanel"), (m) =
 const BusinessPanel = dynamicPanel(() => import("./panels/BusinessPanel"), (m) => m.BusinessPanel);
 const MarketplacePanel = dynamicPanel(() => import("./panels/MarketplacePanel"), (m) => m.MarketplacePanel);
 const CognitivePanel = dynamicPanel(() => import("./panels/CognitivePanel"), (m) => m.CognitivePanel);
-const LearningPanel = dynamicPanel(() => import("./admin-console-panels"), (m) => m.LearningPanel);
-const ObjectsPanel = dynamicPanel(() => import("./admin-console-panels"), (m) => m.ObjectsPanel);
+const LearningPanel = dynamicPanel(() => import("./panels/LearningPanel"), (m) => m.LearningPanel);
+const ObjectsPanel = dynamicPanel(() => import("./panels/ObjectsPanel"), (m) => m.ObjectsPanel);
 
 function buildAlert(
   id: string,
@@ -190,8 +218,9 @@ export function PlatformAdminConsoleClient({
   const [showEngineeringTools, setShowEngineeringTools] = useState(false);
   const [usageAnomalyFilter, setUsageAnomalyFilter] = useState<UsageAnomalyFilter>("all");
   const [selectedUsageAnomalyId, setSelectedUsageAnomalyId] = useState<string | null>(null);
-  const [learningFilter, setLearningFilter] = useState<"all" | "pending" | "approved" | "rejected">("all");
+  const [learningFilter, setLearningFilter] = useState<"all" | "pending" | "approved" | "rejected">("pending");
   const [selectedLearningId, setSelectedLearningId] = useState<string | null>(null);
+  const [learningExecutionNote, setLearningExecutionNote] = useState<string | null>(null);
   const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [selectedOrganizationId, setSelectedOrganizationId] = useState<string | null>(null);
   const [selectedObjectAccountId, setSelectedObjectAccountId] = useState<string | null>(null);
@@ -219,6 +248,7 @@ export function PlatformAdminConsoleClient({
   const [listingEdits, setListingEdits] = useState<
     Record<string, { status: string; visibility: string; priceCents: string }>
   >({});
+  const [partnerReviews, setPartnerReviews] = useState<PartnerReviewQueueItem[]>([]);
   const setShowSeededData: Dispatch<SetStateAction<boolean>> = (value) => {
     setShowSeededDataState((current) => {
       const next = typeof value === "function" ? value(current) : value;
@@ -293,6 +323,7 @@ export function PlatformAdminConsoleClient({
     setSelectedLearningId(learningId);
     setActivePanel("learning");
     setActiveWorkspaceId("learning-review");
+    setLearningExecutionNote(null);
   }
 
   function navigateToCognitiveSession(sessionId: string) {
@@ -1344,13 +1375,21 @@ export function PlatformAdminConsoleClient({
     visibleMissingEvidenceSessions,
   ]);
 
-  const selectedLearning = useMemo(
-    () =>
-      filteredLearningQueue.find((item) => item.id === selectedLearningId) ??
+  const selectedLearning = useMemo(() => {
+    // 必须从全量队列取选中项：审核后 status 变化时，过滤列表可能已不含该项，
+    // 若仍只在 filtered 里找，详情与执行结果会立刻消失。
+    if (selectedLearningId) {
+      const exact =
+        learningDomain.queue.find((item) => item.id === selectedLearningId) ?? null;
+      if (exact) return exact;
+    }
+    return (
+      filteredLearningQueue.find((item) => item.status.toLowerCase() === "pending") ??
       filteredLearningQueue[0] ??
-      null,
-    [filteredLearningQueue, selectedLearningId],
-  );
+      learningDomain.queue[0] ??
+      null
+    );
+  }, [filteredLearningQueue, learningDomain.queue, selectedLearningId]);
 
   const selectedSession = useMemo(
     () =>
@@ -1803,6 +1842,44 @@ export function PlatformAdminConsoleClient({
       patched = true;
     }
 
+    if (body.learningRecord?.id) {
+      const learningId = body.learningRecord.id;
+      const nextStatus = body.learningRecord.status;
+      setOverview((current) => {
+        const nextQueue = current.domains.learning.queue.map((row) =>
+          row.id === learningId
+            ? {
+                ...row,
+                status: nextStatus,
+                weightDelta:
+                  nextStatus.toLowerCase() === "approved"
+                    ? row.weightDelta ?? 0.08
+                    : null,
+              }
+            : row,
+        );
+        const pendingCount = nextQueue.filter(
+          (item) => item.status.toLowerCase() === "pending",
+        ).length;
+        return {
+          ...current,
+          summary: {
+            ...current.summary,
+            learningPending: pendingCount,
+          },
+          domains: {
+            ...current.domains,
+            learning: {
+              ...current.domains.learning,
+              queue: nextQueue,
+            },
+          },
+        };
+      });
+      setSelectedLearningId(learningId);
+      patched = true;
+    }
+
     return patched;
   }
 
@@ -1861,6 +1938,12 @@ export function PlatformAdminConsoleClient({
     }
   }
 
+  async function refreshPartnerReviews() {
+    const response = await fetch("/api/platform/admin/partner-reviews", { cache: "no-store" });
+    const body = await readJson<{ ok?: boolean; reviews?: PartnerReviewQueueItem[] }>(response);
+    setPartnerReviews(body.reviews ?? []);
+  }
+
   async function refreshScopedData(scope: RefreshScope) {
     if (scope === "overview") {
       await refreshOverview();
@@ -1886,6 +1969,7 @@ export function PlatformAdminConsoleClient({
     }
     if (scope === "marketplace") {
       setListingEdits({});
+      await refreshPartnerReviews();
     }
   }
 
@@ -1963,7 +2047,25 @@ export function PlatformAdminConsoleClient({
           weightDelta: row.weightDelta ?? 0.08,
         }),
       });
-      return readJson(response);
+      const body = await readJson(response);
+      const memory = (body as PlatformAdminResponseBody).learningRecord?.memoryResult;
+      if (memory?.ok) {
+        setLearningExecutionNote(
+          `已批准并写入学习燃料（Memory ${memory.memoryId ?? "已创建"}）。老板端经营判断不会自动改写。`,
+        );
+      } else if (memory && memory.ok === false) {
+        setLearningExecutionNote(
+          `已批准状态，但学习燃料写入失败：${memory.error ?? "未知错误"}。可稍后重试或检查 Decision 绑定。`,
+        );
+      } else {
+        setLearningExecutionNote(
+          "已批准。未写入学习燃料（通常因未绑定 Decision）。复核状态已落库。",
+        );
+      }
+      setSelectedLearningId(row.id);
+      // 审核后切到「全部/通过」，避免待审过滤把当前任务藏掉
+      if (learningFilter === "pending") setLearningFilter("all");
+      return body;
     }, { successMessage: "学习记录已批准", refreshScope: "learning" });
   }
 
@@ -1978,7 +2080,11 @@ export function PlatformAdminConsoleClient({
           weightDelta: null,
         }),
       });
-      return readJson(response);
+      const body = await readJson(response);
+      setLearningExecutionNote("已驳回该学习记录。历史保留，不会写入学习燃料。");
+      setSelectedLearningId(row.id);
+      if (learningFilter === "pending") setLearningFilter("all");
+      return body;
     }, { successMessage: "学习记录已驳回", refreshScope: "learning" });
   }
 
@@ -2204,6 +2310,10 @@ export function PlatformAdminConsoleClient({
             derivedMarketplaceCards={derivedMarketplaceCards}
             formatMetricValue={formatMetricValue}
             visibleMarketplaceListings={visibleMarketplaceListings}
+            partnerReviews={partnerReviews}
+            onPartnerReviewsRefresh={() => {
+              void refreshPartnerReviews();
+            }}
             getListingEdit={getListingEdit}
             setListingEdits={setListingEdits}
             runAction={runAction}
@@ -2224,6 +2334,7 @@ export function PlatformAdminConsoleClient({
             learningFilter={learningFilter}
             setLearningFilter={setLearningFilter}
             selectedLearning={selectedLearning}
+            learningExecutionNote={learningExecutionNote}
             isPending={isPending}
             formatMetricValue={formatMetricValue}
             formatNumber={formatNumber}

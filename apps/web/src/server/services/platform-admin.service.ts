@@ -416,7 +416,39 @@ type UsageRecordQueryRow = {
   billable: boolean;
   metadata: string | null;
   occurredAt: Date | string;
+  source?: string | null;
+  sourceEventId?: string | null;
 };
+
+/** 文档样例 / fixture 事件不得进入经营耗用看板 */
+function isDemoUsageSource(record: Pick<UsageRecordQueryRow, "source" | "sourceEventId">) {
+  const blob = `${record.sourceEventId ?? ""} ${record.source ?? ""}`.toLowerCase();
+  return (
+    blob.includes("demo") ||
+    blob.includes("fixture") ||
+    blob.includes("sample") ||
+    blob.includes("fake") ||
+    blob.includes("sandbox")
+  );
+}
+
+function usageCostValue(cost: UsageRecordQueryRow["cost"]) {
+  if (typeof cost === "number") return Number.isFinite(cost) ? cost : 0;
+  if (typeof cost === "string") {
+    const next = Number(cost);
+    return Number.isFinite(next) ? next : 0;
+  }
+  return 0;
+}
+
+/** 第三方耗用看板只认可归因事实：有 token / 成本 / provider / model */
+function isAttributableThirdPartyUsage(record: UsageRecordQueryRow) {
+  if (isDemoUsageSource(record)) return false;
+  const cost = usageCostValue(record.cost);
+  const hasProvider = Boolean(record.provider?.trim());
+  const hasModel = Boolean(record.model?.trim());
+  return record.tokenTotal > 0 || cost > 0 || hasProvider || hasModel;
+}
 
 function slugify(value: string) {
   return value
@@ -2239,7 +2271,8 @@ export async function getPlatformAdminOverview(
             cost: true,
             currency: true,
             billable: true,
-            metadata: true,
+            source: true,
+            sourceEventId: true,
             occurredAt: true,
           },
         })
@@ -2302,6 +2335,12 @@ export async function getPlatformAdminOverview(
         });
   const conversationAgentRunMap = buildConversationAgentRunMap(consumptionAssistantMessages);
   const enrichedConsumptionRecords = enrichConsumptionRunIdsFromConversation(consumptionRecords, conversationAgentRunMap);
+  const attributableUsageRecords = usageRecords
+    .map((row) => ({
+      ...row,
+      metadata: row.metadata ?? null,
+    }))
+    .filter(isAttributableThirdPartyUsage);
   const enrichedReconcileConsumptionRecords = enrichConsumptionRunIdsFromConversation(
     reconcileConsumptionRecords,
     conversationAgentRunMap,
@@ -2795,37 +2834,29 @@ export async function getPlatformAdminOverview(
       isSeeded: metadata.seeded === true,
     };
   });
-  const usageProviders = aggregateUsageRows(usageRecords, "provider");
-  const usageModels = aggregateUsageRows(usageRecords, "model");
-  const usageTypes = aggregateUsageTypeRows(usageRecords);
-  const usageTrend = aggregateUsageTrend(usageRecords, 7);
+  const usageProviders = aggregateUsageRows(attributableUsageRecords, "provider");
+  const usageModels = aggregateUsageRows(attributableUsageRecords, "model");
+  const usageTypes = aggregateUsageTypeRows(attributableUsageRecords);
+  const usageTrend = aggregateUsageTrend(attributableUsageRecords, 7);
   const usageAnomalies = aggregateUsageAnomalies(
-    usageRecords,
+    attributableUsageRecords,
     enrichedReconcileConsumptionRecords,
     businessPointUnitCents,
     12,
   );
   const usageSummary: ThirdPartyUsageSummary = {
-    recordedEvents: usageRecords.length,
-    billableCount: usageRecords.filter((item) => item.billable).length,
-    tokenTotal: usageRecords.reduce((sum, item) => sum + item.tokenTotal, 0),
+    recordedEvents: attributableUsageRecords.length,
+    billableCount: attributableUsageRecords.filter((item) => item.billable).length,
+    tokenTotal: attributableUsageRecords.reduce((sum, item) => sum + item.tokenTotal, 0),
     costValue: round(
-      usageRecords.reduce((sum, item) => {
-        const next =
-          typeof item.cost === "number"
-            ? item.cost
-            : typeof item.cost === "string"
-              ? Number(item.cost)
-              : 0;
-        return sum + (Number.isFinite(next) ? next : 0);
-      }, 0),
+      attributableUsageRecords.reduce((sum, item) => sum + usageCostValue(item.cost), 0),
       6,
     ),
     currency:
-      usageRecords.find((item) => typeof item.currency === "string" && item.currency.trim().length > 0)?.currency ??
-      "USD",
-    missingProviderCount: usageRecords.filter((item) => normalizeUsageLabel(item.provider, "") === "").length,
-    missingModelCount: usageRecords.filter((item) => normalizeUsageLabel(item.model, "") === "").length,
+      attributableUsageRecords.find((item) => typeof item.currency === "string" && item.currency.trim().length > 0)?.currency ??
+      "CNY",
+    missingProviderCount: attributableUsageRecords.filter((item) => normalizeUsageLabel(item.provider, "") === "").length,
+    missingModelCount: attributableUsageRecords.filter((item) => normalizeUsageLabel(item.model, "") === "").length,
   };
 
   const learningQueue: LearningQueueRow[] = learningRecords.map((record) => {

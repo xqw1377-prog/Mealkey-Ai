@@ -5,6 +5,7 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { router, protectedProcedure } from "../trpc";
 import { prisma } from "@/lib/prisma";
+import { createLogger } from "@/lib/logger";
 import { validateProfile } from "@/lib/profile-schema";
 import { saveMemory } from "@/server/services/agent-os.service";
 import {
@@ -62,6 +63,8 @@ import {
   applyExecutionFeedbackToProfile,
   detectDeviation,
 } from "@/server/founder-layer/capability";
+
+const log = createLogger("validation-os");
 
 function asTaskArray(raw: unknown): ValidationTask[] {
   if (!Array.isArray(raw)) return [];
@@ -545,7 +548,7 @@ export const validationOsRouter = router({
             },
           });
         } catch (error) {
-          console.warn("markDecisionLearned failed:", error);
+          log.warn("markDecisionLearned failed", { error: String(error) });
         }
       }
 
@@ -660,7 +663,7 @@ export const validationOsRouter = router({
           }
         }
       } catch (error) {
-        console.warn("council writeBackValidationResult failed", error);
+        log.warn("council writeBackValidationResult failed", { error: String(error) });
       }
 
       // U4：跨租户行业脱敏贡献（仅 opt-in；失败不阻断）

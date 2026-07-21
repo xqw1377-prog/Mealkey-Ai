@@ -1,4 +1,5 @@
 import { buildPositioningSnapshot } from "@/lib/positioning";
+import { createLogger } from "@/lib/logger";
 import { previewMPntSnapshot } from "@/server/services/m-pnt.service";
 import type {
   AdapterBuildInput,
@@ -9,6 +10,8 @@ import type {
   FounderMission,
 } from "../contracts";
 import { BaseFounderAgentAdapter } from "./base.adapter";
+
+const log = createLogger("founder-mpnt");
 
 function inferBrandQuestion(mission: FounderMission) {
   if (mission.missionType === "positioning_review") {
@@ -88,7 +91,7 @@ export class MPntFounderAdapter extends BaseFounderAgentAdapter {
         },
       });
     } catch (error) {
-      console.warn("[Founder-MPNT] 定位服务降级:", (error as Error)?.message);
+      log.warn("[Founder-MPNT] 定位服务降级", { error: (error as Error)?.message });
       const fallback = buildPositioningSnapshot({
         decisionId: `founder-mpnt-degraded-${Date.now()}`,
         problem: "品牌定位评估",

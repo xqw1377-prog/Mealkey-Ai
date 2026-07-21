@@ -10,6 +10,8 @@ function resolveTrustHost(): boolean {
   // Cloudflare Tunnel / 反代域名下必须信任 Host，否则会话 Cookie 写不稳
   const authUrl = process.env.AUTH_URL || process.env.NEXTAUTH_URL || "";
   if (/trycloudflare\.com|cloudflare|ngrok/i.test(authUrl)) return true;
+  // 生产环境默认不信任 Host，防止 Host header 注入
+  if (process.env.NODE_ENV === "production") return false;
   // 开发默认信任，避免本机 / 隧道 Host 不一致导致反复登录
   return true;
 }

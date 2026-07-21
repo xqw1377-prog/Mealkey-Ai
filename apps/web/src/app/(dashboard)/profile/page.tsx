@@ -291,6 +291,13 @@ export default function ProfilePage() {
         >
           经营点
         </Link>
+        <Link
+          href="/my-agents"
+          prefetch={false}
+          className="inline-flex min-h-12 items-center justify-center gap-2 text-[14px] font-medium text-[#66735E] no-underline underline-offset-4 hover:underline"
+        >
+          我的 Agent
+        </Link>
       </section>
     </PageContent>
   );

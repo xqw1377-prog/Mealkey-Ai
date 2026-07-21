@@ -6,6 +6,7 @@ import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { protectedProcedure } from "../trpc";
 import { prisma } from "@/lib/prisma";
+import { createLogger } from "@/lib/logger";
 import {
   buildBusinessSnapshotFromChat,
   snapshotFromProjectBusinessProfile,
@@ -29,6 +30,8 @@ import {
 } from "@/server/services/m-biz-client";
 import { withFounderBusinessContext } from "@/lib/founder-decision-snapshot";
 import { ensureProjectionStringArray } from "./agent-common";
+
+const log = createLogger("agent-business");
 
 function normalizeBizChatData(data: Record<string, unknown>) {
   return {
@@ -322,7 +325,7 @@ export function createBusinessProcedures() {
                   ? await mbizAnalyze(input.dimension || "RS", request)
                   : await mbizChat(request);
           } catch (error) {
-            console.warn("[M-BIZ] 服务调用失败，降级:", (error as Error)?.message);
+            log.warn("[M-BIZ] 服务调用失败，降级", { error: (error as Error)?.message });
             const degraded = mbizDegradedResponse(input.message);
             const normalized = normalizeBizChatData(degraded as unknown as Record<string, unknown>);
             const snapshot = buildBusinessSnapshotFromChat({
@@ -404,7 +407,7 @@ export function createBusinessProcedures() {
             new_insights: input.newInsights,
           });
         } catch (error) {
-          console.warn("[M-BIZ] verify 调用失败，降级:", (error as Error)?.message);
+          log.warn("[M-BIZ] verify 调用失败，降级", { error: (error as Error)?.message });
           const degraded = mbizDegradedResponse(input.conclusion || "商业模式验证");
           const normalized = normalizeBizChatData(degraded as unknown as Record<string, unknown>);
           const snapshot = buildBusinessSnapshotFromChat({

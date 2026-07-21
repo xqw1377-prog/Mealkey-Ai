@@ -92,6 +92,7 @@ export function detectShellSection(pathname: string): NavSection {
   if (pathname.startsWith("/score")) return "capability";
   if (pathname.startsWith("/reports/")) return "action";
   if (pathname.startsWith("/profile")) return "growth";
+  if (pathname.startsWith("/my-agents")) return "growth";
   if (pathname.includes("/settings")) return "growth";
   if (pathname.startsWith("/billing")) return "growth";
   return "today";

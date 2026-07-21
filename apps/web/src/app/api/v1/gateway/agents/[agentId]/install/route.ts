@@ -2,7 +2,7 @@ import {
   gatewayErrorResponse,
   gatewayJson,
   gatewayPathFromUrl,
-  resolveAgent,
+  getInstallStatus,
   verifyAgentSignature,
   verifyUserAccessToken,
 } from "@/server/agent-platform-gateway";
@@ -14,7 +14,7 @@ export async function GET(
   try {
     const { agentId } = await ctx.params;
     const path = gatewayPathFromUrl(request.url);
-    const agent = verifyAgentSignature({
+    const agent = await verifyAgentSignature({
       method: "GET",
       path,
       body: "",
@@ -28,26 +28,33 @@ export async function GET(
         401,
       );
     }
-    verifyUserAccessToken(request.headers.get("authorization"));
+    const user = verifyUserAccessToken(request.headers.get("authorization"));
 
-    const registered = resolveAgent(agentId);
-    if (!registered) {
-      return gatewayJson(
-        {
-          installed: false,
-          scopesGranted: [],
-          maxInsightLevel: 1,
-        },
-        200,
-      );
-    }
-
+    const registered = agent;
     const url = new URL(request.url);
     const restaurantId = url.searchParams.get("restaurantId") || "";
+
+    if (user.mode === "sandbox") {
+      return gatewayJson({
+        installed: Boolean(restaurantId.trim()),
+        scopesGranted: registered.allowedScopes,
+        maxInsightLevel: registered.maxInsightLevel,
+        mode: user.mode,
+      });
+    }
+
+    const status = await getInstallStatus({
+      agentId,
+      restaurantId,
+      ownerId: user.ownerId,
+    });
+
     return gatewayJson({
-      installed: !!restaurantId.trim(),
-      scopesGranted: registered.allowedScopes,
+      installed: status.installed,
+      scopesGranted: status.installed ? registered.allowedScopes : [],
       maxInsightLevel: registered.maxInsightLevel,
+      reason: status.reason,
+      mode: user.mode,
     });
   } catch (error) {
     return gatewayErrorResponse(error);

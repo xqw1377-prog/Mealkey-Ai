@@ -31,7 +31,7 @@ export function SeededFilterToggle({
         onChange={(event) => onChange(event.target.checked)}
         className="h-4 w-4"
       />
-      <span>{showSeededData ? "显示演示样本" : "仅看真实对象"}</span>
+      <span>{showSeededData ? "显示演示样本（会混入 bootstrap 假对象）" : "仅看真实对象"}</span>
       {!showSeededData && hiddenCount > 0 ? (
         <span className="rounded-full bg-[rgba(24,24,23,0.06)] px-2 py-0.5 text-[12px] text-[#5f6368]">
           已隐藏 {hiddenCount}

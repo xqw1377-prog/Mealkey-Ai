@@ -1,5 +1,7 @@
 # 文件存储（Blob）配置
 
+> 生产上线总览见 [`MEALKEY_PRODUCTION_DEPLOY_V1.md`](./MEALKEY_PRODUCTION_DEPLOY_V1.md)。
+
 ## 模式
 
 | Provider | 适用 | 配置 |

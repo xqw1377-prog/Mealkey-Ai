@@ -5,6 +5,7 @@ import {
   normalizeBizStage,
   type MBizChatRequest,
 } from "@/server/services/m-biz-client";
+import { createLogger } from "@/lib/logger";
 import type {
   AdapterBuildInput,
   AdapterNormalizeContext,
@@ -15,6 +16,8 @@ import type {
   FounderMission,
 } from "../contracts";
 import { BaseFounderAgentAdapter } from "./base.adapter";
+
+const log = createLogger("founder-mbiz");
 
 type MBizChatResponse = Awaited<ReturnType<typeof mbizChat>>;
 
@@ -145,7 +148,7 @@ export class MBizFounderAdapter extends BaseFounderAgentAdapter {
         timeoutMs: request.timeoutMs ?? 15000,
       });
     } catch (error) {
-      console.warn("[Founder-MBIZ] 服务不可用，降级为启发式回复:", (error as Error)?.message);
+      log.warn("[Founder-MBIZ] 服务不可用，降级为启发式回复", { error: (error as Error)?.message });
       const degraded = mbizDegradedResponse(
         String((request.payload as Record<string, unknown>)?.message ?? ""),
       );

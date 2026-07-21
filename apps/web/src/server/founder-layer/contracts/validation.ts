@@ -155,6 +155,11 @@ export interface CreateValidationTaskInput {
     day60?: string;
     day90?: string;
   } | null;
+  /**
+   * Capability 环路草稿：允许非 Prisma Decision.id（如合约 D-xxx）。
+   * 写入 DB / 外键挂接时必须为 false（默认）。
+   */
+  allowRuntimeDecisionId?: boolean;
 }
 
 export const LIFECYCLE_LABEL: Record<ValidationLifecycle, string> = {

@@ -2,7 +2,8 @@
 
 > 开发默认仍用 SQLite（`apps/web/prisma/schema.prisma`）。  
 > 生产 / 多用户并发请切换 PostgreSQL。  
-> `schema.postgresql.prisma` 须与主 schema **model 集合保持一致**（CI 有 `schema-parity` 测试）。
+> `schema.postgresql.prisma` 须与主 schema **model 集合保持一致**（CI 有 `schema-parity` 测试）。  
+> **完整上线步骤（域名 / Vercel / Cron / Gateway）见 [`MEALKEY_PRODUCTION_DEPLOY_V1.md`](./MEALKEY_PRODUCTION_DEPLOY_V1.md)。**
 
 ## 1. 一键启动（推荐）
 

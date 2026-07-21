@@ -4,6 +4,7 @@
  */
 
 import type { PrismaClient } from "@/generated/prisma";
+import { createLogger } from "@/lib/logger";
 import type { MemoryPermissionState } from "../contracts/intelligence-profile";
 import { assertIndustryContributionAllowed } from "./permissions";
 import {
@@ -13,6 +14,8 @@ import {
   normalizeIndustryCategory,
   redactIndustryText,
 } from "./industry-sanitize";
+
+const log = createLogger("industry-contribute");
 
 export type IndustryContributionSourceKind =
   | "validation"
@@ -237,7 +240,7 @@ export async function tryContributeFromValidation(
       ? { id: saved.id, supportCount: saved.supportCount }
       : null;
   } catch (error) {
-    console.warn("tryContributeFromValidation failed", error);
+    log.warn("tryContributeFromValidation failed", { error: String(error) });
     return null;
   }
 }

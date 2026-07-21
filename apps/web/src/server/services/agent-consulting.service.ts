@@ -2,6 +2,7 @@
  * 通用六步咨询项目服务 — M-MKT / M-BIZ / M-ED
  */
 import { prisma } from "@/lib/prisma";
+import { createLogger } from "@/lib/logger";
 import { validateProfile } from "@/lib/profile-schema";
 import { updateProjectProfile } from "@/server/services/project-profile";
 import {
@@ -75,6 +76,8 @@ import {
   buildMedSignOffPackageMarkdown,
   medSignOffPackageFilename,
 } from "../../../../../packages/agents/src/m-ed/consulting";
+
+const log = createLogger("agent-consulting");
 
 const PROFILE_KEYS: Record<ConsultingAgentKind, string> = {
   "m-mkt": "mMktConsultingProject",
@@ -1025,7 +1028,7 @@ export async function confirmAgentStrategy(
               : null,
       });
     } catch (error) {
-      console.warn("Restaurant Brain market facts sync failed:", error);
+      log.warn("Restaurant Brain market facts sync failed", { error: String(error) });
     }
 
     return {
@@ -1092,7 +1095,7 @@ export async function confirmAgentStrategy(
           typeof answers.brandName === "string" ? answers.brandName : null,
       });
     } catch (error) {
-      console.warn("Restaurant Brain business facts sync failed:", error);
+      log.warn("Restaurant Brain business facts sync failed", { error: String(error) });
     }
 
     return {
@@ -1167,7 +1170,7 @@ export async function confirmAgentStrategy(
               : null,
       });
     } catch (error) {
-      console.warn("Restaurant Brain equity facts sync failed:", error);
+      log.warn("Restaurant Brain equity facts sync failed", { error: String(error) });
     }
 
     return {

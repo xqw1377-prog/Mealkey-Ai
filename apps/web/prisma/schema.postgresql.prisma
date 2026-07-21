@@ -584,6 +584,7 @@ model AgentRun {
   @@index([ownerId])
   @@index([projectId])
   @@index([missionId])
+  @@index([conversationId])
   @@index([status])
 }
 
@@ -1174,6 +1175,7 @@ model Conversation {
 
   @@index([userId])
   @@index([projectId])
+  @@index([agentType])
 }
 
 // ─── 消息 ───
@@ -1191,6 +1193,7 @@ model Message {
   createdAt      DateTime     @default(now())
 
   @@index([conversationId])
+  @@index([role])
 }
 
 model AssetCategory {
@@ -1322,4 +1325,110 @@ model StrategyDocument {
 
   @@index([ownerId])
   @@index([type])
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Developer Portal / Partner Agent（与 schema.prisma 对齐）
+// 真源：docs/MEALKEY_DEVELOPER_PORTAL_IA_DATA_MODEL_V1.md
+// ═══════════════════════════════════════════════════════════════
+
+model DeveloperAccount {
+  id           String   @id @default(cuid())
+  userId       String?
+  type         String   // individual | company | partner_org
+  displayName  String
+  legalName    String?
+  website      String?
+  contactEmail String
+  direction    String?  // 产品方向自述
+  status       String   @default("applied") // applied | active | suspended | rejected
+  verifiedAt   DateTime?
+  metadata     String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  applications PartnerAgentApplication[]
+
+  @@index([contactEmail, createdAt])
+  @@index([status, createdAt])
+  @@index([userId])
+}
+
+model PartnerAgentApplication {
+  id                  String   @id @default(cuid())
+  developerAccountId  String
+  developerAccount    DeveloperAccount @relation(fields: [developerAccountId], references: [id], onDelete: Cascade)
+  agentId             String   @unique // partner.<org>.<slug>
+  name                String
+  category            String
+  capabilityIds       String   @default("[]") // JSON string[]
+  runtimeMode         String   @default("cloud_https")
+  endpointUrl         String?
+  webhookUrl          String?
+  clientSecretHash    String?
+  lifecycleStatus     String   @default("draft")
+  currentVersionId    String?
+  listingId           String?
+  agentProductId      String?
+  qualityScore        Float?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  versions PartnerAgentDraftVersion[]
+  sandboxRuns PartnerSandboxRun[]
+  reviewTasks PartnerReviewTask[]
+
+  @@index([developerAccountId, createdAt])
+  @@index([lifecycleStatus, createdAt])
+}
+
+model PartnerAgentDraftVersion {
+  id              String   @id @default(cuid())
+  applicationId   String
+  application     PartnerAgentApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  version         String
+  manifestJson    String
+  skillPackageJson String   @default("{}")
+  releaseChannel  String   @default("draft") // draft | sandbox | review | live | yanked
+  demoUrl         String?
+  privacyNotes    String?
+  pricingJson     String?
+  createdAt       DateTime @default(now())
+
+  @@unique([applicationId, version])
+  @@index([applicationId, createdAt])
+}
+
+model PartnerSandboxRun {
+  id              String   @id @default(cuid())
+  applicationId   String
+  application     PartnerAgentApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  versionId       String
+  fixtureId       String
+  status          String   // running | passed | failed
+  checksJson      String   @default("{}")
+  qualityReportJson String?
+  logText         String?
+  invokeId        String?
+  startedAt       DateTime @default(now())
+  finishedAt      DateTime?
+
+  @@index([applicationId, startedAt])
+  @@index([status, startedAt])
+}
+
+model PartnerReviewTask {
+  id              String   @id @default(cuid())
+  applicationId   String
+  application     PartnerAgentApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  versionId       String
+  status          String   @default("queued") // queued | in_review | changes_requested | approved | rejected
+  checklistJson   String   @default("{}")
+  reviewerUserId  String?
+  decisionNote    String?
+  submittedAt     DateTime @default(now())
+  resolvedAt      DateTime?
+
+  @@index([status, submittedAt])
+  @@index([applicationId, submittedAt])
 }

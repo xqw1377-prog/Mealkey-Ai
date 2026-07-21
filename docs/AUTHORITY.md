@@ -39,7 +39,7 @@
 | **L0 Council 4+1 审计** | `docs/FOUNDER_OS_COUNCIL_INTELLIGENCE_GOVERNANCE_AUDIT_V1.md` | S5 闸门清单；代码真源 `founder-os/mk-insight.ts` | 可加深测试；不得绕过 Adapter |
 | **L0 垂直 Agent 接入** | `docs/FOUNDER_OS_VERTICAL_AGENT_MKINSIGHT_ADAPTER_V1.md` | L3 → MKInsight Adapter → Council；禁止私有 Report 直进 | **否** — 垂直能力不得升格为第五核心 Agent |
 | **L0 Agent 架构原则** | `docs/MEALKEY_AGENT_ARCHITECTURE_PRINCIPLE_V1.md` | **OS 定规则，Agent 独立产品**：不堆大杂烩；三边界 Core/Agent/UI；仓库变薄；四席留 Core | **否** — 禁 Marketplace 升格第五席；禁拆 Brain/DIE/拍板场 |
-| **L0 Agent 平台架构** | `docs/MEALKEY_AGENT_PLATFORM_ARCHITECTURE_V1.md` | **Gateway · Context API · SDK · 独立部署 · 审核 · 能力市场 · 官方/第三方共存** | **否** — 禁 Agent 直连 Prisma；禁 Core 再堆业务 Agent 大包 |
+| **L0 Agent 平台架构** | `docs/MEALKEY_AGENT_PLATFORM_ARCHITECTURE_V1.md` | **四基建** Identity/Brain/Decision/Agent OS；Lifecycle；Runtime 五件套；Context Manager；Orchestra；四独立 | **否** — 禁 Core 新增 Agent；禁特权读库；组合须经 OS 编排 |
 | **L0 Agent 外接接口** | `docs/MEALKEY_AGENT_EXTERNAL_INTERFACE_V1.md` | **唯一接入面**：认证签名 · Context API · Ingress Ports · 拒收码 · SDK 边界 | **否 — MealKey 仓禁止新增任何 Agent**；存量仅 m-ops-diag 过渡 |
 | **L0 Agent UI 框架** | `docs/MEALKEY_AGENT_UI_FRAMEWORK_V1.md` | **规范在 OS、实现外置**：双表面 · 五段旅程 · 视觉禁令 · Handoff；Core 只做今日/决策室投影 | **否** — 禁止在 apps/web 新建垂直 Agent 业务站 |
 | **L0 Agent Protocol** | `docs/MEALKEY_AGENT_PROTOCOL_V1.md` | **生态壁垒/能力标准化**：五层模型 · Capability Registry · Decision Skill · Insight L1–L5 · 五维质量 · Memory 隔离 · 能力市场 | **否** — 禁直连库/私有永久记忆；默认≤L3；禁无限自造能力；Store 服从 MVP 停扩 |
@@ -106,8 +106,8 @@
 13u. **Tool Agent Framework V1 已冻结**（2026-07-21）：支撑约 100 个独立 L3；单元=Manifest+Engine+Ports+Bridge；合法出口仅 Signal/Insight/Work/Gap；代码 `@mealkey/tool-agent-kit`；引擎目录 `tool-agents/`。真源 `MEALKEY_TOOL_AGENT_FRAMEWORK_V1.md`。批量上架仍服从 MVP 停扩闸门。  
 13aa. **MealKey Agent Protocol V1.1 已冻结**（2026-07-21）：五层模型；Capability Registry；Decision Skill；Insight L1–L5；五维质量；Memory 隔离；能力市场。真源 `MEALKEY_AGENT_PROTOCOL_V1.md`。  
 13ab. **Agent Architecture Principle V1 已冻结**（2026-07-21）：MealKey 不开发功能、定义能力标准；Agent 独立创造能力经协议进大脑；Core/Agent/UI 三边界；四席留 Core。真源 `MEALKEY_AGENT_ARCHITECTURE_PRINCIPLE_V1.md`。  
-13ac. **Agent Platform Architecture V1 已冻结**（2026-07-21）：独立部署；Gateway；Context API；SDK；审核；Marketplace；官方/第三方共存。真源 `MEALKEY_AGENT_PLATFORM_ARCHITECTURE_V1.md`。  
-13ad. **Agent 外接硬闸门**（2026-07-21）：**MealKey 仓库禁止新增任何 Agent**（包/tool-agents/垂直引擎）；新能力仅外接。技术接口真源 `MEALKEY_AGENT_EXTERNAL_INTERFACE_V1.md`；UI/视觉交互框架真源 `MEALKEY_AGENT_UI_FRAMEWORK_V1.md`（规范可维护，实现外置）。存量仅 `m-ops-diag` 过渡至迁出。**下一刀 = Gateway/Context/Ingress 工程落点 + 外置诊断仓，而非 Core 内加 Agent。**  
+13ac. **Agent Platform Architecture V1.1 已冻结**（2026-07-21）：四基建（Identity/Brain/Decision/Agent OS）；Lifecycle；Runtime（Registry/Router/Context/Permission/Quality）；Context Manager 壁垒；Agent Orchestra；四独立；商业三层。真源 `MEALKEY_AGENT_PLATFORM_ARCHITECTURE_V1.md`。**下一刀 = 《MealKey Agent SDK V1》**。  
+13ad. **Agent 外接硬闸门**（2026-07-21）：**MealKey 仓库禁止新增任何 Agent**；接口 `MEALKEY_AGENT_EXTERNAL_INTERFACE_V1.md`；UI 框架 `MEALKEY_AGENT_UI_FRAMEWORK_V1.md`（实现外置）。存量仅 `m-ops-diag` 过渡迁出。  
 13v. **M-OPS-DIAG Architecture Freeze V1.0**（2026-07-21）：能力边界与工程真源；角色=观察/发现/证据/预警/决策输入；六大引擎架构；Evidence 三层；Finding→Pattern→Signal；Cockpit/Room。真源 `M_OPS_DIAG_AGENT_V1.md`。  
 13x. **M-OPS-DIAG UX Freeze V1.0**（2026-07-21）：壁垒=「它真的懂我的店」；First Moment≤60s；采集过程感；经营画像一句话；顾客声音墙；六观察面；今日扫描卡；V1 仅 5 页。真源 `M_OPS_DIAG_UX_V1.md`。  
 13y. **M-OPS-DIAG Data Collection Freeze V1.0**（2026-07-21）：最少主动采集+最大外部感知+持续学习；Identity/Business Fact/Consumer 三层；必采 10 事实；Evidence Card 与权重表；日扫四域；Brain 落点树。真源 `M_OPS_DIAG_DATA_COLLECTION_V1.md`。  

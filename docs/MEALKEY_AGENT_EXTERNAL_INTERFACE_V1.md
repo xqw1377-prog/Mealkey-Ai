@@ -5,7 +5,7 @@
 > **日期：** 2026-07-21  
 > **权威挂载：** `docs/AUTHORITY.md` L0  
 > **原则：** `MEALKEY_AGENT_ARCHITECTURE_PRINCIPLE_V1.md`  
-> **平台：** `MEALKEY_AGENT_PLATFORM_ARCHITECTURE_V1.md`  
+> **平台：** `MEALKEY_AGENT_PLATFORM_ARCHITECTURE_V1.md`（V1.1：四基建 · Runtime · Context Manager · Orchestra）  
 > **协议：** `MEALKEY_AGENT_PROTOCOL_V1.md`  
 > **一句话：** **MealKey 仓库不再新增任何 Agent；一切新能力仅以外接 Agent 经本接口接入。**  
 

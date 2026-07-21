@@ -1,386 +1,351 @@
 # MealKey Agent Platform Architecture V1（冻结）
 
-> **版本：** V1.0  
+> **版本：** V1.1  
 > **状态：正式冻结（Freeze）**  
 > **日期：** 2026-07-21  
 > **权威挂载：** `docs/AUTHORITY.md` L0  
 > **原则真源：** `MEALKEY_AGENT_ARCHITECTURE_PRINCIPLE_V1.md`  
 > **协议真源：** `MEALKEY_AGENT_PROTOCOL_V1.md`  
-> **配套：** `MEALKEY_TOOL_AGENT_FRAMEWORK_V1.md` · `MEALKEY_FOUNDER_OS_PERMISSION_MODEL_V2.md` · `M_OPS_DIAG_AGENT_V1.md`  
-> **冲突裁决：** 部署/网关/SDK/共存模型以本文为准；能力质量与 L1–L5 以 Protocol 为准；一句话原则以 Principle 为准  
+> **接口真源：** `MEALKEY_AGENT_EXTERNAL_INTERFACE_V1.md`（HTTP/签名/Ingress 字段）  
+> **UI 框架：** `MEALKEY_AGENT_UI_FRAMEWORK_V1.md`（实现外置）  
+> **冲突裁决：** 平台拓扑/四基建/Lifecycle/Orchestra/商业分层以本文为准；线级 API 以 External Interface 为准；质量与 L1–L5 以 Protocol 为准  
+> **硬闸门：** MealKey 仓 **禁止新增任何 Agent**；Agent 独立开发·部署·商业化  
 
 ---
 
-## 0. 目标（冻结）
+## 0. 一句话（冻结）
 
-把 MealKey 从「AI 餐饮产品」升级为 **餐饮 AI 平台**：
+> **Agent 独立开发、独立部署、独立商业化；MealKey 负责连接、治理、组合。**
+
+平台要回答的下一层问题：
+
+> 外部 Agent 如何像 App 一样 **安全、稳定、高质量** 跑在 MealKey 生态里？
+
+---
+
+## 1. 平台整体架构（冻结）
 
 ```text
-MealKey OS（薄）
-  = Identity + Brain + Decision + Execution + Protocol + Gateway + Marketplace
-Agent（厚·外置）
-  = 独立产品创造垂直能力
+                         用户
+                          │
+                    MealKey 入口层
+        ┌─────────────────┴─────────────────┐
+        │                                   │
+   MealKey Web                         Agent 独立 Web
+   今日驾驶舱                           诊断系统 / 定位…
+   决策会议室                           （外置产品）
+        │                                   │
+        └─────────────────┬─────────────────┘
+                          │
+                  Agent Gateway Layer
+                      （统一入口）
+                          │
+                  Agent Runtime
+        Registry · Router · Context Manager
+        Permission Manager · Quality Monitor
+                          │
+                  External Agents
+        餐厅诊断 ·（外置）M-PNT 能力面 · 选址 · 招聘 · 第三方…
 ```
 
-本文冻结八块：
-
-1. Agent 独立部署架构  
-2. Agent Gateway  
-3. Agent SDK  
-4. Context API  
-5. Permission 系统  
-6. Agent 审核体系  
-7. Agent Marketplace  
-8. 官方 Agent 与第三方共存模型  
-
----
-
-## 1. 总览拓扑（冻结）
-
-```text
-                    ┌─────────────────────────┐
-                    │      MealKey Core OS      │
-                    │  User · Identity · Brain  │
-                    │  DIE · Council · M-EXEC   │
-                    │  Marketplace · Billing    │
-                    └────────────┬────────────┘
-                                 │
-                         Agent Gateway
-                     (auth · scope · meter · audit)
-                                 │
-              ┌──────────────────┼──────────────────┐
-              │                  │                  │
-       官方 Agent           第三方 Agent        企业私有 Agent
-    diagnosis.mealkey…    partner HTTPS      enterprise_local
-     独立前端/后端/业务库    同等 Protocol         同等 Protocol
-```
-
-**铁律：** Agent 不直连 Prisma / Brain DB / Memory 表；只经 Gateway。
-
----
-
-## 2. Agent 独立部署架构（冻结）
-
-### 2.1 一个 Agent = 完整产品
-
-| 部件 | 职责 | 例（经营诊断） |
-|------|------|----------------|
-| **Agent UI** | 独立体验与转化 | `diagnosis.mealkey.com` |
-| **Agent Server** | 业务 API · 工作流 · 支付对接 | `restaurant-diagnosis-server` |
-| **Diagnosis Engine** | Decision Skill 实现 | 纯逻辑，可同仓 |
-| **Agent DB** | 诊断历史 · 报告 · 模型参数 · 测试集 | **禁止**存平台 User/Brain 主事实 |
-| **Protocol Client** | SDK 调 Gateway | Context 入 · Insight/Signal 出 |
-
-### 2.2 数据边界
-
-| 数据 | 归属 |
-|------|------|
-| User / 登录身份 / 门店 Identity | MealKey Core |
-| Restaurant Brain 事实与 DNA | MealKey Core |
-| Decision / Execution 主记录 | MealKey Core |
-| 诊断报告原文、Agent 内部评分缓存、A/B 实验 | Agent DB |
-| Learning 回写 | 仅 Learning Event → Core 审核（Protocol §11） |
-
-### 2.3 部署形态
-
-| 形态 | 用途 |
-|------|------|
-| 独立域名 + 独立服务 | 官方/第三方默认 |
-| inprocess 包 | **仅过渡/单测**；不得作为长期堆 Core 的借口 |
-| enterprise_local | 集团内网 Engine，仍经 Gateway 换 Context / 回传 Ports |
-
-### 2.4 仓库目标结构
-
-```text
-mealkey-core/                    # 本 monorepo 演进方向：变薄
-  packages/
-    agent-sdk/                   # 开发者 SDK（协议客户端）
-    agent-runtime/               # OS 侧调度（可含 Gateway 逻辑）
-    protocol/                    # 或 agent-sdk/protocol 类型 SSOT
-    identity-sdk / brain-sdk / decision-sdk / ui-sdk
-    tool-agent-kit/              # 过渡：Ports/Registry；语义并入 Protocol
-    restaurant-brain/ …
-    # ❌ 不再新增业务垂直 Agent 大包
-
-mealkey-agents/                  # 独立仓或多仓
-  restaurant-diagnosis-agent/    # 样板（现 packages/m-ops-diag → 迁出）
-  restaurant-location-agent/
-  menu-optimization-agent/
-```
-
-**硬闸门：** Core **禁止新增**任何 Agent。`packages/m-ops-diag` 仅存量过渡至迁出；接口形状对齐 `MEALKEY_AGENT_EXTERNAL_INTERFACE_V1.md`。
-
----
-
-## 3. Agent Gateway（冻结）
-
-### 3.1 定位
-
-类似 API Gateway：**唯一** Agent↔Core 数据与能力通道。
-
-```text
-Agent → Gateway → Core services
-Agent ← Gateway ← Context Package / Ack
-```
-
-### 3.2 网关职责
-
-| 职责 | 说明 |
-|------|------|
-| 认证 | Agent 身份（client_id + 签名/mTLS）· 用户委托 token |
-| 鉴权 | Permission / scope 裁剪 |
-| Context 组装 | 调 Brain/Evidence，生成 MKContext 切片 |
-| 输出校验 | Port · Insight Level · Quality 闸门 |
-| 投影 | Signal→今日 · Insight→决策室适配 · Work→EXEC（须授权） |
-| 计量 | billable 调用计数 |
-| 审计 | 请求/响应摘要 · 拒收原因 |
-
-### 3.3 非职责
-
-- 不跑垂直诊断算法  
-- 不替 Agent 渲染 UI  
-- 不把私有 JSON 直接写入 Brain  
-
-### 3.4 工程落点（演进）
-
-```text
-apps/web 或独立 gateway 服务
-  /v1/agents/invoke
-  /v1/context/...
-  /v1/insights/ingress
-  /v1/signals/ingress
-```
-
-V1 可先 Host Bridge 内聚；对外形状必须像 Gateway。
-
----
-
-## 4. Agent SDK（冻结）
-
-面向官方与第三方开发者的最小包（`@mealkey/agent-sdk` 演进）：
-
-| 模块 | 用途 |
-|------|------|
-| `manifest` | Manifest + Skill Package 类型 |
-| `context` | 请求/解析 Context Package |
-| `ports` | 构造 Signal / Insight / Work / Gap |
-| `auth` | 签名与 token 助手 |
-| `invoke` | 本地 stub / 连 Gateway |
-| `sandbox` | 标准模拟餐厅夹具 |
-
-**Hello 路径（语义）：** 声明 Manifest → `getContext(scope)` → Skill.run → `submitPorts(result)`。
-
-详细「7 日上手」另文；本文冻结 SDK 边界。
-
----
-
-## 5. Context API（冻结）
-
-### 5.1 形态
-
-```http
-GET /v1/context/restaurant/{restaurantId}
-Authorization: Bearer <user-or-delegation>
-X-Agent-Id: m-ops-diag
-X-Agent-Signature: ...
-
-?scope=basic,operation,review,market
-```
-
-### 5.2 响应（概念）
-
-```json
-{
-  "restaurant": "湘味馆",
-  "location": "长沙岳麓",
-  "category": "湘菜",
-  "reviews": [],
-  "operation": {},
-  "meta": {
-    "scopesGranted": ["basic", "operation", "review"],
-    "scopesDenied": ["market"],
-    "asOf": "2026-07-21T00:00:00Z"
-  }
-}
-```
-
-### 5.3 硬规则
-
-1. scope ⊆ Manifest.permissions 映射  
-2. 拒绝字段不出现（不靠客户端自觉）  
-3. 只读；写回走 `/v1/signals` · `/v1/insights` · `/v1/learning`  
-4. 与 Protocol `MKContextV1` 同构  
-
----
-
-## 6. Permission 系统（冻结）
-
-复用并产品化 Protocol §8：
-
-| 层 | 机制 |
+| 层 | 职责 |
 |----|------|
-| 声明 | Manifest `permissions` / capability 所需 scope |
-| 用户授权 | 安装能力时授权范围（类 iOS 权限弹窗，产品可渐进） |
-| 网关裁剪 | Context API 强制执行 |
-| 默认拒绝 | Personal / Bank / HR PII / Raw DB |
+| **入口层** | OS 宿主面 + 各 Agent 独立前端（双表面，见 UI Framework） |
+| **Gateway** | 认证·鉴权·计量·审计·唯一数据通道 |
+| **Runtime** | 注册·路由·Context 组装·权限·质量监控 |
+| **External Agents** | 专业能力；**不在** MealKey 仓新增 |
 
-官方 Agent **不享受** 隐式全量权限；与第三方同一套表，仅审核可放宽 `maxInsightLevel`。
+Council 四席留在 **Decision Infrastructure**（Core），不是 Marketplace 商品。
 
 ---
 
-## 7. Agent 审核体系（冻结）
+## 2. MealKey 真正拥有的：四大基础设施（冻结）
+
+不要理解为「MealKey 拥有所有 Agent」。MealKey 拥有：
 
 ```text
-提交 Manifest + Skill Package + Sandbox 报告
-        ↓
-能力挂载（Capability Registry）
-        ↓
-安全审核（权限·隐私·远程回调）
-        ↓
-质量审核（五维 Score · L 级）
-        ↓
-Sandbox 标准餐厅跑批
-        ↓
-stage: live → Marketplace 上架
+Identity OS  +  Brain OS  +  Decision OS  +  Agent OS
 ```
 
-| 认证档 | maxInsightLevel | 说明 |
-|--------|-----------------|------|
-| 默认上架 | ≤3 | 观察/诊断/建议 |
-| 决策认证 | 4 | 可进决策室议题 |
-| 执行认证 | 5 | 可发 Work（仍须决策授权） |
+### 2.1 Identity Infrastructure（身份）
 
-抽检失败 → 降级 `pilot` / 下架。
+> 你是谁？你经营什么？
 
----
+共享对象：`User` · `Founder` · `Company` · `Brand` · `Restaurant` · `Store` · `Region`
 
-## 8. Agent Marketplace（冻结）
+Agent 租用 `scope=basic` 即可获得店名/城市/品类/阶段等，**禁止**每个 Agent 重新问一遍身份长表。
 
-### 8.1 产品形态
+### 2.2 Brain Infrastructure（经营事实）
 
-**餐饮能力市场**（非 App Store 图标墙）：
+> 这盘生意发生了什么？
 
-- 浏览 Capability Registry  
-- 购买/订阅能力  
-- 按门店安装启用  
-- 官方与第三方混排，标注 provider  
+经营数据 · 顾客评价 · 菜单/价格 · 竞争 · 历史事件 · 过去决策记忆  
 
-### 8.2 平台收入钩子
+**最大数据资产。** Agent 只经 Context Manager 租用切片，不拥有主库。
 
-抽佣 · Context/M-INTEL 调用计费 · 企业接入。费率商务定。
+### 2.3 Decision Infrastructure（决策）
 
-### 8.3 MVP 闸门
+> 如何把信息变成判断。
 
-协议与架构可冻；**批量第三方上架**仍服从核心飞轮停扩，直到诊断样板闭环验证。
+`Signal` · `Case` · `Evidence` · `Option` · `Assessment` · `Decision` · `Execution` · `Learning`
 
----
+所有 Agent 合法输出最终进入这里（经 Ingress 投影）。拍板唯一场仍在决策室。
 
-## 9. 官方 Agent 与第三方共存（冻结）
+### 2.4 Agent Infrastructure（能力）
 
-| 维度 | 官方 | 第三方 |
-|------|------|--------|
-| Protocol | 同一套 | 同一套 |
-| Gateway | 同一套 | 同一套 |
-| 默认 L 级 | ≤3，可申请认证 | ≤3，可申请认证 |
-| 预装 | 可系统预装（如诊断） | 须用户安装 |
-| 品牌 | mealkey.com 子域 | 自有域或合作域 |
-| 数据 | 自有业务库 + 租用 Context | 同左 |
-| 信任标识 | 「官方」徽章 | 「认证伙伴」 |
+> 谁来解决问题。
 
-**禁止双轨特权 API**（官方私有读库通道）。过渡期 inprocess 调用必须可替换为 Gateway 等价路径。
+Registry · Lifecycle · Marketplace · Quality · Orchestra · Billing 钩子  
+
+**连接、治理、组合** —— 不替代垂直算法。
 
 ---
 
-## 10. 输出统一与宿主投影（冻结）
+## 3. Agent Lifecycle（冻结）
 
-Agent 不得输出私有「我的分析」大对象作为唯一出口。
+第三方不是「上传一段 Prompt」，而是完整生命周期：
 
-标准 Ingress 例：
+```text
+Draft → Registered → Verified → Published → Running → Optimizing → Deprecated
+```
+
+| 状态 | 含义 |
+|------|------|
+| **Draft** | 独立仓开发 |
+| **Registered** | 登记 Manifest · Capability · Permission · Version |
+| **Verified** | 输入/输出/安全/质量测试通过（Sandbox） |
+| **Published** | 进入能力市场 |
+| **Running** | 真实用户；Runtime 持续监控 |
+| **Optimizing** | 依反馈·决策结果·效果升级版本 |
+| **Deprecated** | 停止新装；已装可只读或迁移 |
+
+对齐 Protocol `stage`：`idea/pilot/sandbox/live/deprecated`（映射见下）。
+
+| Lifecycle | Protocol stage（约） |
+|-----------|----------------------|
+| Draft | idea |
+| Registered–Verified | sandbox / pilot |
+| Published–Running | live |
+| Deprecated | deprecated |
+
+---
+
+## 4. Agent Manifest（运行时身份证）
+
+每个 Agent 必备（类 `package.json`）。完整字段以 Protocol `AgentManifestV1` 为准；运行时最小例：
 
 ```json
 {
-  "type": "Insight",
-  "source": "restaurant-diagnosis-agent",
-  "severity": "HIGH",
-  "title": "服务体验下降",
-  "evidence": ["近30天差评相关指标上升（有源）"],
-  "confidence": 0.86,
-  "level": 2
+  "id": "restaurant-diagnosis",
+  "name": "餐厅经营诊断系统",
+  "version": "1.0.0",
+  "category": "operation",
+  "provider": "mealkey",
+  "capabilities": [
+    "ops.diagnosis.health_check",
+    "ops.diagnosis.problem_detection",
+    "ops.diagnosis.operation_analysis"
+  ],
+  "context_required": [
+    "restaurant.basic",
+    "restaurant.review",
+    "restaurant.operation"
+  ],
+  "output": ["BusinessSignal", "MKInsight", "Gap"],
+  "permission": ["read:restaurant", "read:evidence"],
+  "maxInsightLevel": 3
 }
 ```
 
-Core 自动：
+说明：`Report` 不是一等 Ingress 出口（见 Protocol）；长报告仅 Agent 自有面附件。
 
-- 今日驾驶舱（Signal）  
-- 决策室（L4 认证 + Promote）  
-- M-EXEC（L5 + 授权）  
-
-对齐 Protocol Ports 与 Insight L1–L5。
+线级注册 API：`MEALKEY_AGENT_EXTERNAL_INTERFACE_V1` §5。
 
 ---
 
-## 11. 战略适配：为何外接（冻结）
+## 5. Agent Runtime：一次调用怎么跑（冻结）
 
-目标不是又一个餐饮 SaaS，而是 **餐饮经营能力生态**：
-
-- 平台自研少量核心官方 Agent（样板质量）  
-- 供应链 / 培训 / 空间设计等第三方接入  
-- 迭代解耦 · 商业清晰 · 融资故事 = OS + 生态  
-
----
-
-## 12. 样板路径：餐厅经营诊断（冻结）
+例：用户问「我的店最近为什么生意下降？」
 
 ```text
-Agent UI 登录（可 SSO 到 MealKey）
-  → Gateway 获取 Business Identity
-  → Context API 读 Brain / Reviews
-  →（可选）触发 M-INTEL 采集授权
-  → Engine 诊断
-  → submit Signal/Insight（≤L3）
-  → 用户回 MealKey 今日 / 决策室
-  → Execution · Learning
+用户问题
+  → MealKey Intent Router（OS）
+  → 判断需要经营诊断能力
+  → Agent Gateway
+  → Runtime Router 解析已安装 Agent
+  → Context Manager 组装 Business Context
+  → Permission Manager 裁剪 scope
+  → 调用外接 restaurant-diagnosis-agent
+  → Agent 执行 Decision Skill
+  → 返回 Insight/Signal（Ingress）
+  → Quality Monitor 闸门
+  → 投影 Decision Infrastructure（今日 / 决策室候选）
 ```
 
-验收：不读 Core DB 连接串；输出可进今日；拆仓后行为不变。
+### 5.1 Runtime 五件套
+
+| 组件 | 职责 |
+|------|------|
+| **Agent Registry** | Manifest · 版本 · 安装关系 |
+| **Agent Router** | Intent/能力 → agent_id；编排入口 |
+| **Context Manager** | 决定给什么、何时给、给多少（壁垒） |
+| **Permission Manager** | 安装授权 · scope · 默认拒绝集 |
+| **Quality Monitor** | 运行时拒收 · Score 抽样 · 降级/下架信号 |
+
+Gateway = 对外边缘；Runtime = 对内治理引擎。接口形状见 External Interface。
 
 ---
 
-## 13. 与旧框架映射（冻结）
+## 6. Context Manager = 关键壁垒（冻结）
 
-| 旧概念 | 平台态 |
-|--------|--------|
-| Tool Agent Framework 四件套 | Agent 仓内 Engine + Manifest；Host Bridge → Gateway |
-| `packages/m-ops-diag` | 官方诊断 Agent 过渡包 |
-| L1 四席 | 留在 Core；消费 Ingress，不做 Marketplace 商品 |
-| agent-runtime | Gateway/调度核心 |
+AI 能力越来越便宜；**喂什么上下文**决定质量。第三方无法复制的是：
+
+> 什么信息给它 · 什么时候给 · 给多少 · 与历史决策如何对齐。
+
+| 普通 GPT | MealKey Context |
+|----------|-----------------|
+| 「生意不好」 | 湘菜·长沙·营业18个月·客单78 |
+| 泛建议 | 近90天营业额↓12%（有源） |
+| 无记忆 | 等待差评↑40% · 500m 新竞品2家 · 曾增员失败的 Learning |
+
+Context Manager 规则（冻结方向）：
+
+1. **最小充分**：只给 Manifest `context_required` ∩ 用户授权  
+2. **新鲜度优先**：日扫 Δ 与历史基线一并标注 `asOf`  
+3. **决策记忆可选注入**：相关 past Decision/Learning（须权限）  
+4. **禁止倾倒全库**：条数/字段硬顶（Interface 已定）  
+5. **可审计**：每次 invoke 记录 Context 指纹（hash/scope），供复盘  
+
+这是平台相对「裸 LLM 壳」的护城河之一（并列 Brain 数据本身）。
 
 ---
 
-## 14. 落地阶段（工程建议 · 非停扩豁免）
+## 7. Agent Orchestra（组合 · 冻结）
+
+未来默认不是单 Agent 聊天，而是 **任务编排**：
+
+```text
+Mission（例：开第二家店）
+  → Agent Chain（选址 + 品牌落差 + 经营诊断 + 财务摘要…）
+  → Evidence Merge
+  → Decision Package（进决策室，非自动拍板）
+```
+
+### 7.1 硬规则
+
+| 规则 | 含义 |
+|------|------|
+| 组合在 OS | Orchestra 由 Runtime 编排，不由 Agent 互调私有 API |
+| 中间物合法 | 仅 Port 类型（Signal/Insight/Work/Gap）可串联 |
+| 默认 ≤L3 | 链上 Agent 未认证不得冒充 L4/L5 |
+| 汇聚非聊天 | Evidence Merge 进 DIE，不是群聊纪要 |
+| 用户可见 | Mission 进度可解释；禁黑盒自动战略终局 |
+
+与 Tool Framework 的 Pipeline/Fan-in 语义对齐，升级为平台级 Mission。
+
+---
+
+## 8. 四个独立（每个 Agent 必须满足）
+
+| # | 独立 | 例（诊断） |
+|---|------|------------|
+| 1 | **独立仓库** | `restaurant-diagnosis-agent` |
+| 2 | **独立部署** | `diagnosis-api.…` |
+| 3 | **独立前端** | `diagnosis.mealkey.com`（或自有域） |
+| 4 | **独立商业化** | subscription / usage / enterprise |
+
+MealKey 仓内 **不得** 为新 Agent 开包；存量 `m-ops-diag` 仅过渡迁出。
+
+---
+
+## 9. 商业分层（冻结方向）
+
+| 类型 | 谁开发 | 收入 |
+|------|--------|------|
+| **官方 Agent** | MealKey（外置仓） | 归平台（或内部结算） |
+| **合作 Agent** | 服务商 | 示意分成：开发者 70% / 平台 30%（费率商务定） |
+| **企业 Agent** | 连锁内部 | Enterprise 接入费 / 席位；`enterprise_local` |
+
+计费钩子：安装订阅 · Context/Ingress 调用 · 能力市场抽佣。数字不冻死在架构文。
+
+---
+
+## 10. 官方与第三方共存
+
+同一 Gateway · 同一 Context/Ingress · 同一 Quality。  
+官方无特权读库通道。预装仅「默认安装」，权限表仍执行。  
+详见 V1.0 共存表；徽章：官方 / 认证伙伴。
+
+---
+
+## 11. 样板：餐厅经营诊断 = 标准 Agent 产品模板（冻结）
+
+**不是** MealKey 内一个功能菜单，而是第一个证明路径：
+
+```text
+独立创造 → 接入 MealKey → 共享经营数据（Context）
+  → 进入决策系统（Ingress）→ 持续学习进化（Learning 审核）
+```
+
+体验：`M_OPS_DIAG_UX_V1` + `MEALKEY_AGENT_UI_FRAMEWORK_V1`（实现外置）  
+算法：`M_OPS_DIAG_DIAGNOSIS_MODEL_V1`（外置 Engine）  
+接入：`MEALKEY_AGENT_EXTERNAL_INTERFACE_V1`
+
+---
+
+## 12. 与线级接口 / 旧框架映射
+
+| 本文概念 | 落点 |
+|----------|------|
+| Gateway + Runtime | External Interface `/v1/gateway/*` |
+| Context Manager | Context API + 组装策略（本文 §6） |
+| Ingress | Signal/Insight/Work/Gap/Learning |
+| Registry/Lifecycle | Manifest 注册 + stage |
+| Orchestra | Mission 编排（工程后置，语义先冻） |
+| `packages/m-ops-diag` | 过渡；禁止再增兄弟包 |
+| L1 四席 | Decision OS 内治理角色 |
+
+---
+
+## 13. 落地阶段（提醒：非停扩豁免）
 
 | Phase | 内容 |
 |-------|------|
-| **P0** | 原则+协议+本文冻结；诊断样板标明 Gateway 语义 |
-| **P1** | Context API + Ingress 校验；SDK 类型 |
-| **P2** | 诊断 Agent 独立前端/部署形状（可仍 monorepo） |
-| **P3** | 拆 `mealkey-agents`；Marketplace 最小安装 |
-| **P4** | 第三方 cloud_https + 审核后台 |
+| **P0** | 本文 V1.1 + 外接接口 + UI 框架已冻 |
+| **P1** | Gateway Context/Ingress 工程；Context Manager 最小策略 |
+| **P2** | 外置诊断仓（四独立）打通样板 |
+| **P3** | Registry Lifecycle + Marketplace 安装 |
+| **P4** | Orchestra Mission 最小链；第三方 Verified |
+
+批量第三方上架仍服从核心飞轮闸门。
 
 ---
 
-## 15. 下一步（冻结）
+## 14. 下一步（冻结）
 
-1. 工程落点：Gateway Context/Ingress（`MEALKEY_AGENT_EXTERNAL_INTERFACE_V1`）  
-2. 外置仓：诊断 Agent UI 按 `MEALKEY_AGENT_UI_FRAMEWORK_V1` + `M_OPS_DIAG_UX_V1` 实现  
-3. 7 日开发者手册（可选）  
+进入技术骨架下一刀：
 
-**停止：** MealKey 仓内任何新 Agent。
+# 《MealKey Agent SDK V1 设计》
+
+须定义：
+
+1. 第三方拿什么 SDK 包  
+2. 如何获取餐厅上下文  
+3. 如何（经 Gateway）使用 Brain 切片——**无直连 Brain**  
+4. 如何返回 Signal / Insight  
+5. 如何进入 Decision Room（L4 认证路径）  
+6. 如何获得用户授权  
+7. 如何收费结算钩子  
+
+SDK 设计完成后，平台才具备可交付的「餐饮 Agent 平台」开发者骨架。
+
+**并行工程：** Gateway 落点；**禁止** MealKey 仓内新增 Agent。
 
 ---
 
-## 16. 修订记录
+## 15. 修订记录
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
-| V1.0 Platform Freeze | 2026-07-21 | 独立部署 · Gateway · SDK · Context API · Permission · 审核 · Marketplace · 官方/第三方共存 · 仓库变薄 |
+| V1.0 | 2026-07-21 | 独立部署 · Gateway · SDK 边界 · Context · 审核 · Marketplace · 共存 |
+| V1.1 | 2026-07-21 | 四基建 · Lifecycle · Runtime 五件套 · Context Manager 壁垒 · Orchestra · 四独立 · 商业分层 · 下一刀=Agent SDK V1 |

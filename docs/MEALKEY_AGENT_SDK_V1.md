@@ -41,7 +41,7 @@ import { createAgentClient } from "@mealkey/agent-sdk/platform";
 const mk = createAgentClient({
   agentId: "partner.acme.diagnosis",
   clientSecret: process.env.MK_AGENT_SECRET!,
-  baseUrl: process.env.MK_GATEWAY_URL!, // https://api.mealkey.com
+  baseUrl: process.env.MK_GATEWAY_URL!, // 本地: http://localhost:3000/api
 });
 
 // 1) 用户已在 Agent UI 完成授权 → 持有 userAccessToken
@@ -397,10 +397,10 @@ restaurant-diagnosis-agent/
 
 | 优先级 | 动作 |
 |--------|------|
-| P0 | 在 `@mealkey/agent-sdk/platform` 落下类型 + client 骨架 + 单测（mock Gateway） |
-| P1 | Gateway 真实路由对接 Interface |
+| P0 | ✅ platform client 骨架 |
+| P1 | ✅ Gateway Host `/api/v1/gateway/*` |
 | P2 | 外置诊断仓改用本 SDK |
-| P3 | 7 日开发者上手手册（基于本文 Hello） |
+| P3 | 今日雷达消费 ingress 侧车 · 7 日手册 |
 
 **禁止：** MealKey 仓内新增垂直 Agent。
 

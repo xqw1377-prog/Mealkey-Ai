@@ -109,7 +109,8 @@
 13ab. **Agent Architecture Principle V1 已冻结**（2026-07-21）：MealKey 不开发功能、定义能力标准；Agent 独立创造能力经协议进大脑；Core/Agent/UI 三边界；四席留 Core。真源 `MEALKEY_AGENT_ARCHITECTURE_PRINCIPLE_V1.md`。  
 13ac. **Agent Platform Architecture V1.1 已冻结**（2026-07-21）：四基建；Lifecycle；Runtime 五件套；Context Manager；Orchestra；四独立。真源 `MEALKEY_AGENT_PLATFORM_ARCHITECTURE_V1.md`。  
 13ad. **Agent 外接硬闸门**（2026-07-21）：**MealKey 仓库禁止新增任何 Agent**；接口 `MEALKEY_AGENT_EXTERNAL_INTERFACE_V1.md`；UI 框架 `MEALKEY_AGENT_UI_FRAMEWORK_V1.md`（实现外置）。存量仅 `m-ops-diag` 过渡迁出。  
-13ae. **MealKey Agent SDK V1 已冻结**（2026-07-21）：外接开发者唯一工具包；`createAgentClient` · Context 租用 · Ingress · 决策室 Handoff · OAuth/安装 · Billing 钩子 · Sandbox；代码 `@mealkey/agent-sdk/platform`。真源 `MEALKEY_AGENT_SDK_V1.md`。**下一刀 = Gateway 真实路由对接 + 外置诊断仓改用 SDK**。  
+13ae. **MealKey Agent SDK V1 已冻结**（2026-07-21）：外接开发者唯一工具包；`createAgentClient` · Context 租用 · Ingress · Handoff · Billing · Sandbox；`@mealkey/agent-sdk/platform`。真源 `MEALKEY_AGENT_SDK_V1.md`。  
+13af. **Agent Gateway Host P0**（2026-07-21）：`/api/v1/gateway/*` Context/Ingress/install/sandbox fixtures；签名对齐 SDK；ingress 质量闸门；侧车写入 `profile.agentGatewayIngress`。代码 `apps/web/src/server/agent-platform-gateway`。**下一刀 = 外置诊断仓改用 SDK + 今日雷达消费 ingress 侧车**。  
 13v. **M-OPS-DIAG Architecture Freeze V1.0**（2026-07-21）：能力边界与工程真源；角色=观察/发现/证据/预警/决策输入；六大引擎架构；Evidence 三层；Finding→Pattern→Signal；Cockpit/Room。真源 `M_OPS_DIAG_AGENT_V1.md`。  
 13x. **M-OPS-DIAG UX Freeze V1.0**（2026-07-21）：壁垒=「它真的懂我的店」；First Moment≤60s；采集过程感；经营画像一句话；顾客声音墙；六观察面；今日扫描卡；V1 仅 5 页。真源 `M_OPS_DIAG_UX_V1.md`。  
 13y. **M-OPS-DIAG Data Collection Freeze V1.0**（2026-07-21）：最少主动采集+最大外部感知+持续学习；Identity/Business Fact/Consumer 三层；必采 10 事实；Evidence Card 与权重表；日扫四域；Brain 落点树。真源 `M_OPS_DIAG_DATA_COLLECTION_V1.md`。  

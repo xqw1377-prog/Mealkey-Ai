@@ -329,8 +329,21 @@ MealKey **不**实现 Agent 垂直算法，**不**实现 Agent 独立前端。
 
 ---
 
-## 11. 修订记录
+## 11. Host 工程落点（2026-07-21）
+
+| 逻辑 | `apps/web/src/server/agent-platform-gateway/` |
+|------|-----------------------------------------------|
+| HTTP | `/api/v1/gateway/context/restaurant/[id]` · `/api/v1/gateway/ingress` · `/api/v1/gateway/agents/[id]/install` · `/api/v1/gateway/sandbox/fixtures/[id]` |
+| SDK baseUrl | `{origin}/api`（签名 path 仍为 `/v1/gateway/...`） |
+| 测试 | `apps/web/tests/agent-platform-gateway.test.ts` |
+
+V1 用户 Token：`Bearer sandbox` / `sandbox_*` / `MK_GATEWAY_USER_TOKENS`；Agent 密钥：`MK_AGENT_SANDBOX_SECRET` 或 `MK_AGENT_REGISTRY_JSON`。
+
+---
+
+## 12. 修订记录
 
 | 版本 | 日期 | 说明 |
 |------|------|------|
 | V1.0 | 2026-07-21 | 禁 Core 新增 Agent；Context/Ingress/认证/拒收码/SDK 边界/投影规则 |
+| V1.0+ | 2026-07-21 | Host Gateway 路由与 registry/sandbox 落点 |

@@ -323,13 +323,13 @@ MealKey 仓内 **不得** 为新 Agent 开包；存量 `m-ops-diag` 仅过渡迁
 
 ## 14. 下一步（冻结）
 
-**Agent SDK V1 已冻结：** `docs/MEALKEY_AGENT_SDK_V1.md` · `@mealkey/agent-sdk/platform`
+**已冻结/落地：** SDK V1 · Gateway Host P0（`/api/v1/gateway/*`）
 
 下一工程刀：
 
-1. Gateway 真实路由对接 External Interface  
-2. 外置诊断仓改用 Platform SDK  
-3. 7 日开发者手册（基于 SDK Hello）  
+1. 外置诊断仓改用 Platform SDK  
+2. 今日雷达消费 `profile.agentGatewayIngress` 侧车  
+3. 7 日开发者手册  
 
 **禁止** MealKey 仓内新增 Agent。
 

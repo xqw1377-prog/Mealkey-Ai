@@ -95,9 +95,11 @@ export type AgentPlatformClient = {
 };
 
 function resolveBase(config: AgentClientConfig): string {
+  // Next Host: baseUrl = origin + "/api"  → paths /v1/gateway/* 挂在 /api/v1/gateway/*
   const root = config.baseUrl.replace(/\/$/, "");
-  if (config.env === "sandbox" && !root.includes("sandbox")) {
-    return `${root}/sandbox`;
+  if (config.env === "sandbox" && !/\/api$/i.test(root) && !root.includes("sandbox")) {
+    // sandbox fixtures 仍走同一 Gateway；env 仅作标记
+    return root;
   }
   return root;
 }

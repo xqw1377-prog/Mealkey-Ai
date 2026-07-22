@@ -23,6 +23,19 @@ console.log("[vercel-build-prep] Swapping to PostgreSQL schema...");
 fs.copyFileSync(schema, schemaSqlite);
 fs.copyFileSync(schemaPg, schema);
 
+// Remove .env files that override Vercel's environment variables
+const webEnv = "apps/web/.env";
+const webEnvLocal = "apps/web/.env.local";
+for (const f of [webEnv, webEnvLocal]) {
+  if (fs.existsSync(f)) {
+    fs.unlinkSync(f);
+    console.log(`[vercel-build-prep] Removed ${f}`);
+  }
+}
+
+const dbUrl = process.env.DATABASE_URL;
+console.log(`[vercel-build-prep] DATABASE_URL starts with: ${dbUrl?.slice(0, 15)}...`);
+
 console.log("[vercel-build-prep] Running prisma generate...");
 execSync("npx prisma generate", { cwd: "apps/web", stdio: "inherit" });
 

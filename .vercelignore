@@ -12,10 +12,9 @@ apps/web/prisma/dev.db
 
 # 不需要部署到生产的内容
 tests/
-scripts/
 docs/
-founder-os/
-agents/
+/founder-os/
+/agents/
 tool-agents/
 *.traineddata
 $null

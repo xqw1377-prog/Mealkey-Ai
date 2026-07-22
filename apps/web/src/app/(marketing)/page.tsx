@@ -3,6 +3,11 @@ import { ArrowRight } from "lucide-react";
 import { MKBrand } from "@/components/brand/MKBrand";
 import { PRODUCT_BRAND } from "@/lib/product-brand";
 
+/**
+ * 老板产品入口（用户 Web）
+ * 与营销橱窗 `/store`、开发者门户 `/developers`、运营管理台 `/platform/admin` 分离：
+ * 本页只服务「进入经营台」，不并列生态/开发/运营入口。
+ */
 export default function HomePage() {
   return (
     <main className="relative min-h-[100dvh] overflow-hidden text-[#171717]">
@@ -59,41 +64,39 @@ export default function HomePage() {
 
           <div className="mpnt-rise mpnt-rise-delay-2 mt-9 flex w-full max-w-md flex-col gap-3 sm:mt-10 sm:flex-row sm:items-stretch">
             <Link
-              href="/store"
+              href="/login"
               className="btn-primary min-h-12 w-full flex-1 touch-manipulation justify-center text-[15px]"
             >
-              <span>浏览 Store</span>
+              <span>进入经营台</span>
               <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
-              href="/developers"
+              href="/register"
               className="btn-secondary min-h-12 w-full flex-1 touch-manipulation justify-center text-[15px]"
             >
-              <span>开发者</span>
+              <span>注册账号</span>
             </Link>
           </div>
-          <p className="mpnt-rise mpnt-rise-delay-2 mt-3 text-[12px] text-[#6f747b]">
-            已有账号？
-            <Link href="/login" className="ml-1 underline-offset-2 hover:underline">
-              登录经营台
-            </Link>
-            <span className="mx-2 text-[rgba(24,24,23,0.2)]">·</span>
-            <Link href="/developers/console" className="underline-offset-2 hover:underline">
-              Console
-            </Link>
+          <p className="mpnt-rise mpnt-rise-delay-2 mt-3 text-[12px] leading-5 text-[#6f747b]">
+            面向餐饮老板的日常经营入口。能力市场与开发者门户已拆到独立页面，不在此混排。
           </p>
         </div>
 
-        <footer className="mpnt-rise mpnt-rise-delay-3 shrink-0 pt-4 text-[12px] leading-5 tracking-[0.04em] text-[#6f747b]">
-          {PRODUCT_BRAND.nameZh} · {PRODUCT_BRAND.nameEn}
-          <span className="mx-2 text-[rgba(24,24,23,0.2)]">·</span>
-          <Link href="/store" className="underline-offset-2 hover:underline">
-            Store
-          </Link>
-          <span className="mx-2 text-[rgba(24,24,23,0.2)]">·</span>
-          <Link href="/developers" className="underline-offset-2 hover:underline">
-            Developers
-          </Link>
+        <footer className="mpnt-rise mpnt-rise-delay-3 shrink-0 space-y-2 border-t border-[rgba(24,24,23,0.08)] pt-4 text-[12px] leading-5 tracking-[0.02em] text-[#6f747b]">
+          <p>
+            {PRODUCT_BRAND.nameZh} · {PRODUCT_BRAND.nameEn} · {PRODUCT_BRAND.positioning}
+          </p>
+          <p className="flex flex-wrap gap-x-3 gap-y-1">
+            <Link href="/store" className="underline-offset-2 hover:underline">
+              能力市场（营销）
+            </Link>
+            <span className="text-[rgba(24,24,23,0.2)]" aria-hidden>
+              ·
+            </span>
+            <Link href="/developers" className="underline-offset-2 hover:underline">
+              开发者门户
+            </Link>
+          </p>
         </footer>
       </div>
     </main>

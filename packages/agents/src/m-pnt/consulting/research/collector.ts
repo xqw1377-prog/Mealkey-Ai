@@ -108,6 +108,30 @@ function buildQueries(scope: ResearchScope): {
   };
 }
 
+/** 定位报告禁止英文/多语主导的公开检索噪声 */
+function isChineseFacingHit(hit: {
+  title?: string;
+  snippet?: string;
+  url?: string;
+}): boolean {
+  const text = `${hit.title || ""} ${hit.snippet || ""}`.replace(/\s+/g, " ").trim();
+  if (text.length < 8) return false;
+  const cjk = (text.match(/[\u4e00-\u9fff]/g) || []).length;
+  const latin = (text.match(/[A-Za-z]/g) || []).length;
+  if (cjk < 6) return false;
+  if (latin >= 24 && cjk / (cjk + latin) < 0.4) return false;
+  if (latin >= 40 && cjk < 12) return false;
+  const url = hit.url || "";
+  if (
+    /microsoft\.com|office\.com|outlook\.com|hotmail|sap\.com|hema\.nl|support\.google|translate\.google/i.test(
+      url,
+    )
+  ) {
+    return false;
+  }
+  return true;
+}
+
 async function runQuery(
   adapter: ResearchSearchAdapter | undefined,
   query: string,
@@ -116,10 +140,16 @@ async function runQuery(
 ): Promise<CrawlSourceHit[]> {
   if (!adapter) return [];
   try {
-    const rows = await adapter.search({ query, limit, region });
+    const rows = await adapter.search({
+      query,
+      limit: Math.min(12, limit * 3),
+      region,
+    });
     const at = nowIso();
     return (rows || [])
       .filter((r) => r.snippet || r.title)
+      .filter((r) => isChineseFacingHit(r))
+      .slice(0, limit)
       .map((r) => ({
         title: r.title || query,
         url: r.url || "",

@@ -47,6 +47,7 @@ model User {
   updatedAt     DateTime @updatedAt
 }
 
+/// 一次性密码重置（只存 token 哈希；明文链接仅签发时返回给管理员/开发日志）
 model PasswordResetToken {
   id        String    @id @default(cuid())
   userId    String
@@ -55,7 +56,7 @@ model PasswordResetToken {
   expiresAt DateTime
   usedAt    DateTime?
   createdAt DateTime  @default(now())
-  requestedFrom String?
+  requestedFrom String? // forgot | admin
 
   @@index([userId])
   @@index([expiresAt])
@@ -135,6 +136,7 @@ model Project {
   reports     Report[]
   conversations Conversation[]
   assets      Asset[]
+  /// Restaurant Brain 根（一项目一店脑）；SSOT 经营事实在此树下
   restaurant  Restaurant?
 
   @@index([ownerId])
@@ -358,7 +360,7 @@ model Memory {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([ownerId, key])
+  @@unique([ownerId, projectId, key])
   @@index([ownerId])
   @@index([projectId])
   @@index([type])
@@ -423,9 +425,96 @@ model Decision {
   updatedAt   DateTime @updatedAt
 
   @@index([ownerId])
-  @@index([projectId])
+  @@index([projectId, createdAt])
   @@index([type])
   @@index([agentId])
+}
+
+model DecisionEvent {
+  id            String   @id @default(cuid())
+  decisionId    String
+  eventType     String
+  metadata      String?
+  sourceEventId String?  @unique
+  createdAt     DateTime @default(now())
+
+  @@index([decisionId, createdAt])
+  @@index([eventType, createdAt])
+}
+
+model CognitiveSession {
+  id                 String    @id @default(cuid())
+  agentRunId         String?
+  projectId          String?
+  decisionId         String?
+  contextSnapshotRef String?
+  status             String    @default("COMPLETED")
+  confidenceRef      String?
+  source             String    @default("decision_persistence")
+  startedAt          DateTime  @default(now())
+  completedAt        DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  @@index([agentRunId, createdAt])
+  @@index([projectId, createdAt])
+  @@index([decisionId, createdAt])
+  @@index([status, createdAt])
+}
+
+model CognitiveTrace {
+  id            String    @id @default(cuid())
+  sessionId     String
+  type          String
+  sourceType    String
+  sourceId      String?
+  input         String?
+  output        String?
+  confidence    Float?
+  weight        Float?
+  sequence      Int
+  sourceEventId String?   @unique
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([sessionId, sequence])
+  @@index([type, createdAt])
+  @@index([sourceType, createdAt])
+  @@index([sourceId])
+}
+
+model EvidenceReference {
+  id           String    @id @default(cuid())
+  sessionId    String
+  decisionId   String?
+  type         String
+  sourceType   String
+  sourceId     String
+  contribution Float
+  confidence   Float?
+  content      String?
+  metadata     String?
+  createdAt    DateTime  @default(now())
+
+  @@index([sessionId, createdAt])
+  @@index([decisionId, createdAt])
+  @@index([sourceType, sourceId])
+}
+
+model ConfidenceModel {
+  id                   String    @id @default(cuid())
+  sessionId            String    @unique
+  overall              Float
+  dataConfidence       Float?
+  knowledgeConfidence  Float?
+  ruleConfidence       Float?
+  llmConfidence        Float?
+  historicalConfidence Float?
+  metadata             String?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  @@index([overall, createdAt])
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -496,6 +585,7 @@ model AgentRun {
   @@index([ownerId])
   @@index([projectId])
   @@index([missionId])
+  @@index([conversationId])
   @@index([status])
 }
 
@@ -603,6 +693,468 @@ model AgentProduct {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// Platform Facts（Platform Migration V1）
+//
+// 先在旧 Kernel 之上补平台事实层：
+// - PlatformEvent: 原始接入审计层
+// - AgentTrace: 运行链路事实
+// - AgentOutcome: 结果事实
+// - UsageRecord: 资源消耗事实
+//
+// 当前 SQLite 阶段优先兼容落地，因此 JSON / Decimal 先用 String 存储
+// ═══════════════════════════════════════════════════════════════
+
+model PlatformEvent {
+  id               String   @id @default(cuid())
+  eventId          String   @unique
+  eventName        String
+  eventVersion     Int      @default(1)
+  producer         String
+  source           String
+  entityType       String
+  entityId         String
+  agentId          String?
+  versionId        String?
+  runtimeId        String?
+  runId            String?
+  traceId          String?
+  decisionId       String?
+  projectId        String?
+  organizationId   String?
+  billingAccountId String?
+  invoiceId        String?
+  listingId        String?
+  sequence         Int?
+  idempotencyKey   String?
+  payload          String
+  rawBody          String
+  occurredAt       DateTime
+  receivedAt       DateTime @default(now())
+  createdAt        DateTime @default(now())
+
+  @@index([eventName, occurredAt])
+  @@index([runId, occurredAt])
+  @@index([traceId])
+  @@index([billingAccountId, occurredAt])
+  @@index([idempotencyKey])
+}
+
+model AgentTrace {
+  id              String    @id @default(cuid())
+  runId           String
+  parentTraceId   String?
+  type            String
+  source          String
+  name            String
+  inputSnapshot   String?
+  outputSnapshot  String?
+  status          String
+  errorCode       String?
+  retryCount      Int       @default(0)
+  latencyMs       Int?
+  sequence        Int?
+  sourceEventId   String?   @unique
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([runId, createdAt])
+  @@index([status, createdAt])
+  @@index([errorCode])
+}
+
+model AgentOutcome {
+  id            String    @id @default(cuid())
+  runId         String
+  metricType    String
+  value         String
+  unit          String?
+  source        String
+  sourceEventId String?   @unique
+  createdAt     DateTime  @default(now())
+
+  @@index([runId, createdAt])
+  @@index([metricType])
+}
+
+model UsageRecord {
+  id               String    @id @default(cuid())
+  runId            String?
+  runtimeId        String?
+  agentId          String?
+  versionId        String?
+  billingAccountId String?
+  usageType        String
+  provider         String?
+  model            String?
+  tokenInput       Int       @default(0)
+  tokenOutput      Int       @default(0)
+  tokenCached      Int       @default(0)
+  tokenReasoning   Int       @default(0)
+  tokenTotal       Int       @default(0)
+  cost             String
+  currency         String    @default("CNY")
+  billable         Boolean   @default(true)
+  externalUsageId  String?
+  source           String
+  sourceEventId    String?   @unique
+  occurredAt       DateTime
+  createdAt        DateTime  @default(now())
+
+  @@index([runId, occurredAt])
+  @@index([billingAccountId, occurredAt])
+  @@index([usageType, occurredAt])
+  @@index([externalUsageId])
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Platform Admin Objects（Admin Console V1）
+//
+// 在现有 Kernel 与 Platform Facts 之上补平台管理对象层：
+// - Organization / OrganizationMember
+// - BillingAccount / Plan / Subscription / CreditLedger / Invoice
+// - AgentListing / RevenueShare
+// - EvaluationResult / LearningRecord
+// - KnowledgeEdge
+// ═══════════════════════════════════════════════════════════════
+
+model Organization {
+  id          String   @id
+  name        String
+  slug        String   @unique
+  type        String   @default("workspace")
+  status      String   @default("active")
+  ownerUserId String?
+  metadata    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([ownerUserId])
+  @@index([status, createdAt])
+}
+
+model OrganizationMember {
+  id              String   @id
+  organizationId  String
+  userId          String
+  role            String   @default("OWNER")
+  status          String   @default("active")
+  invitedByUserId String?
+  metadata        String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([organizationId, userId])
+  @@index([userId])
+  @@index([role, status])
+}
+
+model BillingAccount {
+  id             String   @id
+  organizationId String?
+  ownerId        String?
+  name           String
+  status         String   @default("active")
+  currency       String   @default("CNY")
+  balance        String   @default("0")
+  metadata       String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([ownerId])
+  @@index([status, createdAt])
+}
+
+model Plan {
+  id             String   @id
+  code           String   @unique
+  name           String
+  description    String?
+  billingCycle   String   @default("MONTHLY")
+  priceCents     Int      @default(0)
+  currency       String   @default("CNY")
+  includedTokens Int      @default(0)
+  includedRuns   Int      @default(0)
+  status         String   @default("active")
+  metadata       String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([status, billingCycle])
+}
+
+model Subscription {
+  id                  String   @id
+  billingAccountId    String
+  planId              String
+  status              String   @default("active")
+  seats               Int      @default(1)
+  startedAt           DateTime @default(now())
+  currentPeriodStart  DateTime?
+  currentPeriodEnd    DateTime?
+  cancelAtPeriodEnd   Boolean  @default(false)
+  metadata            String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@index([billingAccountId, status])
+  @@index([planId, status])
+}
+
+model CreditLedger {
+  id               String   @id
+  billingAccountId String
+  entryType        String
+  amount           String
+  currency         String   @default("CNY")
+  balanceAfter     String?
+  description      String?
+  sourceType       String?
+  sourceId         String?
+  createdAt        DateTime @default(now())
+
+  @@index([billingAccountId, createdAt])
+  @@index([entryType, createdAt])
+}
+
+model Invoice {
+  id               String   @id
+  billingAccountId String
+  invoiceNo        String   @unique
+  status           String   @default("draft")
+  subtotal         String   @default("0")
+  tax              String   @default("0")
+  total            String   @default("0")
+  currency         String   @default("CNY")
+  issuedAt         DateTime?
+  paidAt           DateTime?
+  metadata         String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([billingAccountId, createdAt])
+  @@index([status, createdAt])
+}
+
+/// 微信支付 / 支付宝套餐订单
+model PaymentOrder {
+  id               String    @id @default(cuid())
+  orderNo          String    @unique
+  userId           String
+  ownerId          String
+  billingAccountId String
+  planId           String
+  channel          String // wechat | alipay | sandbox
+  status           String    @default("pending") // pending | paid | failed | closed | refunded
+  amountCents      Int
+  currency         String    @default("CNY")
+  providerTradeNo  String?
+  codeUrl          String?
+  payUrl           String?
+  paidAt           DateTime?
+  metadata         String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@index([userId, createdAt])
+  @@index([billingAccountId, status])
+  @@index([status, createdAt])
+  @@index([providerTradeNo])
+}
+
+/// 经营点钱包（余额真相源）
+model UserWallet {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  balance        Int      @default(0)
+  totalPurchased Int      @default(0)
+  totalConsumed  Int      @default(0)
+  frozenAmount   Int      @default(0)
+  status         String   @default("active") // active | frozen
+  metadata       String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([status, updatedAt])
+}
+
+/// 经营点流水
+model WalletLedger {
+  id           String   @id @default(cuid())
+  userId       String
+  walletId     String
+  amount       Int
+  balanceAfter Int
+  type         String // PURCHASE | CONSUME | REFUND | BONUS | RESERVE | RELEASE | SETTLE | ADJUST
+  reason       String
+  referenceId  String?
+  metadata     String?
+  createdAt    DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([walletId, createdAt])
+  @@index([type, createdAt])
+  @@index([referenceId])
+}
+
+/// 能力定价规则
+model CapabilityPrice {
+  id                     String   @id @default(cuid())
+  capability             String   @unique
+  baseCost               Int
+  depthMultipliers       String   @default("{}")
+  complexityMultipliers  String   @default("{}")
+  modelMultipliers       String   @default("{}")
+  dataMultipliers        String   @default("{}")
+  agentMultipliers       String   @default("{}")
+  active                 Boolean  @default(true)
+  metadata               String?
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  @@index([active])
+}
+
+/// 能力消耗记录（预授权 → 结算 / 退款）
+model ConsumptionRecord {
+  id               String   @id @default(cuid())
+  userId           String
+  walletId         String
+  capability       String
+  agentCodes       String   @default("[]")
+  requestedAmount  Int
+  actualAmount     Int      @default(0)
+  status           String   @default("AUTHORIZED") // AUTHORIZED | SETTLED | FAILED | REFUNDED
+  reason           String
+  pricingSnapshot  String?
+  runId            String?
+  tokenInput       Int      @default(0)
+  tokenOutput      Int      @default(0)
+  tokenCached      Int      @default(0)
+  tokenReasoning   Int      @default(0)
+  tokenTotal       Int      @default(0)
+  model            String?
+  provider         String?
+  costCents        Int      @default(0)
+  metadata         String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([userId, createdAt])
+  @@index([walletId, createdAt])
+  @@index([status, createdAt])
+  @@index([capability, createdAt])
+  @@index([runId])
+}
+
+/// 按 Agent 授权（矩阵节点可独立开通）
+model AgentEntitlement {
+  id               String    @id @default(cuid())
+  billingAccountId String
+  agentCode        String // chief | m-mkt | m-pnt | m-ed | m-biz
+  status           String    @default("active") // active | expired | revoked
+  source           String    @default("plan") // plan | addon | grant
+  planId           String?
+  subscriptionId   String?
+  startedAt        DateTime  @default(now())
+  endsAt           DateTime?
+  metadata         String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@unique([billingAccountId, agentCode])
+  @@index([billingAccountId, status])
+  @@index([agentCode, status])
+}
+
+model AgentListing {
+  id            String   @id
+  agentProductId String?
+  slug          String   @unique
+  name          String
+  description   String?
+  status        String   @default("active")
+  visibility    String   @default("public")
+  pricingModel  String   @default("subscription")
+  priceCents    Int      @default(0)
+  currency      String   @default("CNY")
+  installCount  Int      @default(0)
+  rating        Float    @default(0)
+  metadata      String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([agentProductId])
+  @@index([status, visibility])
+}
+
+model RevenueShare {
+  id              String   @id
+  listingId       String
+  beneficiaryType String
+  beneficiaryId   String
+  sharePercent    Float
+  status          String   @default("active")
+  metadata        String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([listingId, status])
+  @@index([beneficiaryType, beneficiaryId])
+}
+
+model EvaluationResult {
+  id         String   @id
+  agentRunId String?
+  decisionId String?
+  evaluator  String
+  score      Float?
+  verdict    String
+  summary    String?
+  metadata   String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([agentRunId, createdAt])
+  @@index([decisionId, createdAt])
+  @@index([verdict, createdAt])
+}
+
+model LearningRecord {
+  id                 String   @id
+  decisionId         String?
+  evaluationResultId String?
+  sourceType         String
+  sourceId           String?
+  title              String
+  summary            String?
+  status             String   @default("pending")
+  weightDelta        Float?
+  metadata           String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([decisionId, createdAt])
+  @@index([evaluationResultId])
+  @@index([status, createdAt])
+}
+
+model KnowledgeEdge {
+  id           String   @id
+  fromNodeId   String
+  toNodeId     String
+  relationType String
+  weight       Float?
+  metadata     String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([fromNodeId])
+  @@index([toNodeId])
+  @@index([relationType])
+}
+
+// ═══════════════════════════════════════════════════════════════
 // 交互系统（不属于 Kernel，支撑对话）
 // ═══════════════════════════════════════════════════════════════
 
@@ -624,6 +1176,7 @@ model Conversation {
 
   @@index([userId])
   @@index([projectId])
+  @@index([agentType])
 }
 
 // ─── 消息 ───
@@ -641,6 +1194,7 @@ model Message {
   createdAt      DateTime     @default(now())
 
   @@index([conversationId])
+  @@index([role])
 }
 
 model AssetCategory {
@@ -772,4 +1326,110 @@ model StrategyDocument {
 
   @@index([ownerId])
   @@index([type])
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Developer Portal Domain（外接生态入驻 · 不写 Brain/Decision）
+// 真源：docs/MEALKEY_DEVELOPER_PORTAL_IA_DATA_MODEL_V1.md
+// ═══════════════════════════════════════════════════════════════
+
+model DeveloperAccount {
+  id           String   @id @default(cuid())
+  userId       String?
+  type         String   // individual | company | partner_org
+  displayName  String
+  legalName    String?
+  website      String?
+  contactEmail String
+  direction    String?  // 产品方向自述
+  status       String   @default("applied") // applied | active | suspended | rejected
+  verifiedAt   DateTime?
+  metadata     String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  applications PartnerAgentApplication[]
+
+  @@index([contactEmail, createdAt])
+  @@index([status, createdAt])
+  @@index([userId])
+}
+
+model PartnerAgentApplication {
+  id                  String   @id @default(cuid())
+  developerAccountId  String
+  developerAccount    DeveloperAccount @relation(fields: [developerAccountId], references: [id], onDelete: Cascade)
+  agentId             String   @unique // partner.<org>.<slug>
+  name                String
+  category            String
+  capabilityIds       String   @default("[]") // JSON string[]
+  runtimeMode         String   @default("cloud_https")
+  endpointUrl         String?
+  webhookUrl          String?
+  clientSecretHash    String?
+  lifecycleStatus     String   @default("draft")
+  currentVersionId    String?
+  listingId           String?
+  agentProductId      String?
+  qualityScore        Float?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  versions PartnerAgentDraftVersion[]
+  sandboxRuns PartnerSandboxRun[]
+  reviewTasks PartnerReviewTask[]
+
+  @@index([developerAccountId, createdAt])
+  @@index([lifecycleStatus, createdAt])
+}
+
+model PartnerAgentDraftVersion {
+  id              String   @id @default(cuid())
+  applicationId   String
+  application     PartnerAgentApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  version         String
+  manifestJson    String
+  skillPackageJson String   @default("{}")
+  releaseChannel  String   @default("draft") // draft | sandbox | review | live | yanked
+  demoUrl         String?
+  privacyNotes    String?
+  pricingJson     String?
+  createdAt       DateTime @default(now())
+
+  @@unique([applicationId, version])
+  @@index([applicationId, createdAt])
+}
+
+model PartnerSandboxRun {
+  id              String   @id @default(cuid())
+  applicationId   String
+  application     PartnerAgentApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  versionId       String
+  fixtureId       String
+  status          String   // running | passed | failed
+  checksJson      String   @default("{}")
+  qualityReportJson String?
+  logText         String?
+  invokeId        String?
+  startedAt       DateTime @default(now())
+  finishedAt      DateTime?
+
+  @@index([applicationId, startedAt])
+  @@index([status, startedAt])
+}
+
+model PartnerReviewTask {
+  id              String   @id @default(cuid())
+  applicationId   String
+  application     PartnerAgentApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  versionId       String
+  status          String   @default("queued") // queued | in_review | changes_requested | approved | rejected
+  checklistJson   String   @default("{}")
+  reviewerUserId  String?
+  decisionNote    String?
+  submittedAt     DateTime @default(now())
+  resolvedAt      DateTime?
+
+  @@index([status, submittedAt])
+  @@index([applicationId, submittedAt])
 }

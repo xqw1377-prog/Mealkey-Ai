@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  filterChineseFacingSearchHits,
+  isChineseFacingSearchHit,
   parseBingHtml,
   parseDuckDuckGoHtml,
 } from "../../../packages/knowledge-engine/src/web-search";
@@ -31,5 +33,56 @@ describe("web search HTML parsers", () => {
     expect(rows[0].title).toBe("区域市场分析");
     expect(rows[0].url).toBe("https://news.example.com/x");
     expect(rows[0].source).toBe("bing");
+  });
+});
+
+describe("Chinese-facing search hit gate", () => {
+  it("keeps Chinese catering snippets", () => {
+    expect(
+      isChineseFacingSearchHit({
+        title: "开福区湘菜门店密度",
+        snippet: "万国城商圈湘菜供给偏饱和，客单价与心智争夺加剧。",
+        url: "https://news.example.cn/a",
+      }),
+    ).toBe(true);
+  });
+
+  it("drops English-dominant and blocked hosts", () => {
+    expect(
+      isChineseFacingSearchHit({
+        title: "Contact Us - Microsoft Support",
+        snippet:
+          "Contact Microsoft Support. Find solutions to common problems with Hotmail and Outlook.",
+        url: "https://support.microsoft.com/en-us",
+      }),
+    ).toBe(false);
+    expect(
+      isChineseFacingSearchHit({
+        title: "Managing Condition Records for Sales Prices - SAP Learning",
+        snippet:
+          "Learn how to copy condition records in SAP S/4HANA for sales pricing workflows.",
+        url: "https://learning.sap.com/learning-journey/x",
+      }),
+    ).toBe(false);
+  });
+
+  it("filters mixed lists down to Chinese hits only", () => {
+    const kept = filterChineseFacingSearchHits(
+      [
+        {
+          title: "Contact Microsoft Support",
+          snippet: "Find solutions to common Hotmail problems online today.",
+          url: "https://support.microsoft.com/en-us",
+        },
+        {
+          title: "长沙开福区餐饮商圈观察",
+          snippet: "万国城周边湘菜门店密集，竞争进入成熟期。",
+          url: "https://local.example.cn/kaifu",
+        },
+      ],
+      5,
+    );
+    expect(kept).toHaveLength(1);
+    expect(kept[0].title).toMatch(/开福区/);
   });
 });

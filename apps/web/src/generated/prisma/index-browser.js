@@ -116,6 +116,9 @@ Prisma.NullTypes = {
  */
 
 exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
+  ReadUncommitted: 'ReadUncommitted',
+  ReadCommitted: 'ReadCommitted',
+  RepeatableRead: 'RepeatableRead',
   Serializable: 'Serializable'
 });
 
@@ -1016,6 +1019,7 @@ exports.Prisma.PartnerAgentApplicationScalarFieldEnum = {
   runtimeMode: 'runtimeMode',
   endpointUrl: 'endpointUrl',
   webhookUrl: 'webhookUrl',
+  clientSecretHash: 'clientSecretHash',
   lifecycleStatus: 'lifecycleStatus',
   currentVersionId: 'currentVersionId',
   listingId: 'listingId',
@@ -1067,6 +1071,11 @@ exports.Prisma.PartnerReviewTaskScalarFieldEnum = {
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
+};
+
+exports.Prisma.QueryMode = {
+  default: 'default',
+  insensitive: 'insensitive'
 };
 
 exports.Prisma.NullsOrder = {

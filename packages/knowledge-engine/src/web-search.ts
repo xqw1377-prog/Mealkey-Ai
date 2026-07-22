@@ -78,6 +78,52 @@ export function parseDuckDuckGoHtml(
   return results;
 }
 
+/**
+ * 餐饮定位调研只收中文可读命中。
+ * Bing/DDG 常回灌 Outlook/SAP/多语言无关页，禁止进入报告正文。
+ */
+const BLOCKED_HOST_RE =
+  /(?:^|\.)(?:microsoft\.com|office\.com|live\.com|outlook\.com|hotmail\.com|msn\.com|sap\.com|support\.google\.com|translate\.google\.|hema\.nl|wikipedia\.org)(?:\/|$)/i;
+
+export function isChineseFacingSearchHit(hit: {
+  title?: string;
+  snippet?: string;
+  url?: string;
+}): boolean {
+  const title = (hit.title || "").trim();
+  const snippet = (hit.snippet || "").trim();
+  const text = `${title} ${snippet}`.replace(/\s+/g, " ").trim();
+  if (text.length < 8) return false;
+
+  if (hit.url) {
+    try {
+      const host = new URL(hit.url).hostname.toLowerCase();
+      if (BLOCKED_HOST_RE.test(host)) return false;
+      // 非中文维基路径
+      if (host.includes("wikipedia.org") && !/\/zh/.test(hit.url)) return false;
+    } catch {
+      // ignore bad url
+    }
+  }
+
+  const cjk = (text.match(/[\u4e00-\u9fff]/g) || []).length;
+  const latin = (text.match(/[A-Za-z]/g) || []).length;
+  if (cjk < 6) return false;
+  // 英文/多语主导 → 剔除
+  if (latin >= 24 && cjk / (cjk + latin) < 0.4) return false;
+  if (latin >= 40 && cjk < 12) return false;
+  return true;
+}
+
+export function filterChineseFacingSearchHits<T extends {
+  title?: string;
+  snippet?: string;
+  url?: string;
+}>(hits: T[], limit?: number): T[] {
+  const kept = hits.filter((h) => isChineseFacingSearchHit(h));
+  return typeof limit === "number" ? kept.slice(0, limit) : kept;
+}
+
 /** 解析 Bing HTML 结果页（供单测） */
 export function parseBingHtml(html: string, limit = 5): WebSearchResult[] {
   const results: WebSearchResult[] = [];
@@ -299,18 +345,22 @@ export class WebSearchManager {
 
   async search(options: WebSearchOptions): Promise<WebSearchResult[]> {
     const tried: string[] = [];
+    const want = options.limit ?? 5;
+    // 多取再滤中文，避免英文垃圾占满额度后报告空窗
+    const fetchLimit = Math.min(20, Math.max(want * 3, want + 4));
     for (const provider of this.providers) {
       tried.push(provider.name);
       try {
-        const results = await provider.search(options);
-        if (results.length > 0) {
+        const results = await provider.search({ ...options, limit: fetchLimit });
+        const filtered = filterChineseFacingSearchHits(results, want);
+        if (filtered.length > 0) {
           this.lastAttempt = {
             query: options.query,
             tried,
             hitProvider: provider.name,
             at: new Date().toISOString(),
           };
-          return results;
+          return filtered;
         }
       } catch {
         continue;

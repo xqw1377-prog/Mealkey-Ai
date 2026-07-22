@@ -63,26 +63,35 @@ export default function StorePage() {
 
       <div className="relative mx-auto max-w-5xl px-5 pb-16 pt-8 md:px-8">
         <header className="flex flex-wrap items-center justify-between gap-4">
-          <Link href="/" className="inline-flex items-center gap-2">
+          <Link href="/store" className="inline-flex items-center gap-2">
             <MKBrand size="default" />
           </Link>
           <nav className="flex items-center gap-4 text-[13px] text-[#5f6368]">
-            <Link href="/developers" className="hover:text-[#171717]">
-              开发者
-            </Link>
-            <Link href="/dashboard" className="hover:text-[#171717]">
-              经营台
+            <span className="hidden text-[11px] tracking-[0.08em] text-[#66735E] sm:inline">
+              能力市场 · 营销面
+            </span>
+            <Link href="/login" className="hover:text-[#171717]">
+              登录经营台
             </Link>
           </nav>
         </header>
 
         <section className="mt-12 max-w-xl">
           <p className="text-[12px] font-semibold tracking-[0.14em] text-[#66735E]">AGENT STORE</p>
-          <h1 className="mt-3 font-display text-[34px] font-semibold tracking-[-0.04em] text-[#171717] md:text-[40px]">
-            MealKey Store
+          <h1 className="mt-2 font-display text-[28px] font-semibold tracking-[-0.04em] text-[#171717] md:text-[34px]">
+            餐饮经营能力市场
           </h1>
           <p className="mt-3 text-[15px] leading-7 text-[#3a3d41]">
-            发现并安装餐饮经营 Agent。安装即授权进 OS，不是下载安装包。
+            浏览可安装的 Agent 能力。安装授权发生在经营台；开发与提审请走独立的开发者门户。
+          </p>
+          <p className="mt-3 text-[12px] text-[#6f747b]">
+            <Link href="/developers" className="underline-offset-2 hover:underline">
+              前往开发者门户
+            </Link>
+            <span className="mx-2 text-[rgba(24,24,23,0.2)]">·</span>
+            <Link href="/" className="underline-offset-2 hover:underline">
+              返回老板入口
+            </Link>
           </p>
         </section>
 

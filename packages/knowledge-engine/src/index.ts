@@ -70,6 +70,8 @@ export {
   resetWebSearch,
   parseDuckDuckGoHtml,
   parseBingHtml,
+  isChineseFacingSearchHit,
+  filterChineseFacingSearchHits,
 } from "./web-search";
 export type { WebSearchResult, WebSearchOptions } from "./web-search";
 

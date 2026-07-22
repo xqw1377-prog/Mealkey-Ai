@@ -15,14 +15,32 @@
 import type { ResearchCollection } from "./collector";
 import type { ResearchScope } from "./scope";
 
+function isChineseFacingHit(hit: {
+  title?: string;
+  snippet?: string;
+  url?: string;
+}): boolean {
+  const text = `${hit.title || ""} ${hit.snippet || ""}`.replace(/\s+/g, " ").trim();
+  if (text.length < 8) return false;
+  const cjk = (text.match(/[\u4e00-\u9fff]/g) || []).length;
+  const latin = (text.match(/[A-Za-z]/g) || []).length;
+  if (cjk < 6) return false;
+  if (latin >= 24 && cjk / (cjk + latin) < 0.4) return false;
+  if (latin >= 40 && cjk < 12) return false;
+  return true;
+}
+
 function srcList(
   hits: Array<{ title: string; url: string; snippet: string; source: string }>,
   max = 5,
 ): string[] {
-  return hits.slice(0, max).map((h, i) => {
-    const link = h.url ? `[${h.title || "来源"}](${h.url})` : h.title || "来源";
-    return `${i + 1}. ${link} — ${h.snippet.slice(0, 120)}${h.snippet.length > 120 ? "…" : ""}（${h.source}）`;
-  });
+  return hits
+    .filter((h) => isChineseFacingHit(h))
+    .slice(0, max)
+    .map((h, i) => {
+      const link = h.url ? `[${h.title || "来源"}](${h.url})` : h.title || "来源";
+      return `${i + 1}. ${link} — ${h.snippet.slice(0, 120)}${h.snippet.length > 120 ? "…" : ""}（${h.source}）`;
+    });
 }
 
 export function composePositioningResearchReport(

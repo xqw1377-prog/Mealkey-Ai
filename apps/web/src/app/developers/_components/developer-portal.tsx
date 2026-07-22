@@ -71,7 +71,7 @@ export function DeveloperShell({
               href="/"
               className="ml-1 hidden rounded-[10px] px-2.5 py-1.5 text-[13px] text-[#6f747b] underline-offset-2 hover:underline sm:inline"
             >
-              {PRODUCT_BRAND.nameZh} 主站
+              老板入口
             </Link>
           </nav>
         </div>

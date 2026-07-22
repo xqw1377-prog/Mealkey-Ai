@@ -7,7 +7,7 @@ generator client {
 // 开发环境用 SQLite，生产环境用 PostgreSQL
 // 通过 DATABASE_URL 控制：file:./dev.db 或 postgresql://...
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -136,10 +136,203 @@ model Project {
   reports       Report[]
   conversations Conversation[]
   assets        Asset[]
+  restaurant    Restaurant?
 
   @@index([ownerId])
   @@index([status])
   @@index([stage])
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Restaurant Brain V1 — 规范化实体（事实 Fact ≠ 判断 Decision）
+// 权威：docs/MEALKEY_RESTAURANT_BRAIN_PRISMA_ENTITY_V1.md
+// JSON 字段以 String 存（与全库一致），API 层解析
+// ═══════════════════════════════════════════════════════════════
+
+model Restaurant {
+  id        String   @id @default(cuid())
+  projectId String   @unique
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  ownerId   String
+  name      String
+  status    String   @default("active") // active | archived | paused
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  profile    RestaurantProfile?
+  brand      BrandProfile?
+  business   BusinessProfile?
+  capability CapabilityProfile?
+  founder    FounderProfile?
+  decisions  DecisionRecord[]
+  actions    ActionRecord[]
+  learnings  BrainLearning[]
+  events     BrainEvent[]
+  evolution  EvolutionState?
+
+  @@index([ownerId])
+  @@index([status])
+}
+
+model RestaurantProfile {
+  id           String     @id @default(cuid())
+  restaurantId String     @unique
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  category     String     @default("")
+  stage        String     @default("unknown") // idea|opening|growth|mature|expansion|unknown
+  city         String?
+  storeCount   Int        @default(1)
+  priceRange   String?
+  description  String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+model BrandProfile {
+  id                   String     @id @default(cuid())
+  restaurantId         String     @unique
+  restaurant           Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  positioning          String?
+  targetCustomer       String?
+  consumptionScene     String?
+  brandPromise         String?
+  competitiveAdvantage String?
+  brandRisk            String?
+  confidence           Float      @default(0.5)
+  updatedAt            DateTime   @updatedAt
+}
+
+model BusinessProfile {
+  id             String     @id @default(cuid())
+  restaurantId   String     @unique
+  restaurant     Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  monthlyRevenue Float?
+  grossMargin    Float?
+  netMargin      Float?
+  averageTicket  Float?
+  dailyOrders    Int?
+  laborRatio     Float?
+  rentRatio      Float?
+  businessModel  String?
+  updatedAt      DateTime   @updatedAt
+}
+
+model CapabilityProfile {
+  id                String     @id @default(cuid())
+  restaurantId      String     @unique
+  restaurant        Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  strategyScore     Int        @default(0)
+  marketScore       Int        @default(0)
+  productScore      Int        @default(0)
+  financeScore      Int        @default(0)
+  operationScore    Int        @default(0)
+  organizationScore Int        @default(0)
+  overallScore      Int        @default(0)
+  confidence        Float      @default(0)
+  updatedAt         DateTime   @updatedAt
+}
+
+model FounderProfile {
+  id              String     @id @default(cuid())
+  restaurantId    String     @unique
+  restaurant      Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  experience      String?
+  decisionStyle   String?
+  riskPreference  String?
+  strengthsJson   String? // JSON string[]
+  weaknessesJson  String?
+  blindSpotsJson  String?
+  growthTrendJson String?
+  updatedAt       DateTime   @updatedAt
+}
+
+model DecisionRecord {
+  id                  String     @id @default(cuid())
+  restaurantId        String
+  restaurant          Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  mkDecisionId        String?    @unique // 可选挂接 Prisma Decision
+  type                String     @default("general")
+  question            String
+  contextJson         String? // 当时事实快照（非答案）
+  optionsJson         String?
+  chosenOption        String?
+  aiAssessmentJson    String?
+  councilResultJson   String?
+  expectedOutcomeJson String?
+  actualOutcomeJson   String?
+  learningGenerated   Boolean    @default(false)
+  status              String     @default("open")
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+
+  actions ActionRecord[]
+
+  @@index([restaurantId, createdAt])
+  @@index([type])
+  @@index([status])
+}
+
+model ActionRecord {
+  id           String          @id @default(cuid())
+  restaurantId String
+  restaurant   Restaurant      @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  decisionId   String?
+  decision     DecisionRecord? @relation(fields: [decisionId], references: [id], onDelete: SetNull)
+  action       String
+  owner        String?
+  deadline     DateTime?
+  status       String          @default("pending")
+  resultJson   String?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  @@index([restaurantId, createdAt])
+  @@index([decisionId])
+  @@index([status])
+}
+
+/// Brain 学习记忆（与认知内核 LearningRecord 区分）
+model BrainLearning {
+  id           String     @id @default(cuid())
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  sourceType   String
+  sourceId     String?
+  pattern      String
+  insight      String
+  confidence   Float      @default(0.5)
+  appliedCount Int        @default(0)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@index([restaurantId, createdAt])
+  @@index([pattern])
+}
+
+model BrainEvent {
+  id           String     @id @default(cuid())
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  type         String
+  payloadJson  String
+  source       String     @default("system")
+  createdAt    DateTime   @default(now())
+
+  @@index([restaurantId, createdAt])
+  @@index([type, createdAt])
+}
+
+model EvolutionState {
+  id                 String     @id @default(cuid())
+  restaurantId       String     @unique
+  restaurant         Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  understandingScore Int        @default(0)
+  dataCompleteness   Int        @default(0)
+  decisionCount      Int        @default(0)
+  learningCount      Int        @default(0)
+  actionCount        Int        @default(0)
+  lastEvolutionAt    DateTime?
+  updatedAt          DateTime   @updatedAt
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -391,6 +584,7 @@ model AgentRun {
   @@index([ownerId])
   @@index([projectId])
   @@index([missionId])
+  @@index([conversationId])
   @@index([status])
 }
 
@@ -981,6 +1175,7 @@ model Conversation {
 
   @@index([userId])
   @@index([projectId])
+  @@index([agentType])
 }
 
 // ─── 消息 ───
@@ -998,6 +1193,7 @@ model Message {
   createdAt      DateTime     @default(now())
 
   @@index([conversationId])
+  @@index([role])
 }
 
 model AssetCategory {
@@ -1129,4 +1325,110 @@ model StrategyDocument {
 
   @@index([ownerId])
   @@index([type])
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Developer Portal / Partner Agent（与 schema.prisma 对齐）
+// 真源：docs/MEALKEY_DEVELOPER_PORTAL_IA_DATA_MODEL_V1.md
+// ═══════════════════════════════════════════════════════════════
+
+model DeveloperAccount {
+  id           String    @id @default(cuid())
+  userId       String?
+  type         String // individual | company | partner_org
+  displayName  String
+  legalName    String?
+  website      String?
+  contactEmail String
+  direction    String? // 产品方向自述
+  status       String    @default("applied") // applied | active | suspended | rejected
+  verifiedAt   DateTime?
+  metadata     String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  applications PartnerAgentApplication[]
+
+  @@index([contactEmail, createdAt])
+  @@index([status, createdAt])
+  @@index([userId])
+}
+
+model PartnerAgentApplication {
+  id                 String           @id @default(cuid())
+  developerAccountId String
+  developerAccount   DeveloperAccount @relation(fields: [developerAccountId], references: [id], onDelete: Cascade)
+  agentId            String           @unique // partner.<org>.<slug>
+  name               String
+  category           String
+  capabilityIds      String           @default("[]") // JSON string[]
+  runtimeMode        String           @default("cloud_https")
+  endpointUrl        String?
+  webhookUrl         String?
+  clientSecretHash   String?
+  lifecycleStatus    String           @default("draft")
+  currentVersionId   String?
+  listingId          String?
+  agentProductId     String?
+  qualityScore       Float?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+
+  versions    PartnerAgentDraftVersion[]
+  sandboxRuns PartnerSandboxRun[]
+  reviewTasks PartnerReviewTask[]
+
+  @@index([developerAccountId, createdAt])
+  @@index([lifecycleStatus, createdAt])
+}
+
+model PartnerAgentDraftVersion {
+  id               String                  @id @default(cuid())
+  applicationId    String
+  application      PartnerAgentApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  version          String
+  manifestJson     String
+  skillPackageJson String                  @default("{}")
+  releaseChannel   String                  @default("draft") // draft | sandbox | review | live | yanked
+  demoUrl          String?
+  privacyNotes     String?
+  pricingJson      String?
+  createdAt        DateTime                @default(now())
+
+  @@unique([applicationId, version])
+  @@index([applicationId, createdAt])
+}
+
+model PartnerSandboxRun {
+  id                String                  @id @default(cuid())
+  applicationId     String
+  application       PartnerAgentApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  versionId         String
+  fixtureId         String
+  status            String // running | passed | failed
+  checksJson        String                  @default("{}")
+  qualityReportJson String?
+  logText           String?
+  invokeId          String?
+  startedAt         DateTime                @default(now())
+  finishedAt        DateTime?
+
+  @@index([applicationId, startedAt])
+  @@index([status, startedAt])
+}
+
+model PartnerReviewTask {
+  id             String                  @id @default(cuid())
+  applicationId  String
+  application    PartnerAgentApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  versionId      String
+  status         String                  @default("queued") // queued | in_review | changes_requested | approved | rejected
+  checklistJson  String                  @default("{}")
+  reviewerUserId String?
+  decisionNote   String?
+  submittedAt    DateTime                @default(now())
+  resolvedAt     DateTime?
+
+  @@index([status, submittedAt])
+  @@index([applicationId, submittedAt])
 }

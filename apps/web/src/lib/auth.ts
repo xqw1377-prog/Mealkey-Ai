@@ -25,7 +25,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           10,
           15 * 60 * 1000,
         );
-        if (!emailLimited.ok) return null;
+        // #region debug-point login-failure-email-limit
+        if (!emailLimited.ok && emailLimited.backend !== "fail-closed") return null;
+        // #endregion
 
         const user = await prisma.user.findUnique({
           where: { email },

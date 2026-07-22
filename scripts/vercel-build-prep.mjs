@@ -24,9 +24,8 @@ fs.copyFileSync(schema, schemaSqlite);
 fs.copyFileSync(schemaPg, schema);
 
 // Remove .env files that override Vercel's environment variables
-const webEnv = "apps/web/.env";
-const webEnvLocal = "apps/web/.env.local";
-for (const f of [webEnv, webEnvLocal]) {
+const envFiles = [".env", ".env.local", "apps/web/.env", "apps/web/.env.local"];
+for (const f of envFiles) {
   if (fs.existsSync(f)) {
     fs.unlinkSync(f);
     console.log(`[vercel-build-prep] Removed ${f}`);

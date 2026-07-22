@@ -1,7 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
-  "installCommand": "npm ci && node -e \"const fs=require('fs'),p='apps/web/prisma';if(fs.existsSync(p+'/schema.postgresql.prisma')){fs.copyFileSync(p+'/schema.prisma',p+'/schema.sqlite.prisma');fs.copyFileSync(p+'/schema.postgresql.prisma',p+'/schema.prisma');}\" && npm --workspace @mealkey/web run prisma:generate && npm --workspace @mealkey/web exec -- prisma migrate deploy",
+  "installCommand": "npm ci && node scripts/vercel-build-prep.mjs",
   "buildCommand": "npx turbo build --force",
   "outputDirectory": "apps/web/.next",
   "crons": [

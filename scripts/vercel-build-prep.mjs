@@ -38,7 +38,7 @@ console.log(`[vercel-build-prep] DATABASE_URL starts with: ${dbUrl?.slice(0, 15)
 console.log("[vercel-build-prep] Running prisma generate...");
 execSync("npx prisma generate", { cwd: "apps/web", stdio: "inherit" });
 
-console.log("[vercel-build-prep] Running prisma migrate deploy...");
-execSync("npx prisma migrate deploy", { cwd: "apps/web", stdio: "inherit" });
+// Skip migrate deploy during build - run it separately after deployment
+console.log("[vercel-build-prep] Skipping prisma migrate deploy (run separately after deploy)");
 
 console.log("[vercel-build-prep] Done!");

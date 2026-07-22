@@ -38,7 +38,7 @@ console.log(`[vercel-build-prep] DATABASE_URL starts with: ${dbUrl?.slice(0, 15)
 console.log("[vercel-build-prep] Running prisma generate...");
 execSync("npx prisma generate", { cwd: "apps/web", stdio: "inherit" });
 
-console.log("[vercel-build-prep] Running prisma db push...");
-execSync("npx prisma db push --accept-data-loss", { cwd: "apps/web", stdio: "inherit" });
+// Skip db push during build - Supabase may be unreachable from build env
+console.log("[vercel-build-prep] Skipping db push (run manually via Supabase SQL Editor)");
 
 console.log("[vercel-build-prep] Done!");

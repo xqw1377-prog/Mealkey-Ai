@@ -1,0 +1,19 @@
+.finding {
+  padding: 18rpx 0;
+  border-bottom: 1rpx solid var(--mk-line);
+}
+
+.finding:last-child {
+  border-bottom: none;
+}
+
+.finding-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  margin-bottom: 6rpx;
+}
+
+.finding-body {
+  font-size: 26rpx;
+  color: var(--mk-ink);
+}

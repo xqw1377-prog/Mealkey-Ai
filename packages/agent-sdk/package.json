@@ -17,6 +17,11 @@
       "import": "./src/platform/index.ts",
       "default": "./src/platform/index.ts"
     },
+    "./mini-shell": {
+      "types": "./src/mini-shell/index.ts",
+      "import": "./src/mini-shell/index.ts",
+      "default": "./src/mini-shell/index.ts"
+    },
     "./*": {
       "types": "./src/*.ts",
       "import": "./src/*.ts",

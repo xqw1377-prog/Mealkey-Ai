@@ -1,0 +1,21 @@
+<view class="mk-page">
+  <view class="mk-brand">餐启 · MealKey Agent</view>
+  <view class="mk-title">餐饮 AI 超级入口</view>
+  <view class="mk-sub">一个小程序，挂载可插拔经营能力。先体验价值，再进入经营大脑。</view>
+
+  <view class="mk-card" wx:if="{{featured}}">
+    <view class="mk-card-title">{{featured.title}}</view>
+    <view class="mk-card-sub">{{featured.subtitle}}</view>
+    <view class="mk-tags">
+      <text class="mk-tag" wx:for="{{featured.tags}}" wx:key="*this">{{item}}</text>
+    </view>
+    <button class="mk-btn" bindtap="onStartFeatured">免费 AI 餐厅体检</button>
+    <view class="mk-meta">约 {{featured.firstValueMinutes}} 分钟 · 消耗 {{featured.costPoints}} 燃料</view>
+  </view>
+
+  <view class="mk-card">
+    <view class="mk-card-title">更多能力</view>
+    <view class="mk-card-sub">经审核后挂载到本 Shell，共享同一餐厅档案。</view>
+    <button class="mk-btn mk-btn-ghost" bindtap="goCapabilities">查看我的能力</button>
+  </view>
+</view>

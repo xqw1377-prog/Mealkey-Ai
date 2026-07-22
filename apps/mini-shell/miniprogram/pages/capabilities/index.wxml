@@ -1,0 +1,20 @@
+<view class="mk-page">
+  <view class="mk-title">我的能力</view>
+  <view class="mk-sub">安装的是能力，不是又一个小程序。</view>
+
+  <view
+    class="mk-card"
+    wx:for="{{items}}"
+    wx:key="agentId"
+    data-path="{{item.entryPath}}"
+    bindtap="onOpen"
+  >
+    <view class="mk-card-title">{{item.title}}</view>
+    <view class="mk-card-sub">{{item.subtitle}}</view>
+    <view class="mk-meta">{{item.costPoints}} 燃料 / 次 · {{item.firstValueMinutes}} 分钟起</view>
+  </view>
+
+  <view class="mk-card" wx:if="{{!items.length}}">
+    <view class="mk-card-sub">暂无已挂载能力。请检查 BFF 或使用离线首发体检。</view>
+  </view>
+</view>

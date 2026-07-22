@@ -1,0 +1,39 @@
+{
+  "pages": [
+    "pages/home/index",
+    "pages/capabilities/index",
+    "pages/me/index",
+    "pages/plugins/restaurant-diagnosis/index",
+    "pages/bind-phone/index"
+  ],
+  "window": {
+    "navigationBarTitleText": "餐启 Agent",
+    "navigationBarBackgroundColor": "#f6f3ed",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#f6f3ed",
+    "backgroundTextStyle": "dark"
+  },
+  "tabBar": {
+    "color": "#6b7260",
+    "selectedColor": "#3d4634",
+    "backgroundColor": "#f6f3ed",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/home/index",
+        "text": "发现"
+      },
+      {
+        "pagePath": "pages/capabilities/index",
+        "text": "我的能力"
+      },
+      {
+        "pagePath": "pages/me/index",
+        "text": "我的"
+      }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

@@ -19,6 +19,7 @@
 | 7 天做出第一个 | `MEALKEY_AGENT_DEVELOPER_ONBOARDING_7DAY_V1.md` |
 | 抄样板 | `M_OPS_AGENT_AS_REFERENCE_IMPLEMENTATION_V1.md` · 仓 `M-OPS-Agent` |
 | 上架与分成（产品） | `MEALKEY_AGENT_MARKETPLACE_PRD_V1.md` · `MEALKEY_DEVELOPER_PORTAL_V1.md` |
+| 微信获客 / 1 Shell+N Plugin | `MEALKEY_AGENT_MINI_PROGRAM_PLATFORM_V1.md` · `MEALKEY_MINI_PROGRAM_SHELL_AND_PLUGIN_RUNTIME_V1.md`（ShellContext · Plugin UI · 模式 1/2） |
 
 ```text
 宪法（规则）     Protocol

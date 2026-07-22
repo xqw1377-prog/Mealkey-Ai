@@ -1,6 +1,6 @@
 # MealKey / Founder OS — 文档权威（AUTHORITY）
 
-> 生效日：2026-07-17（…；**核心产品闭环最终冻结 + MVP 90天路线：2026-07-21**）  
+> 生效日：2026-07-17（…；**核心产品闭环最终冻结 + MVP 90天路线：2026-07-21**；**Agent Mini Program 平台：2026-07-22**）  
 > 状态：**唯一入口**。改产品路径或交付语义前先读本文件。  
 > 原则：老板 UX 与签字门禁以代码 + 下列权威文档为准；其余 `docs/M_PNT_*` 多为设计草稿或归档，**不得覆盖**本表。  
 > **当前主线（2026-07-21 起）：** 不再扩能力面；只跑通「一家餐厅老板每天打开」第一条飞轮（见 L0 战略收口）。
@@ -44,6 +44,8 @@
 | **L0 Agent SDK** | `docs/MEALKEY_AGENT_SDK_V1.md` · `@mealkey/agent-sdk/platform` | **开发者骨架**：createAgentClient · Context 租用 · Ingress · OAuth/安装 · Handoff · Billing 钩子 · Sandbox | **否** — SDK 禁嵌垂直 Agent；禁直连 Brain/Prisma |
 | **L0 Agent 7 日上手** | `docs/MEALKEY_AGENT_DEVELOPER_ONBOARDING_7DAY_V1.md` | Day0–7：Hello Context → Skill → Ingress → Manifest → UI → Handoff → 审核包 | 可加深样例；不得改外接硬闸门 |
 | **L0 Agent UI 框架** | `docs/MEALKEY_AGENT_UI_FRAMEWORK_V1.md` | **规范在 OS、实现外置**：双表面 · 五段旅程 · 视觉禁令 · Handoff；Core 只做今日/决策室投影 | **否** — 禁止在 apps/web 新建垂直 Agent 业务站 |
+| **L0 Agent Mini Program 平台** | `docs/MEALKEY_AGENT_MINI_PROGRAM_PLATFORM_V1.md` | **微信生态总架构**：1 Shell + N Plugin · 三层入口 · 身份/燃料/裂变 · 模式 1 Plugin / 模式 2 伙伴小程序 · Brain 中枢 | **否** — 官方禁一 Agent 一小程序；禁 Shell 拍板/第二 Brain；禁第二积分宇宙；Live 服从 MVP 停扩 |
+| **L0 Mini Shell · Plugin Runtime** | `docs/MEALKEY_MINI_PROGRAM_SHELL_AND_PLUGIN_RUNTIME_V1.md` | **Shell 产品架构 · PluginHost · ShellContext · UI 事件 · 生命周期 · 模式 1/2 运行规范** | **否** — Plugin 零 Prisma；静态 UI 包审核；共享 Brain；动态任意脚本禁止 |
 | **L0 Agent Protocol** | `docs/MEALKEY_AGENT_PROTOCOL_V1.md` | **生态壁垒/能力标准化**：五层模型 · Capability Registry · Decision Skill · Insight L1–L5 · 五维质量 · Memory 隔离 · 能力市场 | **否** — 禁直连库/私有永久记忆；默认≤L3；禁无限自造能力；Store 服从 MVP 停扩 |
 | **L0 Agent Marketplace PRD** | `docs/MEALKEY_AGENT_MARKETPLACE_PRD_V1.md` | **开放平台产品**：`mealkey.cn` Store · 安装授权 · 分成 · 申请上架 | **否** — 安装≠下载包；API 以 External Interface 为准；禁伪 `/agent/run` 平行契约 |
 | **L0 Developer Portal** | `docs/MEALKEY_DEVELOPER_PORTAL_V1.md` | **开发者操作系统**：`developers.mealkey.cn` · 7 日路径 · Console 四步 · 三类用户 · P0–P2 | **否** — 停扩协议；文档投影不得分叉；管理员审核在 platform admin |
@@ -120,6 +122,8 @@
 13ab. **Agent Architecture Principle V1 已冻结**（2026-07-21）：MealKey 不开发功能、定义能力标准；Agent 独立创造能力经协议进大脑；Core/Agent/UI 三边界；四席留 Core。真源 `MEALKEY_AGENT_ARCHITECTURE_PRINCIPLE_V1.md`。  
 13ac. **Agent Platform Architecture V1.1 已冻结**（2026-07-21）：四基建；Lifecycle；Runtime 五件套；Context Manager；Orchestra；四独立。真源 `MEALKEY_AGENT_PLATFORM_ARCHITECTURE_V1.md`。  
 13ad. **Agent 外接硬闸门**（2026-07-21）：**MealKey 仓库禁止新增任何 Agent**；接口 `MEALKEY_AGENT_EXTERNAL_INTERFACE_V1.md`；UI 框架 `MEALKEY_AGENT_UI_FRAMEWORK_V1.md`（实现外置）。  
+13ad2. **Agent Mini Program 平台 V1.1 已冻结**（2026-07-22）：**不是 100 个小程序，而是 1 个 Mini Shell + ~100 Plugin**；Restaurant Brain 为共享长期资产；三层=官方 Shell / Marketplace / 伙伴小程序；模式 1 Plugin（推荐）· 模式 2 伙伴独立小程序经 Gateway；身份 Guest→Bound→Member；燃料=经营点；有效用户裂变示意双边 500、≤两级。真源 `MEALKEY_AGENT_MINI_PROGRAM_PLATFORM_V1.md`。  
+13ad3. **Mini Shell · Agent Plugin Runtime V1 已冻结**（2026-07-22）：Shell 子系统（Auth/Binder/Fuel/Invite/Catalog/PluginHost/Handoff）；`ShellContextV1` · `PluginUiEventV1` · 生命周期；UI=原生页/受控 web-view/组件片段；Gateway-only；首发 Plugin=餐厅体检。真源 `MEALKEY_MINI_PROGRAM_SHELL_AND_PLUGIN_RUNTIME_V1.md`。**S1/S2 骨架已落库：** `apps/mini-shell` · `@mealkey/agent-sdk/mini-shell` · `/api/v1/mini-shell/*`；S3+（真微信登录/经营点账本/裂变/Marketplace）后置，服从 MVP 停扩。  
 13ae. **MealKey Agent SDK V1 已冻结**（2026-07-21）：`@mealkey/agent-sdk/platform`。真源 `MEALKEY_AGENT_SDK_V1.md`。  
 13af. **Agent Gateway Host P0**（2026-07-21）：`/api/v1/gateway/*`；侧车 `profile.agentGatewayIngress`。  
 13ag–13ah. **外置诊断落地**后清理（2026-07-21）：独立仓 `C:\Users\xqw13\M-OPS-Agent`；Core 删除 `packages/m-ops-diag`、`mealkey-agents/*`、进程内 bridge/router；产品文档迁至外置仓 `docs/`；MealKey 仅留 `M_OPS_DIAG_EXTERNAL_POINTER_V1.md`。  

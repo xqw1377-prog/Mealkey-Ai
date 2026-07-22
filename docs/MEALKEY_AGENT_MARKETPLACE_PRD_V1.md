@@ -12,6 +12,7 @@
 > - `MEALKEY_DEVELOPER_PORTAL_V1.md` — 开发者门户 IA · Docs · Sandbox · Console  
 > - `MEALKEY_AGENT_SDK_V1.md` · `MEALKEY_AGENT_DEVELOPER_ONBOARDING_7DAY_V1.md`  
 > - `MEALKEY_AGENT_UI_FRAMEWORK_V1.md` — Agent UI 规范（实现外置）  
+> - `MEALKEY_AGENT_MINI_PROGRAM_PLATFORM_V1.md` — 微信 Hub 获客 · 身份/燃料/裂变 · 三 Manifest  
 > - `M_OPS_AGENT_AS_REFERENCE_IMPLEMENTATION_V1.md` — 第一个生态样板  
 > **冲突裁决：** Store/安装/分成对外叙述以本文为准；开发者机场 IA 以 Developer Portal 为准；技术契约以 Protocol + External Interface 为准；**禁止**用「给 Agent 塞任意 JSON 就跑」覆盖 Gateway 模型。
 

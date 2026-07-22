@@ -1,0 +1,9 @@
+{
+  "desc": "MealKey Mini Shell",
+  "rules": [
+    {
+      "action": "allow",
+      "page": "*"
+    }
+  ]
+}

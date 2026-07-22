@@ -4,7 +4,7 @@
 > **状态：正式冻结（Freeze）** — **规范输出；实现外置**  
 > **日期：** 2026-07-21  
 > **权威挂载：** `docs/AUTHORITY.md` L0  
-> **配套：** `MEALKEY_AGENT_EXTERNAL_INTERFACE_V1.md` · `MEALKEY_AGENT_PROTOCOL_V1.md` · `MOBILE_THREE_EASY_IA_V1.md` · 外置仓 `M-OPS-Agent` 诊断 UX（见 `M_OPS_DIAG_EXTERNAL_POINTER_V1.md`）  
+> **配套：** `MEALKEY_AGENT_EXTERNAL_INTERFACE_V1.md` · `MEALKEY_AGENT_PROTOCOL_V1.md` · `MOBILE_THREE_EASY_IA_V1.md` · `MEALKEY_AGENT_MINI_PROGRAM_PLATFORM_V1.md`（获客 Hub） · 外置仓 `M-OPS-Agent` 诊断 UX（见 `M_OPS_DIAG_EXTERNAL_POINTER_V1.md`）  
 > **一句话：** MealKey 输出 Agent 的 **UI 与视觉级交互框架**；**页面实现不在 MealKey 仓内新增**，由各 Agent 独立产品落地。  
 
 ---
@@ -22,21 +22,26 @@
 
 ---
 
-## 1. 双表面模型
+## 1. 三表面模型（获客层 + 双表面）
 
 ```text
-┌──────────────── Agent Surface（外置）────────────────┐
-│  能力转化 · First Moment · 专业工作流 · 报告 · 支付   │
-│  例：经营诊断五页旅程（外置 M-OPS-Agent UX）         │
-└──────────────────────────┬───────────────────────────┘
+┌──────── Acquisition Surface（微信 Hub · 见 Mini Program V1）──┐
+│  发现工具 · 首次体验 · 微信身份 · 燃料 · 升级经营大脑           │
+└──────────────────────────┬───────────────────────────────────┘
+                           │ Slot 打开 / 深链
+┌──────────────── Agent Surface（外置 / Hub 内页）──────────────┐
+│  能力转化 · First Moment · 专业工作流 · 报告 · 支付           │
+│  例：经营体检旅程（外置 M-OPS-Agent UX 或 Hub Slot）           │
+└──────────────────────────┬───────────────────────────────────┘
                            │ SSO / 深链 / Ingress
-┌──────────────── OS Surface（MealKey）────────────────┐
-│  今日：Signal 卡 · 决策室：议题 · 执行：任务         │
-│  禁止在 OS 内复制整套 Agent 工作流                    │
-└──────────────────────────────────────────────────────┘
+┌──────────────── OS Surface（MealKey）────────────────────────┐
+│  今日：Signal 卡 · 决策室：议题 · 执行：任务                   │
+│  禁止在 OS 内复制整套 Agent 工作流                            │
+└──────────────────────────────────────────────────────────────┘
 ```
 
-用户可从 OS「安装的能力」跳进 Agent Surface；Agent 产出经 Ingress 回到 OS。
+用户可从微信 Hub 或 OS「安装的能力」进入 Agent Surface；Agent 产出经 Ingress 回到 OS。  
+获客与插件运行真源：`MEALKEY_AGENT_MINI_PROGRAM_PLATFORM_V1.md` · `MEALKEY_MINI_PROGRAM_SHELL_AND_PLUGIN_RUNTIME_V1.md`（**1 Shell + N Plugin**；官方禁止一 Agent 一小程序）。
 
 ---
 
@@ -172,3 +177,4 @@ Token 短时委托；Agent 不得持久化 MealKey refresh token 到不安全存
 | 版本 | 日期 | 说明 |
 |------|------|------|
 | V1.0 | 2026-07-21 | 双表面 · 五段旅程 · 视觉禁令 · 组件语义 · OS 跳转 · Core 禁建 Agent UI |
+| V1.0a | 2026-07-22 | 增补 Acquisition Surface（微信 Hub）；与 Mini Program 平台 V1 对齐 |

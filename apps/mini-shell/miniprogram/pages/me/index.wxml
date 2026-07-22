@@ -1,0 +1,26 @@
+<view class="mk-page">
+  <view class="mk-title">我的</view>
+  <view class="mk-sub">身份、燃料与经营大脑入口。</view>
+
+  <view class="mk-card">
+    <view class="mk-row">
+      <text class="mk-label">账户状态</text>
+      <text class="mk-value">{{statusLabel}}</text>
+    </view>
+    <view class="mk-row">
+      <text class="mk-label">燃料余额</text>
+      <text class="mk-value">{{fuelBalance}}</text>
+    </view>
+    <view class="mk-row">
+      <text class="mk-label">当前餐厅</text>
+      <text class="mk-value">{{restaurantName}}</text>
+    </view>
+  </view>
+
+  <view class="mk-card">
+    <button class="mk-btn" bindtap="onHandoff">进入 MealKey 经营大脑</button>
+    <view class="mk-meta">持续跟踪 · 日扫 · 决策室在经营大脑完成</view>
+    <button class="mk-btn mk-btn-ghost" style="margin-top: 16rpx" bindtap="onBindPhone">保存档案（绑定手机）</button>
+    <button class="mk-btn mk-btn-ghost" style="margin-top: 16rpx" bindtap="onInvite">经营合伙人（邀请）</button>
+  </view>
+</view>

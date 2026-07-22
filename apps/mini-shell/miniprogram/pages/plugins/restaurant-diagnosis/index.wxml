@@ -1,0 +1,40 @@
+<view class="mk-page">
+  <block wx:if="{{step === 'intake'}}">
+    <view class="mk-brand">首发能力 · Plugin</view>
+    <view class="mk-title">餐厅经营体检系统</view>
+    <view class="mk-sub">先让我认识你的店。约 3 分钟生成可关注的发现——拍板留在经营大脑。</view>
+
+    <view class="mk-card">
+      <view class="mk-field-label">餐厅名称</view>
+      <input class="mk-input" placeholder="例如：湘味小馆" value="{{name}}" bindinput="onName" />
+      <view class="mk-field-label">城市</view>
+      <input class="mk-input" placeholder="例如：长沙" value="{{city}}" bindinput="onCity" />
+      <view class="mk-field-label">品类</view>
+      <input class="mk-input" placeholder="例如：湘菜" value="{{category}}" bindinput="onCategory" />
+      <button class="mk-btn" loading="{{loading}}" bindtap="onRun">开始体检（100 燃料）</button>
+      <view class="mk-meta">访客可体验；保存报告需绑定手机</view>
+    </view>
+  </block>
+
+  <block wx:if="{{step === 'report'}}">
+    <view class="mk-brand">我的餐厅健康报告 · 预览 30%</view>
+    <view class="mk-title">{{restaurantName}}</view>
+    <view class="mk-sub">{{city}} · {{category}} · 定性档位：需关注</view>
+
+    <view class="mk-card">
+      <view class="mk-card-title">今日发现</view>
+      <view class="finding" wx:for="{{findings}}" wx:key="title">
+        <view class="finding-title">{{item.title}}</view>
+        <view class="finding-body">{{item.body}}</view>
+        <view class="mk-meta">{{item.evidence}}</view>
+      </view>
+    </view>
+
+    <view class="mk-card">
+      <view class="mk-card-title">解锁完整经营大脑</view>
+      <view class="mk-card-sub">每日扫描、客群与竞争变化、决策室拍板——不在小程序内完成。</view>
+      <button class="mk-btn" bindtap="onHandoff">进入 MealKey 经营大脑</button>
+      <button class="mk-btn mk-btn-ghost" style="margin-top: 16rpx" bindtap="onPersist">保存报告（绑定手机）</button>
+    </view>
+  </block>
+</view>

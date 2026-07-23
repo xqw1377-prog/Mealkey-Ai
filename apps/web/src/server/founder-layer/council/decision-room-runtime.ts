@@ -452,10 +452,11 @@ export async function generateCouncilOpinions(input: {
   }
 
   const provider = resolveLlmProvider();
-  const llmAdapter = tryCreateSharedLlmAdapter();
-  if (!llmAdapter || provider === "none") {
+  const llmOrNull = tryCreateSharedLlmAdapter();
+  if (!llmOrNull || provider === "none") {
     return { opinions: fallback, source: "heuristic" };
   }
+  const llm: NonNullable<typeof llmOrNull> = llmOrNull;
 
   const model = resolveLlmModel(provider);
   const llmOpinions = new Map<CouncilRoleId, CouncilOpinion>();
@@ -488,7 +489,7 @@ export async function generateCouncilOpinions(input: {
       calibrationHint +
       "\n\n## 输出要求\n只返回合法 JSON，不要 Markdown 围栏。必须包含完整的判断。";
 
-    const chatPromise = llmAdapter.chat({
+    const chatPromise = llm.chat({
       model,
       temperature: 0.4,
       maxTokens: 1500,

@@ -1,0 +1,14 @@
+# TheoryRule — 定位理论蒸馏后的可执行判断规则
+object_type: TheoryRule
+fields:
+  id: string
+  theory_source: enum[ries, trout, ye_maozhong]
+  name: string
+  principle: string
+  decision_question: string
+  applicable_context: list[string]
+  key_variables: list[string]
+  decision_rules: list[string]
+  anti_patterns: list[string]
+  output_implication: string
+  theory_view_tag: list[string]

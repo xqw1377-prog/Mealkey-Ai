@@ -1,0 +1,28 @@
+id: tr-ries-focus-principle
+theory_source: ries
+name: 聚焦法则
+principle: 品牌在心智中只能代表一个概念，多概念等于无概念
+decision_question: 这个品牌是否能用一个词或一句话被消费者定义？
+applicable_context:
+  - 品牌处于定位模糊期
+  - 同时覆盖多个品类或场景
+  - 品牌延伸计划中
+key_variables:
+  - 定位语对消费者的心智清晰度
+  - 品牌关联的核心概念数量
+  - 消费者自发转述时的一致性
+decision_rules:
+  - 如果消费者需要超过5个字才能说清品牌是做什么的，就不够聚焦
+  - 不应同时覆盖两个无强关联的消费场景
+  - 不应同时服务两个需求动机不同的核心客群
+  - 品牌延伸通常稀释品牌而非强化品牌
+anti_patterns:
+  - 「一站式」定位—通常意味着哪个都不精
+  - 同时强调「高端品质」和「极致性价比」
+  - 同一个品牌名同时做不同品类
+  - 为了扩大客群而模糊定位
+output_implication: 若违反聚焦法则，须在最终推荐中明确应放弃的概念
+theory_view_tag:
+  - ries
+  - focus
+  - brand_extension

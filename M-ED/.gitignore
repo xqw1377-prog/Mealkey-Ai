@@ -1,0 +1,56 @@
+# Dependencies
+node_modules/
+.pnp/
+.pnp.js
+
+# Build
+dist/
+.next/
+.turbo/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Prisma
+apps/web/src/generated/prisma/query_engine-windows.dll.node
+
+# Large traineddata files (Tesseract OCR)
+*.traineddata
+
+# Logs
+logs/
+*.log
+
+# Agent Python caches
+agents/**/__pycache__/
+agents/**/*.py[cod]
+agents/**/.pytest_cache/
+agents/**/.git/
+agents/**/*.egg-info/
+agents/**/.ruff_cache/
+agents/**/.coverage
+agents/**/htmlcov/
+agents/**/node_modules/
+
+# Temp
+temp_find.txt
+apps/web/prisma/dev.db
+apps/web/prisma/dev.db-journal

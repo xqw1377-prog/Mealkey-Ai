@@ -1,0 +1,26 @@
+id: pp-family-dining-brand
+name: 家庭聚餐型品牌定位
+pattern_type: strategy_pattern
+summary: 以家庭场景与情感价值为核心的餐饮品牌定位模式
+typical_context:
+  - 家庭消费占比较高
+  - 高频周末聚餐
+  - 情感价值强于极致专业性
+trigger_signals:
+  - 客群以家庭为主
+  - 周末高峰显著
+  - 复购依赖情感与习惯
+positioning_formula:
+  - 品类 + 家庭场景 + 情感价值
+success_reason: 场景清晰、复购稳定、心智易记忆
+failure_modes:
+  - 场景太泛
+  - 环境与体验支撑不足
+  - 儿童 / 家庭友好能力不成立
+recommended_usage: 家庭客流占比高、情感差异可被体验验证时
+not_recommended_when:
+  - 门店无法支撑家庭场景
+  - 产品与服务明显偏商务或单身社交
+theory_alignment:
+  - trout
+  - ye_maozhong

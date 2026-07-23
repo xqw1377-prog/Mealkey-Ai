@@ -1,0 +1,16 @@
+# CompetitorProfile — 竞品心智与位置画像
+object_type: CompetitorProfile
+fields:
+  id: string
+  brand_name: string
+  category: string
+  city: string
+  main_positioning: string
+  mental_keywords: list[string]
+  main_scene: string
+  target_customer: string
+  price_band: string
+  differentiation_basis: string
+  strengths: list[string]
+  weaknesses: list[string]
+  occupancy_strength: enum[weak, medium, strong]

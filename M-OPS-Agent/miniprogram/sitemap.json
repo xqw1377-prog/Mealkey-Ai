@@ -1,0 +1,10 @@
+{
+  "desc": "餐厅经营体检系统",
+  "rules": [
+    {
+      "action": "allow",
+      "page": "*",
+      "params": ["*"]
+    }
+  ]
+}

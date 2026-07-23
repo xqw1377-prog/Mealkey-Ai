@@ -1,0 +1,37 @@
+id: case-weidao-chongqing
+brand_name: 味道重庆（化名）
+category: 川菜/重庆菜
+city_context: 重庆
+market_stage: 红海
+project_stage: 品牌升级
+initial_problem: 重庆菜市场心智极度拥挤，几乎每个品牌都自称「正宗重庆味」，消费者评价标准只有"好不好吃"
+resource_condition: 已有8家门店，年营收3000万，创始人是重庆本地餐饮老兵
+competition_context: 竞品心智全部集中在「味道正宗」上，没有人讲场景、没有人讲客群、没有人做体验差异
+candidate_positions:
+  - 「重庆第一江湖菜」——自封
+  - 「重庆人的家庭食堂」——场景清晰，有复购逻辑
+  - 「游客必吃榜」——依赖旅游流量不稳定
+final_position: 「重庆人的家庭食堂」——绑定本地家庭日常消费场景，不跟游客流量
+why_choose: 竞品全部在做「正宗」「网红」「必吃」，没有人做本地日常——这是一个被忽视的场景空位；家庭客群复购率远高于游客
+why_not_others: 「第一」是自封且无法验证；「游客必吃」等于把命脉交给旅游周期
+differentiation_design: 菜单设计更偏向家庭用餐场景（适合2-4人的套餐组合）、价格带定在家庭日常可接受的区间（低于宴请高于快餐）
+execution_actions:
+  - 调低客单价至家庭日常消费区间（人均50-70）
+  - 套餐设计以2-3人家庭份量为主
+  - 不做网红营销，做社区口碑
+  - 周日推出家庭特惠套餐
+market_feedback: 首店在非旅游区的社区选址，6个月后复购率到达45%，远超重庆餐饮平均水平
+result_summary: 在红海品类中通过场景切割找到蓝海——不与所有人争"谁更正宗"，转而锚定"谁更日常"
+success_or_failure: success
+quality_tier: silver_case
+mental_takeaway: 红海品类中的最佳策略不是做得更好，而是找一个没人占的"日常场景"切入
+reusable_principles:
+  - 竞品都在抢"高光时刻"时，"日常"就是最好的空位
+  - 场景定位的复购率远高于品类定位
+  - 做"本地人日常选择"比做"游客打卡"更可持续
+risk_lessons:
+  - 不做网红意味着品牌传播速度慢
+  - 需要熬过前3-6个月的冷启动期
+theory_tags:
+  - trout
+  - ries

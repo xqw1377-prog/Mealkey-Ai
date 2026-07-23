@@ -1,0 +1,221 @@
+# M-PNT 跨资产索引 V2
+# 不存储知识内容，只记录资产间关系和查询路径
+version: "2.0"
+created_at: "2026-07-12"
+
+# ─── 关系定义 ──────────────────────────────────────────────────
+# relation 类型：
+#   supports      规则 → 案例（该规则被案例验证）
+#   triggers      规则 → 风险（违反规则导致的风险）
+#   mitigated_by  风险 → 模式（该风险的缓解定位模式）
+#   follows       案例 → 模式（案例遵循的定位模式）
+#   exemplifies   案例 → 模式（案例作为某模式的典型示例）
+
+relations:
+  # ═══ Ries 聚焦法则 ═══════════════════════════════════════════
+  - from_type: TheoryRule
+    from_id: tr-ries-focus-principle
+    to_type: CaseAsset
+    to_id: case-chayan-yueSe
+    relation: supports
+    strength: strong
+    note: "茶颜悦色聚焦'中国风茶饮'单一概念，验证聚焦法则"
+
+  - from_type: TheoryRule
+    from_id: tr-ries-focus-principle
+    to_type: CaseAsset
+    to_id: case-guyue-longjing-tea
+    relation: supports
+    strength: strong
+    note: "古茗聚焦'每天一杯喝不腻'，不做网红化"
+
+  - from_type: TheoryRule
+    from_id: tr-ries-focus-principle
+    to_type: ChallengeRule
+    to_id: cr-customer-too-broad
+    relation: triggers
+    strength: strong
+    note: "违反聚焦法则直接导致客群过宽"
+
+  - from_type: TheoryRule
+    from_id: tr-ries-focus-principle
+    to_type: ChallengeRule
+    to_id: cr-scene-not-authentic
+    relation: triggers
+    strength: medium
+
+  # ═══ Ries 品类第一 ═══════════════════════════════════════════
+  - from_type: TheoryRule
+    from_id: tr-ries-category-first
+    to_type: CaseAsset
+    to_id: case-wanglaoji-conflict
+    relation: supports
+    strength: strong
+    note: "王老吉占'怕上火'第一位置"
+
+  - from_type: TheoryRule
+    from_id: tr-ries-category-first
+    to_type: CaseAsset
+    to_id: case-chayan-yueSe
+    relation: supports
+    strength: strong
+    note: "茶颜悦色占'中国风茶饮'第一"
+
+  - from_type: TheoryRule
+    from_id: tr-ries-category-first
+    to_type: ChallengeRule
+    to_id: cr-competitor-copy-easy
+    relation: triggers
+    strength: medium
+
+  # ═══ Trout 第一联想 ══════════════════════════════════════════
+  - from_type: TheoryRule
+    from_id: tr-trout-first-association
+    to_type: CaseAsset
+    to_id: case-haidilao-service
+    relation: supports
+    strength: strong
+    note: "海底捞'服务好'成为火锅场景第一联想"
+
+  - from_type: TheoryRule
+    from_id: tr-trout-first-association
+    to_type: CaseAsset
+    to_id: case-laojie-hotpot
+    relation: supports
+    strength: medium
+    note: "老街老火锅'一人食'场景联想"
+
+  - from_type: TheoryRule
+    from_id: tr-trout-first-association
+    to_type: ChallengeRule
+    to_id: cr-customer-too-broad
+    relation: triggers
+    strength: strong
+
+  - from_type: TheoryRule
+    from_id: tr-trout-first-association
+    to_type: ChallengeRule
+    to_id: cr-price-signal-conflict
+    relation: triggers
+    strength: medium
+
+  # ═══ Trout 侧翼战 ════════════════════════════════════════════
+  - from_type: TheoryRule
+    from_id: tr-trout-flanking-war
+    to_type: CaseAsset
+    to_id: case-zhangxiaoheng-noodle
+    relation: supports
+    strength: strong
+    note: "张小花骨汤面用'骨汤不勾兑'侧翼攻击老字号弱点"
+
+  - from_type: TheoryRule
+    from_id: tr-trout-flanking-war
+    to_type: CaseAsset
+    to_id: case-feiyue-dumpling
+    relation: supports
+    strength: medium
+    note: "飞跃饺子用'年轻人的饺子局'场景侧翼"
+
+  # ═══ Ye 冲突营销 ═════════════════════════════════════════════
+  - from_type: TheoryRule
+    from_id: tr-ye-conflict-core
+    to_type: CaseAsset
+    to_id: case-wanglaoji-conflict
+    relation: supports
+    strength: strong
+    note: "怕上火=焦虑冲突+场景绑定的经典案例"
+
+  - from_type: TheoryRule
+    from_id: tr-ye-conflict-core
+    to_type: CaseAsset
+    to_id: case-haidilao-service
+    relation: supports
+    strength: medium
+    note: "服务vs正宗口味的冲突结构"
+
+  - from_type: TheoryRule
+    from_id: tr-ye-conflict-core
+    to_type: ChallengeRule
+    to_id: cr-scene-not-authentic
+    relation: triggers
+    strength: strong
+    note: "没有真实冲突的场景绑定是虚假定位"
+
+  # ═══ Ye 执行落地 ═════════════════════════════════════════════
+  - from_type: TheoryRule
+    from_id: tr-ye-execution-reality
+    to_type: ChallengeRule
+    to_id: cr-budget-insufficient
+    relation: triggers
+    strength: strong
+    note: "做不动的定位违反执行落地法则"
+
+  - from_type: TheoryRule
+    from_id: tr-ye-execution-reality
+    to_type: CaseAsset
+    to_id: case-bali-bear-failure
+    relation: supports
+    strength: strong
+    note: "巴黎贝甜'不卖隔夜'执行中盈利模型崩溃"
+
+  # ═══ 案例 → 模式 ═════════════════════════════════════════════
+  - from_type: CaseAsset
+    from_id: case-haidilao-service
+    to_type: PositioningPattern
+    to_id: pp-rebel-brand-packaging
+    relation: follows
+    strength: strong
+
+  - from_type: CaseAsset
+    from_id: case-chayan-yueSe
+    to_type: PositioningPattern
+    to_id: pp-category-origin-claim
+    relation: follows
+    strength: strong
+
+  - from_type: CaseAsset
+    from_id: case-weidao-chongqing-sichuan
+    to_type: PositioningPattern
+    to_id: pp-family-dining-brand
+    relation: exemplifies
+    strength: strong
+
+  - from_type: CaseAsset
+    from_id: case-guyue-longjing-tea
+    to_type: PositioningPattern
+    to_id: pp-price-flanker
+    relation: follows
+    strength: medium
+
+  # ═══ 风险 → 缓解模式 ═════════════════════════════════════════
+  - from_type: ChallengeRule
+    from_id: cr-scene-not-authentic
+    to_type: PositioningPattern
+    to_id: pp-family-dining-brand
+    relation: mitigated_by
+    strength: medium
+
+  - from_type: ChallengeRule
+    from_id: cr-customer-too-broad
+    to_type: PositioningPattern
+    to_id: pp-category-origin-claim
+    relation: mitigated_by
+    strength: medium
+
+  # ═══ 跨理论交叉引用 ══════════════════════════════════════════
+  # 同一条规则在不同理论体系中可能产生冲突
+  - from_type: TheoryRule
+    from_id: tr-ries-focus-principle
+    to_type: TheoryRule
+    to_id: tr-ye-conflict-core
+    relation: conflicts_with
+    strength: medium
+    note: "Ries 聚焦 vs Ye 冲突—聚焦可能减少冲突张力"
+
+  - from_type: TheoryRule
+    from_id: tr-trout-first-association
+    to_type: TheoryRule
+    to_id: tr-ries-category-first
+    relation: complements
+    strength: strong
+    note: "第一联想(Trout) + 第一位置(Ries) 互为补充"

@@ -1,0 +1,115 @@
+<view class="page">
+  <text class="kicker">第 2 步 · 导入真数</text>
+  <text class="h1">导入账本 / 评论</text>
+  <text class="lede">选文件或粘贴均可。先看质检单与评论打标，确认后再出完整会审。</text>
+
+  <view class="field">
+    <text class="label">门店（来自上一步，可改）</text>
+    <view class="row">
+      <input class="input half" value="{{name}}" bindinput="onName" placeholder="店名" />
+      <input class="input half" value="{{category}}" bindinput="onCategory" placeholder="品类" />
+    </view>
+  </view>
+
+  <!-- 日明细 -->
+  <view class="block">
+    <view class="label-row">
+      <text class="label">日×餐段明细（深检必填）</text>
+      <text class="link" bindtap="copyDailyTpl">复制模板</text>
+    </view>
+    <text class="help">{{dailyHelp}}</text>
+    <view class="row">
+      <button class="btn-mini" bindtap="pickDaily">选文件</button>
+      <button class="btn-mini ghost" bindtap="fillDailySample">填入示例</button>
+    </view>
+    <textarea class="area" value="{{dailyText}}" bindinput="onDaily" maxlength="-1" placeholder="日期,餐段,来客数,营收" />
+  </view>
+
+  <view class="block">
+    <view class="label-row">
+      <text class="label">菜品销售（建议）</text>
+      <text class="link" bindtap="copyDishTpl">复制模板</text>
+    </view>
+    <text class="help">{{dishHelp}}</text>
+    <view class="row">
+      <button class="btn-mini" bindtap="pickDish">选文件</button>
+      <button class="btn-mini ghost" bindtap="fillDishSample">填入示例</button>
+    </view>
+    <textarea class="area short" value="{{dishText}}" bindinput="onDish" maxlength="-1" />
+  </view>
+
+  <view class="block">
+    <view class="label-row">
+      <text class="label">菜单主数据（建议）</text>
+      <text class="link" bindtap="copyMenuTpl">复制模板</text>
+    </view>
+    <text class="help">{{menuHelp}}</text>
+    <view class="row">
+      <button class="btn-mini" bindtap="pickMenu">选文件</button>
+      <button class="btn-mini ghost" bindtap="fillMenuSample">填入示例</button>
+    </view>
+    <textarea class="area short" value="{{menuText}}" bindinput="onMenu" maxlength="-1" />
+  </view>
+
+  <view class="block">
+    <view class="label-row">
+      <text class="label">顾客评论（每行一条）</text>
+      <text class="link" bindtap="fillCommentSample">填入示例</text>
+    </view>
+    <textarea class="area short" value="{{commentText}}" bindinput="onComment" maxlength="-1" />
+  </view>
+
+  <view class="block">
+    <view class="label-row">
+      <text class="label">外采摘要（结构化粘贴，可选）</text>
+      <text class="link" bindtap="fillExternalSample">填入示例</text>
+    </view>
+    <text class="help">{{externalHelp}}</text>
+    <textarea
+      class="area short"
+      value="{{externalText}}"
+      bindinput="onExternal"
+      maxlength="-1"
+      placeholder="平台: 大众点评&#10;星级: 4.2&#10;---&#10;每行一条评论"
+    />
+    <text class="help" wx:if="{{externalMetaLabel}}">已识别：{{externalMetaLabel}}</text>
+    <view class="soft" wx:for="{{externalWarnings}}" wx:key="*this">! {{item}}</view>
+    <view class="preview" wx:if="{{tagRows.length}}">
+      <text class="label">评论打标预览（评论 + 外采合并）</text>
+      <view class="tag-row" wx:for="{{tagRows}}" wx:key="id">
+        <text class="tag">{{item.theme || '未匹配'}} · {{item.sentiment}}</text>
+        <text class="claim">{{item.claim}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="qc" wx:if="{{qcSummary}}">
+    <text class="qc-title">就绪度仪表 {{overallPct}}%</text>
+    <view class="gauge">
+      <view class="gauge-row">
+        <text>硬门槛 {{hardPct}}%</text>
+        <view class="bar-wrap"><view class="bar" style="width: {{hardPct}}%;"></view></view>
+      </view>
+      <view class="gauge-row">
+        <text>强建议 {{softPct}}%</text>
+        <view class="bar-wrap"><view class="bar soft" style="width: {{softPct}}%;"></view></view>
+      </view>
+    </view>
+    <view class="check" wx:for="{{hardItems}}" wx:key="id">
+      <text>{{item.done ? '☑' : '☐'}} {{item.label}}</text>
+      <text class="muted">{{item.detail}}</text>
+    </view>
+    <view class="check" wx:for="{{softItems}}" wx:key="id">
+      <text>{{item.done ? '☑' : '☐'}} {{item.label}}</text>
+      <text class="muted">{{item.detail}}</text>
+    </view>
+    <text class="qc-sum">{{qcSummary}}</text>
+    <view class="hard" wx:for="{{qcHard}}" wx:key="*this">✕ {{item}}</view>
+    <view class="soft" wx:for="{{qcSoft}}" wx:key="*this">! {{item}}</view>
+  </view>
+
+  <text class="err" wx:if="{{error}}">{{error}}</text>
+  <button class="btn btn-block" loading="{{busy}}" bindtap="refreshQc">刷新质检</button>
+  <button class="btn btn-block gap" loading="{{busy}}" bindtap="runImport">确认并出具会审</button>
+  <button class="btn btn-ghost btn-block gap" bindtap="clearImport">清除已存导入</button>
+</view>

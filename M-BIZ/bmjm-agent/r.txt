@@ -1,0 +1,1 @@
+R:88 SA:32 VT:20 FQ:40 W:True M:True

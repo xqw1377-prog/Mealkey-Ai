@@ -1,0 +1,73 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "m-mkt"
+version = "1.0.0"
+description = "MealKey 餐饮市场机会分析引擎 — 专业判断结构"
+readme = "README.md"
+authors = [
+    {name = "MealKey Team"},
+]
+license = {text = "Proprietary"}
+requires-python = ">=3.11"
+keywords = ["mealkey", "餐饮", "市场分析", "六维模型", "机会评分"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+]
+
+[project.urls]
+Homepage = "https://github.com/mealkey/m-mkt"
+Documentation = "https://github.com/mealkey/m-mkt/docs"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["core*", "adapters*", "utils*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short -p no:cacheprovider"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "SIM"]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
+"tests/*.py" = ["N802", "N803", "E501", "B904"]
+"src/core/knowledge/data/*.py" = ["E501"]
+"src/core/knowledge/models.py" = ["E501"]
+"src/core/dimension_definitions.py" = ["E501"]
+"src/core/knowledge/category.py" = ["E501"]
+"src/core/knowledge/case.py" = ["E501"]
+"src/core/knowledge/rules.py" = ["E501"]
+"src/core/knowledge/retriever.py" = ["E501"]
+"src/core/models.py" = ["E501"]
+"src/core/registry.py" = ["E501"]
+"src/core/serializer.py" = ["E501"]
+"src/core/engine.py" = ["E501"]
+"src/core/inference.py" = ["E501"]
+"src/core/reporter.py" = ["E501"]
+"src/core/cli.py" = ["E501"]
+
+[tool.coverage.run]
+source = ["src"]
+omit = ["*/tests/*", "*/__init__.py"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise NotImplementedError",
+]

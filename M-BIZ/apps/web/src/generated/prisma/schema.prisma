@@ -1,0 +1,658 @@
+generator client {
+  provider      = "prisma-client-js"
+  output        = "../src/generated/prisma"
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
+}
+
+// 开发环境用 SQLite，生产环境用 PostgreSQL
+// 通过 DATABASE_URL 控制：file:./dev.db 或 postgresql://...
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MealKey OS Kernel Schema V1
+//
+// 8 核心对象，对齐 7 Frozen Protocols
+//
+// Protocol 1: Context → Owner + Project + Memory + Decision + Knowledge
+// Protocol 2: Decision → Decision
+// Protocol 3: Memory → Memory
+// Protocol 4: Agent Manifest → AgentProduct
+// Protocol 5: Capability → CapabilityModule
+// Protocol 6: Mission → Mission
+// Protocol 7: Agent Run → AgentRun
+// ═══════════════════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════════════════
+// 认证系统（不属于 Kernel，支撑登录）
+// ═══════════════════════════════════════════════════════════════
+
+model User {
+  id           String  @id @default(cuid())
+  email        String? @unique
+  passwordHash String?
+  name         String?
+  image        String?
+  onboarded    Boolean @default(false)
+  preferences  String? // JSON
+
+  // 关联
+  owner         Owner?
+  conversations Conversation[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Kernel Object 1: Owner（经营者）
+// 对齐 Protocol 1: OwnerContext
+// ═══════════════════════════════════════════════════════════════
+
+model Owner {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // 基础信息
+  name  String?
+  email String?
+
+  // 经营者画像（对齐 OwnerContext）
+  experience      String @default("0年") // "餐饮3年"
+  background      String @default("{}") // JSON: { product, operation, brand, finance }
+  overallScore    Int    @default(50) // 0-100
+  strengths       String @default("[]") // JSON: ["产品", "运营"]
+  weaknesses      String @default("[]") // JSON: ["品牌战略"]
+  riskTolerance   String @default("medium") // low | medium | high
+  investmentStyle String @default("moderate") // conservative | moderate | aggressive
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 关联
+  projects        Project[]
+  memories        Memory[]
+  decisions       Decision[]
+  missions        Mission[]             @relation("MissionSource")
+  agentRuns       AgentRun[]
+  capabilities    OwnerCapability[]
+  assessments     CognitionAssessment[]
+  strategies      StrategyDocument[]
+  assetCategories AssetCategory[]
+  assets          Asset[]
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Kernel Object 2: Project（经营项目）
+// 对齐 Protocol 1: ProjectContext
+// ═══════════════════════════════════════════════════════════════
+
+model Project {
+  id          String  @id @default(cuid())
+  ownerId     String
+  owner       Owner   @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  status      String  @default("active") // active | archived | paused
+  stage       String  @default("idea") // idea | positioning | location | setup | opening | growth
+
+  // 对齐 ProjectContext
+  category    String? // "湘菜"
+  target      String? // "年轻消费者"
+  city        String?
+  district    String?
+  budget      Float? // 500000
+  profile     String? // JSON: 扩展信息
+  currentGoal String?
+  healthScore Int?
+  confidence  Float?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 关联
+  memories      Memory[]
+  decisions     Decision[]
+  agentRuns     AgentRun[]
+  reports       Report[]
+  conversations Conversation[]
+  assets        Asset[]
+
+  @@index([ownerId])
+  @@index([status])
+  @@index([stage])
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Kernel Object 3: Memory（记忆）
+// 对齐 Protocol 3: MemoryEngine
+//
+// 四类记忆：owner / project / decision / learning
+// ═══════════════════════════════════════════════════════════════
+
+model Memory {
+  id        String   @id @default(cuid())
+  ownerId   String
+  owner     Owner    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  projectId String?
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  // 对齐 MemoryContext
+  type       String // OWNER | PROJECT | DECISION | LEARNING
+  key        String
+  content    String // 记忆内容（文本或 JSON）
+  importance Int    @default(50) // 0-100
+  source     String @default("ai") // user | ai | feedback
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([ownerId, projectId, key])
+  @@index([ownerId])
+  @@index([projectId])
+  @@index([type])
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Kernel Object 4: Decision（决策）
+// 对齐 Protocol 2: MKDecision
+//
+// 判断链：observation → diagnosis → strategy → action
+// ═══════════════════════════════════════════════════════════════
+
+model Decision {
+  id         String    @id @default(cuid())
+  ownerId    String
+  owner      Owner     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  projectId  String?
+  project    Project?  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  agentRunId String?
+  agentRun   AgentRun? @relation(fields: [agentRunId], references: [id])
+  agentId    String? // 来源 Agent ID
+
+  // 对齐 MKDecision
+  problem     String // 问题是什么
+  observation String // 观察到了什么
+  diagnosis   String // 诊断结果
+  judgement   String // 判断结论
+  strategy    String // 策略建议
+  action      String // 具体行动
+  confidence  Float  @default(0) // 0-1
+  evidence    String @default("[]") // JSON: Evidence[]
+
+  // 结果反馈（闭环）
+  outcome  String? // JSON: 实际结果
+  learning String? // JSON: 学到的教训
+
+  type      String   @default("general") // positioning | investment | product | marketing | risk
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ownerId])
+  @@index([projectId, createdAt])
+  @@index([type])
+  @@index([agentId])
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Kernel Object 5: Mission（任务）
+// 对齐 Protocol 6: Mission
+//
+// Agent 间不直接调用，通过 Mission 通信
+// ═══════════════════════════════════════════════════════════════
+
+model Mission {
+  id          String  @id @default(cuid())
+  sourceAgent String // 发起方 Agent ID
+  targetAgent String // 目标 Agent ID
+  ownerId     String
+  owner       Owner   @relation("MissionSource", fields: [ownerId], references: [id], onDelete: Cascade)
+  projectId   String?
+
+  // 对齐 Mission
+  objective String // "生成品牌定位方案"
+  context   String // JSON: MKContext（快照）
+  status    String  @default("pending") // pending | running | completed | failed
+  result    String? // JSON: MKDecision
+
+  // 元数据
+  duration Int @default(0) // ms
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ownerId])
+  @@index([sourceAgent])
+  @@index([targetAgent])
+  @@index([status])
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Kernel Object 6: AgentRun（执行记录）
+// 对齐 Protocol 7: AgentRun
+//
+// 每一次 Agent 工作都记录：复盘、计费、优化、排错
+// ═══════════════════════════════════════════════════════════════
+
+model AgentRun {
+  id             String   @id @default(cuid())
+  agentId        String // Agent ID
+  ownerId        String
+  owner          Owner    @relation(fields: [ownerId], references: [id])
+  projectId      String?
+  project        Project? @relation(fields: [projectId], references: [id])
+  missionId      String? // 关联 Mission
+  conversationId String?
+
+  // 对齐 AgentRun
+  input      String? // JSON: Partial<MKContext>
+  output     String? // JSON: MKDecision
+  decisionId String? // 关联 Decision
+  tokens     Int     @default(0)
+  duration   Int     @default(0) // ms
+  status     String  @default("running") // running | success | failed
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 关联
+  decisions Decision[]
+
+  @@index([agentId])
+  @@index([ownerId])
+  @@index([projectId])
+  @@index([missionId])
+  @@index([status])
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Kernel Object 7: Capability（能力模块）
+// 对齐 Protocol 5: CapabilityDefinition
+//
+// 能力不属于 Agent，能力属于系统
+// ═══════════════════════════════════════════════════════════════
+
+model CapabilityModule {
+  id          String @id @default(cuid())
+  name        String @unique // "market-analysis"
+  description String
+  domain      String @default("general") // startup | brand | finance | product | marketing
+  version     String @default("1.0.0")
+
+  // 对齐 CapabilityDefinition
+  inputSchema  String // JSON Schema
+  outputSchema String // JSON Schema
+
+  status    String   @default("active") // active | deprecated
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([domain])
+  @@index([status])
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Kernel Object 8: Knowledge（知识）
+// 对齐 Protocol 1: KnowledgeContext
+//
+// 三类知识：rules / cases / models
+// ═══════════════════════════════════════════════════════════════
+
+model KnowledgeNode {
+  id         String             @id @default(cuid())
+  title      String
+  content    String
+  categoryId String?
+  category   KnowledgeCategory? @relation(fields: [categoryId], references: [id])
+
+  // 对齐 KnowledgeContext
+  type String @default("rule") // principle | rule | case | model | framework
+
+  // 元数据
+  tags       String  @default("[]") // JSON array
+  source     String?
+  confidence Float   @default(0.8)
+  relations  String? // JSON
+
+  status    String   @default("draft") // draft | published | archived
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([categoryId])
+  @@index([type])
+  @@index([status])
+}
+
+// ─── 知识分类 ───
+model KnowledgeCategory {
+  id        String              @id @default(cuid())
+  name      String
+  parentId  String?
+  parent    KnowledgeCategory?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children  KnowledgeCategory[] @relation("CategoryTree")
+  nodes     KnowledgeNode[]
+  sortOrder Int                 @default(0)
+  createdAt DateTime            @default(now())
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Agent 生态模型（Protocol 4: Agent Manifest）
+// ═══════════════════════════════════════════════════════════════
+
+// ─── Agent 产品（对齐 AgentManifest）───
+model AgentProduct {
+  id          String @id @default(cuid())
+  slug        String @unique // "launch-agent"
+  name        String // "开店战略顾问"
+  description String
+  version     String @default("1.0.0")
+  author      String @default("MealKey")
+  domain      String // startup | brand | finance | product | marketing
+
+  // 对齐 AgentManifest
+  capabilities    String @default("[]") // JSON: ["market-analysis", "positioning"]
+  requiredContext String @default("[]") // JSON: ["owner", "project", "knowledge"]
+  workflow        String @default("") // 工作流描述
+  outputSchema    String @default("") // 输出 Schema 描述
+  manifest        String // JSON: 完整 manifest
+  pricing         String // JSON: { model, price, currency }
+
+  status   String @default("active") // active | deprecated | draft
+  rating   Float  @default(0)
+  installs Int    @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([domain])
+  @@index([status])
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Platform Facts（Platform Migration V1）
+//
+// 先在旧 Kernel 之上补平台事实层：
+// - PlatformEvent: 原始接入审计层
+// - AgentTrace: 运行链路事实
+// - AgentOutcome: 结果事实
+// - UsageRecord: 资源消耗事实
+//
+// 当前 SQLite 阶段优先兼容落地，因此 JSON / Decimal 先用 String 存储
+// ═══════════════════════════════════════════════════════════════
+
+model PlatformEvent {
+  id               String   @id @default(cuid())
+  eventId          String   @unique
+  eventName        String
+  eventVersion     Int      @default(1)
+  producer         String
+  source           String
+  entityType       String
+  entityId         String
+  agentId          String?
+  versionId        String?
+  runtimeId        String?
+  runId            String?
+  traceId          String?
+  decisionId       String?
+  projectId        String?
+  organizationId   String?
+  billingAccountId String?
+  invoiceId        String?
+  listingId        String?
+  sequence         Int?
+  idempotencyKey   String?
+  payload          String
+  rawBody          String
+  occurredAt       DateTime
+  receivedAt       DateTime @default(now())
+  createdAt        DateTime @default(now())
+
+  @@index([eventName, occurredAt])
+  @@index([runId, occurredAt])
+  @@index([traceId])
+  @@index([billingAccountId, occurredAt])
+  @@index([idempotencyKey])
+}
+
+model AgentTrace {
+  id             String   @id @default(cuid())
+  runId          String
+  parentTraceId  String?
+  type           String
+  source         String
+  name           String
+  inputSnapshot  String?
+  outputSnapshot String?
+  status         String
+  errorCode      String?
+  retryCount     Int      @default(0)
+  latencyMs      Int?
+  sequence       Int?
+  sourceEventId  String?  @unique
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([runId, createdAt])
+  @@index([status, createdAt])
+  @@index([errorCode])
+}
+
+model AgentOutcome {
+  id            String   @id @default(cuid())
+  runId         String
+  metricType    String
+  value         String
+  unit          String?
+  source        String
+  sourceEventId String?  @unique
+  createdAt     DateTime @default(now())
+
+  @@index([runId, createdAt])
+  @@index([metricType])
+}
+
+model UsageRecord {
+  id               String   @id @default(cuid())
+  runId            String?
+  runtimeId        String?
+  agentId          String?
+  versionId        String?
+  billingAccountId String?
+  usageType        String
+  provider         String?
+  model            String?
+  tokenInput       Int      @default(0)
+  tokenOutput      Int      @default(0)
+  tokenCached      Int      @default(0)
+  tokenReasoning   Int      @default(0)
+  tokenTotal       Int      @default(0)
+  cost             String
+  currency         String   @default("CNY")
+  billable         Boolean  @default(true)
+  externalUsageId  String?
+  source           String
+  sourceEventId    String?  @unique
+  occurredAt       DateTime
+  createdAt        DateTime @default(now())
+
+  @@index([runId, occurredAt])
+  @@index([billingAccountId, occurredAt])
+  @@index([usageType, occurredAt])
+  @@index([externalUsageId])
+}
+
+// ═══════════════════════════════════════════════════════════════
+// 交互系统（不属于 Kernel，支撑对话）
+// ═══════════════════════════════════════════════════════════════
+
+// ─── 对话 ───
+model Conversation {
+  id           String    @id @default(cuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectId    String?
+  project      Project?  @relation(fields: [projectId], references: [id])
+  agentType    String? // chief | brand | location | finance
+  title        String?
+  summary      String?
+  messageCount Int       @default(0)
+  messages     Message[]
+  assets       Asset[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([projectId])
+}
+
+// ─── 消息 ───
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role           String // user | assistant | tool
+  content        String
+  toolName       String?
+  toolArgs       String? // JSON
+  toolResult     String? // JSON
+  metadata       String? // JSON: { model, latency, tokens, decisionId }
+  assets         Asset[]
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId])
+}
+
+model AssetCategory {
+  id          String   @id @default(cuid())
+  ownerId     String
+  owner       Owner    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  name        String
+  slug        String
+  description String?
+  scope       String   @default("owner") // owner | project | knowledge
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  assets Asset[]
+
+  @@unique([ownerId, slug])
+  @@index([ownerId])
+  @@index([scope])
+}
+
+model Asset {
+  id             String         @id @default(cuid())
+  ownerId        String
+  owner          Owner          @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  projectId      String?
+  project        Project?       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  conversationId String?
+  conversation   Conversation?  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  messageId      String?
+  message        Message?       @relation(fields: [messageId], references: [id], onDelete: SetNull)
+  categoryId     String?
+  category       AssetCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  kind        String // audio | image | video | document
+  title       String
+  fileName    String
+  mimeType    String
+  extension   String?
+  sizeBytes   Int
+  storagePath String
+  publicUrl   String
+
+  status        String  @default("ready") // uploading | processing | ready | failed
+  tags          String  @default("[]")
+  transcript    String?
+  extractedText String?
+  summary       String?
+  metadata      String? // JSON
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ownerId])
+  @@index([projectId])
+  @@index([conversationId])
+  @@index([messageId])
+  @@index([categoryId])
+  @@index([kind])
+  @@index([status])
+}
+
+// ─── 报告 ───
+model Report {
+  id          String   @id @default(cuid())
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  type        String // diagnosis | strategy | monthly | location | menu | custom
+  title       String
+  summary     String?
+  content     String? // JSON
+  decisionIds String? // JSON: 关联决策ID
+  status      String   @default("draft")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([projectId])
+  @@index([type])
+}
+
+// ─── 经营者能力评估（辅助模型）───
+model OwnerCapability {
+  id          String   @id @default(cuid())
+  ownerId     String
+  owner       Owner    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  name        String
+  category    String
+  score       Int      @default(50)
+  evidence    String   @default("{}")
+  improvement String   @default("{}")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([ownerId, name])
+  @@index([ownerId])
+}
+
+// ─── 认知评估记录（辅助模型）───
+model CognitionAssessment {
+  id        String   @id @default(cuid())
+  ownerId   String
+  owner     Owner    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  topic     String
+  framework String
+  before    String
+  analysis  String
+  after     String?
+  outcome   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ownerId])
+  @@index([topic])
+}
+
+// ─── 战略文档（辅助模型）───
+model StrategyDocument {
+  id        String   @id @default(cuid())
+  ownerId   String
+  owner     Owner    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  type      String
+  title     String
+  content   String
+  version   Int      @default(1)
+  status    String   @default("draft")
+  projectId String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ownerId])
+  @@index([type])
+}

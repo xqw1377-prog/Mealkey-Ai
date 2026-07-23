@@ -1,0 +1,38 @@
+id: case-teayeah-failure
+brand_name: 茶悦（化名）
+category: 茶饮
+city_context: 武汉
+market_stage: 成长期偏白热化
+project_stage: 品牌升级
+initial_problem: 品牌原有「国潮茶饮」定位在茶颜、霸王等强势品牌心智下逐渐模糊
+resource_condition: 预算 150 万，已有 12 家直营店，区域供应链搭建中
+competition_context: 茶颜占「长沙国风」、霸王占「健康轻负担」、喜茶占「灵感之茶」；中间地带拥挤
+candidate_positions:
+  - 「武汉人自己的茶饮」——地域标签但武汉城市心智不强
+  - 「鲜果+茶，清爽不甜腻」——口感方向，易被跟
+  - 「年轻人的第三空间」——场景泛，执行复杂
+final_position: 「武汉人自己的茶饮」——地域情感绑定
+why_choose: 创始人对武汉有深厚情感连接，认为本地消费者会支持本地品牌
+why_not_others: 其他两个方向无资源支撑且竞品已在跑
+differentiation_design: 武汉方言包装、黄鹤楼联名、本地食材（藕粉/莲心）入茶
+execution_actions:
+  - 全面更换包装为武汉方言系列
+  - 推出黄鹤楼联名款（限时 3 个月）
+  - 本地生活平台打「武汉人喝武汉茶」话题
+  - 门店增加武汉老照片墙
+market_feedback: 联名期销量涨 30%，但联名结束后回落 80%；「本地人认证」未能形成持续心智
+result_summary: 失败：地域标签未与真实消费者心理冲突/需求结合，沦为一次性话题
+success_or_failure: failure
+quality_tier: bronze_case
+mental_takeaway: 「XX人自己的XX」是自嗨型定位，除非消费者真的有「外来品牌入侵」的焦虑且品牌能成为抵抗符号
+reusable_principles:
+  - 地域标签必须有具体冲突或情感对立面支撑
+  - 联名带来的流量不构建品牌资产
+  - 定位需要每天被消费方式验证，不只是品牌传播
+risk_lessons:
+  - 高估了「地域自豪感」在茶饮消费决策中的权重
+  - 缺乏持续性的场景绑定，定位成为单次营销活动
+  - 竞品降价/联名跟进后差异化迅速消失
+theory_tags:
+  - ries
+  - trout

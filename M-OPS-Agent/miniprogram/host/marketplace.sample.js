@@ -1,0 +1,22 @@
+/** 开发用 Marketplace 样例（小程序可 require） */
+module.exports = {
+  version: 1,
+  agents: [
+    {
+      agentId: "m-supply-opt",
+      family: "m-supply",
+      displayName: "采购优化",
+      summary: "Marketplace 远程清单示例：库存与供应商（即将上架）",
+      status: "coming",
+      tokenCost: 300,
+    },
+    {
+      agentId: "m-review-insight",
+      family: "m-ops",
+      displayName: "差评分析助手",
+      summary: "远程清单示例：差评主题与处置建议",
+      status: "coming",
+      tokenCost: 200,
+    },
+  ],
+};

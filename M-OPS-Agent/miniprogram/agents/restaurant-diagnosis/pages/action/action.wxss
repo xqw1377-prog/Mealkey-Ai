@@ -1,0 +1,64 @@
+.page {
+  padding: 40rpx 36rpx 80rpx;
+}
+
+.share-card {
+  padding: 36rpx 32rpx;
+  border: 2rpx solid var(--ink);
+  background: linear-gradient(160deg, #fffcf7, #f0efe6);
+  margin-bottom: 32rpx;
+}
+
+.store {
+  display: block;
+  font-size: 40rpx;
+  font-weight: 600;
+  margin: 12rpx 0 28rpx;
+}
+
+.block {
+  margin-bottom: 28rpx;
+}
+
+.block.focus {
+  padding: 20rpx;
+  border-left: 6rpx solid var(--olive);
+  background: rgba(119, 128, 95, 0.1);
+}
+
+.label {
+  display: block;
+  font-size: 22rpx;
+  color: var(--olive);
+  letter-spacing: 0.08em;
+  margin-bottom: 8rpx;
+}
+
+.body {
+  display: block;
+  font-size: 28rpx;
+  line-height: 1.45;
+}
+
+.action {
+  display: block;
+  font-size: 34rpx;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.v {
+  font-size: 26rpx;
+  margin-bottom: 8rpx;
+}
+
+.foot {
+  display: block;
+  margin-top: 16rpx;
+  font-size: 20rpx;
+  color: var(--muted);
+}
+
+.gap {
+  margin-top: 20rpx;
+}

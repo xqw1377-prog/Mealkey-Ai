@@ -1,0 +1,37 @@
+id: case-bali-bear-failure
+brand_name: 巴黎贝甜（中国化名案例·虚拟）
+category: 烘焙/面包
+city_context: 上海
+market_stage: 成熟期
+project_stage: 品牌定位重塑
+initial_problem: 烘焙品牌在消费者心中几乎无差异化——每家都卖面包蛋糕，消费者看谁离得近去谁家
+resource_condition: 50家门店，预算200万，团队有烘焙技术但品牌团队薄弱
+competition_context: 好利来=生日蛋糕/85°C=咖啡+面包/幸福西饼=线上订阅；中间地带无明确心智
+candidate_positions:
+  - 「上海最好吃的面包」——无法验证
+  - 「每日新鲜现烤」——竞品都在说
+  - 「不卖隔夜面包」——有冲突感但执行成本高
+final_position: 「不卖隔夜面包」——以"新鲜承诺"建立区隔
+why_choose: 听起来很有冲突感，可以打击竞品"卖隔夜面包"的潜规则
+why_not_others: 「最好吃」「新鲜现烤」都是通用话术，没有区隔力
+differentiation_design: 每晚8点后折扣清货、承诺"当日生产当日售罄"、透明烘焙厨房展示
+execution_actions:
+  - 投入"当日清货"系统
+  - 打烊前打折处理当日未售出产品
+  - 品牌传播主推「不卖隔夜面包」
+market_feedback: 初期确实引起话题，但问题出现了三方面：1）消费者买了打折的觉得"便宜货"品牌降级；2）全价买的人发现晚上7点就没什么可选了；3）当日清货带来的损耗率吞噬了利润
+result_summary: 定位看似锋利但执行中暴露了三个致命矛盾：定位承诺与盈利模型冲突、定位信号与消费者感知错位、定位执行成本超出资源边界
+success_or_failure: failure
+quality_tier: silver_case
+mental_takeaway: 一个好的定位承诺必须在品牌、产品、盈利模型三个方向上都成立——只在意"冲突感"而忽略执行成本，定位会变成负资产
+reusable_principles:
+  - 定位承诺必须经过「成本倒推」检验
+  - 「不做什么」的承诺比「做什么」更难兑现
+  - 消费者对价格比对承诺更敏感
+risk_lessons:
+  - 打折清货策略会破坏正价消费者的购买体验
+  - 定位执行前必须做成本模型测算
+  - 不要选择一个会伤害盈利模型的定位
+theory_tags:
+  - ye_maozhong
+  - trout

@@ -1,0 +1,75 @@
+.page {
+  padding: 40rpx 36rpx 100rpx;
+}
+
+.evo {
+  margin: 24rpx 0;
+  padding: 20rpx;
+  border: 1rpx solid var(--line);
+  background: var(--card);
+  font-size: 24rpx;
+  color: var(--muted);
+}
+
+.card {
+  margin-top: 24rpx;
+  padding: 24rpx;
+  border: 1rpx solid var(--line);
+  background: var(--card);
+}
+
+.hyp {
+  display: block;
+  font-weight: 500;
+  font-size: 28rpx;
+  margin-bottom: 8rpx;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+  margin-top: 16rpx;
+}
+
+.chip {
+  margin: 0;
+  padding: 0 20rpx;
+  min-height: 64rpx;
+  line-height: 64rpx;
+  font-size: 24rpx;
+  background: transparent;
+  border: 1rpx solid var(--line);
+  color: var(--ink);
+  border-radius: 0;
+}
+
+.chip.on {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: #f6f3ed;
+}
+
+.chip::after {
+  border: none;
+}
+
+.gap {
+  margin-top: 20rpx;
+}
+
+.weight {
+  margin-top: 12rpx;
+  font-size: 24rpx;
+}
+
+.bar-wrap {
+  margin-top: 6rpx;
+  height: 10rpx;
+  background: rgba(20, 20, 19, 0.08);
+}
+
+.bar {
+  height: 100%;
+  background: var(--olive);
+}

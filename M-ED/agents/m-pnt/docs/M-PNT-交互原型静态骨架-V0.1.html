@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>M-PNT × MealKey 交互原型静态骨架 V0.1</title>
+    <style>
+      :root {
+        --bg: #f5f3ef;
+        --panel: #fcfbf8;
+        --line: #d7d2c8;
+        --text: #1d1b18;
+        --muted: #6d665d;
+        --accent: #28313b;
+        --accent-soft: #e7ebef;
+        --risk: #6b4f3c;
+        --good: #345447;
+        --shadow: 0 18px 50px rgba(28, 27, 24, 0.08);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.5;
+      }
+
+      a {
+        color: inherit;
+      }
+
+      .shell {
+        max-width: 1600px;
+        margin: 0 auto;
+        padding: 24px;
+      }
+
+      .hero {
+        margin-bottom: 18px;
+        padding: 20px 24px;
+        border: 1px solid var(--line);
+        background: linear-gradient(135deg, #fcfbf8 0%, #f1ede6 100%);
+        box-shadow: var(--shadow);
+      }
+
+      .hero h1 {
+        margin: 0 0 8px;
+        font-size: 28px;
+        font-weight: 600;
+      }
+
+      .hero p {
+        margin: 0;
+        color: var(--muted);
+      }
+
+      .nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin: 16px 0 0;
+      }
+
+      .chip,
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border: 1px solid var(--line);
+        background: var(--panel);
+        color: var(--text);
+        text-decoration: none;
+        font-size: 13px;
+      }
+
+      .btn.primary {
+        background: var(--accent);
+        color: #fff;
+        border-color: var(--accent);
+      }
+
+      .section {
+        margin-top: 20px;
+        padding: 20px;
+        border: 1px solid var(--line);
+        background: var(--panel);
+        box-shadow: var(--shadow);
+      }
+
+      .section h2 {
+        margin: 0 0 6px;
+        font-size: 20px;
+      }
+
+      .section p.lead {
+        margin: 0 0 16px;
+        color: var(--muted);
+      }
+
+      .statusbar {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        display: grid;
+        grid-template-columns: 2fr 120px 120px 1.5fr auto auto;
+        gap: 10px;
+        margin-bottom: 14px;
+        padding: 14px;
+        border: 1px solid var(--line);
+        background: rgba(252, 251, 248, 0.96);
+        backdrop-filter: blur(8px);
+      }
+
+      .statuscard {
+        padding: 10px 12px;
+        border: 1px solid var(--line);
+        background: #fff;
+        min-height: 70px;
+      }
+
+      .label {
+        display: block;
+        margin-bottom: 4px;
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .value {
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      .grid-home {
+        display: grid;
+        grid-template-columns: 1.6fr 1fr;
+        gap: 14px;
+      }
+
+      .workspace {
+        display: grid;
+        grid-template-columns: 280px minmax(760px, 1fr) 320px;
+        gap: 14px;
+      }
+
+      .panel {
+        border: 1px solid var(--line);
+        background: #fff;
+        padding: 16px;
+        min-height: 160px;
+      }
+
+      .panel h3 {
+        margin: 0 0 12px;
+        font-size: 16px;
+      }
+
+      .meta-list,
+      .bullet-list {
+        display: grid;
+        gap: 10px;
+      }
+
+      .meta-item {
+        padding-bottom: 10px;
+        border-bottom: 1px dashed var(--line);
+      }
+
+      .cards {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .card {
+        padding: 14px;
+        border: 1px solid var(--line);
+        background: #fcfbf8;
+      }
+
+      .card strong {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 15px;
+      }
+
+      .pill-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin: 8px 0 12px;
+      }
+
+      .pill {
+        padding: 4px 8px;
+        border: 1px solid var(--line);
+        background: #fff;
+        font-size: 12px;
+      }
+
+      .theory-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .theory {
+        padding: 14px;
+        border: 1px solid var(--line);
+        background: #faf8f4;
+      }
+
+      .theory h4 {
+        margin: 0 0 10px;
+        font-size: 14px;
+      }
+
+      .decision-block {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .decision-item {
+        padding: 14px;
+        border: 1px solid var(--line);
+        background: #fff;
+      }
+
+      .decision-item.full {
+        grid-column: 1 / -1;
+      }
+
+      .action-stack {
+        display: grid;
+        gap: 10px;
+      }
+
+      .action-box {
+        padding: 12px;
+        border: 1px solid var(--line);
+        background: #faf8f4;
+      }
+
+      .review {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+      }
+
+      .diff {
+        margin-top: 14px;
+        padding: 14px;
+        border: 1px solid var(--line);
+        background: #faf8f4;
+      }
+
+      .mobile-frame {
+        max-width: 430px;
+        margin: 0 auto;
+        border: 1px solid var(--line);
+        background: #fff;
+        box-shadow: var(--shadow);
+      }
+
+      .mobile-top,
+      .mobile-bottom {
+        position: sticky;
+        z-index: 2;
+        padding: 14px;
+        border-bottom: 1px solid var(--line);
+        background: rgba(252, 251, 248, 0.96);
+      }
+
+      .mobile-bottom {
+        bottom: 0;
+        border-top: 1px solid var(--line);
+        border-bottom: none;
+      }
+
+      .mobile-main {
+        min-height: 55vh;
+        padding: 14px;
+        display: grid;
+        gap: 12px;
+        background: #f8f5f0;
+      }
+
+      .mobile-box {
+        padding: 14px;
+        border: 1px solid var(--line);
+        background: #fff;
+      }
+
+      .muted {
+        color: var(--muted);
+      }
+
+      .risk {
+        color: var(--risk);
+      }
+
+      .good {
+        color: var(--good);
+      }
+
+      @media (max-width: 1280px) {
+        .workspace {
+          grid-template-columns: 250px minmax(0, 1fr);
+        }
+
+        .workspace .sidebar-right {
+          grid-column: 1 / -1;
+        }
+
+        .statusbar {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 920px) {
+        .grid-home,
+        .review,
+        .decision-block,
+        .theory-grid,
+        .cards {
+          grid-template-columns: 1fr;
+        }
+
+        .workspace {
+          grid-template-columns: 1fr;
+        }
+
+        .statusbar {
+          position: static;
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <section class="hero">
+        <h1>M-PNT × MealKey 交互原型静态骨架 V0.1</h1>
+        <p>这不是独立产品原型，而是一版把 M-PNT 作为 MealKey 内嵌专项模块来设计的低保真骨架。</p>
+        <div class="nav">
+          <a class="chip" href="#home">首页</a>
+          <a class="chip" href="#workspace">工作台</a>
+          <a class="chip" href="#review">复审页</a>
+          <a class="chip" href="#mobile">移动端</a>
+          <a class="btn primary" href="M-PNT-交互原型框架-V0.1.md">查看原型框架文档</a>
+        </div>
+      </section>
+
+      <section class="section" id="home">
+        <h2>1. Dashboard / Today 定位状态卡</h2>
+        <p class="lead">这里不是独立 M-PNT 首页，而是 MealKey 首页里的定位状态卡。用户一进入就知道当前定位是否已形成、是否需要复审、当前执行动作是什么。</p>
+        <div class="statusbar">
+          <div class="statuscard">
+            <span class="label">当前主推定位</span>
+            <div class="value">成为「长沙家庭聚餐第一想起的湘菜」</div>
+          </div>
+          <div class="statuscard">
+            <span class="label">决策等级</span>
+            <div class="value">primary</div>
+          </div>
+          <div class="statuscard">
+            <span class="label">风险等级</span>
+            <div class="value risk">R2</div>
+          </div>
+          <div class="statuscard">
+            <span class="label">当前 Next Step</span>
+            <div class="value">完成 30 天转述测试与首轮菜单锚点落地</div>
+          </div>
+          <a class="btn" href="#review">发起复审</a>
+          <a class="btn primary" href="#workspace">进入经营会议</a>
+        </div>
+
+        <div class="grid-home">
+          <div class="panel">
+            <h3>最近一次裁决</h3>
+            <div class="bullet-list">
+              <div class="meta-item">
+                <span class="label">为什么选这个</span>
+                <div>场景清晰、可一句话转述、在三理论下综合最均衡，且没有触发 R4。</div>
+              </div>
+              <div class="meta-item">
+                <span class="label">为什么不选别的</span>
+                <div>进攻型方向区隔更锋利，但执行难度更高；优势放大型资源匹配更好，但心智钉子不够硬。</div>
+              </div>
+              <div class="meta-item">
+                <span class="label">当前判断</span>
+                <div class="good">现在不应该重开定位，而应该先把定位策略翻译成门店表达、菜单锚点和验证动作。</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h3>验证提醒</h3>
+            <div class="action-stack">
+              <div class="action-box">
+                <span class="label">本周执行</span>
+                门头话术、菜单锚点、到店问答口径统一
+              </div>
+              <div class="action-box">
+                <span class="label">Day 30</span>
+                主场景到店话术与转述测试
+              </div>
+              <div class="action-box">
+                <span class="label">Day 90</span>
+                复购与转介绍是否继续指向同一心智锚
+              </div>
+              <div class="action-box">
+                <span class="label">Kill Criteria</span>
+                心智转述持续发散，且门店表达无法拉回
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="workspace">
+        <h2>2. Advisor / 经营会议中的定位模块</h2>
+        <p class="lead">这不是独立工作台，而是 MealKey 经营会议里的定位模块。核心不是“显示很多信息”，而是输出最终可落地的定位策略、执行方案和验证动作。</p>
+
+        <div class="statusbar">
+          <div class="statuscard">
+            <span class="label">当前主推定位</span>
+            <div class="value">成为「长沙家庭聚餐第一想起的湘菜」</div>
+          </div>
+          <div class="statuscard">
+            <span class="label">决策等级</span>
+            <div class="value">primary</div>
+          </div>
+          <div class="statuscard">
+            <span class="label">风险等级</span>
+            <div class="value risk">R2</div>
+          </div>
+          <div class="statuscard">
+            <span class="label">当前 Next Step</span>
+            <div class="value">锁定执行方案并进入 30 天验证</div>
+          </div>
+          <a class="btn" href="#review">发起复审</a>
+          <a class="btn primary" href="#mobile">看移动端</a>
+        </div>
+
+        <div class="workspace">
+          <aside class="panel">
+            <h3>项目上下文</h3>
+            <div class="meta-list">
+              <div class="meta-item">
+                <span class="label">项目摘要</span>
+                湘菜 / 长沙 / 五一商圈 / 预算 100 万 / 筹备中
+              </div>
+              <div class="meta-item">
+                <span class="label">创始人优势</span>
+                招牌剁椒鱼头、本地供应链、老客维护
+              </div>
+              <div class="meta-item">
+                <span class="label">盲区</span>
+                品牌表达弱、数字化运营不足
+              </div>
+              <div class="meta-item">
+                <span class="label">当前假设场景</span>
+                家庭聚餐、朋友小聚
+              </div>
+              <div class="meta-item">
+                <span class="label">缺失事实</span>
+                同商圈竞品口号和心智锚点仍需补齐
+              </div>
+            </div>
+            <div class="nav">
+              <span class="btn">补充事实</span>
+              <span class="btn">标记事实不足</span>
+            </div>
+          </aside>
+
+          <main class="panel">
+            <h3>候选方向卡组</h3>
+            <div class="cards">
+              <article class="card">
+                <strong>A. 长沙湘菜·场景钉死型</strong>
+                成为「长沙家庭聚餐第一想起的湘菜」
+                <div class="pill-row">
+                  <span class="pill">primary</span>
+                  <span class="pill">稳健型</span>
+                  <span class="pill">场景切口</span>
+                </div>
+                <div class="muted">优势：场景清晰、可转述、资源匹配较强</div>
+                <div class="risk">风险：牺牲边界还不够清楚</div>
+              </article>
+
+              <article class="card">
+                <strong>B. 湘菜·竞争对立型</strong>
+                不做大而全的湘菜，只打「有态度的社交聚餐」
+                <div class="pill-row">
+                  <span class="pill">secondary</span>
+                  <span class="pill">进攻型</span>
+                  <span class="pill">竞争空位</span>
+                </div>
+                <div class="muted">优势：区隔更强，传播张力更大</div>
+                <div class="risk">风险：第一联想还不够稳，执行门槛更高</div>
+              </article>
+
+              <article class="card">
+                <strong>C. 湘菜·优势放大型</strong>
+                把「招牌剁椒鱼头」做成不可替代的心智资产
+                <div class="pill-row">
+                  <span class="pill">backup</span>
+                  <span class="pill">备选型</span>
+                  <span class="pill">价值切口</span>
+                </div>
+                <div class="muted">优势：资源利用率高，落地容易</div>
+                <div class="risk">风险：单品资产不等于品牌定位</div>
+              </article>
+            </div>
+
+            <h3 style="margin-top: 18px;">三理论交锋</h3>
+            <div class="theory-grid">
+              <section class="theory">
+                <h4>Ries</h4>
+                <div class="meta-item">
+                  <span class="label">偏好方向</span>
+                  A. 场景钉死型
+                </div>
+                <div class="meta-item">
+                  <span class="label">关键理由</span>
+                  最有机会在细分场景中形成“第一想起”的位置。
+                </div>
+                <div class="meta-item">
+                  <span class="label">反对点</span>
+                  如果牺牲边界不明确，定位会重新变宽。
+                </div>
+              </section>
+
+              <section class="theory">
+                <h4>Trout</h4>
+                <div class="meta-item">
+                  <span class="label">偏好方向</span>
+                  B. 竞争对立型
+                </div>
+                <div class="meta-item">
+                  <span class="label">关键理由</span>
+                  区隔更锋利，更像真正的竞争空位。
+                </div>
+                <div class="meta-item">
+                  <span class="label">反对点</span>
+                  A 的区隔还不够尖锐，容易变成“大家都能说”的安全话。
+                </div>
+              </section>
+
+              <section class="theory">
+                <h4>Ye</h4>
+                <div class="meta-item">
+                  <span class="label">偏好方向</span>
+                  B. 竞争对立型
+                </div>
+                <div class="meta-item">
+                  <span class="label">关键理由</span>
+                  有冲突才有记忆，B 的传播张力更强。
+                </div>
+                <div class="meta-item">
+                  <span class="label">反对点</span>
+                  传播强不代表可交付，必须控制好落地成本。
+                </div>
+              </section>
+            </div>
+
+            <div class="diff">
+              <strong>Cross-Fire 摘要</strong>
+              <div class="muted" style="margin-top: 8px;">
+                三方并未平均折中。Ries 认为 A 更能占位，Trout 与 Ye 认为 B 更有区隔与冲突。Synthesis 最终选 A，不是因为 A 最锋利，而是因为 A 在聚焦、区隔、落地三维更均衡，且没有触发硬否决。
+              </div>
+            </div>
+
+            <h3 style="margin-top: 18px;">最终裁决</h3>
+            <div class="decision-block">
+              <section class="decision-item">
+                <span class="label">选这个</span>
+                成为「长沙家庭聚餐第一想起的湘菜」
+              </section>
+              <section class="decision-item">
+                <span class="label">为什么选</span>
+                这个方向最接近一句话可理解、可转述、可落地的心智位置。
+              </section>
+              <section class="decision-item">
+                <span class="label">为什么不选别的</span>
+                B 更锋利，但第一联想仍有不稳；C 更容易做，但定位钉子不够深。
+              </section>
+              <section class="decision-item">
+                <span class="label">接下来怎么验证</span>
+                30 天验证主场景转述，90 天验证复购是否指向同一锚。
+              </section>
+              <section class="decision-item">
+                <span class="label">定位策略</span>
+                目标心智客户锁定家庭聚餐决策者；核心场景只打“带家人来吃湘菜”。
+              </section>
+              <section class="decision-item">
+                <span class="label">执行方案</span>
+                门头、菜单、招牌菜、服务话术、首轮内容传播全部围绕“家庭聚餐第一想起”展开。
+              </section>
+              <section class="decision-item full">
+                <span class="label">版本记录</span>
+                当前为 V1.3。尚未触发复审，但 Day 30 测试结果会决定是否进入下一轮裁决。
+              </section>
+            </div>
+          </main>
+
+          <aside class="panel sidebar-right">
+            <h3>执行行动栏</h3>
+            <div class="action-stack">
+              <div class="action-box">
+                <span class="label">今日唯一问题</span>
+                这句定位是否能被消费者在 3 秒内复述出来？
+              </div>
+              <div class="action-box">
+                <span class="label">本周执行动作</span>
+                完成门头主话术、菜单锚点菜命名、服务口径统一
+              </div>
+              <div class="action-box">
+                <span class="label">30 天验证</span>
+                到店访谈、点单理由、带人理由、门头转述测试
+              </div>
+              <div class="action-box">
+                <span class="label">Kill Criteria</span>
+                如果 60% 以上用户不能转述同一锚点，必须复审
+              </div>
+              <div class="action-box">
+                <span class="label">动作</span>
+                发起复审 / 标记验证完成 / 基于该定位继续讨论
+              </div>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="section" id="review">
+        <h2>3. Decisions / Review Queue 复审入口</h2>
+        <p class="lead">复审不作为独立产品页存在，而是挂在 MealKey 的 Decisions / Review Queue 里。进入后先看旧结论、执行反馈和复审原因。</p>
+
+        <div class="review">
+          <div class="panel">
+            <h3>上一版定位</h3>
+            <div class="meta-list">
+              <div class="meta-item">
+                <span class="label">结论</span>
+                家庭聚餐第一想起的湘菜
+              </div>
+              <div class="meta-item">
+                <span class="label">风险</span>
+                R2
+              </div>
+              <div class="meta-item">
+                <span class="label">当时为什么选</span>
+                三理论下最均衡，且执行风险最低
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h3>当前变化建议</h3>
+            <div class="meta-list">
+              <div class="meta-item">
+                <span class="label">触发原因</span>
+                30 天验证显示家庭聚餐与朋友小聚转述混杂
+              </div>
+              <div class="meta-item">
+                <span class="label">变化判断</span>
+                不建议扩成双场景，应收窄回家庭聚餐
+              </div>
+              <div class="meta-item">
+                <span class="label">当前动作</span>
+                发起复审会议并重新看候选 A / B
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="diff">
+          <strong>差异摘要</strong>
+          <ul>
+            <li>旧版主推没有被推翻，但边界需要收窄。</li>
+            <li>Trout 与 Ye 对旧版的支持下降，说明区隔表达仍需强化。</li>
+            <li>Kill criteria 已接近触发，不能继续只看漂亮结论。</li>
+          </ul>
+          <div class="nav">
+            <span class="btn primary">回到经营会议继续复审</span>
+            <span class="btn">查看完整 diff</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="mobile">
+        <h2>4. MealKey 移动端骨架</h2>
+        <p class="lead">移动端不复制桌面三栏，而是在 MealKey 会议里保住主阅读区，并把 `Next Step` 和执行动作固定在底部。</p>
+
+        <div class="mobile-frame">
+          <div class="mobile-top">
+            <div class="label">当前主推定位</div>
+            <div class="value">家庭聚餐第一想起的湘菜</div>
+            <div class="pill-row" style="margin-top: 10px;">
+              <span class="pill">primary</span>
+              <span class="pill">R2</span>
+              <span class="pill">待验证</span>
+            </div>
+          </div>
+
+          <div class="mobile-main">
+            <section class="mobile-box">
+              <span class="label">当前结论</span>
+              为什么选这个、为什么不选别的，一屏先给完。
+            </section>
+            <section class="mobile-box">
+              <span class="label">候选方向</span>
+              默认只展示主推 + 1 个备选，其余折叠。
+            </section>
+            <section class="mobile-box">
+              <span class="label">三理论交锋</span>
+              默认先展示谁支持、谁反对、是否有 R4。
+            </section>
+            <section class="mobile-box">
+              <span class="label">定位策略</span>
+              目标客户、核心场景、竞争位置、差异化钉子。
+            </section>
+            <section class="mobile-box">
+              <span class="label">执行方案</span>
+              菜单锚点、门头话术、服务口径、首轮传播动作。
+            </section>
+            <section class="mobile-box">
+              <span class="label">验证动作</span>
+              Day 30 / Day 90 / kill criteria 分层展示。
+            </section>
+          </div>
+
+          <div class="mobile-bottom">
+            <div class="label">底部固定行动条</div>
+            <div class="pill-row">
+              <span class="pill">今日下一步</span>
+              <span class="pill">发起复审</span>
+              <span class="pill">继续讨论</span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </body>
+</html>

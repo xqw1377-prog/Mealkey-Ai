@@ -1,0 +1,256 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --mealkey-background: #f6f3ed;
+    --mealkey-surface: #ffffff;
+    --mealkey-surface-soft: #f5f1ea;
+    --mealkey-surface-tint: #eef1ea;
+    --mealkey-foreground: #171717;
+    --mealkey-muted-foreground: #6f747b;
+    --mealkey-subtle-foreground: #8b877f;
+    --mealkey-line: rgba(23, 23, 23, 0.10);
+    --mealkey-line-strong: rgba(23, 23, 23, 0.16);
+    --mealkey-primary: #77805f;
+    --mealkey-primary-strong: #66735e;
+    --mealkey-primary-soft: rgba(119, 128, 95, 0.14);
+    --mealkey-ai: #66735e;
+    --mealkey-ai-soft: rgba(102, 115, 94, 0.12);
+    --mealkey-warm: #b47c5c;
+    --mealkey-warm-soft: rgba(180, 124, 92, 0.14);
+    --state-success: #77805f;
+    --state-warning: #b47c5c;
+    --state-error: #c96b5c;
+    --state-info: #66735e;
+    --mealkey-shadow-soft: 0 14px 30px rgba(24, 24, 23, 0.04);
+    --mealkey-radius-xs: 4px;
+    --mealkey-radius-sm: 8px;
+    --mealkey-radius-md: 12px;
+    --mealkey-radius-lg: 16px;
+    --mealkey-space-1: 4px;
+    --mealkey-space-2: 8px;
+    --mealkey-space-3: 12px;
+    --mealkey-space-4: 16px;
+    --mealkey-space-5: 20px;
+    --mealkey-space-6: 24px;
+    --mealkey-space-7: 28px;
+    --mealkey-space-8: 32px;
+    --mealkey-space-10: 40px;
+    --mealkey-font-sans: "Noto Sans SC", "HarmonyOS Sans SC", "Alibaba PuHuiTi 3.0", "PingFang SC", "Microsoft YaHei", "Inter", sans-serif;
+    --mealkey-font-latin: "Inter", "SF Pro Display", "Segoe UI", sans-serif;
+
+    --mk-bg: #f6f3ed;
+    --mk-surface: #ffffff;
+    --mk-surface-soft: #f5f1ea;
+    --mk-surface-muted: #ede8de;
+    --mk-foreground: #171717;
+    --mk-muted: #6f747b;
+    --mk-line: rgba(23, 23, 23, 0.10);
+    --mk-green: #77805f;
+    --mk-green-deep: #66735e;
+    --mk-blue: #66735e;
+    --mk-orange: #b47c5c;
+
+    --mk-bg: var(--mealkey-background);
+    --mk-surface: var(--mealkey-surface);
+    --mk-surface-soft: var(--mealkey-surface-soft);
+    --mk-foreground: var(--mealkey-foreground);
+    --mk-muted: var(--mealkey-muted-foreground);
+    --mk-line: var(--mealkey-line);
+    --mk-green: var(--mealkey-primary);
+    --mk-green-deep: var(--mealkey-primary-strong);
+    --mk-blue: var(--mealkey-ai);
+    --mk-orange: var(--mealkey-warm);
+  }
+
+  * {
+    @apply border-stone-200;
+  }
+
+  html,
+  body {
+    @apply scroll-smooth;
+    /* 固定页面，禁止横向拖动/缩放查看 */
+    overflow-x: hidden;
+    max-width: 100%;
+  }
+
+  .snap-x,
+  .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  button {
+    font: inherit;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    background: var(--mealkey-background);
+    color: var(--mealkey-foreground);
+    font-family: var(--mealkey-font-sans);
+    @apply antialiased;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: rgba(119, 128, 95, 0.24);
+    color: #171717;
+  }
+
+  /* 键盘焦点可见环：仅 focus-visible，不影响鼠标点击外观 */
+  :where(a, button, input, textarea, select, [tabindex]):focus-visible {
+    outline: 2px solid var(--mealkey-primary-strong);
+    outline-offset: 2px;
+  }
+
+  .font-display {
+    font-family: var(--mealkey-font-sans);
+  }
+
+  .mealkey-display {
+    font-family: var(--mealkey-font-latin);
+    letter-spacing: -0.03em;
+  }
+
+  .mealkey-title {
+    font-family: var(--mealkey-font-sans);
+    letter-spacing: -0.02em;
+  }
+
+  .mealkey-body {
+    font-family: var(--mealkey-font-sans);
+    line-height: 1.6;
+  }
+
+  .mealkey-caption {
+    font-family: var(--mealkey-font-sans);
+    letter-spacing: 0.01em;
+  }
+
+  @media (max-width: 1023px) {
+    input,
+    textarea,
+    select {
+      font-size: 16px;
+    }
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-full px-5 py-3 text-sm font-medium
+           text-white shadow-[0_14px_32px_rgba(83,101,116,0.18)] transition duration-200
+           hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2
+           focus-visible:outline-offset-2 active:scale-[0.98] no-underline;
+    background: linear-gradient(135deg, var(--mk-green-deep), var(--mk-green));
+    outline-color: rgba(119, 128, 95, 0.30);
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-full border px-5 py-3 text-sm font-medium
+           text-[#202124] shadow-[0_10px_26px_rgba(32,33,36,0.06)] transition duration-200
+           hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2
+           focus-visible:outline-offset-2 active:scale-[0.98] no-underline;
+    border-color: rgba(32, 33, 36, 0.08);
+    background: rgba(255, 255, 255, 0.85);
+    outline-color: rgba(119, 128, 95, 0.20);
+  }
+
+  .card {
+    @apply rounded-[30px] border p-6 text-[#202124]
+           shadow-[0_16px_40px_rgba(32,33,36,0.06)];
+    border-color: rgba(32, 33, 36, 0.07);
+    background: rgba(255, 255, 255, 0.78);
+    backdrop-filter: blur(18px);
+  }
+
+  .input-field {
+    @apply block w-full rounded-[22px] border bg-white/90 px-4 py-3
+           text-sm text-[#202124] placeholder:text-[#6f747b] focus:outline-none focus:ring-2
+           transition-colors duration-150;
+    border-color: rgba(32, 33, 36, 0.08);
+    focus-ring-color: rgba(83, 101, 116, 0.16);
+  }
+
+  .mk-shell-surface {
+    background:
+      radial-gradient(circle at top, rgba(119, 128, 95, 0.10), transparent 28%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0));
+  }
+
+  .mk-panel {
+    @apply rounded-[32px] border shadow-[0_16px_42px_rgba(32,33,36,0.06)] backdrop-blur-xl;
+    border-color: rgba(32, 33, 36, 0.07);
+    background: rgba(255, 255, 255, 0.78);
+  }
+
+  .mk-note {
+    @apply rounded-[28px] border shadow-[0_10px_24px_rgba(32,33,36,0.05)] backdrop-blur-lg;
+    border-color: rgba(32, 33, 36, 0.06);
+    background: rgba(255, 255, 255, 0.72);
+  }
+
+  .mk-pill {
+    @apply inline-flex items-center rounded-full px-3 py-1 text-xs font-medium;
+    background: rgba(83, 101, 116, 0.08);
+    color: var(--mk-blue);
+  }
+
+  .mk-number {
+    @apply font-display tracking-[-0.05em] text-[#202124];
+  }
+
+  .mk-divider {
+    height: 1px;
+    background: rgba(32, 33, 36, 0.07);
+  }
+}
+
+@layer utilities {
+  /* 隐藏横滑容器的滚动条，避免破坏渐隐遮罩视觉 */
+  .overflow-x-auto {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .overflow-x-auto::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* 防止会议页对话区滚动带动整页下拉刷新 */
+  .overscroll-contain {
+    overscroll-behavior: contain;
+  }
+}
+
+/* 触屏设备关闭卡片级 backdrop-filter，降低中低端机滚动掉帧 */
+@media (hover: none) and (pointer: coarse) {
+  .card,
+  .mk-panel,
+  .mk-note {
+    backdrop-filter: none;
+    background: #ffffff;
+  }
+}
+
+/* 尊重系统的“减少动态效果”偏好 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

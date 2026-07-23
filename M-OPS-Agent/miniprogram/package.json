@@ -1,0 +1,6 @@
+{
+  "name": "m-ops-miniprogram",
+  "private": true,
+  "type": "commonjs",
+  "description": "微信小程序独立壳（CommonJS；勿改为 module）"
+}

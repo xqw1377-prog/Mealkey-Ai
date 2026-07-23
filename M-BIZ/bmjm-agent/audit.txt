@@ -1,0 +1,1 @@
+规则:88\n阶段规则:32\n画像:8\n验证模板:20\n追问:40\n阶段权重:True\n状态枚举:True\n验证枚举:True\n认知层:True\n类别:{'structure_completeness': 8, 'consistency': 6, 'health_threshold': 11, 'risk_warning': 13, 'pattern_recognition': 7, 'stage_aware': 32, 'strategy': 5, 'data_quality': 6}

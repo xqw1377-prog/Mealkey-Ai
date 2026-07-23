@@ -1,0 +1,27 @@
+id: pp-price-flanker-positioning
+name: 价格侧翼战定位
+pattern_type: strategy_pattern
+summary: 在主价格带之外选择侧翼价格区间，以性价比或高端降维切入，避开主战场正面竞争
+typical_context:
+  - 品类主流价格带已被占稳
+  - 目标客群存在「升级不上去」或「降级不甘心」的中间地带
+  - 成本结构能支撑非主流价格带
+trigger_signals:
+  - 品类头部品牌集中在单一价格带
+  - 消费者存在「价格锚点」但无「品质锚点」的空白
+  - 评价格局中间有断裂
+positioning_formula:
+  - 主价格带对立 + 品质/体验重新定义 + 成本结构倒推验证
+success_reason: 避开正面心智战，以价格认知差异快速建立「性价比/质价比」联想
+failure_modes:
+  - 价格差异不够大，消费者感知不到「侧翼」
+  - 品质/体验与价格不符，形成「便宜没好货」
+  - 主价格带品牌降价下沉后失去防御
+recommended_usage: 品类成熟、头部品牌价格心智固化但存在断层时
+not_recommended_when:
+  - 价格带空间过窄，不形成有效差异
+  - 成本结构不支持侧翼价格且能盈利
+  - 目标客群对价格不敏感
+theory_alignment:
+  - trout
+  - ye_maozhong

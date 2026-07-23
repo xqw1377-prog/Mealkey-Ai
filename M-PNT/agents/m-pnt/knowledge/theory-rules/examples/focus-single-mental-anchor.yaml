@@ -1,0 +1,25 @@
+id: tr-trout-focus-single-mental-anchor
+theory_source: trout
+name: 聚焦单一心智锚点
+principle: 品牌应在消费者心智中建立一个简单清晰的认知位置
+decision_question: 当前定位是否足够聚焦
+applicable_context:
+  - 新品牌定位
+  - 品类同质化严重
+  - 多方向摇摆期
+key_variables:
+  - 定位语清晰度
+  - 场景数量
+  - 核心客群数量
+decision_rules:
+  - 定位语必须可一句话复述
+  - 不应同时覆盖多个无强关联场景
+  - 不应同时服务多个核心客群
+anti_patterns:
+  - 面向所有人
+  - 什么都想表达
+  - 价值点过多
+output_implication: 若违反，应在 Position 与 Decision 中明确收窄第一心智锚点
+theory_view_tag:
+  - trout
+  - focus

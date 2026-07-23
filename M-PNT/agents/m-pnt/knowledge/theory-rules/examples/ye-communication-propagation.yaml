@@ -1,0 +1,27 @@
+id: tr-ye-communication-propagation
+theory_source: ye_maozhong
+name: 传播力即定位力
+principle: 在一个信息爆炸的市场里，定位能否被传播决定了定位能否存在——不能被转述的定位等于没有定位
+decision_question: 消费者会主动向朋友转述这个定位吗？他会怎么说？
+applicable_context:
+  - 品牌处于起步阶段
+  - 传播预算有限或为零
+  - 品类本身传播性较弱
+key_variables:
+  - 定位语的口语化程度
+  - 定位是否含有「传播钩子」（让人想讲给别人听）
+  - 定位是否能激发消费者表达自我认同
+decision_rules:
+  - 如果定位不能让消费者在朋友面前说出来，传播成本就会很高
+  - 好的定位本身就是一次传播：让人想「哎你知道吗，有家店……」
+  - 冲突和反常识是最强的传播催化剂
+  - 不要试图在定位中告诉消费者所有信息，只告诉他们最想转述的那一句
+anti_patterns:
+  - 书面语做定位语（消费者不会按书面语说话）
+  - 定位只有品牌方自己说得出口
+  - 定位太"正常"了，没有人会觉得有什么值得分享的
+output_implication: 传播力弱的定位方向应补充冲突钩子或降低预期传播效果
+theory_view_tag:
+  - ye_maozhong
+  - communication
+  - word_of_mouth

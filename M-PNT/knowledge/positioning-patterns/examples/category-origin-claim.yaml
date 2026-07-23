@@ -1,0 +1,27 @@
+id: pp-category-origin-claim
+name: 品类/原产地心智占位
+pattern_type: strategy_pattern
+summary: 通过与品类强相关的地理原产地或品类起源绑定，形成先天心智优势
+typical_context:
+  - 品类有明确的地域心智关联（如重庆火锅、长沙湘菜）
+  - 原产地本身具有消费者认知优势
+  - 经营者在原产地有供应链或文化根脉
+trigger_signals:
+  - 城市/地域名称在品类搜索中是高频词
+  - 目标城市消费者有「原产情结」
+  - 竞品没有在使用「正宗原产地」标签
+positioning_formula:
+  - 原产地/品类源起 + 真实供给根脉 + 可被验证的正宗体系
+success_reason: 原产地心智自带信任状，竞品难以完全复制同样地域叙事
+failure_modes:
+  - 经营者在原产地无供给根脉，沦为空洞口号
+  - 本地消费者不认可「外来者讲原产地故事」
+  - 原产地标签过于宽泛，无法形成具体联想
+recommended_usage: 品类与原产地强关联、经营者在当地有真实根基时
+not_recommended_when:
+  - 经营者与原产地无真实关联
+  - 原产地已被强势品牌占稳
+  - 品类对原产地不敏感（如茶饮、快餐）
+theory_alignment:
+  - ries
+  - trout

@@ -1,0 +1,18 @@
+{
+  "name": "m-pnt",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Meal Brand Positioning & Navigation Tool",
+  "workspaces": [
+    "packages/agent-sdk",
+    "packages/agents"
+  ],
+  "scripts": {
+    "test": "npm run test -w @mealkey/agents",
+    "test:v1": "npm run test:v1 -w @mealkey/agents",
+    "test:all": "npm run test && npm run test:v1",
+    "typecheck": "npm run typecheck -w @mealkey/agents",
+    "demo:xiangcai": "npm run demo:xiangcai -w @mealkey/agents",
+    "demo:xiangcai-v1": "npm run demo:xiangcai-v1 -w @mealkey/agents"
+  }
+}

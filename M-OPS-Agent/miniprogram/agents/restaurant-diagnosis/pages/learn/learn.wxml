@@ -1,0 +1,34 @@
+<view class="page" wx:if="{{ready}}">
+  <text class="kicker">门店 DNA</text>
+  <text class="h1">验证假设，下一轮可见加权</text>
+  <text class="lede">点「成立 / 不成立」后保存复扫。权重条会立刻变化——这就是越用越懂你的店。</text>
+
+  <view class="evo" wx:if="{{evoSummary}}">
+    <text>{{evoSummary}}</text>
+    <view class="weight" wx:for="{{weights}}" wx:key="theme">
+      <text>{{item.label}}</text>
+      <view class="bar-wrap">
+        <view class="bar" style="width: {{item.pct}}%;"></view>
+      </view>
+    </view>
+  </view>
+
+  <view class="card" wx:for="{{items}}" wx:key="id">
+    <text class="hyp">{{item.hypothesis}}</text>
+    <text class="muted" wx:if="{{item.expectedOutcome}}">预期：{{item.expectedOutcome}}</text>
+    <view class="actions">
+      <button class="chip {{item.polarity==='confirmed'?'on':''}}" data-id="{{item.id}}" data-polarity="confirmed" bindtap="setPolarity">成立</button>
+      <button class="chip {{item.polarity==='rejected'?'on':''}}" data-id="{{item.id}}" data-polarity="rejected" bindtap="setPolarity">不成立</button>
+      <button class="chip {{item.polarity==='unknown'?'on':''}}" data-id="{{item.id}}" data-polarity="unknown" bindtap="setPolarity">尚不确定</button>
+    </view>
+  </view>
+
+  <button class="btn btn-block" loading="{{busy}}" bindtap="commit">保存并复扫</button>
+  <button class="btn btn-ghost btn-block gap" bindtap="backReport">返回报告</button>
+  <button class="btn btn-ghost btn-block gap" bindtap="downloadApp">进入 MealKey 经营大脑</button>
+</view>
+
+<view class="page" wx:else>
+  <text class="lede">暂无待回填假设。请先完成一次体检。</text>
+  <button class="btn btn-block gap" bindtap="goHome">返回 MealKey</button>
+</view>

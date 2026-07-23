@@ -1,0 +1,24 @@
+id: ma-price-anchor-affordable-comfort
+asset_type: price_anchor_terms
+term: 吃得起的品质感
+meaning: 消费者愿意为「有品质但不贵」的情感价值付费，这是中餐最大价格心智盲区
+target_customer_tags:
+  - 家庭消费
+  - 年轻白领
+  - 价格敏感但品质不妥协
+scene_tags:
+  - 周末聚餐
+  - 朋友局
+  - 日常改善
+category_tags:
+  - 湘菜
+  - 家常菜
+  - 川菜
+  - 中餐
+mental_effect:
+  - 心理安全感高
+  - 试错成本低
+  - 复购意愿强
+competitor_overlap_level: medium
+cultural_relevance: 中国消费者「好吃不贵」仍是最大主流心智，高端化浪潮下有大量升级但不想花太多的人群
+usage_notes: 适合大众中餐定位；价格锚点须与场景感知一致，避免「吃完了也不觉得便宜」

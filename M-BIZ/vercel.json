@@ -1,0 +1,7 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "nextjs",
+  "installCommand": "npm install && npm --workspace @mealkey/web run prisma:generate",
+  "buildCommand": "npx turbo build --filter=@mealkey/web",
+  "outputDirectory": "apps/web/.next"
+}

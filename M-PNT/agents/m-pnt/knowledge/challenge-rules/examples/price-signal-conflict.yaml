@@ -1,0 +1,27 @@
+id: cr-price-signal-conflict
+name: 价格信号与定位冲突
+risk_type: mental_confusion
+trigger_condition:
+  - 品牌定位在高端/精致，但价格带处于品类中低端
+  - 品牌定位在大众/性价比，但门店装修/选址暗示高端
+  - 消费者从价格无法推断出品牌定位
+challenge_questions:
+  - 消费者看到菜单价格后，是否符合对品牌定位的预期？
+  - 预期价格与实际价格之间是否存在不一致？
+  - 竞争品牌在同一价格带上的定位信号是什么？
+typical_failure_signal:
+  - 消费者评论「环境不错但贵了」或「看起来便宜结果不便宜」
+  - 价格带与场景/产品档次产生认知冲突
+  - 客群实际消费水平与目标客群明显偏离
+severity_level: R3
+elimination_condition:
+  - 价格与定位信号在两个以上维度明显冲突
+  - 调整价格带会破坏盈利模型
+mitigation_direction:
+  - 调整定位语言使其与价格带一致（不一定要降定位）
+  - 或调整供给结构让价格带可支撑定位承诺
+  - 在品牌表达中增加价格信号透明度
+linked_patterns: []
+linked_theories:
+  - trout
+  - ye_maozhong

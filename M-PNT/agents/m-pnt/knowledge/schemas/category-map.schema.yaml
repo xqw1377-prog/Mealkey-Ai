@@ -1,0 +1,12 @@
+# CategoryMap — 品类竞争与空白地图
+object_type: CategoryMap
+fields:
+  id: string
+  category_name: string
+  main_segments: list[string]
+  common_positioning_types: list[string]
+  crowded_positions: list[string]
+  white_space_positions: list[string]
+  key_customer_groups: list[string]
+  key_scene_groups: list[string]
+  price_structure: string

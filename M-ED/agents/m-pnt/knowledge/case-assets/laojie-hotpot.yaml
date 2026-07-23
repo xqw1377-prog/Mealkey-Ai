@@ -1,0 +1,37 @@
+id: case-laojie-hotpot
+brand_name: 老街老火锅
+category: 火锅
+city_context: 重庆
+market_stage: 成熟期偏红海
+project_stage: 筹备开店
+initial_problem: 重庆火锅竞争极度饱和，头部品牌心智固化为「正宗重庆味」，新品牌极难切入
+resource_condition: 预算 200 万，创始人家族有底料配方，无餐饮连锁经验
+competition_context: 海底捞占「服务」、周师兄占「大片毛肚」、珮姐占「回家路线」；无品牌明确占「一人食火锅」
+candidate_positions:
+  - 「正宗重庆老火锅」——与头部正面冲突，不可行
+  - 「一人食精致火锅」——场景窄但有空白
+  - 「火锅+小酒馆」——复合型但执行复杂
+final_position: 「一个人也要好好吃火锅」——一人食火锅场景切割
+why_choose: 一人食是火锅品类中未被头部占稳的空位，且城市化单身经济趋势明显可长期强化
+why_not_others: 「正宗」无法与头部争；「火锅+酒馆」团队能力和预算不支持
+differentiation_design: 单人小锅+高吧台动线+套餐化（避免一人点菜尴尬）+出餐效率优化
+execution_actions:
+  - 门店以吧台式单人座为主（60%），小桌为辅（40%）
+  - 开发 3 款一人食套餐（68/88/128 元）
+  - 出餐标准 8 分钟内上齐
+  - 运营策略主攻「下班后一人食」场景
+market_feedback: 首店 6 个月实现盈亏平衡，一人食占比 70%，复购率 32% 高于区域平均水平
+result_summary: 以品类场景切割在红海中找到可行空位，验证了特劳特区隔理论在饱和市场的有效性
+success_or_failure: success
+quality_tier: silver_case
+mental_takeaway: 即使是红海品类，只要切割出未被占稳的场景空位，仍有进入窗口
+reusable_principles:
+  - 饱和市场不做正面战，找场景空位
+  - 一人食的前提是「不尴尬」「不浪费」「不用等」
+  - 品类越成熟，场景切割越锋利
+risk_lessons:
+  - 午市上座率不足，需要午餐场景补充
+  - 一人食翻台压力大，厨房动线必须提前设计
+theory_tags:
+  - trout
+  - ye_maozhong

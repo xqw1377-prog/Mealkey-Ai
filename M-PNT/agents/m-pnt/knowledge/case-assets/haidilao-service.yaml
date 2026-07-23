@@ -1,0 +1,36 @@
+id: case-haidilao-service
+brand_name: 海底捞
+category: 火锅
+city_context: 全国
+market_stage: 成熟期
+project_stage: 品牌跃升
+initial_problem: 火锅品类极度同质化，川式火锅竞争红海，所有品牌都在讲「正宗」「老汤」「食材新鲜」
+resource_condition: 早期预算有限，创始团队有餐饮服务经验
+competition_context: 火锅品类心智被「正宗川味」占据，任何新品牌打「正宗」都是正面战
+candidate_positions:
+  - 「最好的川味火锅」——正面战，不可行
+  - 「服务最好的火锅」——差异化但执行门槛高
+  - 「年轻人火锅」——人群过宽
+final_position: 「服务最好的火锅」——以极致服务建立品类区隔
+why_choose: 在火锅这个品类里，「正宗味道」已经无法区分品牌，但「服务」是一个无人占据的空位
+why_not_others: 「最好川味」是正面攻击强势品类认知；「年轻人火锅」太泛
+differentiation_design: 等位区美甲/擦鞋、拉面表演、生日惊喜、服务员无限热情的个性化服务
+execution_actions:
+  - 把服务体验打造成品牌的核心产品（不只火锅本身）
+  - 招聘时优先关注服务意识而非厨师背景
+  - 每一个服务触点设计成可被转述的「故事」
+market_feedback: 服务成为海底捞的第一联想，超越火锅口味本身；消费者说「我要吃火锅，去海底捞吧」而不是「我要吃火锅，选川味的」
+result_summary: 品类区隔最经典的案例：火锅的差异化不在锅里，在锅外
+success_or_failure: success
+quality_tier: gold_case
+mental_takeaway: 成熟品类的差异化机会往往不在产品本身，而在消费体验的某个空白维度
+reusable_principles:
+  - 同质化品类中，如果产品无法区分，就换维度竞争
+  - 差异化维度越不可被模仿越好（服务文化比菜品配方难抄）
+  - 消费者转述的品牌故事比广告语更有说服力
+risk_lessons:
+  - 服务差异化的核心是人，人的管理成本高于产品
+  - 如果只学服务不学文化，差异化会迅速消失
+theory_tags:
+  - trout
+  - ye_maozhong

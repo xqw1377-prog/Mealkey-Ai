@@ -1,0 +1,38 @@
+.page {
+  padding: 40rpx;
+}
+
+.form {
+  margin: 40rpx 0;
+}
+
+.field {
+  margin-bottom: 28rpx;
+}
+
+.label {
+  display: block;
+  font-size: 24rpx;
+  color: var(--muted);
+  margin-bottom: 10rpx;
+}
+
+.input {
+  border: 1rpx solid var(--line);
+  background: var(--card);
+  padding: 20rpx 24rpx;
+  font-size: 28rpx;
+  min-height: 80rpx;
+}
+
+.gap {
+  margin-top: 20rpx;
+}
+
+.radio {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 14rpx;
+  font-size: 26rpx;
+}

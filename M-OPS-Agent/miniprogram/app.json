@@ -1,0 +1,51 @@
+{
+  "pages": [
+    "shell/pages/home/home",
+    "shell/pages/capabilities/capabilities",
+    "shell/pages/brain/brain",
+    "shell/pages/me/me",
+    "agents/restaurant-diagnosis/pages/index/index",
+    "agents/restaurant-diagnosis/pages/intake/intake",
+    "agents/restaurant-diagnosis/pages/import/import",
+    "agents/restaurant-diagnosis/pages/report/report",
+    "agents/restaurant-diagnosis/pages/learn/learn",
+    "agents/restaurant-diagnosis/pages/archive/archive",
+    "agents/restaurant-diagnosis/pages/action/action",
+    "agents/restaurant-diagnosis/pages/enhance/enhance",
+    "agents/m-pnt-brand/pages/home/home"
+  ],
+  "window": {
+    "navigationBarTitleText": "MealKey",
+    "navigationBarBackgroundColor": "#F6F3ED",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#F6F3ED",
+    "backgroundTextStyle": "dark"
+  },
+  "tabBar": {
+    "color": "#6b6a64",
+    "selectedColor": "#141413",
+    "backgroundColor": "#F6F3ED",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "shell/pages/home/home",
+        "text": "首页"
+      },
+      {
+        "pagePath": "shell/pages/capabilities/capabilities",
+        "text": "能力"
+      },
+      {
+        "pagePath": "shell/pages/brain/brain",
+        "text": "大脑"
+      },
+      {
+        "pagePath": "shell/pages/me/me",
+        "text": "我的"
+      }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

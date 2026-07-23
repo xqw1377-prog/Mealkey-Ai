@@ -1,0 +1,27 @@
+id: tr-trout-simplicity-power
+theory_source: trout
+name: 简单是终极武器
+principle: 在信息过载的时代，复杂的信息无法进入心智，简单才是最有力量的定位武器
+decision_question: 这个定位能用最简单的话说清楚吗？
+applicable_context:
+  - 品类信息复杂
+  - 消费者决策路径短
+  - 品牌传播资源有限
+key_variables:
+  - 定位语的长度和复杂度
+  - 消费者复述的准确度
+  - 定位语与竞品的区分速度（3秒内？）
+decision_rules:
+  - 好的定位应该能用3秒说清楚、3秒被记住
+  - 如果CEO需要用一分钟来解释品牌定位，说明定位还不够简单
+  - 去掉所有的形容词，只留名词和动词
+  - 简单不是空洞，是去掉一切多余信息后留下的核心
+anti_patterns:
+  - 用复杂的理论包装简单的概念
+  - 为了显得有深度而使用抽象词汇（「生活方式」「新物种」「生态」）
+  - 在定位语中堆砌多个价值点
+output_implication: 定位语必须可被消费者在3秒内复述，否则应简化
+theory_view_tag:
+  - trout
+  - simplicity
+  - communication

@@ -1,0 +1,50 @@
+<view class="page shell-page">
+  <text class="kicker">Account</text>
+  <text class="h1">我的</text>
+
+  <view class="banner">
+    <text class="banner-title">{{nickName}}</text>
+    <text class="banner-body">{{levelLabel}} · 登录态 {{authMode}} · Token {{balance}}</text>
+    <text class="muted" wx:if="{{syncPending}}">Brain 待云同步 {{syncPending}} 条</text>
+  </view>
+
+  <view class="section">
+    <text class="section-title">微信身份</text>
+    <button class="btn btn-ghost btn-block gap" bindtap="doLogin">微信登录 / 刷新会话</button>
+  </view>
+
+  <view class="section">
+    <text class="section-title">保存经营档案</text>
+    <text class="muted">不是注册。绑定后可同步到经营大脑。</text>
+    <button
+      class="btn btn-ghost btn-block gap"
+      open-type="getPhoneNumber"
+      bindgetphonenumber="onGetPhoneNumber"
+    >
+      微信手机号授权
+    </button>
+    <input class="input" placeholder="或手填手机号" value="{{phone}}" bindinput="onPhone" />
+    <button class="btn btn-block gap" bindtap="bindPhone">绑定并保存</button>
+  </view>
+
+  <view class="section">
+    <text class="section-title">经营合伙人</text>
+    <text class="muted">有效邀请 = 授权/建档 + 完成首次诊断。一级 {{inviteCode ? '' : ''}}奖励见流水。</text>
+    <text class="banner-body">我的邀请码：{{inviteCode}}</text>
+    <text class="muted" wx:if="{{invitedBy}}">来自邀请：{{invitedBy}}</text>
+    <text class="muted">有效完诊：{{qualified ? '已达成' : '未达成'}} · 已结算邀请 {{inviteeCount}} 人</text>
+    <button class="btn btn-ghost btn-block gap" bindtap="copyInvite">复制邀请文案</button>
+    <button class="btn btn-ghost btn-block gap" bindtap="settleInvite">结算邀请奖励（本机）</button>
+  </view>
+
+  <view class="section" wx:if="{{ledger.length}}">
+    <text class="section-title">Token 流水</text>
+    <view class="ledger" wx:for="{{ledger}}" wx:key="at">
+      <text>{{item.delta}} · {{item.note}}</text>
+      <text class="muted">{{item.at}}</text>
+    </view>
+  </view>
+
+  <button class="btn btn-ghost btn-block gap" bindtap="flushSync">推送 Brain 同步队列</button>
+  <button class="btn btn-block gap" bindtap="enterBrain">进入 MealKey 经营大脑</button>
+</view>

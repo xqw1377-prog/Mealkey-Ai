@@ -1,0 +1,25 @@
+{
+  "name": "@mealkey/knowledge-engine",
+  "version": "0.1.0",
+  "private": true,
+  "description": "MealKey Knowledge Engine - 餐饮知识引擎（存储无关）",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit",
+    "clean": "node -e \"require('fs').rmSync('dist', { recursive: true, force: true })\""
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0"
+  }
+}

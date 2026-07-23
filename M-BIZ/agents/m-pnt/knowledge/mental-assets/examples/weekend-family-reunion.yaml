@@ -1,0 +1,21 @@
+id: ma-scene-weekend-family-reunion
+asset_type: scene_triggers
+term: 周末家庭团聚
+meaning: 以家庭周末聚餐为核心的第一心智场景
+target_customer_tags:
+  - 年轻家庭
+  - 亲子家庭
+scene_tags:
+  - 周末聚餐
+  - 家庭团聚
+category_tags:
+  - 湘菜
+  - 家常菜
+  - 正餐
+mental_effect:
+  - 情感强
+  - 高频稳定
+  - 易形成品牌记忆
+competitor_overlap_level: medium
+cultural_relevance: 中国家庭周末聚餐文化高度相关
+usage_notes: 适合家庭情感型定位；需配套家庭友好空间与菜品结构

@@ -1,0 +1,11 @@
+{
+  "id": "skill.restaurant-diagnosis.v1",
+  "agentId": "restaurant-diagnosis",
+  "version": "1.0.0",
+  "entry": "src/skill.ts#runRestaurantDiagnosisSkill",
+  "inputRef": "ContextPackageV1",
+  "outputRef": "IngressBatchV1",
+  "maxInsightLevel": 3,
+  "ports": ["signal", "insight", "gap"],
+  "notes": "Decision Skill：Context → diagnose → Ingress；禁止拍板句；无 Prisma"
+}

@@ -1,0 +1,32 @@
+{
+  "name": "@mealkey/core",
+  "version": "0.1.0",
+  "private": true,
+  "description": "MealKey Core - 餐饮经营智能层: ChiefAgent, KnowledgeEngine, MemoryEngine, CognitionEngine",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit",
+    "clean": "node -e \"require('fs').rmSync('dist', { recursive: true, force: true })\""
+  },
+  "dependencies": {
+    "@mealkey/agent-sdk": "*",
+    "@mealkey/knowledge-engine": "*",
+    "@mealkey/memory-engine": "*",
+    "zod": "^3.22.0"
+  },
+  "devDependencies": {
+    "@prisma/client": "^5.22.0",
+    "typescript": "^5.4.0"
+  }
+}

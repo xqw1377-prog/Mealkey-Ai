@@ -1,0 +1,2344 @@
+rules:
+- id: R-BM-030
+  name: 价值主张完整性检查
+  domain: VP
+  expert: cpo
+  level: 1
+  category: structure_completeness
+  condition:
+    and:
+    - metric: vp_description_exists
+      operator: ==
+      value: false
+  conclusion:
+    type: incomplete
+    summary: 价值主张描述缺失，商业模式基础不完整
+    severity: high
+    confidence: 1.0
+  suggestion: 请明确您的核心价值主张：您为客户解决什么核心问题？
+- id: R-BM-031
+  name: 客户细分完整性检查
+  domain: CS
+  expert: cpo
+  level: 1
+  category: structure_completeness
+  condition:
+    and:
+    - metric: cs_primary_exists
+      operator: ==
+      value: false
+  conclusion:
+    type: incomplete
+    summary: 目标客户细分未定义
+    severity: high
+    confidence: 1.0
+  suggestion: 请明确您的目标客户是谁？核心客户画像是什么？
+- id: R-BM-032
+  name: 收入来源完整性检查
+  domain: RS
+  expert: cfo
+  level: 1
+  category: structure_completeness
+  condition:
+    and:
+    - metric: rs_types_exists
+      operator: ==
+      value: false
+  conclusion:
+    type: incomplete
+    summary: 收入来源未定义
+    severity: high
+    confidence: 1.0
+  suggestion: 请说明您的收入来源：客户为什么付费？付费方式是什么？
+- id: R-BM-033
+  name: 渠道通路完整性检查
+  domain: CH
+  expert: coo
+  level: 1
+  category: structure_completeness
+  condition:
+    and:
+    - metric: ch_types_count
+      operator: ==
+      value: 0
+  conclusion:
+    type: incomplete
+    summary: 渠道通路未定义
+    severity: medium
+    confidence: 1.0
+  suggestion: 请说明您的产品/服务通过什么渠道触达客户？
+- id: R-BM-034
+  name: 成本结构完整性检查
+  domain: COST
+  expert: cfo
+  level: 1
+  category: structure_completeness
+  condition:
+    and:
+    - metric: has_cost_breakdown
+      operator: ==
+      value: false
+  conclusion:
+    type: incomplete
+    summary: 成本结构明细未定义
+    severity: medium
+    confidence: 0.9
+  suggestion: 请列出您的主要成本构成，这有助于评估盈利模型
+- id: R-BM-035
+  name: 核心资源完整性检查
+  domain: KR
+  expert: coo
+  level: 1
+  category: structure_completeness
+  condition:
+    and:
+    - metric: unique_resource
+      operator: ==
+      value: false
+    - metric: ka_primary_exists
+      operator: ==
+      value: false
+  conclusion:
+    type: incomplete
+    summary: 核心资源与关键业务均未定义，商业模式缺乏支撑
+    severity: high
+    confidence: 0.9
+  suggestion: 请说明您的核心资产是什么？最关键的业务活动是什么？
+- id: R-BM-036
+  name: 客户关系完整性检查
+  domain: CR
+  expert: coo
+  level: 1
+  category: structure_completeness
+  condition:
+    and:
+    - metric: monthly_churn_rate
+      operator: not_exists
+      value: true
+  conclusion:
+    type: incomplete
+    summary: 客户留存数据缺失，无法评估客户关系健康度
+    severity: low
+    confidence: 0.8
+  suggestion: 建议开始追踪客户流失率与 NPS，建立数据驱动决策习惯
+- id: R-BM-037
+  name: 合作伙伴完整性检查
+  domain: KP
+  expert: coo
+  level: 1
+  category: structure_completeness
+  condition:
+    and:
+    - metric: partner_count_ge_2
+      operator: ==
+      value: false
+  conclusion:
+    type: incomplete
+    summary: 合作伙伴数量不足或有缺失
+    severity: low
+    confidence: 0.7
+  suggestion: 考虑拓展 2-3 个关键合作伙伴，增强业务协同效应
+- id: R-BM-040
+  name: 价值主张-客户匹配度检查
+  domain: VP
+  expert: cpo
+  level: 3
+  category: consistency
+  condition:
+    and:
+    - metric: vp_description_exists
+      operator: ==
+      value: true
+    - metric: cs_primary_exists
+      operator: ==
+      value: false
+  conclusion:
+    type: inconsistency
+    summary: 有价值主张描述但目标客户未定义，存在逻辑缺口
+    severity: medium
+    confidence: 0.8
+  suggestion: 在明确目标客户后重新评估价值主张的匹配度
+- id: R-BM-041
+  name: 毛利率-获客成本一致性检查
+  domain: COST
+  expert: cfo
+  level: 3
+  category: consistency
+  condition:
+    and:
+    - metric: gross_margin
+      operator: exists
+      value: true
+    - metric: gross_margin
+      operator: <
+      value: 0.2
+    - metric: cac
+      operator: exists
+      value: true
+    - metric: cac
+      operator: '>'
+      value: 1000
+  conclusion:
+    type: inconsistency
+    summary: 低毛利率 + 高获客成本，单位经济模型不可持续
+    severity: high
+    confidence: 0.9
+  suggestion: 需同时优化成本结构和获客效率，否则商业模式难以长期持续
+  verification_action_template: 请先计算您的单客 LTV，确认 LTV/CAC 是否 > 3，若低于 3 需优先调整定价或成本结构
+- id: R-BM-042
+  name: 高流失-高获客成本不匹配检查
+  domain: CR
+  expert: coo
+  level: 3
+  category: consistency
+  condition:
+    and:
+    - metric: churn_under_5pct
+      operator: ==
+      value: false
+    - metric: cac
+      operator: '>'
+      value: 5000
+  conclusion:
+    type: inconsistency
+    summary: 高流失率 + 高获客成本 = 效率陷阱，边际收益持续恶化
+    severity: high
+    confidence: 0.85
+  suggestion: 在加大获客投入前，优先降低流失率
+- id: R-BM-043
+  name: 高NPS-高流失率矛盾检查
+  domain: CR
+  expert: coo
+  level: 3
+  category: consistency
+  condition:
+    and:
+    - metric: nps_ge_40
+      operator: ==
+      value: true
+    - metric: churn_under_5pct
+      operator: ==
+      value: false
+  conclusion:
+    type: inconsistency
+    summary: NPS 偏高但流失率也偏高，可能存在调研偏差或流失集中在特定客群
+    severity: medium
+    confidence: 0.7
+  suggestion: 建议分客群分析流失率，识别出高NPS但流失的矛盾群体
+- id: R-BM-044
+  name: 高毛利-低定价合理性检查
+  domain: COST
+  expert: cfo
+  level: 3
+  category: consistency
+  condition:
+    and:
+    - metric: margin_ge_60pct
+      operator: ==
+      value: true
+    - metric: cac
+      operator: '>'
+      value: 10000
+  conclusion:
+    type: inconsistency
+    summary: 高毛利率但获客成本极高，产品可能定价过高限制了市场覆盖
+    severity: medium
+    confidence: 0.65
+  suggestion: 评估是否需要通过分层定价降低入门门槛，扩大市场覆盖
+- id: R-BM-045
+  name: 收入多来源-低ARPU矛盾检查
+  domain: RS
+  expert: cfo
+  level: 3
+  category: consistency
+  condition:
+    and:
+    - metric: revenue_streams_count
+      operator: '>='
+      value: 3
+    - metric: arpu
+      operator: exists
+      value: true
+    - metric: arpu
+      operator: <
+      value: 200
+  conclusion:
+    type: inconsistency
+    summary: 收入来源多样但客单价极低，可能存在变现分散问题
+    severity: low
+    confidence: 0.6
+  suggestion: 评估各收入来源的贡献占比，聚焦高价值变现路径
+- id: R-BM-010
+  name: LTV/CAC 健康度判定
+  domain: RS
+  expert: cfo
+  level: 2
+  category: health_threshold
+  condition:
+    and:
+    - metric: ltv_cac_ratio
+      operator: exists
+      value: true
+    - metric: ltv_cac_ratio
+      operator: <
+      value: 3.0
+  conclusion:
+    type: warning
+    summary: LTV/CAC 比值低于健康线 (3.0)，单位经济模型需优化
+    severity: medium
+    confidence: 0.8
+  suggestion: 提升客户生命周期价值或降低获客成本
+  verification_action_template: 请分别计算过去 {months} 个月的平均客户生命周期和平均获客成本，找出比值偏低的具体原因后再制定优化方案
+- id: R-BM-011
+  name: 营收增长率健康度判定
+  domain: RS
+  level: 2
+  category: health_threshold
+  condition:
+    and:
+    - metric: mrr_growth_rate
+      operator: exists
+      value: true
+    - metric: mrr_growth_rate
+      operator: <
+      value: 0.05
+  conclusion:
+    type: warning
+    summary: 月营收增长率低于 5%，增长动力不足
+    severity: medium
+    confidence: 0.75
+  suggestion: 分析增长瓶颈，考虑优化获客策略或提升客单价
+  verification_action_template: 请先拆解过去 {months} 个月的新客增长与老客增购数据，定位增长放缓的具体环节后再制定对策
+  expert: cfo
+- id: R-BM-012
+  name: ARPU 健康度判定
+  domain: RS
+  level: 2
+  category: health_threshold
+  condition:
+    and:
+    - metric: arpu
+      operator: exists
+      value: true
+    - metric: arpu
+      operator: <
+      value: 500
+  conclusion:
+    type: warning
+    summary: ARPU 偏低（<500），客单价有提升空间
+    severity: low
+    confidence: 0.6
+  suggestion: 评估向上销售或捆绑销售的可行性
+  expert: cfo
+- id: R-BM-013
+  name: 客户集中度健康度判定
+  domain: RS
+  level: 2
+  category: health_threshold
+  condition:
+    and:
+    - metric: top_revenue_share
+      operator: exists
+      value: true
+    - metric: top_revenue_share
+      operator: '>='
+      value: 0.7
+  conclusion:
+    type: warning
+    summary: 收入高度依赖少数来源，存在集中度风险
+    severity: high
+    confidence: 0.85
+  suggestion: 拓展收入来源，降低单来源依赖
+  verification_action_template: 请分析 top 3 收入来源的客户占比，若单一客户占比 > 30% 需优先制定客户多元化计划
+  expert: cfo
+- id: R-BM-014
+  name: NPS 健康度判定
+  domain: CR
+  level: 2
+  category: health_threshold
+  condition:
+    and:
+    - metric: nps
+      operator: exists
+      value: true
+    - metric: nps
+      operator: <
+      value: 30
+  conclusion:
+    type: warning
+    summary: NPS 低于 30，客户满意度有较大提升空间
+    severity: medium
+    confidence: 0.7
+  suggestion: 建立客户反馈闭环，系统化改进产品与服务体验
+  expert: coo
+- id: R-BM-015
+  name: 客户留存健康度判定
+  domain: CR
+  level: 2
+  category: health_threshold
+  condition:
+    and:
+    - metric: monthly_churn_rate
+      operator: exists
+      value: true
+    - metric: monthly_churn_rate
+      operator: '>='
+      value: 0.05
+  conclusion:
+    type: warning
+    summary: 月流失率 ≥ 5%，年度流失风险超过 46%
+    severity: high
+    confidence: 0.85
+  suggestion: 建立客户健康度评分体系，主动干预高风险客户
+  verification_action_template: 请提取过去 {months} 个月流失客户的登录频率/工单数/NPS数据，构建评分卡回测至 70%
+    准确率再实施
+  expert: coo
+- id: R-BM-016
+  name: 毛利率健康度判定
+  domain: COST
+  level: 2
+  category: health_threshold
+  condition:
+    and:
+    - metric: gross_margin
+      operator: exists
+      value: true
+    - metric: gross_margin
+      operator: <
+      value: 0.3
+  conclusion:
+    type: warning
+    summary: 毛利率低于 30%，盈利模型承压
+    severity: high
+    confidence: 0.8
+  suggestion: 分析成本结构，识别优化空间或评估提价可行性
+  verification_action_template: 请拆解过去 {months} 个月的成本明细，按固定/变动分类，找出占比前 3 的成本项再制定方案
+  expert: cfo
+- id: R-BM-017
+  name: 市场规模健康度判定
+  domain: CS
+  level: 2
+  category: health_threshold
+  condition:
+    and:
+    - metric: tam
+      operator: exists
+      value: true
+    - metric: tam
+      operator: <
+      value: 100000000
+  conclusion:
+    type: warning
+    summary: 目标市场规模有限，增长天花板较低
+    severity: medium
+    confidence: 0.7
+  suggestion: 评估拓展相邻市场的可能性，或考虑差异化定位获取更高溢价
+  verification_action_template: 请调研 {n} 个相邻细分市场的规模和竞争格局，筛选 2-3 个备选市场再做决策
+  expert: cso
+- id: R-BM-018
+  name: 获客成本占比营收判定
+  domain: CH
+  level: 2
+  category: health_threshold
+  condition:
+    and:
+    - metric: cac
+      operator: exists
+      value: true
+    - metric: arpu
+      operator: exists
+      value: true
+    - metric: cac
+      operator: '>'
+      value: 0
+    - metric: arpu
+      operator: '>'
+      value: 0
+  condition_script: cac / arpu > 0.5
+  conclusion:
+    type: warning
+    summary: 获客成本占 ARPU 比例过高，单位经济模型需优化
+    severity: high
+    confidence: 0.75
+  suggestion: 降低 CAC 或提升 ARPU，确保获客成本回收周期在 12 个月内
+  expert: coo
+- id: R-BM-001
+  name: 收入来源单一性风险判定
+  domain: RS
+  level: 2
+  category: risk_warning
+  condition:
+    and:
+    - metric: revenue_streams_count
+      operator: <=
+      value: 1
+    - metric: top_revenue_share
+      operator: '>'
+      value: 0.8
+  conclusion:
+    type: risk_warning
+    summary: 收入来源高度单一，抗风险能力弱
+    severity: high
+    confidence: 0.85
+  suggestion: 建议拓展多元化收入渠道，降低单来源依赖风险
+  verification_action_template: 请补充 {months} 个月的真实 {revenue_type} 流水数据，分析各渠道收入占比后再决定拓展方向
+  expert: cfo
+- id: R-BM-002
+  name: 获客成本偏高判定
+  domain: CH
+  level: 2
+  category: risk_warning
+  condition:
+    and:
+    - metric: cac
+      operator: exists
+      value: true
+    - metric: cac
+      operator: '>'
+      value: 10000
+  conclusion:
+    type: risk_warning
+    summary: CAC 超过 10000，获客成本处于高位
+    severity: high
+    confidence: 0.8
+  suggestion: 审视获客渠道效率，优先压缩高 CAC 低转化渠道的预算
+  verification_action_template: 请先收集过去 {months} 个月的渠道转化漏斗数据，识别流失最严重的环节后制定优化方案
+  expert: coo
+- id: R-BM-003
+  name: 获客成本 vs 行业偏离判定
+  domain: CH
+  level: 2
+  category: risk_warning
+  condition:
+    and:
+    - metric: cac
+      operator: exists
+      value: true
+    - metric: cac_vs_industry_ratio_exists
+      operator: ==
+      value: 1
+    - metric: cac
+      operator: '>'
+      value: 5000
+  conclusion:
+    type: risk_warning
+    summary: 获客成本显著高于行业水平
+    severity: medium
+    confidence: 0.75
+  suggestion: 优化获客渠道组合，提升营销转化效率
+  expert: coo
+- id: R-BM-004
+  name: 高客户流失风险判定
+  domain: CR
+  level: 2
+  category: risk_warning
+  condition:
+    or:
+    - metric: monthly_churn_rate
+      operator: '>'
+      value: 0.08
+    - metric: nps
+      operator: <=
+      value: 20
+  conclusion:
+    type: risk_warning
+    summary: 客户留存存在较高风险
+    severity: high
+    confidence: 0.8
+  suggestion: 建议建立客户健康度监控体系，主动干预高风险客户
+  verification_action_template: 请提取过去 {months} 个月已流失客户的共性特征（登录频率/工单数/NPS评分），构建简易评分卡，回测准确率达到
+    70% 以上再实施
+  expert: coo
+- id: R-BM-005
+  name: 毛利率偏低风险判定
+  domain: COST
+  level: 2
+  category: risk_warning
+  condition:
+    and:
+    - metric: gross_margin
+      operator: exists
+      value: true
+    - metric: gross_margin
+      operator: <
+      value: 0.3
+  conclusion:
+    type: risk_warning
+    summary: 毛利率偏低，盈利模型可持续性存疑
+    severity: high
+    confidence: 0.85
+  suggestion: 分析成本结构，识别成本优化空间或评估提价可行性
+  verification_action_template: 请先拆解过去 {months} 个月的成本明细，按固定/变动成本分类，找出占比最高的前 3 项成本再制定优化方案
+  expert: cfo
+- id: R-BM-006
+  name: 市场容量不足风险判定
+  domain: CS
+  level: 2
+  category: risk_warning
+  condition:
+    and:
+    - metric: tam
+      operator: exists
+      value: true
+    - metric: tam
+      operator: <
+      value: 100000000
+  conclusion:
+    type: risk_warning
+    summary: 目标市场规模有限，增长天花板较低
+    severity: medium
+    confidence: 0.7
+  suggestion: 评估拓展相邻市场的可能性，或考虑差异化定位获取更高溢价
+  verification_action_template: 请先调研 {n} 个相邻细分市场的规模和竞争格局，筛选出 2-3 个可进入的备选市场再做决策
+  expert: cso
+- id: R-BM-007
+  name: 核心资源可替代性风险
+  domain: KR
+  level: 2
+  category: risk_warning
+  condition:
+    and:
+    - metric: unique_resource
+      operator: exists
+      value: false
+  conclusion:
+    type: risk_warning
+    summary: 缺乏独特核心资源，竞争壁垒薄弱
+    severity: medium
+    confidence: 0.7
+  suggestion: 识别并构建差异化核心能力，如专利、数据资产、品牌认知
+  verification_action_template: 请先完成一份竞争差异化分析报告，列出 top 3 竞争对手的核心资源与你方的差距，找出 1-2 个可构建的独特能力方向
+  expert: coo
+- id: R-BM-050
+  name: 无营收风险判定
+  domain: RS
+  level: 2
+  category: risk_warning
+  condition:
+    and:
+    - metric: mrr
+      operator: ==
+      value: 0
+  conclusion:
+    type: risk_warning
+    summary: 尚无营收，商业模式尚未被市场验证
+    severity: high
+    confidence: 0.9
+  suggestion: 尽快推动 MVP 上线并获取第一批付费客户
+  expert: cfo
+- id: R-BM-051
+  name: 无获客渠道风险判定
+  domain: CH
+  level: 2
+  category: risk_warning
+  condition:
+    and:
+    - metric: ch_types_count
+      operator: ==
+      value: 0
+  conclusion:
+    type: risk_warning
+    summary: 未定义任何获客渠道，客户触达方式缺失
+    severity: high
+    confidence: 0.9
+  suggestion: 至少确定 2-3 个核心获客渠道并开始小规模测试
+  expert: coo
+- id: R-BM-052
+  name: 无痛点的价值主张风险
+  domain: VP
+  level: 2
+  category: risk_warning
+  condition:
+    and:
+    - metric: pain_point_ge_2
+      operator: ==
+      value: false
+  conclusion:
+    type: risk_warning
+    summary: 客户痛点描述不清晰或不足，价值主张可能缺乏说服力
+    severity: medium
+    confidence: 0.7
+  suggestion: 深度访谈至少 5 名目标客户，提炼 3 个以上真实痛点
+  expert: cpo
+- id: R-BM-053
+  name: 无合作伙伴的独立运营风险
+  domain: KP
+  level: 2
+  category: risk_warning
+  condition:
+    and:
+    - metric: partner_count_ge_2
+      operator: ==
+      value: false
+  conclusion:
+    type: risk_warning
+    summary: 缺少外部合作伙伴，业务可扩展性和抗风险能力受限
+    severity: low
+    confidence: 0.6
+  suggestion: 识别 2-3 个具有互补能力的潜在合作伙伴
+  expert: coo
+- id: R-BM-020
+  name: SaaS 订阅模式匹配
+  domain: VP
+  level: 3
+  category: pattern_recognition
+  condition:
+    and:
+    - metric: rs_types_contains_subscription
+      operator: ==
+      value: true
+    - metric: vp_type
+      operator: ==
+      value: subscription_access
+  conclusion:
+    type: pattern
+    summary: 符合 SaaS 订阅模式特征
+    confidence: 0.8
+  suggestion: 参考标准 SaaS 订阅模式的最佳实践优化运营
+  expert: cso
+- id: R-BM-021
+  name: 平台型模式匹配
+  domain: VP
+  level: 3
+  category: pattern_recognition
+  condition:
+    and:
+    - metric: cs_has_multi_side
+      operator: ==
+      value: true
+    - metric: rs_types_contains_commission
+      operator: ==
+      value: true
+  conclusion:
+    type: pattern
+    summary: 符合双边平台模式特征
+    confidence: 0.75
+  suggestion: 关注网络效应的放大与供需平衡管理
+  expert: cso
+- id: R-BM-022
+  name: 免费增值模式匹配
+  domain: VP
+  level: 3
+  category: pattern_recognition
+  condition:
+    and:
+    - metric: rs_types_contains_free
+      operator: ==
+      value: true
+    - metric: rs_types_contains_premium
+      operator: ==
+      value: true
+  conclusion:
+    type: pattern
+    summary: 符合免费增值模式特征
+    confidence: 0.75
+  suggestion: 优化免费到付费的转化漏斗，提升转化率
+  expert: cso
+- id: R-BM-023
+  name: 硬件+服务模式匹配
+  domain: VP
+  level: 3
+  category: pattern_recognition
+  condition:
+    and:
+    - metric: rs_types_contains_hardware
+      operator: ==
+      value: true
+    - metric: rs_types_contains_subscription
+      operator: ==
+      value: true
+  conclusion:
+    type: pattern
+    summary: 符合硬件+服务模式特征
+    confidence: 0.75
+  suggestion: 硬件锁定 + 服务订阅是最佳组合策略
+  expert: cso
+- id: R-BM-024
+  name: 产品制造分销模式匹配
+  domain: VP
+  level: 3
+  category: pattern_recognition
+  condition:
+    and:
+    - metric: rs_types_contains_product_sales
+      operator: ==
+      value: true
+    - metric: kr_type
+      operator: ==
+      value: manufacturing
+  conclusion:
+    type: pattern
+    summary: 符合产品制造分销模式特征
+    confidence: 0.7
+  suggestion: 关注供应链效率与库存周转率
+  expert: cso
+- id: R-BM-025
+  name: 数据变现模式匹配
+  domain: VP
+  level: 3
+  category: pattern_recognition
+  condition:
+    and:
+    - metric: kr_type
+      operator: ==
+      value: data_assets
+    - metric: rs_types_contains_data
+      operator: ==
+      value: true
+  conclusion:
+    type: pattern
+    summary: 符合数据变现模式特征
+    confidence: 0.7
+  suggestion: 数据合规是底线，建议优先建立数据治理框架
+  expert: cso
+- id: R-BM-026
+  name: 内容订阅模式匹配
+  domain: VP
+  level: 3
+  category: pattern_recognition
+  condition:
+    and:
+    - metric: rs_types_contains_content_subscription
+      operator: ==
+      value: true
+    - metric: vp_type
+      operator: ==
+      value: premium_content
+  conclusion:
+    type: pattern
+    summary: 符合内容订阅模式特征
+    confidence: 0.7
+  suggestion: 内容质量与更新频率是留存关键
+  expert: cso
+- id: R-ECC-SEED-001
+  name: 种子期-PMF 验证风险
+  domain: VP
+  level: 2
+  category: stage_aware
+  condition:
+    and:
+    - metric: is_seed
+      operator: ==
+      value: 1
+    - metric: pain_point_ge_2
+      operator: ==
+      value: false
+  conclusion:
+    type: risk_warning
+    summary: 种子期客户痛点不清晰，PMF 验证面临挑战
+    severity: high
+    confidence: 0.8
+  suggestion: 建议先完成 10-20 组客户深度访谈，验证痛点真实性
+  expert: cso
+- id: R-ECC-SEED-002
+  name: 种子期-客户定义模糊风险
+  domain: CS
+  level: 2
+  category: stage_aware
+  condition:
+    and:
+    - metric: is_seed
+      operator: ==
+      value: 1
+    - metric: cs_primary_exists
+      operator: ==
+      value: false
+  conclusion:
+    type: risk_warning
+    summary: 种子期目标客户不明确，无法有效验证产品方向
+    severity: high
+    confidence: 0.85
+  suggestion: 先定义最可能成为早期用户的 1-2 个细分客群画像
+  expert: cso
+- id: R-ECC-SEED-003
+  name: 种子期-收入模式缺失
+  domain: RS
+  level: 2
+  category: stage_aware
+  condition:
+    and:
+    - metric: is_seed
+      operator: ==
+      value: 1
+    - metric: rs_types_exists
+      operator: ==
+      value: false
+  conclusion:
+    type: warning
+    summary: 种子期尚未定义收入模式
+    severity: medium
+    confidence: 0.7
+  suggestion: 建议在设计 MVP 阶段同步思考付费点，即使初期免费也要有变现路径
+  expert: cfo
+- id: R-ECC-SEED-004
+  name: 种子期-竞争认知不足
+  domain: VP
+  level: 2
+  category: stage_aware
+  condition:
+    and:
+    - metric: is_seed
+      operator: ==
+      value: 1
+    - metric: cs_primary_exists
+      operator: ==
+      value: true
+    - metric: pain_point_ge_2
+      operator: ==
+      value: false
+  conclusion:
+    type: warning
+    summary: 种子期有客户定义但痛点不足，需深入验证
+    severity: medium
+    confidence: 0.65
+  suggestion: 针对已定义的客户群体做 5-10 组深度访谈，提炼 3 个以上真实痛点
+  expert: cso
+- id: R-ECC-SEED-005
+  name: 种子期-团队完整度检查
+  domain: KR
+  level: 2
+  category: stage_aware
+  condition:
+    and:
+    - metric: is_seed
+      operator: ==
+      value: 1
+  conclusion:
+    type: info
+    summary: 种子期团队能力是最大竞争力，请确认核心团队是否完整
+    severity: low
+    confidence: 0.6
+  suggestion: 种子期建议核心团队覆盖产品、技术、商业三个角色
+  expert: coo
+- id: R-ECC-SEED-006
+  name: 种子期-获客渠道缺失
+  domain: CH
+  level: 2
+  category: stage_aware
+  condition:
+    and:
+    - metric: is_seed
+      operator: ==
+      value: 1
+    - metric: ch_types_count
+      operator: ==
+      value: 0
+  conclusion:
+    type: warning
+    summary: 种子期尚未考虑获客渠道
+    severity: medium
+    confidence: 0.6
+  suggestion: 确定 1-2 个低成本获客渠道做早期测试（社群/口碑/内容）
+  expert: coo
+- id: R-ECC-SEED-007
+  name: 种子期-关键指标未定义
+  domain: RS
+  level: 2
+  category: stage_aware
+  condition:
+    and:
+    - metric: is_seed
+      operator: ==
+      value: 1
+  conclusion:
+    type: info
+    summary: 种子期建议明确北极星指标
+    severity: low
+    confidence: 0.55
+  suggestion: 确定 1 个北极星指标（如周活跃用户/核心功能使用率）来指导产品迭代
+  expert: cfo
+- id: R-ECC-SEED-008
+  name: 种子期-MVP 验证建议
+  domain: VP
+  level: 4
+  category: stage_aware
+  condition:
+    and:
+    - metric: is_seed
+      operator: ==
+      value: 1
+    - metric: pain_point_ge_2
+      operator: ==
+      value: true
+    - metric: cs_primary_exists
+      operator: ==
+      value: true
+  conclusion:
+    type: positive
+    summary: 种子期已具备 MVP 验证条件
+    confidence: 0.75
+  suggestion: 建议在 2-4 周内搭建最简可行产品，找 10-20 个种子用户测试
+  verification_action_template: 请先完成 MVP 开发并邀请 {n} 名种子用户内测，核心功能使用率达到 {threshold}%
+    再考虑正式上线
+  expert: cso
+- id: R-ECC-GROWTH-001
+  name: 成长期-获客效率风险
+  domain: CH
+  level: 2
+  category: stage_aware
+  condition:
+    and:
+    - metric: is_growth
+      operator: ==
+      value: 1
+    - metric: cac
+      operator: exists
+      value: true
+    - metric: cac
+      operator: '>'
+      value: 5000
+  conclusion:
+    type: risk_warning
+    summary: 成长期 CAC 偏高，规模化获客效率受限
+    severity: high
+    confidence: 0.75
+  suggestion: 测试低成本获客渠道（内容营销/口碑/PLG），降低对高价渠道的依赖
+  expert: coo
+- id: R-ECC-GROWTH-002
+  name: 成长期-单位经济模型风险
+  domain: RS
+  level: 2
+  category: stage_aware
+  condition:
+    and:
+    - metric: is_growth
+      operator: ==
+      value: 1
+    - metric: ltv_cac_ratio
+      operator: exists
+      value: true
+    - metric: ltv_cac_ratio
+      operator: <
+      value: 3.0
+  conclusion:
+    type: risk_warning
+    summary: 成长期 LTV/CAC < 3，单位经济模型不足以支撑规模扩张
+    severity: high
+    confidence: 0.8
+  suggestion: 先优化单位经济模型再追求规模化，否则增长越快亏损越大
+  expert: cfo
+- id: R-ECC-GROWTH-003
+  name: 成长期-留存率风险
+  domain: CR
+  level: 2
+  category: stage_aware
+  condition:
+    and:
+    - metric: is_growth
+      operator: ==
+      value: 1
+    - metric: churn_under_5pct
+      operator: ==
+      value: false
+  conclusion:
+    type: risk_warning
+    summary: 成长期月流失率高于 5%，留存是当前最大风险
+    severity: high
+    confidence: 0.8
+  suggestion: 建立客户成功体系，设置留存率作为核心 OKR
+  expert: coo
+- id: R-ECC-GROWTH-004
+  name: 成长期-渠道单一风险
+  domain: CH
+  level: 2
+  category: stage_aware
+  condition:
+    and:
+    - metric: is_growth
+      operator: ==
+      value: 1
+    - metric: channel_ge_2
+      operator: ==
+      value: false
+  conclusion:
+    type: risk_warning
+    summary: 成长期仅依赖单一获客渠道，规模化风险高
+    severity: high
+    confidence: 0.75
+  suggestion: 至少测试 3 个不同获客渠道，找到可复制的增长引擎
+  expert: coo
+- id: R-ECC-GROWTH-005
+  name: 成长期-收入增长放缓
+  domain: RS
+  level: 2
+  category: stage_aware
+  condition:
+    and:
+    - metric: is_growth
+      operator: ==
+      value: 1
+    - metric: mrr_growth_rate
+      operator: exists
+      value: true
+    - metric: mrr_growth_rate
+      operator: <
+      value: 0.1
+  conclusion:
+    type: warning
+    summary: 成长期月增长率低于 10%，增速不足以支撑规模化
+    severity: medium
+    confidence: 0.7
+  suggestion: 审视产品市场匹配度，确认是否已找到可复制的增长模式
+  expert: cfo
+- id: R-ECC-GROWTH-006
+  name: 成长期-客单价风险
+  domain: RS
+  level: 2
+  category: stage_aware
+  condition:
+    and:
+    - metric: is_growth
+      operator: ==
+      value: 1
+    - metric: arpu
+      operator: <
+      value: 500
+  conclusion:
+    type: warning
+    summary: 成长期 ARPU 偏低，获客成本回收周期可能过长
+    severity: medium
+    confidence: 0.65
+  suggestion: 评估向上销售/捆绑销售策略，或考虑提价
+  expert: cfo
+- id: R-ECC-GROWTH-007
+  name: 成长期-新客 vs 老客增长失衡
+  domain: RS
+  level: 3
+  category: stage_aware
+  condition:
+    and:
+    - metric: is_growth
+      operator: ==
+      value: 1
+    - metric: churn_under_5pct
+      operator: ==
+      value: false
+    - metric: cac
+      operator: '>'
+      value: 3000
+  conclusion:
+    type: warning
+    summary: 高流失 + 高获客成本，存在拿钱买流失客户的风险
+    severity: medium
+    confidence: 0.7
+  suggestion: 在加大获客投入前，优先解决留存问题
+  expert: cfo
+- id: R-ECC-GROWTH-008
+  name: 成长期-NPS 健康度检查
+  domain: CR
+  level: 2
+  category: stage_aware
+  condition:
+    and:
+    - metric: is_growth
+      operator: ==
+      value: 1
+    - metric: nps
+      operator: exists
+      value: true
+    - metric: nps
+      operator: <
+      value: 40
+  conclusion:
+    type: warning
+    summary: 成长期 NPS < 40，客户口碑不足以支撑自然增长
+    severity: medium
+    confidence: 0.65
+  suggestion: 建立 NPS 闭环反馈机制，重点关注贬损者的核心诉求
+  expert: coo
+- id: R-ECC-MATURE-001
+  name: 成熟期-核心壁垒检查
+  domain: KR
+  level: 2
+  category: stage_aware
+  condition:
+    and:
+    - metric: is_mature
+      operator: ==
+      value: 1
+    - metric: unique_resource
+      operator: ==
+      value: false
+  conclusion:
+    type: risk_warning
+    summary: 成熟期缺乏独特核心资源，竞争壁垒不足
+    severity: high
+    confidence: 0.8
+  suggestion: 评估专利/品牌/网络效应/数据资产等可持续壁垒的构建路径
+  expert: coo
+- id: R-ECC-MATURE-002
+  name: 成熟期-增长停滞风险
+  domain: RS
+  level: 2
+  category: stage_aware
+  condition:
+    and:
+    - metric: is_mature
+      operator: ==
+      value: 1
+    - metric: mrr_growth_rate
+      operator: exists
+      value: true
+    - metric: mrr_growth_rate
+      operator: <
+      value: 0.03
+  conclusion:
+    type: risk_warning
+    summary: 成熟期月增长率低于 3%，业务进入平台期
+    severity: medium
+    confidence: 0.75
+  suggestion: 探索相邻市场或新业务线，避免陷入增长天花板
+  expert: cfo
+- id: R-ECC-MATURE-003
+  name: 成熟期-利润优化建议
+  domain: COST
+  level: 2
+  category: stage_aware
+  condition:
+    and:
+    - metric: is_mature
+      operator: ==
+      value: 1
+    - metric: margin_ge_60pct
+      operator: ==
+      value: false
+  conclusion:
+    type: warning
+    summary: 成熟期毛利率不足 60%，盈利能力有优化空间
+    severity: medium
+    confidence: 0.65
+  suggestion: 审视成本结构，通过规模效应和技术优化提升毛利率
+  expert: cfo
+- id: R-ECC-MATURE-004
+  name: 成熟期-客户集中度风险
+  domain: RS
+  level: 2
+  category: stage_aware
+  condition:
+    and:
+    - metric: is_mature
+      operator: ==
+      value: 1
+    - metric: top_revenue_share
+      operator: '>'
+      value: 0.5
+  conclusion:
+    type: risk_warning
+    summary: 成熟期收入集中度过高，大客户流失将严重影响营收
+    severity: high
+    confidence: 0.75
+  suggestion: 评估客户集中度，制定大客户留存计划
+  expert: cfo
+- id: R-ECC-MATURE-005
+  name: 成熟期-第二曲线建议
+  domain: VP
+  level: 4
+  category: stage_aware
+  condition:
+    and:
+    - metric: is_mature
+      operator: ==
+      value: 1
+    - metric: margin_ge_60pct
+      operator: ==
+      value: true
+  conclusion:
+    type: positive
+    summary: 成熟期且健康度良好，适合启动第二曲线
+    confidence: 0.7
+  suggestion: 建议将 10-15% 的利润投入创新孵化，探索相邻市场
+  verification_action_template: 请先完成市场调研报告，识别 {n} 个潜在新业务方向，评估市场规模和进入难度后再决定投入方向
+  expert: cso
+- id: R-ECC-MATURE-006
+  name: 成熟期-组织能力检查
+  domain: KR
+  level: 2
+  category: stage_aware
+  condition:
+    and:
+    - metric: is_mature
+      operator: ==
+      value: 1
+  conclusion:
+    type: info
+    summary: 成熟期组织能力决定能否持续增长
+    severity: low
+    confidence: 0.55
+  suggestion: 评估当前组织架构是否支撑下一阶段的战略目标
+  expert: coo
+- id: R-ECC-PIVOT-001
+  name: 转型期-核心指标恶化判定
+  domain: RS
+  level: 2
+  category: stage_aware
+  condition:
+    and:
+    - metric: is_decline
+      operator: ==
+      value: 1
+    - metric: mrr_growth_rate
+      operator: exists
+      value: true
+    - metric: mrr_growth_rate
+      operator: <
+      value: 0
+  conclusion:
+    type: risk_warning
+    summary: 转型期营收负增长，建议立即启动转型评估
+    severity: high
+    confidence: 0.9
+  suggestion: 系统评估现有业务的竞争力和市场变化，制定转型路线图
+  expert: cfo
+- id: R-ECC-PIVOT-002
+  name: 转型期-客户大量流失判定
+  domain: CR
+  level: 2
+  category: stage_aware
+  condition:
+    and:
+    - metric: is_decline
+      operator: ==
+      value: 1
+    - metric: monthly_churn_rate
+      operator: '>'
+      value: 0.1
+  conclusion:
+    type: risk_warning
+    summary: 转型期月流失率超过 10%，客户基础加速萎缩
+    severity: high
+    confidence: 0.85
+  suggestion: 立即排查流失原因，判断是产品问题还是市场变化引起的退出潮
+  expert: coo
+- id: R-ECC-PIVOT-003
+  name: 转型期-核心竞争力评估
+  domain: KR
+  level: 2
+  category: stage_aware
+  condition:
+    and:
+    - metric: is_decline
+      operator: ==
+      value: 1
+    - metric: unique_resource
+      operator: ==
+      value: true
+  conclusion:
+    type: positive
+    summary: 转型期仍具备独特资源，可作为转型基础
+    confidence: 0.65
+  suggestion: 在现有核心能力基础上寻找新应用场景
+  expert: coo
+- id: R-ECC-PIVOT-004
+  name: 转型期-现金流预警
+  domain: COST
+  level: 2
+  category: stage_aware
+  condition:
+    and:
+    - metric: is_decline
+      operator: ==
+      value: 1
+    - metric: mrr
+      operator: <
+      value: 100000
+  conclusion:
+    type: risk_warning
+    summary: 转型期月收入不足 10 万，现金流安全边际低
+    severity: high
+    confidence: 0.7
+  suggestion: 严格控制成本，确保至少 6 个月的现金流用于转型
+  expert: cfo
+- id: R-ECC-PIVOT-005
+  name: 转型期-方向选择建议
+  domain: VP
+  level: 4
+  category: stage_aware
+  condition:
+    and:
+    - metric: is_decline
+      operator: ==
+      value: 1
+  conclusion:
+    type: strategy
+    summary: 转型期是关键转折点，需谨慎选择新方向
+    confidence: 0.8
+  suggestion: 评估 3 个潜在转型方向，选择匹配团队能力和市场趋势的路径
+  verification_action_template: 请先完成 {n} 个潜在方向的 3C 分析（客户/竞争/自身），评分选出最优方向后再启动转型
+  expert: cso
+- id: R-ECC-SEED-009
+  name: 种子期-竞争分析建议
+  domain: VP
+  level: 2
+  category: stage_aware
+  condition:
+    and:
+    - metric: is_seed
+      operator: ==
+      value: 1
+  conclusion:
+    type: info
+    summary: 种子期建议完成竞品分析，确认差异化
+    severity: low
+    confidence: 0.55
+  suggestion: 列出 3-5 个直接/间接竞品，分析各自的优劣势和定位
+  expert: cso
+- id: R-ECC-GROWTH-009
+  name: 成长期-客户成功体系缺失
+  domain: CR
+  level: 2
+  category: stage_aware
+  condition:
+    and:
+    - metric: is_growth
+      operator: ==
+      value: 1
+    - metric: churn_under_5pct
+      operator: ==
+      value: false
+    - metric: nps
+      operator: exists
+      value: true
+    - metric: nps
+      operator: <
+      value: 40
+  conclusion:
+    type: warning
+    summary: 成长期高流失 + 低 NPS，需立即建立客户成功体系
+    severity: high
+    confidence: 0.75
+  suggestion: 建立客户 onboarding 流程和定期健康度回访机制
+  expert: coo
+- id: R-ECC-MATURE-007
+  name: 成熟期-生态建设建议
+  domain: KP
+  level: 4
+  category: stage_aware
+  condition:
+    and:
+    - metric: is_mature
+      operator: ==
+      value: 1
+    - metric: partner_count_ge_2
+      operator: ==
+      value: false
+  conclusion:
+    type: strategy
+    summary: 成熟期合作伙伴网络薄弱，建议启动生态建设
+    confidence: 0.65
+  suggestion: 识别上下游合作伙伴，建立 API/集成生态
+  verification_action_template: 请先列出 {n} 个潜在合作伙伴，评估集成可行性和商业价值后再启动合作
+  expert: cso
+- id: R-ECC-SEED-010
+  name: 种子期-价值主张清晰度检查
+  domain: VP
+  level: 2
+  category: stage_aware
+  condition:
+    and:
+    - metric: is_seed
+      operator: ==
+      value: 1
+    - metric: pain_point_ge_2
+      operator: ==
+      value: true
+  conclusion:
+    type: positive
+    summary: 种子期痛点明确，PMF 验证基础良好
+    confidence: 0.65
+  suggestion: 继续深挖痛点，验证解决方案与痛点的匹配度
+  expert: cso
+- id: R-ECC-GROWTH-010
+  name: 成长期-产品成熟度检查
+  domain: KA
+  level: 2
+  category: stage_aware
+  condition:
+    and:
+    - metric: is_growth
+      operator: ==
+      value: 1
+  conclusion:
+    type: info
+    summary: 成长期产品能力是增长的基础
+    severity: low
+    confidence: 0.5
+  suggestion: 评估产品的功能完整度和用户体验，确保能满足规模化需求
+  expert: coo
+- id: R-BM-060
+  name: SaaS 行业-ARR 健康度判定
+  domain: RS
+  level: 2
+  category: health_threshold
+  condition:
+    and:
+    - metric: mrr
+      operator: exists
+      value: true
+    - metric: mrr
+      operator: <
+      value: 50000
+    - metric: is_growth
+      operator: ==
+      value: 1
+  conclusion:
+    type: warning
+    summary: 成长期 SaaS 的 MRR < 5 万，尚未达到规模化门槛
+    severity: medium
+    confidence: 0.65
+  suggestion: 聚焦 PMF 优化和早期客户获取，达到 PMF 后再加大投入
+  expert: cfo
+- id: R-BM-061
+  name: 电商行业-客单价健康度判定
+  domain: RS
+  level: 2
+  category: health_threshold
+  condition:
+    and:
+    - metric: arpu
+      operator: exists
+      value: true
+    - metric: arpu
+      operator: <
+      value: 100
+  conclusion:
+    type: warning
+    summary: 电商客单价偏低，需评估客单价提升或复购率优化策略
+    severity: medium
+    confidence: 0.6
+  suggestion: 通过捆绑销售/会员体系提升客单价，或优化复购机制提升 LTV
+  expert: cfo
+- id: R-BM-062
+  name: 企业服务-长周期风险判定
+  domain: CR
+  level: 2
+  category: risk_warning
+  condition:
+    and:
+    - metric: cac
+      operator: exists
+      value: true
+    - metric: cac
+      operator: '>'
+      value: 20000
+    - metric: nps
+      operator: exists
+      value: true
+    - metric: nps
+      operator: <
+      value: 40
+  conclusion:
+    type: risk_warning
+    summary: 企业服务场景下高 CAC + 低 NPS，客户大概率无法长期留存
+    severity: high
+    confidence: 0.75
+  suggestion: 在客户成功团队上加大投入，确保高价值客户的 onboarding 体验
+  expert: coo
+- id: R-BM-063
+  name: 金融科技-监管合规风险提示
+  domain: KP
+  level: 2
+  category: risk_warning
+  condition:
+    and:
+    - metric: partner_count_ge_2
+      operator: ==
+      value: false
+  conclusion:
+    type: warning
+    summary: 金融科技场景建议尽早建立监管咨询与合规合作伙伴关系
+    severity: medium
+    confidence: 0.6
+  suggestion: 联系至少 1 家律所或合规咨询机构，评估产品合规风险
+  expert: coo
+- id: R-BM-070
+  name: 多条高风险建议-优先级排序
+  domain: VP
+  level: 4
+  category: strategy
+  condition:
+    and:
+    - metric: is_seed
+      operator: ==
+      value: 1
+  conclusion:
+    type: priority
+    summary: 种子期企业应优先验证 PMF 再谈增长
+    confidence: 0.9
+  suggestion: 建议将验证动作按 PMF 验证 > 获客测试 > 定价优化的顺序执行
+  expert: cso
+- id: R-BM-071
+  name: 成长期-增长杠杆识别
+  domain: RS
+  level: 4
+  category: strategy
+  condition:
+    and:
+    - metric: is_growth
+      operator: ==
+      value: 1
+    - metric: churn_under_5pct
+      operator: ==
+      value: false
+  conclusion:
+    type: strategy
+    summary: 降低流失率是当前最高 ROI 的增长杠杆
+    confidence: 0.75
+  suggestion: 每降低 1% 流失率 = 提升 1/(1-流失率) 倍的 LTV，建议优先优化留存
+  expert: cso
+- id: R-BM-072
+  name: 成熟期-第二曲线建议
+  domain: KR
+  level: 4
+  category: strategy
+  condition:
+    and:
+    - metric: is_mature
+      operator: ==
+      value: 1
+    - metric: margin_ge_60pct
+      operator: ==
+      value: true
+  conclusion:
+    type: strategy
+    summary: 成熟期且毛利健康，建议启动第二曲线探索
+    confidence: 0.7
+  suggestion: 将 10-15% 的利润投入创新项目，探索相邻市场或新业务线
+  expert: cso
+- id: R-BM-073
+  name: 融资准备度判定
+  domain: RS
+  level: 4
+  category: strategy
+  condition:
+    and:
+    - metric: mrr
+      operator: exists
+      value: true
+    - metric: mrr
+      operator: '>'
+      value: 50000
+    - metric: mrr_growth_rate
+      operator: '>'
+      value: 0.1
+  conclusion:
+    type: strategy
+    summary: MRR > 5 万且月增长 > 10%，具备融资基本条件
+    confidence: 0.8
+  suggestion: 建议准备融资材料（数据看板 + 财务模型 + 客户案例），启动 A 轮融资
+  verification_action_template: 请先准备 {n} 项关键材料（12 个月财务预测 + 用户增长曲线 + Top 10 客户案例）再启动融资
+  expert: cso
+- id: R-BM-074
+  name: 出海准备度判定
+  domain: VP
+  level: 4
+  category: strategy
+  condition:
+    and:
+    - metric: is_growth
+      operator: ==
+      value: 1
+    - metric: margin_ge_60pct
+      operator: ==
+      value: true
+  conclusion:
+    type: strategy
+    summary: 成长期且高毛利，具备出海探索条件
+    confidence: 0.6
+  suggestion: 选择 1 个目标海外市场做 3 个月小规模验证
+  verification_action_template: 请先收集目标市场的 {n} 项关键数据（竞品定价/监管要求/用户获取成本），再决定是否进入
+  expert: cso
+- id: R-BM-080
+  name: 数据缺失-建议补充毛利率
+  domain: COST
+  level: 1
+  category: data_quality
+  condition:
+    and:
+    - metric: gross_margin
+      operator: not_exists
+      value: true
+  conclusion:
+    type: data_hint
+    summary: 毛利率数据缺失，建议补充以完善成本结构评估
+    confidence: 0.9
+  suggestion: 毛利率 = (营收 - 直接成本) / 营收，请提供近 3 个月的数据
+  expert: cfo
+- id: R-BM-081
+  name: 数据缺失-建议补充 NPS
+  domain: CR
+  level: 1
+  category: data_quality
+  condition:
+    and:
+    - metric: nps
+      operator: not_exists
+      value: true
+  conclusion:
+    type: data_hint
+    summary: NPS 数据缺失，建议补充以评估客户满意度
+    confidence: 0.8
+  suggestion: NPS = 推荐者% - 贬损者%，向至少 30 名客户发送简短的 NPS 调研即可获取
+  expert: coo
+- id: R-BM-082
+  name: 数据缺失-建议补充流失率
+  domain: CR
+  level: 1
+  category: data_quality
+  condition:
+    and:
+    - metric: monthly_churn_rate
+      operator: not_exists
+      value: true
+  conclusion:
+    type: data_hint
+    summary: 月流失率数据缺失，建议建立客户留存追踪
+    confidence: 0.8
+  suggestion: 月流失率 = 当月流失客户数 / 月初客户总数，从后台按月统计即可
+  expert: coo
+- id: R-BM-083
+  name: 数据缺失-建议补充 CAC
+  domain: CH
+  level: 1
+  category: data_quality
+  condition:
+    and:
+    - metric: cac
+      operator: not_exists
+      value: true
+  conclusion:
+    type: data_hint
+    summary: CAC 数据缺失，建议计算并补充
+    confidence: 0.8
+  suggestion: CAC = 获客总成本 / 新增客户数，包含市场 + 销售 + 工具费用
+  expert: coo
+- id: R-BM-084
+  name: 数据缺失-建议补充 ARPU
+  domain: RS
+  level: 1
+  category: data_quality
+  condition:
+    and:
+    - metric: arpu
+      operator: not_exists
+      value: true
+  conclusion:
+    type: data_hint
+    summary: ARPU 数据缺失，建议补充以评估客单价水平
+    confidence: 0.8
+  suggestion: ARPU = 总营收 / 付费客户数，按月统计即可
+  expert: cfo
+- id: R-BM-085
+  name: 数据充分性综合判定
+  domain: VP
+  level: 1
+  category: data_quality
+  condition:
+    and:
+    - metric: vp_description_exists
+      operator: ==
+      value: true
+    - metric: cs_primary_exists
+      operator: ==
+      value: true
+    - metric: rs_types_exists
+      operator: ==
+      value: true
+    - metric: gross_margin
+      operator: exists
+      value: true
+  conclusion:
+    type: positive
+    summary: 核心数据完整，判断结果可信度较高
+    confidence: 0.85
+  suggestion: 数据已满足进行全面商业模式评估的条件
+  expert: cpo
+- id: R-BM-CPO-001
+  name: 差异化清晰度判定
+  domain: VP
+  expert: cpo
+  level: 2
+  category: product_depth
+  condition:
+    and:
+    - metric: vp_description_exists
+      operator: ==
+      value: true
+    - metric: vp_pain_points_count
+      operator: <
+      value: 2
+  conclusion:
+    type: warning
+    summary: 产品价值主张存在但差异化不清晰，客户缺乏选择你的理由
+    severity: medium
+    confidence: 0.7
+  suggestion: 建议用一句话回答：你的产品为什么比现有方案好 3 倍以上？
+- id: R-BM-CPO-002
+  name: 多客群聚焦度判定
+  domain: CS
+  expert: cpo
+  level: 2
+  category: product_depth
+  condition:
+    and:
+    - metric: cs_primary_exists
+      operator: ==
+      value: true
+  conclusion:
+    type: positive
+    summary: 目标客户已定义，建议进一步验证客群是否足够聚焦
+    severity: low
+    confidence: 0.6
+  suggestion: 早期创业最怕'谁都想要'，建议聚焦到最痛的单一客群
+- id: R-BM-CPO-003
+  name: PMF 信号检查
+  domain: VP
+  expert: cpo
+  level: 2
+  category: product_depth
+  condition:
+    and:
+    - metric: nps
+      operator: exists
+      value: true
+    - metric: nps
+      operator: '>='
+      value: 40
+    - metric: churn_under_5pct
+      operator: ==
+      value: true
+  conclusion:
+    type: positive
+    summary: 高 NPS + 低流失率，产品市场匹配(PMF)信号积极
+    severity: positive
+    confidence: 0.75
+  suggestion: PMF 信号良好，下一步可以加大获客投入
+- id: R-BM-CPO-004
+  name: PMF 缺失信号检查
+  domain: VP
+  expert: cpo
+  level: 2
+  category: product_depth
+  condition:
+    and:
+    - metric: nps
+      operator: exists
+      value: true
+    - metric: nps
+      operator: <
+      value: 20
+    - metric: monthly_churn_rate
+      operator: '>'
+      value: 0.05
+  conclusion:
+    type: risk_warning
+    summary: 低 NPS + 高流失率，产品可能尚未找到 PMF
+    severity: high
+    confidence: 0.8
+  suggestion: 暂停新功能开发，先把核心体验做到让用户离不开
+  verification_action_template: 请先完成 10 组客户深度回访，了解流失的真实原因，再决定产品方向
+- id: R-BM-CPO-005
+  name: 种子期产品验证进度检查
+  domain: VP
+  expert: cpo
+  level: 2
+  category: stage_aware
+  condition:
+    and:
+    - metric: is_seed
+      operator: ==
+      value: 1
+    - metric: pain_point_ge_2
+      operator: ==
+      value: true
+    - metric: cs_primary_exists
+      operator: ==
+      value: true
+  conclusion:
+    type: positive
+    summary: 种子期已完成客群和痛点定义，建议尽快进入 MVP 验证
+    severity: low
+    confidence: 0.65
+  suggestion: 找 10-20 个种子用户做内测，核心功能日活达到 30% 以上算通过
+- id: R-BM-CPO-006
+  name: 成长期产品差异化退化风险
+  domain: VP
+  expert: cpo
+  level: 2
+  category: stage_aware
+  condition:
+    and:
+    - metric: is_growth
+      operator: ==
+      value: 1
+    - metric: churn_under_5pct
+      operator: ==
+      value: false
+    - metric: nps
+      operator: exists
+      value: true
+    - metric: nps
+      operator: <
+      value: 30
+  conclusion:
+    type: risk_warning
+    summary: 成长期出现高流失 + 低 NPS，产品差异化优势可能在减弱
+    severity: high
+    confidence: 0.7
+  suggestion: 对比竞品最新功能，找出差异化退化的环节并快速补齐
+- id: R-BM-CSO-001
+  name: 行业增速对标判定
+  domain: CS
+  expert: cso
+  level: 2
+  category: industry_benchmark
+  condition:
+    and:
+    - metric: mrr_growth_rate
+      operator: exists
+      value: true
+    - metric: mrr_growth_rate
+      operator: <
+      value: 0.05
+  conclusion:
+    type: warning
+    summary: 月增长率低于5%，低于SaaS行业平均水平(10%)，增长策略需重新审视
+    severity: medium
+    confidence: 0.7
+  suggestion: 对比同类企业增长曲线，确认是市场问题还是执行问题
+- id: R-BM-CSO-002
+  name: 竞争壁垒强度判定
+  domain: KR
+  expert: cso
+  level: 2
+  category: strategy
+  condition:
+    and:
+    - metric: unique_resource
+      operator: exists
+      value: false
+  conclusion:
+    type: risk_warning
+    summary: 缺乏独特资源意味着竞争壁垒薄弱，容易被复制或替代
+    severity: high
+    confidence: 0.8
+  suggestion: 从数据资产/网络效应/品牌/专利四个方向评估，选择1-2个构建核心壁垒
+  verification_action_template: 请先完成竞争壁垒评估报告，列出top 3竞品与你方的壁垒对比，找出1个可构建的差异化能力方向
+- id: R-BM-CSO-003
+  name: 市场容量与增长天花板判定
+  domain: CS
+  expert: cso
+  level: 2
+  category: industry_benchmark
+  condition:
+    and:
+    - metric: tam
+      operator: exists
+      value: true
+    - metric: tam
+      operator: <
+      value: 100000000
+    - metric: mrr_growth_rate
+      operator: exists
+      value: true
+    - metric: mrr_growth_rate
+      operator: '>'
+      value: 0.1
+  conclusion:
+    type: warning
+    summary: 增长快但市场小，很快会遇到天花板，建议同步探索相邻市场
+    severity: medium
+    confidence: 0.65
+  suggestion: 高速增长中就要为下一阶段布局，不要等到增长放缓再找新方向
+- id: R-BM-CSO-004
+  name: 融资节奏判定
+  domain: RS
+  expert: cso
+  level: 4
+  category: strategy
+  condition:
+    and:
+    - metric: mrr
+      operator: exists
+      value: true
+    - metric: mrr
+      operator: '>'
+      value: 100000
+    - metric: mrr_growth_rate
+      operator: exists
+      value: true
+    - metric: mrr_growth_rate
+      operator: '>'
+      value: 0.15
+  conclusion:
+    type: positive
+    summary: MRR>10万且月增长>15%，达到A轮融资标准的良好水平
+    confidence: 0.75
+  suggestion: 建议启动A轮融资准备，关键材料：12个月财务预测 + 增长曲线 + Top客户案例
+  verification_action_template: 请先准备完整的数据看板(ARR/MRR/流失率/CAC/LTV-CAC/NDR)，再启动投资人沟通
+- id: R-BM-CSO-005
+  name: 老客增购率与增长质量判定
+  domain: RS
+  expert: cso
+  level: 2
+  category: health_threshold
+  condition:
+    and:
+    - metric: mrr
+      operator: exists
+      value: true
+    - metric: mrr_growth_rate
+      operator: exists
+      value: true
+    - metric: churn_under_5pct
+      operator: ==
+      value: true
+  conclusion:
+    type: positive
+    summary: 低流失+有营收增长，说明增长质量较高，非'漏水桶'式增长
+    confidence: 0.7
+  suggestion: 建议进一步分析新老客贡献占比，理想比例是新客占60%、老客增购占40%
+- id: R-BM-CPO-007
+  name: 核心业务聚焦度判定
+  domain: KA
+  expert: cpo
+  level: 2
+  category: product_depth
+  condition:
+    and:
+    - metric: ka_primary_exists
+      operator: ==
+      value: false
+  conclusion:
+    type: incomplete
+    summary: 没有定义核心业务活动，产品方向不清晰
+    severity: high
+    confidence: 0.85
+  suggestion: 用一句话说清：你的产品每天在帮用户解决哪个核心场景的问题？
+- id: R-BM-CPO-008
+  name: 客户流失原因诊断判定
+  domain: CR
+  expert: cpo
+  level: 2
+  category: product_depth
+  condition:
+    and:
+    - metric: monthly_churn_rate
+      operator: exists
+      value: true
+    - metric: monthly_churn_rate
+      operator: '>'
+      value: 0.05
+    - metric: nps
+      operator: exists
+      value: true
+    - metric: nps
+      operator: <
+      value: 30
+  conclusion:
+    type: risk_warning
+    summary: 高流失+低NPS，问题大概率出在产品体验或核心价值上，而非运营
+    severity: high
+    confidence: 0.75
+  suggestion: 建议做流失客户回访，区分'产品不好用'和'不需要了'两类原因再制定对策
+  verification_action_template: 请提取过去3个月流失客户名单，完成10组深度回访，按产品/价格/需求消失三类归因后再决策
+- id: R-BM-CPO-009
+  name: 功能使用深度判定
+  domain: VP
+  expert: cpo
+  level: 2
+  category: product_depth
+  condition:
+    and:
+    - metric: vp_description_exists
+      operator: ==
+      value: true
+    - metric: churn_under_5pct
+      operator: ==
+      value: false
+  conclusion:
+    type: warning
+    summary: 有产品定义但流失偏高，核心功能可能未被用户真正用起来
+    severity: medium
+    confidence: 0.65
+  suggestion: 先确认日活/周活数据，如果核心功能使用率低于30%，问题出在 onboarding 或功能设计
+- id: R-BM-CPO-010
+  name: 多渠道反馈一致性检查
+  domain: VP
+  expert: cpo
+  level: 3
+  category: consistency
+  condition:
+    and:
+    - metric: nps
+      operator: exists
+      value: true
+    - metric: nps
+      operator: '>='
+      value: 40
+    - metric: churn_under_5pct
+      operator: ==
+      value: false
+  conclusion:
+    type: inconsistency
+    summary: NPS高但流失也高，可能存在'沉默的大多数'——满意的用户不说话，不满意的直接走了
+    severity: medium
+    confidence: 0.7
+  suggestion: 建议分客群分析NPS和流失率，找出高NPS但流失的客群做定向回访
+- id: R-BM-CFO-001
+  name: 成本结构健康度判定
+  domain: COST
+  expert: cfo
+  level: 2
+  category: health_threshold
+  condition:
+    and:
+    - metric: has_cost_breakdown
+      operator: ==
+      value: true
+    - metric: margin_ge_60pct
+      operator: ==
+      value: false
+  conclusion:
+    type: warning
+    summary: 有成本明细但毛利率不足60%，说明成本结构可能需要优化
+    severity: medium
+    confidence: 0.65
+  suggestion: 分析固定成本与变动成本占比，SaaS企业理想结构是固定成本占60-70%、变动成本占30-40%
+- id: R-BM-CFO-002
+  name: 收入质量判定
+  domain: RS
+  expert: cfo
+  level: 2
+  category: health_threshold
+  condition:
+    and:
+    - metric: rs_types_contains_subscription
+      operator: ==
+      value: true
+    - metric: revenue_streams_count
+      operator: '>='
+      value: 2
+    - metric: top_revenue_share
+      operator: exists
+      value: true
+    - metric: top_revenue_share
+      operator: <=
+      value: 0.6
+  conclusion:
+    type: positive
+    summary: 订阅为主+多元收入+集中度可控，收入质量良好
+    confidence: 0.75
+  suggestion: 保持订阅收入占比在70%以上，这是最被投资人看重的收入质量指标
+- id: R-BM-CFO-003
+  name: 现金流预警判定
+  domain: COST
+  expert: cfo
+  level: 2
+  category: risk_warning
+  condition:
+    and:
+    - metric: gross_margin
+      operator: exists
+      value: true
+    - metric: gross_margin
+      operator: <
+      value: 0.3
+    - metric: cac
+      operator: exists
+      value: true
+    - metric: cac
+      operator: '>'
+      value: 5000
+  conclusion:
+    type: risk_warning
+    summary: 低毛利+高CAC，每获取一个客户都在亏钱，现金流压力大
+    severity: high
+    confidence: 0.85
+  suggestion: 先算清楚单客亏损额，制定12个月内达到单客盈利的具体路径
+  verification_action_template: 请先计算单客LTV、CAC回收周期和单客毛利率，确认当前每获一客亏损多少，再制定优化方案
+- id: R-BM-CFO-004
+  name: 营收规模与阶段匹配判定
+  domain: RS
+  expert: cfo
+  level: 2
+  category: stage_aware
+  condition:
+    and:
+    - metric: is_seed
+      operator: ==
+      value: 1
+    - metric: mrr
+      operator: exists
+      value: true
+    - metric: mrr
+      operator: '>'
+      value: 50000
+  conclusion:
+    type: positive
+    summary: 种子期即达到MRR>5万，说明变现能力很强，建议加速增长
+    confidence: 0.7
+  suggestion: 种子期有这个营收水平说明PMF扎实，可以启动小规模付费增长测试
+- id: R-BM-CFO-005
+  name: 定价合理性判定
+  domain: RS
+  expert: cfo
+  level: 2
+  category: product_depth
+  condition:
+    and:
+    - metric: arpu
+      operator: exists
+      value: true
+    - metric: cac
+      operator: exists
+      value: true
+    - metric: cac
+      operator: '>'
+      value: 0
+    - metric: ltv_cac_ratio
+      operator: exists
+      value: true
+    - metric: ltv_cac_ratio
+      operator: <
+      value: 3.0
+  conclusion:
+    type: warning
+    summary: LTV/CAC<3且CAC>0，定价可能偏低或获客成本过高，需调整
+    severity: medium
+    confidence: 0.7
+  suggestion: 有三个调整方向：提价10-20%测试需求弹性、降低获客成本、或者同时做
+  verification_action_template: 请先做A/B定价测试，对top 20%客户提价10%观察流失率变化，若流失率上升不超过2%则提价可行
+- id: R-BM-COO-001
+  name: 获客渠道ROI判定
+  domain: CH
+  expert: coo
+  level: 2
+  category: health_threshold
+  condition:
+    and:
+    - metric: channel_ge_2
+      operator: ==
+      value: true
+    - metric: cac
+      operator: exists
+      value: true
+    - metric: cac
+      operator: '>'
+      value: 8000
+  conclusion:
+    type: warning
+    summary: 多渠道但CAC偏高，需要评估各渠道ROI，关闭低效渠道
+    severity: medium
+    confidence: 0.7
+  suggestion: 按CAC排序各渠道，保留top 2高效渠道，关闭CAC最高的渠道把预算集中
+  verification_action_template: 请先统计每个渠道过去3个月的CAC和转化率，按ROI排序后砍掉最低效的1-2个渠道
+- id: R-BM-COO-002
+  name: 客户分层运营判定
+  domain: CR
+  expert: coo
+  level: 2
+  category: customer_ops
+  condition:
+    and:
+    - metric: churn_under_5pct
+      operator: ==
+      value: false
+    - metric: nps
+      operator: exists
+      value: true
+    - metric: nps
+      operator: <
+      value: 40
+  conclusion:
+    type: warning
+    summary: 流失率高且NPS不高，需要建立客户分层运营体系
+    severity: medium
+    confidence: 0.7
+  suggestion: 按使用频率将客户分为高/中/低活跃三组，高活跃做增购、中活跃做留存、低活跃做唤醒
+  verification_action_template: 请先按登录频率/核心功能使用率将客户分为3组，针对低活跃组设计1个月的定向唤醒campaign，测试响应率
+- id: R-BM-COO-003
+  name: 团队能力完整性判定
+  domain: KR
+  expert: coo
+  level: 2
+  category: customer_ops
+  condition:
+    and:
+    - metric: ka_primary_exists
+      operator: ==
+      value: true
+  conclusion:
+    type: info
+    summary: 核心业务已定义，建议检查团队是否覆盖产品/技术/销售三个关键角色
+    severity: low
+    confidence: 0.55
+  suggestion: '创业团队至少需要三个角色: 有人懂产品、有人懂技术、有人懂销售，缺一不可'
+- id: R-BM-COO-004
+  name: NPS反馈闭环判定
+  domain: CR
+  expert: coo
+  level: 2
+  category: customer_ops
+  condition:
+    and:
+    - metric: nps
+      operator: exists
+      value: true
+    - metric: nps
+      operator: '>='
+      value: 30
+    - metric: nps
+      operator: <
+      value: 60
+  conclusion:
+    type: info
+    summary: NPS在中位水平，建立反馈闭环可以将NPS再提升10-20个点
+    severity: low
+    confidence: 0.6
+  suggestion: NPS调研后48小时内必须回访贬损者，72小时内给出改进方案，这是标准闭环流程
+- id: R-BM-COO-005
+  name: 客户Onboarding效率判定
+  domain: CR
+  expert: coo
+  level: 2
+  category: customer_ops
+  condition:
+    and:
+    - metric: churn_under_5pct
+      operator: ==
+      value: false
+    - metric: nps
+      operator: exists
+      value: true
+    - metric: nps
+      operator: '>='
+      value: 40
+  conclusion:
+    type: inconsistency
+    summary: NPS高但流失也高，问题可能出在Onboarding阶段——客户第一周没体验到核心价值
+    severity: medium
+    confidence: 0.7
+  suggestion: 检查新客户前7天的行为数据，如果核心功能使用率<30%，需要优化Onboarding流程
+- id: R-BM-COO-006
+  name: 渠道质量与数量平衡判定
+  domain: CH
+  expert: coo
+  level: 2
+  category: health_threshold
+  condition:
+    and:
+    - metric: channel_ge_2
+      operator: ==
+      value: false
+    - metric: cac
+      operator: exists
+      value: true
+    - metric: cac
+      operator: <=
+      value: 3000
+  conclusion:
+    type: info
+    summary: 单一渠道但CAC低，说明找到了高效的获客方式，建议测试第二个渠道降低风险
+    severity: low
+    confidence: 0.6
+  suggestion: 单一渠道有单点故障风险，建议用第一个渠道的利润测试1-2个新渠道

@@ -1,0 +1,94 @@
+<view class="page" wx:if="{{ready}}">
+  <view class="layer layer-1">
+    <text class="kicker">{{restaurantName}} · 独立体检已完成</text>
+    <text class="h1">{{overallVerdict}}</text>
+    <view class="brief" wx:if="{{bossBrief}}">
+      <text class="brief-label">① 一句话主因</text>
+      <text class="brief-body">{{bossBrief}}</text>
+    </view>
+    <view class="pack-tip" wx:if="{{categoryTip}}">品类阈值：{{categoryTip}}</view>
+    <view class="pack-tip" wx:if="{{packTip}}">{{packTip}}</view>
+  </view>
+
+  <view class="banner upgrade" wx:if="{{needsDeepUpgrade}}">
+    <text class="banner-title">升级深检：解锁财务官</text>
+    <text class="banner-body">当前为浅检/账本不足。补 ≥7 个营业日的日×餐段明细后，财务官才能签字，会审才完整。</text>
+    <button class="btn btn-block" bindtap="goDeepImport">去补日明细（深检）</button>
+  </view>
+
+  <view class="layer layer-2">
+    <text class="brief-label">② 本周只做这一件</text>
+    <text class="week-action">{{weekAction}}</text>
+    <button class="btn btn-ghost btn-block gap" bindtap="goAction">打开本周动作卡</button>
+  </view>
+
+  <view class="layer delta" wx:if="{{deltaLines.length}}">
+    <text class="brief-label">③ 较上次体检</text>
+    <view class="bullet" wx:for="{{deltaLines}}" wx:key="*this">· {{item}}</view>
+  </view>
+  <view class="layer muted" wx:else>
+    <text>③ 较上次：这是本机首份档案，下次导入新数据复检将自动对比。</text>
+  </view>
+
+  <view class="layer dna" wx:if="{{dnaHas}}">
+    <text class="brief-label">门店 DNA（已按回填加权）</text>
+    <text class="muted">{{dnaSummary}}</text>
+    <view class="weight" wx:for="{{dnaWeights}}" wx:key="theme">
+      <text>{{item.label}}</text>
+      <view class="bar-wrap">
+        <view class="bar" style="width: {{item.pct}}%;"></view>
+      </view>
+    </view>
+  </view>
+
+  <view class="banner">
+    <button class="btn btn-block" bindtap="goLearn">学习回填（加强 DNA）</button>
+    <button class="btn btn-ghost btn-block gap" bindtap="goArchive">我的档案</button>
+    <button class="btn btn-ghost btn-block gap" bindtap="toggleDetail">
+      {{showDetail ? '收起' : '展开'}}会审详情
+    </button>
+  </view>
+
+  <view class="layer layer-3" wx:if="{{showDetail}}">
+    <text class="section-title">会审详情</text>
+    <text class="lede">{{consensus}}</text>
+    <view class="section" wx:if="{{priorities.length}}">
+      <text class="section-title">行动优先级</text>
+      <view class="bullet" wx:for="{{priorities}}" wx:key="*this">• {{item}}</view>
+    </view>
+    <view class="section" wx:for="{{modules}}" wx:key="id">
+      <text class="section-title">[{{item.no}}] {{item.title}}</text>
+      <text class="module-summary" wx:if="{{item.summary}}">{{item.summary}}</text>
+      <view class="bullet" wx:for="{{item.bullets}}" wx:for-item="b" wx:key="*this">- {{b}}</view>
+    </view>
+    <view class="section" wx:if="{{experts.length}}">
+      <text class="section-title">会审讨论记录</text>
+      <view class="expert" wx:for="{{experts}}" wx:key="role">
+        <text class="expert-title">{{item.title}} · {{item.level}}</text>
+        <text class="muted">{{item.verdict}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="banner soft">
+    <text class="banner-title">复检提醒</text>
+    <text class="banner-body">{{remindLabel}}</text>
+    <button class="btn btn-ghost btn-block" bindtap="setRemind7">设为 7 天后复检</button>
+    <button class="btn btn-ghost btn-block gap" wx:if="{{remindDue}}" bindtap="goDeepImport">到期了，去导入新数据</button>
+  </view>
+
+  <view class="banner soft">
+    <text class="banner-title">解锁经营大脑（持续能力）</text>
+    <text class="banner-body">本份体检已交付。要每日扫描、利润深析与 AI 顾问时，进入经营大脑——不是报告被锁 30%。</text>
+    <button class="btn btn-block" bindtap="downloadApp">进入 MealKey 经营大脑</button>
+    <button class="btn btn-ghost btn-block gap" bindtap="exportHandoff">复制交接证据包</button>
+    <button class="btn btn-ghost btn-block gap" bindtap="goEnhance">能力对照与边界说明</button>
+  </view>
+
+  <view class="section muted tip">真数会审 · 全免独立完成 · 规则引擎</view>
+</view>
+
+<view class="page" wx:else>
+  <text class="lede">暂无报告。请先「体检我的店」并导入数据。</text>
+  <button class="btn btn-block gap" bindtap="goHome">返回 MealKey</button>
+</view>

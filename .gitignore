@@ -63,3 +63,7 @@ apps/web/vitest-report.json
 apps/web/src/generated/prisma/*.tmp*
 apps/web/prisma/dev.db
 apps/web/prisma/dev.db-journal
+apps/web/prisma/prisma/dev.db
+apps/web/prisma/prisma/dev.db-journal
+apps/web/private/uploads/
+apps/web/scripts/tmp-*.mjs

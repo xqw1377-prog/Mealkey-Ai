@@ -48,7 +48,7 @@ export function buildCognitionGap(input: {
     );
 
   return {
-    founderClaim: claim.slice(0, 120),
+    founderClaim: claim.slice(0, 400),
     customerPerception,
     summaryLine: input.customer.evidenceInsufficient
       ? "老板自认优势已记录；顾客侧证据不足，差距待核实。"

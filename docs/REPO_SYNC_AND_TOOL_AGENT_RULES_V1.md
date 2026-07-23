@@ -7,7 +7,7 @@
 
 | 项 | 值 |
 |----|-----|
-| Remote | `origin` = `https://github.com/xqw1377-prog/mealkey-agent-1.git` |
+| Remote | `origin` = `https://github.com/xqw1377-prog/Mealkey-Ai.git` |
 | 默认分支 | `master` |
 | 权威入口 | `docs/AUTHORITY.md` |
 | 经营诊断外置仓 | `C:\Users\xqw13\M-OPS-Agent`（独立产品，非本 monorepo） |

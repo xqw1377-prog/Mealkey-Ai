@@ -6,15 +6,23 @@
  */
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowRight, Loader2, RotateCcw } from "lucide-react";
+import { ArrowLeft, ArrowRight, Loader2, RotateCcw } from "lucide-react";
 import { BrandSwitcher } from "@/components/operating/BrandSwitcher";
 import { ConfirmDialog } from "@/components/operating/ConfirmDialog";
 import { ConsultingSixStepJourney } from "@/components/operating/ConsultingSixStepJourney";
+import { GuidedColorIntake } from "@/components/operating/GuidedColorIntake";
+import { IntakeHeardConfirm } from "@/components/operating/IntakeHeardConfirm";
 import { PageErrorState, PageLoadingState } from "@/components/operating/PageState";
+import {
+  dialogueTurnsReady,
+  getIntakeDialogueTurns,
+  hydrateDialogueValues,
+  listWeakBasicsNotes,
+  type ParseUtteranceResult,
+} from "@/lib/intake-dialogue-turns";
 import { buildMeetingHref } from "@/lib/meeting";
 import { trpc } from "@/lib/trpc";
 import {
-  BRAND_BASICS_FIELDS,
   type BrandBasicsFieldKey,
   type BrandStrategyProject,
 } from "@mealkey/agents/m-pnt/consulting";
@@ -31,6 +39,9 @@ export function BrandConsultingWorkspace({ projectId }: { projectId: string }) {
   const completeDiscovery = trpc.mPntConsulting.completeDiscovery.useMutation({
     onSuccess: invalidate,
   });
+  const ingestTurn = trpc.mPntConsulting.ingestDialogueTurn.useMutation({
+    onSuccess: invalidate,
+  });
   const answerBrief = trpc.mPntConsulting.answerBrief.useMutation({
     onSuccess: invalidate,
   });
@@ -44,10 +55,40 @@ export function BrandConsultingWorkspace({ projectId }: { projectId: string }) {
   const [basicsForm, setBasicsForm] = useState<
     Partial<Record<BrandBasicsFieldKey, string>>
   >({});
+  const [dialogueValues, setDialogueValues] = useState<Record<string, string>>(
+    {},
+  );
+  const [microSlots, setMicroSlots] = useState<
+    Array<{ id: string; label: string; prompt: string; keys: string[] }>
+  >([]);
+  const [lastParsed, setLastParsed] = useState<ParseUtteranceResult | null>(
+    null,
+  );
   const [followupAnswer, setFollowupAnswer] = useState("");
   const [actionError, setActionError] = useState<string | null>(null);
   const [hydrated, setHydrated] = useState(false);
   const [resetOpen, setResetOpen] = useState(false);
+  const dialogueTurns = useMemo(() => getIntakeDialogueTurns("m-pnt"), []);
+  const intakeSlots = useMemo(
+    () => [
+      ...dialogueTurns.map((t) => ({
+        id: t.id,
+        label: t.label,
+        prompt: t.prompt,
+        hint: t.hint,
+        placeholder: "按住说话，或打字",
+        required: t.required !== false,
+      })),
+      ...microSlots.map((m) => ({
+        id: m.id,
+        label: m.label,
+        prompt: m.prompt,
+        placeholder: "按住说话，补这一条",
+        required: true,
+      })),
+    ],
+    [dialogueTurns, microSlots],
+  );
 
   const consulting = data?.consulting as BrandStrategyProject | undefined;
   const basicsUi = data?.basicsUi as
@@ -81,12 +122,17 @@ export function BrandConsultingWorkspace({ projectId }: { projectId: string }) {
 
   useEffect(() => {
     if (!basicsUi || hydrated) return;
-    setBasicsForm(basicsUi.values || {});
+    const values = basicsUi.values || {};
+    setBasicsForm(values);
+    setDialogueValues(
+      hydrateDialogueValues(dialogueTurns, values as Record<string, string>),
+    );
     setHydrated(true);
-  }, [basicsUi, hydrated]);
+  }, [basicsUi, hydrated, dialogueTurns]);
 
   const pending =
     completeDiscovery.isPending ||
+    ingestTurn.isPending ||
     answerBrief.isPending ||
     compileBrief.isPending ||
     reset.isPending;
@@ -108,20 +154,13 @@ export function BrandConsultingWorkspace({ projectId }: { projectId: string }) {
     { confirmSpend: true, spendKind: "m-pnt" },
   );
 
-  const mustKeys = useMemo(
-    () =>
-      BRAND_BASICS_FIELDS.filter((f) => f.requirement === "must").map(
-        (f) => f.key,
-      ),
-    [],
+  const basicsAsRecord = basicsForm as Record<string, string>;
+  const basicsReady =
+    dialogueTurnsReady("m-pnt", basicsAsRecord) && microSlots.length === 0;
+  const weakNotes = useMemo(
+    () => listWeakBasicsNotes("m-pnt", basicsAsRecord),
+    [basicsAsRecord],
   );
-
-  const basicsReady = BRAND_BASICS_FIELDS.filter(
-    (f) => f.requirement === "must",
-  ).every((f) => {
-    const v = (basicsForm[f.key] || "").trim();
-    return v.length >= f.minLength && v !== "无" && v !== "没有";
-  });
 
   const currentFollowup = useMemo(() => {
     if (!followupUi?.questions?.length) return null;
@@ -166,20 +205,30 @@ export function BrandConsultingWorkspace({ projectId }: { projectId: string }) {
   }
 
   return (
-    <div className="mpnt-atelier mx-auto max-w-4xl space-y-8 pb-[calc(env(safe-area-inset-bottom)+12.5rem)] pt-6 md:pb-20 md:pt-10">
-      <header className="space-y-4 px-1">
-        <p className="text-[11px] font-medium tracking-[0.18em] text-[#5f6b4e]">
-          定位 · 品牌
-        </p>
-        <h1 className="font-serif-cn text-[28px] font-semibold leading-[1.15] tracking-[-0.03em] text-[#141413] md:text-[40px]">
-          品牌战略定位
-        </h1>
-        <p className="max-w-2xl text-[15px] leading-7 text-[#6f747b]">
-          {journeyDone
-            ? "本轮已完成。可回看调研与会议，或重新开始。"
-            : "先收齐品牌事实，再按缺口追问。"}
-        </p>
-        <BrandSwitcher projectId={projectId} variant="full" />
+    <div className="mpnt-atelier mx-auto max-w-4xl space-y-5 pb-[calc(env(safe-area-inset-bottom)+12.5rem)] pt-4 md:space-y-8 md:pb-20 md:pt-10">
+      <header className="space-y-3 px-1 md:space-y-4">
+        <Link
+          href={`/projects/${projectId}/agent`}
+          prefetch={false}
+          className="inline-flex min-h-10 items-center gap-1.5 text-[13px] font-medium text-[#5f6b4e] no-underline lg:hidden"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          回对话
+        </Link>
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[11px] font-medium tracking-[0.18em] text-[#5f6b4e]">
+              专业能力 · 品牌定位
+            </p>
+            <h1 className="mt-1.5 font-serif-cn text-[26px] font-semibold leading-[1.12] tracking-[-0.03em] text-[#141413] md:text-[36px]">
+              品牌战略定位
+            </h1>
+          </div>
+          <BrandSwitcher projectId={projectId} variant="full" />
+        </div>
+        {journeyDone ? (
+          <p className="text-[14px] leading-6 text-[#5c6168]">本轮已完成。</p>
+        ) : null}
       </header>
 
       <ConsultingSixStepJourney
@@ -203,222 +252,131 @@ export function BrandConsultingWorkspace({ projectId }: { projectId: string }) {
       {!briefDone ? (
         <section
           id="step-intake"
-          className="mpnt-rise overflow-hidden border border-[rgba(20,20,19,0.1)] bg-white"
+          className="mpnt-rise border border-[rgba(20,20,19,0.1)] bg-white p-5 pb-[calc(env(safe-area-inset-bottom)+9rem)] md:p-7 md:pb-7"
         >
-          <div className="border-b border-[rgba(20,20,19,0.08)] bg-[var(--mpnt-field)] px-5 py-4 md:px-7">
-            <p className="text-[11px] tracking-[0.14em] text-[#5f6b4e]">
-              01 · INTAKE
-            </p>
-            <p className="mt-1 text-[14px] text-[#6f747b]">
-              第一轮基础档案 → 第二轮定位追问 → 编译简报
-            </p>
-          </div>
-
-          <div className="space-y-6 p-5 md:p-7">
-            {stage === "DISCOVERY" || !stage ? (
-              <div className="space-y-6">
-                <div>
-                  <h2 className="font-serif-cn text-[24px] font-semibold text-[#141413]">
-                    品牌基础档案
-                  </h2>
-                  <p className="mt-2 text-[14px] leading-6 text-[#6f747b]">
-                    必填项收齐后，系统会根据你的情况生成下一步该问什么——不是固定五问。
-                  </p>
-                </div>
-
-                <div className="grid gap-4 md:grid-cols-2">
-                  {BRAND_BASICS_FIELDS.map((field) => {
-                    const value = basicsForm[field.key] || "";
-                    const missing = mustKeys.includes(field.key)
-                      ? value.trim().length < 2
-                      : false;
-                    return (
-                      <label
-                        key={field.key}
-                        className={`flex flex-col gap-1.5 ${
-                          field.key === "competitors" ||
-                          field.key === "advantages" ||
-                          field.key === "currentPositioning" ||
-                          field.key === "businessGoal" ||
-                          field.key === "mainPain"
-                            ? "md:col-span-2"
-                            : ""
-                        }`}
-                      >
-                        <span className="text-[13px] font-medium text-[#141413]">
-                          {field.label}
-                          {field.requirement === "must" ? (
-                            <span className="ml-1 text-[#a56b4d]">*</span>
-                          ) : (
-                            <span className="ml-1 text-[#6f747b]">选填</span>
-                          )}
-                        </span>
-                        <span className="text-[12px] leading-5 text-[#6f747b]">
-                          {field.prompt}
-                        </span>
-                        <input
-                          value={value}
-                          disabled={pending}
-                          onChange={(e) =>
-                            setBasicsForm((prev) => ({
-                              ...prev,
-                              [field.key]: e.target.value,
-                            }))
-                          }
-                          placeholder={field.placeholder}
-                          className={`min-h-11 border px-3 text-[14px] outline-none focus:border-[#141413] ${
-                            missing
-                              ? "border-[rgba(165,107,77,0.45)] bg-[rgba(165,107,77,0.04)]"
-                              : "border-[rgba(20,20,19,0.12)] bg-[var(--mpnt-field)]"
-                          }`}
-                        />
-                      </label>
+          {stage === "DISCOVERY" || !stage ? (
+            <div className="space-y-3">
+              {lastParsed ? (
+                <IntakeHeardConfirm
+                  parsed={lastParsed}
+                  onDismiss={() => setLastParsed(null)}
+                />
+              ) : null}
+              <GuidedColorIntake
+                projectId={projectId}
+                title="我先问你几句"
+                voiceTitle="品牌定位·口述档案"
+                busy={pending}
+                slots={intakeSlots}
+                values={dialogueValues}
+                onChange={(id, value) => {
+                  setDialogueValues((prev) => ({ ...prev, [id]: value }));
+                }}
+                onCommitSlot={async (id, value) => {
+                  await run(async () => {
+                    const res = await ingestTurn.mutateAsync({
+                      projectId,
+                      turnId: id,
+                      utterance: value,
+                    });
+                    setBasicsForm(
+                      (res.basicsValues || {}) as Partial<
+                        Record<BrandBasicsFieldKey, string>
+                      >,
                     );
-                  })}
-                </div>
+                    setDialogueValues((prev) => ({ ...prev, [id]: value }));
+                    setLastParsed(res.parsed);
+                    if (id.startsWith("micro_")) {
+                      setMicroSlots((prev) => prev.filter((m) => m.id !== id));
+                    } else {
+                      setMicroSlots(res.microSlots || []);
+                    }
+                  });
+                }}
+                completeLabel="生成追问"
+                completePending={completeDiscovery.isPending}
+                completeDisabled={!basicsReady}
+                onComplete={() => {
+                  if (!basicsReady) {
+                    setActionError(
+                      weakNotes.length
+                        ? `还差更具体的信息：${weakNotes.join("；")}`
+                        : "还有信息没抓准，请先答完追问",
+                    );
+                    return;
+                  }
+                  const basics = { ...basicsAsRecord };
+                  void run(() =>
+                    completeDiscovery.mutateAsync({
+                      projectId,
+                      basics,
+                      businessGoal: basics.businessGoal,
+                      notes: basics.mainPain,
+                    }),
+                  );
+                }}
+              />
+            </div>
+          ) : null}
 
+          {stage === "BRAND_BRIEF" ? (
+            followupUi?.status === "ready_to_compile" ? (
+              <div className="space-y-3">
+                <h2 className="font-serif-cn text-[22px] font-semibold text-[#141413]">
+                  可以编译简报了
+                </h2>
                 <button
                   type="button"
-                  disabled={pending || !basicsReady}
+                  disabled={pending}
                   onClick={() =>
-                    void run(() =>
-                      completeDiscovery.mutateAsync({
-                        projectId,
-                        basics: basicsForm as Record<string, string>,
-                        businessGoal: basicsForm.businessGoal,
-                        notes: basicsForm.mainPain,
-                      }),
-                    )
+                    void run(() => compileBrief.mutateAsync({ projectId }))
                   }
-                  className="inline-flex min-h-12 items-center gap-2 bg-[#141413] px-6 text-[15px] font-semibold text-white disabled:opacity-40"
+                  className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[16px] bg-[#141413] px-6 text-[15px] font-semibold text-white disabled:opacity-40"
                 >
-                  {completeDiscovery.isPending ? (
+                  {compileBrief.isPending ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
                     <ArrowRight className="h-4 w-4" />
                   )}
-                  档案齐了，生成定位追问
+                  编译简报
                 </button>
               </div>
-            ) : null}
-
-            {stage === "BRAND_BRIEF" ? (
-              <div className="space-y-6">
-                <div>
-                  <p className="text-[12px] text-[#5f6b4e]">
-                    定位追问 ·{" "}
-                    {followupUi?.progress
-                      ? `${followupUi.progress.mustAnswered}/${followupUi.progress.mustTotal} 必答`
-                      : "准备中"}
-                  </p>
-                  <h2 className="mt-1 font-serif-cn text-[24px] font-semibold text-[#141413]">
-                    基于你的档案，还差这些信息
-                  </h2>
-                  <p className="mt-2 text-[14px] leading-6 text-[#6f747b]">
-                    问题由基础档案缺口生成；答完必答题才能编译简报。
-                  </p>
-                  {followupUi?.progress ? (
-                    <div className="mt-3 h-1.5 overflow-hidden bg-[rgba(20,20,19,0.06)]">
-                      <div
-                        className="h-full bg-[#5f6b4e] transition-all duration-500"
-                        style={{
-                          width: `${
-                            followupUi.progress.mustTotal
-                              ? (followupUi.progress.mustAnswered /
-                                  followupUi.progress.mustTotal) *
-                                100
-                              : 0
-                          }%`,
-                        }}
-                      />
-                    </div>
-                  ) : null}
-                </div>
-
-                {followupUi?.status === "ready_to_compile" ? (
-                  <button
-                    type="button"
-                    disabled={pending}
-                    onClick={() =>
-                      void run(() => compileBrief.mutateAsync({ projectId }))
-                    }
-                    className="inline-flex min-h-12 items-center gap-2 bg-[#141413] px-6 text-[15px] font-semibold text-white disabled:opacity-40"
-                  >
-                    {compileBrief.isPending ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <ArrowRight className="h-4 w-4" />
-                    )}
-                    编译简报，开始市场调研
-                  </button>
-                ) : currentFollowup ? (
-                  <div className="space-y-4">
-                    <p className="text-[17px] font-medium leading-7 text-[#141413]">
-                      {currentFollowup.prompt}
-                    </p>
-                    {"whyNeeded" in currentFollowup &&
-                    currentFollowup.whyNeeded ? (
-                      <p className="text-[13px] leading-5 text-[#6f747b]">
-                        为什么问：{currentFollowup.whyNeeded}
-                      </p>
-                    ) : null}
-                    <div className="flex gap-2">
-                      <input
-                        value={followupAnswer}
-                        onChange={(e) => setFollowupAnswer(e.target.value)}
-                        className="min-h-12 flex-1 border border-[rgba(20,20,19,0.12)] px-3 text-[14px] outline-none focus:border-[#141413]"
-                        placeholder="用具体事实回答，避免「好吃/性价比」这类空话"
-                      />
-                      <button
-                        type="button"
-                        disabled={pending || followupAnswer.trim().length < 2}
-                        onClick={() =>
-                          void run(async () => {
-                            await answerBrief.mutateAsync({
-                              projectId,
-                              questionId: currentFollowup.id,
-                              answer: followupAnswer,
-                            });
-                            setFollowupAnswer("");
-                          })
-                        }
-                        className="bg-[#141413] px-5 text-[14px] font-medium text-white disabled:opacity-40"
-                      >
-                        提交
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <p className="text-[14px] text-[#6f747b]">
-                    追问会话尚未生成，请重置后重新填写基础档案。
-                  </p>
-                )}
-
-                {followupUi?.questions?.length ? (
-                  <ul className="space-y-2 border-t border-[rgba(20,20,19,0.08)] pt-4">
-                    {followupUi.questions.map((q) => (
-                      <li
-                        key={q.id}
-                        className="flex items-start justify-between gap-3 text-[13px]"
-                      >
-                        <span
-                          className={
-                            q.answered ? "text-[#6f747b] line-through" : "text-[#141413]"
-                          }
-                        >
-                          {q.priority === "must" ? "必答 · " : "选答 · "}
-                          {q.prompt}
-                        </span>
-                        <span className="shrink-0 text-[#5f6b4e]">
-                          {q.answered ? "已答" : "待答"}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                ) : null}
-              </div>
-            ) : null}
-          </div>
+            ) : currentFollowup ? (
+              <GuidedColorIntake
+                projectId={projectId}
+                title="还想确认一点"
+                voiceTitle="品牌定位·追问"
+                busy={pending}
+                slots={[
+                  {
+                    id: currentFollowup.id,
+                    label: "",
+                    prompt: currentFollowup.prompt,
+                    hint:
+                      "whyNeeded" in currentFollowup
+                        ? currentFollowup.whyNeeded || undefined
+                        : undefined,
+                    placeholder: "按住说话，或打字",
+                    required: true,
+                  },
+                ]}
+                values={{ [currentFollowup.id]: followupAnswer }}
+                onChange={(_id, value) => setFollowupAnswer(value)}
+                onCommitSlot={async (id, value) => {
+                  await run(async () => {
+                    await answerBrief.mutateAsync({
+                      projectId,
+                      questionId: id,
+                      answer: value,
+                    });
+                    setFollowupAnswer("");
+                  });
+                }}
+              />
+            ) : (
+              <p className="text-[14px] text-[#6f747b]">追问尚未生成，请重置重试。</p>
+            )
+          ) : null}
         </section>
       ) : null}
 
@@ -492,6 +450,9 @@ export function BrandConsultingWorkspace({ projectId }: { projectId: string }) {
             await reset.mutateAsync({ projectId });
             setHydrated(false);
             setBasicsForm({});
+            setDialogueValues({});
+            setMicroSlots([]);
+            setLastParsed(null);
             setResetOpen(false);
           });
         }}

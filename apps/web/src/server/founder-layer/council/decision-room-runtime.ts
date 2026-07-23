@@ -459,52 +459,70 @@ export async function generateCouncilOpinions(input: {
 
   const model = resolveLlmModel(provider);
   const llmOpinions = new Map<CouncilRoleId, CouncilOpinion>();
+  const SEAT_TIMEOUT_MS = 18_000;
 
-  for (const roleId of input.session.roster) {
-    try {
-      const scenarioResults = runScenarioAnalysis(
-        roleId,
-        input.session.agenda.topic,
-      );
-      const scenarioBlock = renderScenarioBlock(roleId, scenarioResults);
-      const calibrationHint = buildCalibrationHint(roleId);
+  async function opinionForSeat(
+    roleId: CouncilRoleId,
+  ): Promise<CouncilOpinion | null> {
+    const scenarioResults = runScenarioAnalysis(
+      roleId,
+      input.session.agenda.topic,
+    );
+    const scenarioBlock = renderScenarioBlock(roleId, scenarioResults);
+    const calibrationHint = buildCalibrationHint(roleId);
 
-      const basePrompt = buildCouncilRuntimePrompt({
-        roleId,
-        casePacket: input.session.casePacket,
-        expertReports: input.session.expertReports,
-        evidencePacket: input.session.evidencePacket,
-        insights: input.session.insights,
-        round: 1,
-      });
+    const basePrompt = buildCouncilRuntimePrompt({
+      roleId,
+      casePacket: input.session.casePacket,
+      expertReports: input.session.expertReports,
+      evidencePacket: input.session.evidencePacket,
+      insights: input.session.insights,
+      round: 1,
+    });
 
-      const fullPrompt =
-        basePrompt +
-        "\n\n" +
-        scenarioBlock +
-        "\n\n## 校准提示\n" +
-        calibrationHint +
-        "\n\n## 输出要求\n只返回合法 JSON，不要 Markdown 围栏。必须包含完整的判断。";
+    const fullPrompt =
+      basePrompt +
+      "\n\n" +
+      scenarioBlock +
+      "\n\n## 校准提示\n" +
+      calibrationHint +
+      "\n\n## 输出要求\n只返回合法 JSON，不要 Markdown 围栏。必须包含完整的判断。";
 
-      const response = await llm.chat({
-        model,
-        temperature: 0.4,
-        maxTokens: 1500,
-        messages: [
-          {
-            role: "system",
-            content: `你是餐启（Mealkey）决策室的 ${roleId}。按照你的身份、世界观、判断模型做独立判断。`,
-          },
-          { role: "user", content: fullPrompt },
-        ],
-      });
+    const chatPromise = llm.chat({
+      model,
+      temperature: 0.4,
+      maxTokens: 1500,
+      messages: [
+        {
+          role: "system",
+          content: `你是餐启（Mealkey）决策室的 ${roleId}。按照你的身份、世界观、判断模型做独立判断。`,
+        },
+        { role: "user", content: fullPrompt },
+      ],
+    });
 
-      const parsed = parseSingleOpinionJson(response.content || "");
-      if (parsed && parsed.member === roleId) {
-        llmOpinions.set(roleId, parsed);
-      }
-    } catch {
-      // 单个常委失败不影响其他人
+    const timed = await Promise.race([
+      chatPromise,
+      new Promise<null>((resolve) => {
+        setTimeout(() => resolve(null), SEAT_TIMEOUT_MS);
+      }),
+    ]);
+    if (!timed) return null;
+
+    const parsed = parseSingleOpinionJson(timed.content || "");
+    if (parsed && parsed.member === roleId) return parsed;
+    return null;
+  }
+
+  // 七席并行（原串行约 60s+，体感「没反应」）；单席超时走启发式
+  const settled = await Promise.allSettled(
+    input.session.roster.map((roleId) => opinionForSeat(roleId)),
+  );
+  for (let i = 0; i < input.session.roster.length; i++) {
+    const roleId = input.session.roster[i]!;
+    const result = settled[i];
+    if (result?.status === "fulfilled" && result.value) {
+      llmOpinions.set(roleId, result.value);
     }
   }
 

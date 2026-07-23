@@ -27,7 +27,6 @@ import {
   type AdvisorMasterScheme,
   type BrandStrategyProject,
   type MpntJourneyStep,
-  type IntakeChecklistItem,
 } from "@mealkey/agents/m-pnt/consulting";
 import { EngineDegradationBanner } from "@/components/operating/EngineDegradationBanner";
 import { MpntReportDoc } from "@/components/operating/MpntReportDoc";
@@ -241,22 +240,36 @@ export function ConsultingSixStepJourney({
   return (
     <section className="mpnt-atelier overflow-hidden border border-[rgba(20,20,19,0.1)] bg-[var(--mpnt-paper)] pb-4 md:pb-0">
       {/* Hero */}
-      <div className="border-b border-[rgba(20,20,19,0.08)] px-5 py-6 md:px-8 md:py-9">
-        <p className="text-[11px] font-medium tracking-[0.18em] text-[#5f6b4e]">
-          {PRODUCT_BRAND_TITLE} · 品牌
-        </p>
-        <h2 className="mt-3 font-serif-cn text-[28px] font-semibold leading-tight tracking-[-0.02em] text-[#141413] md:text-[34px]">
+      <div className="border-b border-[rgba(20,20,19,0.08)] px-5 py-5 md:px-8 md:py-8">
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <p className="text-[11px] font-medium tracking-[0.18em] text-[#5f6b4e]">
+            {PRODUCT_BRAND_TITLE} · 品牌定位
+          </p>
+          <p className="text-[12px] tabular-nums text-[#5c6168]">
+            第 {Math.min(MPNT_JOURNEY_ORDER.indexOf(focus) + 1, 6)} / 6 步
+          </p>
+        </div>
+        <h2 className="mt-2 font-serif-cn text-[26px] font-semibold leading-tight tracking-[-0.02em] text-[#141413] md:mt-3 md:text-[34px]">
           {done ? "本轮已完成" : next.label.title}
         </h2>
-        <p className="mt-2 max-w-xl text-[15px] leading-7 text-[#6f747b]">
+        <p className="mt-1.5 max-w-xl text-[14px] leading-6 text-[#5c6168] md:text-[15px] md:leading-7">
           {done
             ? "定位已定，可签字导出或看怎么干。"
             : next.label.feel}
         </p>
 
+        <div className="mt-4 h-1 overflow-hidden rounded-full bg-[rgba(20,20,19,0.08)] md:mt-5">
+          <div
+            className="h-full rounded-full bg-[#66735E] transition-[width] duration-500 ease-out"
+            style={{
+              width: `${done ? 100 : Math.round(((MPNT_JOURNEY_ORDER.indexOf(focus) + 1) / 6) * 100)}%`,
+            }}
+          />
+        </div>
+
         <ol
           ref={stepRailRef}
-          className="mpnt-step-rail mt-7 -mx-5 flex gap-2 overflow-x-auto scroll-px-5 px-5 pb-1 snap-x snap-mandatory [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden lg:mx-0 lg:grid lg:grid-cols-6 lg:overflow-visible lg:scroll-px-0 lg:px-0 lg:pb-0 lg:snap-none"
+          className="mpnt-step-rail mt-4 -mx-5 flex gap-2 overflow-x-auto scroll-px-5 px-5 pb-1 snap-x snap-mandatory [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden lg:mx-0 lg:mt-5 lg:grid lg:grid-cols-6 lg:overflow-visible lg:scroll-px-0 lg:px-0 lg:pb-0 lg:snap-none"
         >
           {MPNT_JOURNEY_ORDER.map((step, i) => {
             const meta = MPNT_JOURNEY_LABEL[step];
@@ -266,23 +279,23 @@ export function ConsultingSixStepJourney({
               <li
                 key={step}
                 ref={active ? activeStepRef : undefined}
-                className={`mpnt-rise relative min-h-14 min-w-[6.5rem] shrink-0 snap-center border px-3 py-3 lg:min-h-0 lg:min-w-0 lg:px-2.5 lg:py-2.5 ${
+                className={`mpnt-rise relative min-h-[3.75rem] min-w-[7rem] shrink-0 snap-center rounded-[12px] border px-3 py-2.5 transition-colors lg:min-h-0 lg:min-w-0 lg:rounded-none lg:px-2.5 lg:py-2.5 ${
                   active
-                    ? "border-[#141413] bg-[#141413] text-white"
+                    ? "border-[#141413] bg-[#141413] text-white shadow-[0_8px_20px_rgba(20,20,19,0.18)]"
                     : passed
-                      ? "border-[rgba(95,107,78,0.35)] bg-[rgba(95,107,78,0.08)] text-[#5f6b4e]"
-                      : "border-[rgba(20,20,19,0.08)] text-[#9aa0a6]"
+                      ? "border-[rgba(95,107,78,0.4)] bg-[rgba(95,107,78,0.1)] text-[#3d4638]"
+                      : "border-[rgba(20,20,19,0.1)] bg-white text-[#5c6168]"
                 }`}
                 style={{ animationDelay: `${i * 0.04}s` }}
               >
-                <p className="text-[10px] tracking-[0.12em] opacity-75">
+                <p className="text-[10px] tracking-[0.12em] opacity-80">
                   {meta.no}
                 </p>
-                <p className="mt-1 text-[13px] font-medium leading-4">
+                <p className="mt-1 text-[14px] font-semibold leading-4 lg:text-[13px] lg:font-medium">
                   {meta.title}
                 </p>
                 {passed && !active ? (
-                  <Check className="absolute right-1.5 top-1.5 h-3 w-3 opacity-70" />
+                  <Check className="absolute right-1.5 top-1.5 h-3.5 w-3.5 opacity-80" />
                 ) : null}
               </li>
             );
@@ -292,7 +305,7 @@ export function ConsultingSixStepJourney({
 
       {/* Sticky command */}
       <div
-        className={`mpnt-sticky-cta sticky top-0 z-30 flex flex-col gap-3 border-b px-5 py-4 md:flex-row md:items-center md:justify-between md:px-8 ${
+        className={`mpnt-sticky-cta sticky top-0 z-30 flex flex-col gap-3 border-b px-5 py-3.5 md:flex-row md:items-center md:justify-between md:px-8 md:py-4 ${
           done
             ? "border-[rgba(95,107,78,0.3)] bg-[rgba(95,107,78,0.1)]"
             : "border-[#141413] bg-[#141413] text-white"
@@ -301,7 +314,7 @@ export function ConsultingSixStepJourney({
         <div className="min-w-0">
           <p
             className={`text-[11px] tracking-[0.12em] ${
-              done ? "text-[#5f6b4e]" : "text-white/55"
+              done ? "text-[#5f6b4e]" : "text-white/60"
             }`}
           >
             {done ? "已完成" : "现在只做这一步"}
@@ -314,8 +327,8 @@ export function ConsultingSixStepJourney({
             {next.title}
           </p>
           <p
-            className={`mt-0.5 text-[13px] leading-5 ${
-              done ? "text-[#5f6b4e]" : "text-white/65"
+            className={`mt-0.5 hidden text-[13px] leading-5 md:block ${
+              done ? "text-[#5f6b4e]" : "text-white/70"
             }`}
           >
             {next.detail}
@@ -326,7 +339,7 @@ export function ConsultingSixStepJourney({
             type="button"
             disabled={busy}
             onClick={() => void handleCta()}
-            className="inline-flex min-h-12 w-full shrink-0 items-center justify-center gap-2 bg-white px-5 text-[14px] font-semibold text-[#141413] transition touch-manipulation hover:bg-[#f3f1eb] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 md:min-h-11 md:w-auto"
+            className="inline-flex min-h-[3.25rem] w-full shrink-0 items-center justify-center gap-2 rounded-[14px] bg-white px-5 text-[15px] font-semibold text-[#141413] shadow-[0_8px_24px_rgba(0,0,0,0.18)] transition touch-manipulation hover:bg-[#f3f1eb] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 md:min-h-11 md:w-auto md:rounded-none md:text-[14px] md:shadow-none"
           >
             {busy ? (
               <>
@@ -356,13 +369,6 @@ export function ConsultingSixStepJourney({
           <p className="border border-[rgba(165,107,77,0.35)] bg-[rgba(165,107,77,0.08)] px-4 py-3 text-[13px] text-[#a56b4d]">
             {ctaError}
           </p>
-        ) : null}
-
-        {(focus === "INTAKE" ||
-          focus === "MARKET_RESEARCH" ||
-          !intakeChecklist.canConfirmMarketResearch) &&
-        !done ? (
-          <IntakeChecklistPanel items={intakeChecklist.items} summary={intakeChecklist.summary} />
         ) : null}
 
         {journey.challengeBrief &&
@@ -540,76 +546,6 @@ function EmptyStage({ title, detail }: { title: string; detail: string }) {
       <p className="mx-auto mt-2 max-w-md text-[14px] leading-6 text-[#6f747b]">
         {detail}
       </p>
-    </div>
-  );
-}
-
-const SOURCE_LABEL: Record<IntakeChecklistItem["source"], string> = {
-  fixed: "固定采集",
-  adaptive: "动态追问",
-  market_tool: "工具调研",
-};
-
-function IntakeChecklistPanel({
-  items,
-  summary,
-}: {
-  items: IntakeChecklistItem[];
-  summary: string;
-}) {
-  const groups: IntakeChecklistItem["source"][] = [
-    "fixed",
-    "adaptive",
-    "market_tool",
-  ];
-  return (
-    <div className="mpnt-rise border border-[rgba(20,20,19,0.1)] bg-white px-4 py-4 md:px-5">
-      <p className="text-[11px] tracking-[0.14em] text-[#5f6b4e]">
-        POSITIONING · INTAKE CHECKLIST
-      </p>
-      <p className="mt-1 font-serif-cn text-[18px] text-[#141413]">
-        定位信息收集清单
-      </p>
-      <p className="mt-1 text-[13px] leading-5 text-[#6f747b]">{summary}</p>
-      <div className="mt-4 space-y-4">
-        {groups.map((source) => {
-          const rows = items.filter((i) => i.source === source);
-          if (!rows.length) return null;
-          const okCount = rows.filter((r) => r.ok).length;
-          return (
-            <div key={source}>
-              <p className="text-[12px] font-medium text-[#141413]">
-                {SOURCE_LABEL[source]}
-                <span className="ml-2 text-[#6f747b]">
-                  {okCount}/{rows.length}
-                </span>
-              </p>
-              <ul className="mt-2 space-y-1.5">
-                {rows.map((row) => (
-                  <li
-                    key={row.id}
-                    className="flex items-start gap-2 text-[12px] leading-5"
-                  >
-                    <span
-                      className={
-                        row.ok ? "text-[#5f6b4e]" : "text-[#a56b4d]"
-                      }
-                    >
-                      {row.ok ? "✓" : "○"}
-                    </span>
-                    <span className="min-w-0">
-                      <span className="text-[#141413]">{row.label}</span>
-                      <span className="mt-0.5 block text-[#6f747b]">
-                        {row.detail}
-                      </span>
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          );
-        })}
-      </div>
     </div>
   );
 }
@@ -949,10 +885,10 @@ function StoreVisitFillRow({
                     (busy || uploading || speechUploading) &&
                     !(speechRecording && activeFieldId === evidenceFieldId)
                   }
-                  className={`touch-none select-none border px-2.5 py-1.5 text-[12px] font-medium ${
+                  className={`inline-flex min-h-9 touch-none select-none items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] font-semibold transition ${
                     speechRecording && activeFieldId === evidenceFieldId
-                      ? "border-[#07C160] bg-[#07C160] text-white"
-                      : "border-[rgba(20,20,19,0.15)] text-[#141413]"
+                      ? "animate-pulse border-[#07C160] bg-[#07C160] text-white shadow-[0_0_0_3px_rgba(7,193,96,0.25)]"
+                      : "border-[rgba(20,20,19,0.15)] bg-white text-[#141413]"
                   }`}
                   onPointerDown={(e) => {
                     if (busy || uploading || speechUploading) return;
@@ -981,6 +917,9 @@ function StoreVisitFillRow({
                   }}
                   onContextMenu={(e) => e.preventDefault()}
                 >
+                  {speechRecording && activeFieldId === evidenceFieldId ? (
+                    <span className="h-1.5 w-1.5 rounded-full bg-white" />
+                  ) : null}
                   {speechUploading && activeFieldId === evidenceFieldId
                     ? "转写中…"
                     : speechRecording && activeFieldId === evidenceFieldId
@@ -988,7 +927,7 @@ function StoreVisitFillRow({
                       : "按住说话"}
                 </button>
               ) : (
-                <span className="text-[11px] text-[#6f747b]">
+                <span className="text-[11px] text-[#5c6168]">
                   不支持口述时可上传录音，或用手机浏览器打开
                 </span>
               )}
@@ -997,7 +936,11 @@ function StoreVisitFillRow({
               value={evidence}
               onChange={(e) => setEvidence(e.target.value)}
               rows={2}
-              className="w-full border border-[rgba(20,20,19,0.12)] bg-[var(--mpnt-field)] px-2.5 py-2 text-[13px] outline-none focus:border-[#141413]"
+              className={`w-full border bg-[var(--mpnt-field)] px-2.5 py-2 text-[13px] outline-none transition-colors ${
+                speechRecording && activeFieldId === evidenceFieldId
+                  ? "border-[#07C160] ring-2 ring-[rgba(7,193,96,0.2)]"
+                  : "border-[rgba(20,20,19,0.12)] focus:border-[#141413]"
+              }`}
               placeholder="不会打字就按住说话：门头写啥、客人怎么说…"
             />
             {speechError ? (

@@ -22,6 +22,8 @@ import {
   evaluateAgentIntakeChecklist,
   answerAdaptiveFollowup,
   getModuleIntakeConfig,
+  sanitizeDialogueBasicsValues,
+  evaluateDialogueBasicsReady,
   harvestSeatPrimaryFacts,
   normalizeSeatPrimaryFacts,
   assertAgentConsultingNotDegraded,
@@ -378,10 +380,19 @@ export async function saveAgentBasics(
     agentId,
   );
 
+  const cleaned = sanitizeDialogueBasicsValues(agentId, values);
+  if (complete) {
+    const gate = evaluateDialogueBasicsReady(agentId, cleaned);
+    if (!gate.ready) {
+      throw new Error(
+        `基础档案未齐：${gate.notes.slice(0, 4).join("；") || gate.weakKeys.join("、")}`,
+      );
+    }
+  }
   const basics = upsertModuleBasics(
     agentId,
     consulting.assets.basics,
-    values,
+    cleaned,
   );
   consulting = {
     ...consulting,
@@ -419,6 +430,56 @@ export async function saveAgentBasics(
       followups: consulting.assets.adaptiveFollowups,
       research: consulting.assets.research,
     }),
+  };
+}
+
+/**
+ * Round A 真源：单题口述 → 服务端拆解入库（可选 LLM）
+ */
+export async function ingestAgentDialogueTurn(
+  userId: string,
+  projectId: string,
+  agentId: ConsultingAgentKind,
+  turnId: string,
+  utterance: string,
+) {
+  const { ingestDialogueUtterance } = await import(
+    "@/server/services/intake-utterance.service"
+  );
+  const project = await loadOwnerProject(userId, projectId);
+  const profile = readProfile(project.profile);
+  let { consulting, blueprint } = await getOrCreateAgentConsulting(
+    userId,
+    projectId,
+    agentId,
+  );
+  const prior = consulting.assets.basics?.values || {};
+  const ingested = await ingestDialogueUtterance({
+    agent: agentId,
+    turnId,
+    utterance,
+    prior,
+  });
+  const cleaned = sanitizeDialogueBasicsValues(agentId, ingested.values);
+  const basics = upsertModuleBasics(
+    agentId,
+    consulting.assets.basics,
+    cleaned,
+  );
+  consulting = {
+    ...consulting,
+    assets: { ...consulting.assets, basics },
+    updatedAt: new Date().toISOString(),
+  };
+  await persist(project.id, profile, agentId, consulting);
+  return {
+    consulting,
+    nextStep: resolveSixStepNext(consulting, blueprint),
+    parsed: ingested.parsed,
+    microSlots: ingested.microSlots,
+    source: ingested.source,
+    basicsValues: basics.values,
+    ready: evaluateDialogueBasicsReady(agentId, basics.values).ready,
   };
 }
 

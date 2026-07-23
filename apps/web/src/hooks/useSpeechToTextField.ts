@@ -86,6 +86,7 @@ export function useSpeechToTextField(cloud?: SpeechCloudUploadOptions) {
   const [uploading, setUploading] = useState(false);
   const [activeFieldId, setActiveFieldId] = useState<string | null>(null);
   const [speechError, setSpeechError] = useState<string | null>(null);
+  const [recordingSeconds, setRecordingSeconds] = useState(0);
 
   const clearRecordingTimer = useCallback(() => {
     if (recordingTimerRef.current != null) {
@@ -107,6 +108,7 @@ export function useSpeechToTextField(cloud?: SpeechCloudUploadOptions) {
     holdActiveRef.current = false;
     clearRecordingTimer();
     stopBrowserSpeech();
+    setRecordingSeconds(0);
     try {
       if (recorderRef.current && recorderRef.current.state !== "inactive") {
         recorderRef.current.stop();
@@ -338,10 +340,12 @@ export function useSpeechToTextField(cloud?: SpeechCloudUploadOptions) {
 
         recorder.start(250);
         clearRecordingTimer();
+        setRecordingSeconds(0);
         recordingTimerRef.current = window.setInterval(() => {
           const elapsed = Math.floor(
             (Date.now() - recordingStartedAtRef.current) / 1000,
           );
+          setRecordingSeconds(elapsed);
           if (elapsed >= MAX_VOICE_SECONDS) {
             stopRecording();
           }
@@ -481,6 +485,8 @@ export function useSpeechToTextField(cloud?: SpeechCloudUploadOptions) {
     uploading,
     activeFieldId,
     speechError,
+    recordingSeconds,
+    maxVoiceSeconds: MAX_VOICE_SECONDS,
     startFieldRecording,
     toggleFieldRecording,
     stopRecording,

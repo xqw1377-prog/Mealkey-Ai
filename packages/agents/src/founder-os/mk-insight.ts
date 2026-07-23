@@ -370,12 +370,21 @@ export function mergeEvidencePacket(input: {
   base?: EvidencePacket;
   insights: MKInsight[];
   gaps?: string[];
+  /** 可行动缺口入口（语音开案 / 补证 UI） */
+  gapActions?: EvidencePacket["gapActions"];
 }): EvidencePacket {
   const fromInsights = insightsToEvidenceItems(input.insights);
   const baseItems = input.base?.items || [];
   const byId = new Map<string, EvidenceItem>();
   for (const item of [...baseItems, ...fromInsights]) {
     byId.set(item.evidenceId, item);
+  }
+  const actionById = new Map<string, NonNullable<EvidencePacket["gapActions"]>[number]>();
+  for (const action of [
+    ...(input.base?.gapActions || []),
+    ...(input.gapActions || []),
+  ]) {
+    actionById.set(action.id, action);
   }
   return {
     caseId: input.caseId,
@@ -385,6 +394,7 @@ export function mergeEvidencePacket(input: {
       ...(input.base?.gaps || []),
       ...(input.gaps || []),
     ].slice(0, 8),
+    gapActions: [...actionById.values()].slice(0, 8),
   };
 }
 

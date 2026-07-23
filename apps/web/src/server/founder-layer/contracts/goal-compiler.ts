@@ -254,6 +254,8 @@ export type MobileAgentStateV1 = {
   activeDrill?: MobileAgentActiveDrillV1 | null;
   /** 最近一轮交互提示（选项追问 / 行为态） */
   interactionHints?: InteractionHintsV1 | null;
+  /** 色卡/槽位中间草稿（刷新可续填，编译时由 slotPatches 正式写入） */
+  slotDrafts?: Record<string, string>;
   updatedAt: string;
 };
 
@@ -275,6 +277,7 @@ export function emptyMobileAgentState(): MobileAgentStateV1 {
     },
     activeDrill: null,
     interactionHints: null,
+    slotDrafts: {},
     updatedAt: new Date().toISOString(),
   };
 }

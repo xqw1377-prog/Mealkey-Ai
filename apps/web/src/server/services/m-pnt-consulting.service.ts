@@ -1,4 +1,4 @@
-﻿﻿/**
+﻿/**
  * M-PNT 品牌战略咨询项目 — 服务层
  * 持久化：project.profile.mPntBrandProject
  */
@@ -7,6 +7,10 @@ import { createLogger } from "@/lib/logger";
 import { resolveActiveBrand } from "@/lib/brand-registry";
 import { validateProfile } from "@/lib/profile-schema";
 import { updateProjectProfile } from "@/server/services/project-profile";
+import {
+  evaluateDialogueBasicsReady,
+  sanitizeDialogueBasicsValues,
+} from "@mealkey/agents/consulting-os";
 import {
   BrandProjectStage,
   STAGE_CONTRACTS,
@@ -414,10 +418,63 @@ export async function saveBrandBasics(
     throw new Error("当前不在基础档案采集阶段");
   }
 
-  const basics = upsertBrandBasics(consulting.assets.brandBasics, values);
+  const cleaned = sanitizeDialogueBasicsValues(
+    "m-pnt",
+    values as Record<string, string>,
+  ) as BrandBasicsValues;
+  const basics = upsertBrandBasics(consulting.assets.brandBasics, cleaned);
   consulting = writeBrandBasics(consulting, basics);
   await persist(project.id, profile, consulting, interview);
   return { consulting, interview, basics };
+}
+
+/** 口述拆解真源：一题一句 → 服务端解析入库 */
+export async function ingestBrandDialogueTurn(
+  userId: string,
+  projectId: string,
+  turnId: string,
+  utterance: string,
+) {
+  const { ingestDialogueUtterance } = await import(
+    "@/server/services/intake-utterance.service"
+  );
+  const project = await loadOwnerProject(userId, projectId);
+  const profile = readProfile(project.profile);
+  let { consulting, interview } = await getOrCreateBrandConsultingProject(
+    userId,
+    projectId,
+  );
+  if (consulting.stage !== BrandProjectStage.DISCOVERY) {
+    throw new Error("当前不在基础档案采集阶段");
+  }
+  const prior = (consulting.assets.brandBasics?.values ||
+    {}) as Record<string, string>;
+  const ingested = await ingestDialogueUtterance({
+    agent: "m-pnt",
+    turnId,
+    utterance,
+    prior,
+  });
+  const cleaned = sanitizeDialogueBasicsValues(
+    "m-pnt",
+    ingested.values,
+  ) as BrandBasicsValues;
+  const basics = upsertBrandBasics(consulting.assets.brandBasics, cleaned);
+  consulting = writeBrandBasics(consulting, basics);
+  await persist(project.id, profile, consulting, interview);
+  return {
+    consulting,
+    interview,
+    basics,
+    parsed: ingested.parsed,
+    microSlots: ingested.microSlots,
+    source: ingested.source,
+    basicsValues: basics.values as Record<string, string>,
+    ready: evaluateDialogueBasicsReady(
+      "m-pnt",
+      basics.values as Record<string, string>,
+    ).ready,
+  };
 }
 
 /**
@@ -444,14 +501,27 @@ export async function completeDiscovery(
     throw new Error("当前不在基础档案采集阶段");
   }
 
-  const patch: BrandBasicsValues = {
+  const rawPatch: BrandBasicsValues = {
     ...(input?.basics || {}),
   };
   if (input?.businessGoal?.trim()) {
-    patch.businessGoal = input.businessGoal.trim();
+    rawPatch.businessGoal = input.businessGoal.trim();
   }
   if (input?.notes?.trim()) {
-    patch.mainPain = patch.mainPain || input.notes.trim();
+    rawPatch.mainPain = rawPatch.mainPain || input.notes.trim();
+  }
+  const patch = sanitizeDialogueBasicsValues(
+    "m-pnt",
+    rawPatch as Record<string, string>,
+  ) as BrandBasicsValues;
+  const dialogueGate = evaluateDialogueBasicsReady(
+    "m-pnt",
+    patch as Record<string, string>,
+  );
+  if (!dialogueGate.ready) {
+    throw new Error(
+      `基础档案未齐：${dialogueGate.notes.slice(0, 4).join("；") || dialogueGate.weakKeys.join("、")}`,
+    );
   }
 
   let basics = upsertBrandBasics(consulting.assets.brandBasics, patch);

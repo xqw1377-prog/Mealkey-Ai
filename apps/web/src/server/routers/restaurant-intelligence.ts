@@ -128,12 +128,12 @@ export const restaurantIntelligenceRouter = router({
         projectId: z.string().min(1),
         snapshotId: z.string().min(1),
         action: z.enum(["confirm", "revise", "reject"]),
-        founderClaim: z.string().max(200).optional(),
+        founderClaim: z.string().max(2000).optional(),
         revise: z
           .object({
             stageLabel: z.string().max(80).optional(),
             category: z.string().max(80).optional(),
-            founderClaim: z.string().max(200).optional(),
+            founderClaim: z.string().max(2000).optional(),
           })
           .optional(),
       }),

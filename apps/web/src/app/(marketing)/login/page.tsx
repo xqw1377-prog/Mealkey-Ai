@@ -116,6 +116,15 @@ export default function LoginPage({
               注册
             </Link>
           </div>
+          <p className="mt-4 text-center text-[12px] text-[#9a958c]">
+            页面打不开或按钮无响应？
+            <a
+              href="/clear"
+              className="ml-1 font-medium text-[#66735E] underline underline-offset-2"
+            >
+              点这里清理缓存
+            </a>
+          </p>
         </div>
       </div>
     </div>

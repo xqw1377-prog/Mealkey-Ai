@@ -52,12 +52,19 @@ export function OperatingShell({ children }: OperatingShellProps) {
     defaultProjectId,
   );
   // 决策沉浸：决策室 / 决策案；顾问咨询仍可全屏但不占底栏「决策」语义
-  // Agent 是 Mobile 主入口：藏 ShellHeader + 底栏，页内 ChatGPT 壳自管导航
+  // Agent 是 Mobile 主入口：藏 ShellHeader + 底栏，页内语音壳自管导航
   const isAgentSurface = /^\/projects\/[^/]+\/agent$/.test(pathname);
   const isMeetingFullscreen =
     /^\/projects\/[^/]+\/advisor$/.test(pathname) ||
     /^\/projects\/[^/]+\/decision-room$/.test(pathname) ||
     /^\/projects\/[^/]+\/decision-case$/.test(pathname);
+  // 专业 Agent 席：移动端藏 BottomNav，避免挡住按住说话底区
+  const isConsultingVoiceSurface =
+    /^\/projects\/[^/]+\/(positioning|market|business|equity|restaurant-intelligence)$/.test(
+      pathname,
+    );
+  const hideBottomNav =
+    isMeetingFullscreen || isAgentSurface || isConsultingVoiceSurface;
   const hideShellHeader = isMeetingFullscreen || isAgentSurface;
   const [platformAccess, setPlatformAccess] = useState<PlatformAccessState>({
     loading: isPlatformSurface,
@@ -205,8 +212,8 @@ export function OperatingShell({ children }: OperatingShellProps) {
         {isAgentSurface ? null : <InAppBrowserBanner variant="sticky" />}
 
         <main className="relative">{children}</main>
-        {/* Agent = ChatGPT 壳：导航进左侧栏，不再叠底栏三 Tab */}
-        {isMeetingFullscreen || isAgentSurface ? null : (
+        {/* Agent / 决策室 / 专业席：藏底栏，留给按住说话 */}
+        {hideBottomNav ? null : (
           <BottomNav items={navItems} currentSection={currentSection} />
         )}
       </div>

@@ -63,11 +63,24 @@ export interface EvidenceItem {
   refs?: string[];
 }
 
+/** 证据缺口动作：UI 可渲染「去补充」入口 */
+export interface EvidenceGapAction {
+  id: string;
+  /** 短标签，如「商圈客观客流」 */
+  label: string;
+  /** 完整说明：已听到什么、还缺什么 */
+  detail: string;
+  /** 补充引导问 / placeholder */
+  prompt: string;
+}
+
 export interface EvidencePacket {
   caseId: string;
   generatedAt?: string;
   items: EvidenceItem[];
   gaps?: string[];
+  /** 可行动缺口（优先于纯文案 gaps 做入口） */
+  gapActions?: EvidenceGapAction[];
 }
 
 export interface CouncilOpinion {

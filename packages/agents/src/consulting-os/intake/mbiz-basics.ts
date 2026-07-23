@@ -4,6 +4,7 @@ import {
   type IntakeFieldDef,
   type ModuleBasicsProfile,
 } from "./core";
+import { isDumpDuplicate, isVagueAnswer } from "./weak-answer";
 
 export const MBIZ_BASICS_FIELDS: IntakeFieldDef[] = [
   {
@@ -97,6 +98,25 @@ export function generateMbizFollowups(
 ): ReturnType<typeof createFollowupSession> {
   const v = basics.values;
   const qs: AdaptiveFollowupQuestion[] = [];
+
+  if (isDumpDuplicate(v, ["avgTicket", "unitEconomics", "pain"])) {
+    qs.push({
+      id: "fq_split_money",
+      prompt: "分开说：人均多少、月流水/毛利量级、模式上最头疼的一件事。",
+      whyNeeded: "钱与疼点揉在一起，单位经济诊断会失真。",
+      priority: "must",
+      triggeredBy: ["avgTicket", "unitEconomics", "pain"],
+    });
+  }
+  if (isVagueAnswer(v.pain || "", 4)) {
+    qs.push({
+      id: "fq_pain_concrete",
+      prompt: "模式疼点再具体一点：是不稳、不赚，还是复制走样？举一个事实。",
+      whyNeeded: "疼点太泛，顾问方案会对不准。",
+      priority: "must",
+      triggeredBy: ["pain"],
+    });
+  }
 
   qs.push({
     id: "fq_north_star",

@@ -135,7 +135,7 @@ export function openDecisionRoom(input: {
     constraints: input.constraints || "",
     successLooksLike: input.successLooksLike || "",
   });
-  const substanceCount = (input.expertReports || []).filter((r) => {
+  const reportSubstance = (input.expertReports || []).filter((r) => {
     if (!r) return false;
     if (/占位/.test(r.headline || "")) return false;
     const text = (r.sections || [])
@@ -144,6 +144,16 @@ export function openDecisionRoom(input: {
     if (/占位/.test(text)) return false;
     return text.trim().length >= 40;
   }).length;
+  // 合法 MKInsight（含语音开案 Adapter）视为实质资产，不必再勾「仅演示 stub」
+  const insightSubstance = (input.insights || []).some(
+    (i) =>
+      (i.finding || "").trim().length >= 20 &&
+      Array.isArray(i.evidence) &&
+      i.evidence.length > 0,
+  )
+    ? 1
+    : 0;
+  const substanceCount = reportSubstance + insightSubstance;
   const readiness = evaluateAgendaReadiness({
     brief,
     substanceReportCount: substanceCount,

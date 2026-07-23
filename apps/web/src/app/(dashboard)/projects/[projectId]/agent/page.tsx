@@ -10,8 +10,7 @@ import {
   Loader2,
   Menu,
   SquarePen,
-  Mic,
-  Send,
+  MessageCircle,
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { PageErrorBoundary } from "@/components/operating/PageErrorBoundary";
@@ -19,11 +18,44 @@ import {
   AgentChatSidebar,
   type AgentHistoryItem,
 } from "@/components/operating/AgentChatSidebar";
+import {
+  HoldToTalkBanner,
+  HoldToTalkButton,
+} from "@/components/operating/HoldToTalkButton";
 import { useSpeechToTextField } from "@/hooks/useSpeechToTextField";
 import { greetingByHour } from "@/lib/time-greeting";
-import type { BusinessAssetV1 } from "@/server/founder-layer/contracts/goal-compiler";
+import type {
+  BusinessAssetV1,
+  MobileAgentStateV1,
+} from "@/server/founder-layer/contracts/goal-compiler";
+import {
+  latestVoiceUtterance,
+  routeVoiceToSlots,
+} from "@/server/founder-layer/goal-compiler/voice-slot-routing";
 
 type FileKind = "xlsx" | "csv" | "image" | "pdf" | "doc" | "other";
+
+/** 客户端空态：updatedAt 必须稳定，避免 SSR/CSR hydration 不一致 */
+const EMPTY_AGENT_STATE: MobileAgentStateV1 = {
+  version: "v1",
+  activeGoal: null,
+  taskGraph: null,
+  assets: [],
+  turns: [],
+  pendingQuestions: [],
+  pendingDecisions: [],
+  memoryHints: { focus: [] },
+  seedMetrics: {
+    events: [],
+    compileCount: 0,
+    assetCount: 0,
+    returnCount: 0,
+  },
+  activeDrill: null,
+  interactionHints: null,
+  slotDrafts: {},
+  updatedAt: "1970-01-01T00:00:00.000Z",
+};
 
 function guessFileKind(name: string): FileKind {
   const n = name.toLowerCase();
@@ -44,22 +76,39 @@ function clip(s: string, n: number) {
 function AgentPageInner({ projectId }: { projectId: string }) {
   const utils = trpc.useUtils();
   const scrollRef = useRef<HTMLDivElement>(null);
-  const { data, isLoading, isError, error, refetch, isFetched } =
+  const composerRef = useRef<HTMLTextAreaElement>(null);
+  /** 语音只走底栏主麦；色卡当前题用 preferSlot 路由 */
+  const voiceTargetRef = useRef<"composer">("composer");
+  const slotVoiceContextRef = useRef<{
+    pendingQuestions: Array<{ slot: string; prompt: string }>;
+    choiceBySlot: Map<string, Array<{ label: string; value: string }>>;
+    slotDrafts: Record<string, string>;
+    goalBlocked: boolean;
+    preferSlot: string | null;
+  }>({
+    pendingQuestions: [],
+    choiceBySlot: new Map(),
+    slotDrafts: {},
+    goalBlocked: false,
+    preferSlot: null,
+  });
+  const { data, isLoading, isError, error, refetch, isFetching } =
     trpc.mobileAgent.getState.useQuery(
       { projectId },
       {
         retry: 1,
         refetchOnWindowFocus: false,
+        // 超时后停止转圈，避免顶栏永远「正在同步」吓退用户
+        staleTime: 10_000,
       },
     );
-  const [loadTimedOut, setLoadTimedOut] = useState(false);
-
+  const [syncGaveUp, setSyncGaveUp] = useState(false);
   useEffect(() => {
     if (data || isError) {
-      setLoadTimedOut(false);
+      setSyncGaveUp(false);
       return;
     }
-    const t = window.setTimeout(() => setLoadTimedOut(true), 8000);
+    const t = window.setTimeout(() => setSyncGaveUp(true), 6000);
     return () => window.clearTimeout(t);
   }, [data, isError, projectId]);
   const { data: scanData } = trpc.dashboard.getDailyScan.useQuery(
@@ -78,13 +127,6 @@ function AgentPageInner({ projectId }: { projectId: string }) {
       await utils.mobileAgent.getState.invalidate({ projectId });
     },
   });
-  const ackDecisionMut = trpc.mobileAgent.acknowledgePendingDecision.useMutation({
-    onSuccess: async () => {
-      await utils.mobileAgent.getState.invalidate({ projectId });
-      await utils.dashboard.getHome.invalidate();
-    },
-  });
-
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [draft, setDraft] = useState("");
   const [pendingFile, setPendingFile] = useState<{
@@ -96,13 +138,47 @@ function AgentPageInner({ projectId }: { projectId: string }) {
   const [fileHint, setFileHint] = useState<string | null>(null);
   const [viewAsset, setViewAsset] = useState<BusinessAssetV1 | null>(null);
   const [slotDrafts, setSlotDrafts] = useState<Record<string, string>>({});
+  /** 色卡当前引导题（回答一律走底部对话框） */
+  const [guideSlot, setGuideSlot] = useState<string | null>(null);
   const [greeting, setGreeting] = useState("你好");
   const fileRef = useRef<HTMLInputElement>(null);
   const voiceCompileRef = useRef<(text: string) => void>(() => {});
+  const slotDraftsHydratedRef = useRef(false);
+
+  const saveSlotDraftsMut = trpc.mobileAgent.saveSlotDrafts.useMutation();
+  const deleteHistoryMut = trpc.mobileAgent.deleteHistory.useMutation({
+    onSuccess: async (_data, vars) => {
+      await utils.mobileAgent.getState.invalidate({ projectId });
+      if (vars.kind === "asset") {
+        setViewAsset((cur) => (cur?.assetId === vars.id ? null : cur));
+      }
+    },
+  });
+  const ackDecisionMut = trpc.mobileAgent.acknowledgePendingDecision.useMutation({
+    onSuccess: async () => {
+      await utils.mobileAgent.getState.invalidate({ projectId });
+      await utils.dashboard.getHome.invalidate();
+    },
+  });
 
   useEffect(() => {
     setGreeting(greetingByHour());
   }, []);
+
+  // 从后端恢复色卡中间草稿（刷新可续填）
+  useEffect(() => {
+    slotDraftsHydratedRef.current = false;
+    setSlotDrafts({});
+  }, [projectId]);
+
+  useEffect(() => {
+    if (!data?.state || slotDraftsHydratedRef.current) return;
+    const server = data.state.slotDrafts || {};
+    if (Object.keys(server).length > 0) {
+      setSlotDrafts(server);
+    }
+    slotDraftsHydratedRef.current = true;
+  }, [data?.state]);
 
   // Web（lg+）默认开侧栏；手机默认关（ChatGPT 双端）
   useEffect(() => {
@@ -118,6 +194,9 @@ function AgentPageInner({ projectId }: { projectId: string }) {
     recording,
     uploading: speechUploading,
     speechError,
+    activeFieldId,
+    recordingSeconds,
+    maxVoiceSeconds,
     startFieldRecording,
     stopRecording,
   } = useSpeechToTextField({
@@ -128,7 +207,8 @@ function AgentPageInner({ projectId }: { projectId: string }) {
     },
   });
 
-  const state = data?.state;
+  // 禁止整页「加载中」挡门：无数据时用空态渲染对话壳，避免 SW/JS 挂死白屏
+  const state = data?.state ?? EMPTY_AGENT_STATE;
   const known = data?.known;
   const goal = state?.activeGoal ?? null;
   const taskGraph = state?.taskGraph ?? null;
@@ -140,6 +220,37 @@ function AgentPageInner({ projectId }: { projectId: string }) {
   const interactionHints = state?.interactionHints ?? null;
   const followUps = interactionHints?.followUps ?? [];
   const isEmpty = turns.length === 0 && !goal;
+
+  // 待答槽变化时裁掉已答草稿；有改动则防抖落库
+  useEffect(() => {
+    if (!slotDraftsHydratedRef.current) return;
+    const pending = new Set(pendingQuestions.map((q) => q.slot));
+    setSlotDrafts((prev) => {
+      let changed = false;
+      const next: Record<string, string> = {};
+      for (const [k, v] of Object.entries(prev)) {
+        if (!pending.has(k)) {
+          changed = true;
+          continue;
+        }
+        next[k] = v;
+      }
+      return changed ? next : prev;
+    });
+  }, [pendingQuestions]);
+
+  useEffect(() => {
+    if (!slotDraftsHydratedRef.current || !projectId) return;
+    if (pendingQuestions.length === 0 && Object.keys(slotDrafts).length === 0) {
+      return;
+    }
+    const t = window.setTimeout(() => {
+      saveSlotDraftsMut.mutate({ projectId, drafts: slotDrafts });
+    }, 900);
+    return () => window.clearTimeout(t);
+    // 仅随草稿内容落库；mutation 对象不必入依赖
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slotDrafts, projectId, pendingQuestions.length]);
   const knownLine = [
     known?.brandName,
     known?.city,
@@ -185,7 +296,11 @@ function AgentPageInner({ projectId }: { projectId: string }) {
     : "";
 
   const busy =
-    compileMut.isPending || uploading || speechUploading || freshMut.isPending;
+    compileMut.isPending ||
+    uploading ||
+    speechUploading ||
+    freshMut.isPending ||
+    deleteHistoryMut.isPending;
   const hasContent = Boolean(draft.trim() || pendingFile);
 
   const history = useMemo<AgentHistoryItem[]>(() => {
@@ -284,11 +399,113 @@ function AgentPageInner({ projectId }: { projectId: string }) {
     [compileMut, goal?.goalId, pendingFile, projectId],
   );
 
+  // 色卡跟随待答题：优先未答，否则第一题
+  useEffect(() => {
+    if (!pendingQuestions.length) {
+      setGuideSlot(null);
+      return;
+    }
+    const still = pendingQuestions.some((q) => q.slot === guideSlot);
+    if (still) return;
+    const firstEmpty = pendingQuestions.find((q) => {
+      const opts = choiceBySlot.get(q.slot);
+      if (opts?.length) return true; // 选择题未点选前仍在列表里
+      return !(slotDrafts[q.slot] || "").trim();
+    });
+    setGuideSlot((firstEmpty || pendingQuestions[0])!.slot);
+  }, [pendingQuestions, guideSlot, choiceBySlot, slotDrafts]);
+
+  // 同步给语音回调用的最新槽位上下文（避免闭包过期）
+  useEffect(() => {
+    slotVoiceContextRef.current = {
+      pendingQuestions,
+      choiceBySlot,
+      slotDrafts,
+      goalBlocked: goal?.status === "blocked" && pendingQuestions.length > 0,
+      preferSlot: guideSlot,
+    };
+  }, [pendingQuestions, choiceBySlot, slotDrafts, goal?.status, guideSlot]);
+
+  const advanceGuideAfter = useCallback(
+    (answeredSlot: string, nextDrafts: Record<string, string>) => {
+      const rest = pendingQuestions.filter((q) => q.slot !== answeredSlot);
+      const next = rest.find((q) => {
+        if (choiceBySlot.get(q.slot)?.length) return true;
+        return !(nextDrafts[q.slot] || "").trim();
+      });
+      if (next) setGuideSlot(next.slot);
+    },
+    [pendingQuestions, choiceBySlot],
+  );
+
+  const applyVoiceOrTextToSlots = useCallback(
+    async (rawText: string) => {
+      const ctx = slotVoiceContextRef.current;
+      const utterance = latestVoiceUtterance(rawText);
+      if (!utterance || compileMut.isPending) return false;
+
+      if (!ctx.goalBlocked) {
+        setDraft(utterance);
+        await runCompile({ trigger: "utterance", utterance });
+        return true;
+      }
+
+      const routed = routeVoiceToSlots({
+        utterance,
+        questions: ctx.pendingQuestions,
+        choiceBySlot: ctx.choiceBySlot,
+        slotDrafts: ctx.slotDrafts,
+        preferSlot: ctx.preferSlot,
+      });
+
+      if (routed.kind === "choice") {
+        setDraft("");
+        advanceGuideAfter(routed.slot, ctx.slotDrafts);
+        await runCompile({
+          trigger: "confirm_slot",
+          slotPatches: { [routed.slot]: routed.value },
+          utterance: routed.value,
+        });
+        return true;
+      }
+
+      if (routed.kind === "fill_slot") {
+        const nextDrafts = { ...ctx.slotDrafts, [routed.slot]: routed.value };
+        setSlotDrafts((s) => ({ ...s, [routed.slot]: routed.value }));
+        setDraft("");
+        if (routed.allTextFilled) {
+          const cleaned = Object.fromEntries(
+            Object.entries(nextDrafts).filter(([, v]) => String(v).trim()),
+          );
+          await runCompile({
+            trigger: "confirm_slot",
+            slotPatches: cleaned,
+            utterance,
+          });
+        } else {
+          advanceGuideAfter(routed.slot, nextDrafts);
+          window.requestAnimationFrame(() => composerRef.current?.focus());
+        }
+        return true;
+      }
+
+      // freeform：整段作为补充继续
+      setDraft(utterance);
+      const patches = Object.fromEntries(
+        Object.entries(ctx.slotDrafts).filter(([, v]) => String(v).trim()),
+      );
+      await runCompile({
+        trigger: Object.keys(patches).length ? "confirm_slot" : "utterance",
+        utterance,
+        slotPatches: Object.keys(patches).length ? patches : undefined,
+      });
+      return true;
+    },
+    [compileMut.isPending, runCompile, advanceGuideAfter],
+  );
+
   voiceCompileRef.current = (fullText: string) => {
-    const text = fullText.trim();
-    if (!text || compileMut.isPending) return;
-    setDraft(text);
-    void runCompile({ trigger: "utterance", utterance: text });
+    void applyVoiceOrTextToSlots(fullText);
   };
 
   useEffect(() => {
@@ -300,13 +517,19 @@ function AgentPageInner({ projectId }: { projectId: string }) {
   const onSend = async () => {
     const text = draft.trim();
     if (!text && !pendingFile) return;
-    await runCompile({
-      trigger: pendingFile && !text ? "file" : "utterance",
-      utterance: text || undefined,
-    });
+    try {
+      if (pendingFile && !text) {
+        await runCompile({ trigger: "file", utterance: undefined });
+        return;
+      }
+      await applyVoiceOrTextToSlots(text);
+    } catch {
+      /* 错误由 compileMut.error 展示 */
+    }
   };
 
   const onPickChoice = async (slot: string, value: string) => {
+    advanceGuideAfter(slot, slotDrafts);
     await runCompile({
       trigger: "confirm_slot",
       slotPatches: { [slot]: value },
@@ -314,11 +537,43 @@ function AgentPageInner({ projectId }: { projectId: string }) {
     });
   };
 
+  /**
+   * 首页只挂已实现专业 Agent 入口（与能力页同源）：
+   * M-PNT 品牌定位 · M-MKT 市场机会 · M-BIZ 商业模式 · M-ED 股权 ·
+   * 门店体检（经营感知/画像）· 决策室拍板
+   */
   const scenarioStarts = [
-    { label: "开店决策", utterance: "我想开一家店，帮我建立开店模型" },
-    { label: "经营诊断", utterance: "最近生意不好，帮我诊断一下" },
-    { label: "菜单优化", utterance: "帮我看看菜单怎么优化" },
-  ] as const;
+    {
+      kind: "href" as const,
+      label: "品牌定位",
+      href: `/projects/${projectId}/positioning`,
+    },
+    {
+      kind: "href" as const,
+      label: "市场机会",
+      href: `/projects/${projectId}/market`,
+    },
+    {
+      kind: "href" as const,
+      label: "商业模式",
+      href: `/projects/${projectId}/business`,
+    },
+    {
+      kind: "href" as const,
+      label: "股权诊断",
+      href: `/projects/${projectId}/equity`,
+    },
+    {
+      kind: "href" as const,
+      label: "门店体检",
+      href: `/projects/${projectId}/restaurant-intelligence`,
+    },
+    {
+      kind: "href" as const,
+      label: "决策拍板",
+      href: `/projects/${projectId}/decision-room?intake=voice`,
+    },
+  ];
 
   const onUpload = async (file: File) => {
     setUploading(true);
@@ -368,11 +623,31 @@ function AgentPageInner({ projectId }: { projectId: string }) {
     });
   };
 
+  const focusComposer = (seed?: string) => {
+    if (seed) setDraft(seed);
+    window.requestAnimationFrame(() => {
+      const el = composerRef.current;
+      if (!el) return;
+      el.focus();
+      const len = el.value.length;
+      el.setSelectionRange(len, len);
+    });
+  };
+
   const onNewChat = () => {
-    void freshMut.mutateAsync({ projectId });
+    void freshMut.mutateAsync({ projectId }).then(() => {
+      focusComposer();
+    });
   };
 
   const onSelectHistory = (item: AgentHistoryItem) => {
+    if (item.kind === "current") {
+      // 回到当前持续对话线程
+      focusComposer();
+      const el = scrollRef.current;
+      if (el) el.scrollTop = el.scrollHeight;
+      return;
+    }
     if (item.kind === "asset") {
       const a = assets.find((x) => x.assetId === item.id);
       if (a) setViewAsset(a);
@@ -383,52 +658,37 @@ function AgentPageInner({ projectId }: { projectId: string }) {
     }
   };
 
-  if ((isLoading || !isFetched) && !loadTimedOut && !isError) {
-    return (
-      <div className="flex min-h-[100dvh] flex-col items-center justify-center gap-3 bg-[#F7F6F2] px-6 text-center text-[14px] text-[#6f747b]">
-        <p>加载中…</p>
-        <p className="max-w-sm text-[12px] leading-5 text-[#9aa19a]">
-          若超过 8 秒仍无变化：请用无痕窗口打开本页，或按 Ctrl+Shift+R
-          硬刷新。
-        </p>
-        <a
-          href="/login"
-          className="text-[13px] font-medium text-[#465240] underline underline-offset-2"
-        >
-          去登录页重进
-        </a>
-      </div>
-    );
-  }
+  const onDeleteHistory = async (item: AgentHistoryItem) => {
+    if (item.kind === "radar") return;
+    const kind = item.kind === "current" ? "current" : "asset";
+    await deleteHistoryMut.mutateAsync({
+      projectId,
+      kind,
+      id: item.id,
+    });
+  };
 
-  if (isError || !data || loadTimedOut) {
+  if (isError && !data) {
     return (
       <div className="flex min-h-[100dvh] flex-col items-center justify-center gap-4 bg-[#F7F6F2] px-6 text-center">
         <p className="text-[15px] font-medium text-[#2F3A28]">对话暂时打不开</p>
         <p className="max-w-sm text-[13px] leading-5 text-[#6f747b]">
-          {error?.message ||
-            (loadTimedOut
-              ? "加载超时。请用无痕窗口打开，或在开发者工具 → Application → Service Workers 点 Unregister 后硬刷新。"
-              : "请检查登录状态后重试")}
+          {error?.message || "请检查登录状态后重试"}
         </p>
         <div className="flex flex-wrap items-center justify-center gap-2">
           <button
             type="button"
-            onClick={() => {
-              setLoadTimedOut(false);
-              void refetch();
-            }}
+            onClick={() => void refetch()}
             className="inline-flex min-h-11 items-center rounded-[14px] bg-[#181817] px-4 text-[14px] font-semibold text-white"
           >
             重试
           </button>
-          <button
-            type="button"
-            onClick={() => window.location.reload()}
-            className="inline-flex min-h-11 items-center rounded-[14px] border border-[rgba(24,24,23,0.12)] bg-white px-4 text-[14px] font-medium text-[#2F3A28]"
+          <a
+            href="/fix-cache.html?from=agent-error"
+            className="inline-flex min-h-11 items-center rounded-[14px] border border-[rgba(24,24,23,0.12)] bg-white px-4 text-[14px] font-medium text-[#2F3A28] no-underline"
           >
-            刷新页面
-          </button>
+            清理缓存
+          </a>
           <Link
             href="/login"
             className="inline-flex min-h-11 items-center rounded-[14px] border border-[rgba(24,24,23,0.12)] bg-white px-4 text-[14px] font-medium text-[#2F3A28] no-underline"
@@ -453,7 +713,10 @@ function AgentPageInner({ projectId }: { projectId: string }) {
     : data?.projectName || "MealKey";
 
   return (
-    <div className="relative flex h-[100dvh] w-full overflow-hidden bg-[#F7F6F2] lg:bg-white">
+    <div
+      data-mk-hydrated="1"
+      className="relative flex h-[100dvh] w-full overflow-hidden bg-[#F7F6F2] lg:bg-white"
+    >
       <AgentChatSidebar
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
@@ -464,11 +727,36 @@ function AgentPageInner({ projectId }: { projectId: string }) {
         history={history}
         onNewChat={onNewChat}
         onSelectHistory={onSelectHistory}
+        onDeleteHistory={onDeleteHistory}
+        deleteDisabled={busy}
         newChatDisabled={busy}
       />
 
       {/* 主列：ChatGPT Web = 轻顶栏 + 居中消息列 + 底 Composer */}
       <div className="relative flex min-w-0 flex-1 flex-col bg-[#F7F6F2] lg:bg-white">
+        {(isLoading || isFetching) && !data && !syncGaveUp ? (
+          <div className="flex shrink-0 items-center justify-between gap-2 bg-[#F1F3EC] px-3 py-2 text-[12px] text-[#5f6368]">
+            <span>正在同步经营上下文…</span>
+            <a href="/clear" className="underline">
+              打不开？清理缓存
+            </a>
+          </div>
+        ) : null}
+        {syncGaveUp && !data ? (
+          <div className="flex shrink-0 items-center justify-between gap-2 bg-[#FCE8E6] px-3 py-2 text-[12px] text-[#8A4F31]">
+            <span>同步较慢，可先点下方场景试用；或</span>
+            <button
+              type="button"
+              className="underline"
+              onClick={() => {
+                setSyncGaveUp(false);
+                void refetch();
+              }}
+            >
+              重试同步
+            </button>
+          </div>
+        ) : null}
         <header className="flex shrink-0 items-center justify-between gap-2 px-2 pb-1.5 pt-[max(0.4rem,env(safe-area-inset-top))] lg:border-b lg:border-[rgba(0,0,0,0.06)] lg:px-4 lg:py-2">
           <button
             type="button"
@@ -501,12 +789,13 @@ function AgentPageInner({ projectId }: { projectId: string }) {
             type="button"
             disabled={busy}
             onClick={onNewChat}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-[#202124] hover:bg-black/[0.04] disabled:opacity-40 lg:hidden"
+            className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg px-2 text-[#202124] hover:bg-black/[0.04] disabled:opacity-40"
             aria-label="新对话"
+            title="新对话"
           >
             <SquarePen className="h-5 w-5" />
+            <span className="hidden text-[13px] font-medium sm:inline">新对话</span>
           </button>
-          <div className="hidden h-10 w-10 lg:block" aria-hidden />
         </header>
 
         <div
@@ -529,43 +818,50 @@ function AgentPageInner({ projectId }: { projectId: string }) {
               <p className="text-[11px] font-medium tracking-[0.16em] text-[#66735E]">
                 你的餐饮经营 AI
               </p>
-              <h1 className="mt-5 font-display text-[30px] font-semibold leading-[1.18] tracking-[-0.045em] text-[#181817] lg:text-[36px]">
+              <h1 className="mt-4 font-display text-[30px] font-semibold leading-[1.15] tracking-[-0.045em] text-[#181817] lg:mt-5 lg:text-[36px]">
                 {greeting}
                 {data?.ownerName ? `，${data.ownerName}` : ""}
               </h1>
-              <p className="mt-5 max-w-[20em] text-[17px] font-medium leading-7 tracking-[-0.02em] text-[#202124] lg:max-w-[24em] lg:text-[18px]">
-                今天你的经营目标是什么？
+              <p className="mt-4 max-w-[20em] text-[16px] font-medium leading-7 tracking-[-0.02em] text-[#202124] lg:mt-5 lg:max-w-[24em] lg:text-[18px]">
+                有经营问题直接说；多轮追问，越聊越懂你的店
               </p>
               {knownLine ? (
-                <p className="mt-3 max-w-[22em] text-[12px] leading-5 text-[#66735E]">
+                <p className="mt-3 max-w-[22em] rounded-full bg-[rgba(102,115,94,0.1)] px-3 py-1.5 text-[12px] leading-5 text-[#4a5344]">
                   已了解：{knownLine}
                 </p>
               ) : null}
               {radar?.summaryLine ? (
-                <p className="mt-2 max-w-[22em] text-[13px] leading-6 text-[#8a8680]">
+                <p className="mt-2 max-w-[22em] text-[13px] leading-6 text-[#5c6168]">
                   {clip(radar.summaryLine, 48)}
                 </p>
               ) : (
-                <p className="mt-2 max-w-[22em] text-[13px] leading-6 text-[#8a8680]">
-                  说出来、上传营业表，或选一个场景。我不会先甩建议，会先理解再诊断。
+                <p className="mt-2 max-w-[24em] text-[13px] leading-6 text-[#5c6168]">
+                  下方进专业能力，或按住底部麦克风开口。
                 </p>
               )}
-              <div className="mt-7 flex w-full max-w-md flex-wrap justify-center gap-2">
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => {
+                  setFileHint("在下方开口或打字，直接说你的经营问题。");
+                  focusComposer();
+                  window.setTimeout(() => setFileHint(null), 4000);
+                }}
+                className="mt-7 inline-flex min-h-[3.25rem] w-full max-w-md items-center justify-center gap-2 rounded-[16px] bg-[#181817] px-5 text-[15px] font-semibold text-white shadow-[0_10px_28px_rgba(24,24,23,0.16)] transition active:scale-[0.98] disabled:opacity-50"
+              >
+                <MessageCircle className="h-4 w-4" />
+                开始聊经营
+              </button>
+              <div className="mt-5 grid w-full max-w-lg grid-cols-2 gap-2 sm:grid-cols-3">
                 {scenarioStarts.map((s) => (
-                  <button
+                  <Link
                     key={s.label}
-                    type="button"
-                    disabled={busy}
-                    onClick={() =>
-                      void runCompile({
-                        trigger: "utterance",
-                        utterance: s.utterance,
-                      })
-                    }
-                    className="rounded-full border border-[rgba(24,24,23,0.1)] bg-white px-3.5 py-2 text-[13px] font-medium text-[#202124] disabled:opacity-50"
+                    href={s.href}
+                    prefetch={false}
+                    className="inline-flex min-h-11 items-center justify-center rounded-[14px] border border-[rgba(24,24,23,0.1)] bg-white px-3 text-[13px] font-medium text-[#202124] no-underline transition active:scale-[0.98] hover:border-[rgba(24,24,23,0.2)] hover:bg-[#FBFAF7]"
                   >
                     {s.label}
-                  </button>
+                  </Link>
                 ))}
               </div>
               <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-[13px]">
@@ -583,21 +879,37 @@ function AgentPageInner({ projectId }: { projectId: string }) {
                   onClick={() =>
                     void runCompile({
                       trigger: "utterance",
-                      utterance: "练习一下营业额下降追问",
+                      utterance: "最近生意不好，帮我做一次门店体检",
                     })
                   }
                   className="font-medium text-[#66735E] underline-offset-2 hover:underline disabled:opacity-50"
                 >
-                  练习诊断追问
+                  对话里做体检
                 </button>
                 {assets[0] ? (
                   <button
                     type="button"
                     disabled={busy}
-                    onClick={() => setViewAsset(assets[0]!)}
+                    onClick={() => {
+                      setViewAsset(assets[0]!);
+                    }}
                     className="font-medium text-[#66735E] underline-offset-2 hover:underline disabled:opacity-50"
                   >
                     继续上次资产
+                  </button>
+                ) : null}
+                {assets[0] ? (
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() =>
+                      focusComposer(
+                        `关于「${clip(assets[0]!.title, 24)}」，我想继续追问：`,
+                      )
+                    }
+                    className="font-medium text-[#66735E] underline-offset-2 hover:underline disabled:opacity-50"
+                  >
+                    就上次结果继续聊
                   </button>
                 ) : null}
               </div>
@@ -797,17 +1109,63 @@ function AgentPageInner({ projectId }: { projectId: string }) {
               ) : null}
 
               {pendingQuestions.length > 0 && goal?.status === "blocked" ? (
-                <div className="space-y-3 rounded-2xl bg-white px-3 py-3">
-                  <p className="text-[12px] font-medium text-[#4a5344]">
-                    {interactionHints?.behaviorState === "diagnose"
-                      ? "先定位问题，再谈方案"
-                      : "补充后继续"}
-                  </p>
-                  {pendingQuestions.map((q, i) => {
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between gap-2 px-0.5">
+                    <p className="text-[12px] font-medium text-[#4a5344]">
+                      {interactionHints?.behaviorState === "diagnose"
+                        ? "先定位问题，再谈方案"
+                        : "补充后继续"}
+                    </p>
+                    <p className="text-[11px] tabular-nums text-[#8a8680]">
+                      {Math.max(
+                        1,
+                        pendingQuestions.findIndex((q) => q.slot === guideSlot) +
+                          1,
+                      )}
+                      /{pendingQuestions.length}
+                    </p>
+                  </div>
+                  {/* 题号色点：当前题高亮，可点切换 */}
+                  <div className="flex flex-wrap gap-1.5 px-0.5">
+                    {pendingQuestions.map((q, i) => {
+                      const active = q.slot === guideSlot;
+                      const answered = Boolean(
+                        (slotDrafts[q.slot] || "").trim(),
+                      );
+                      return (
+                        <button
+                          key={q.slot}
+                          type="button"
+                          onClick={() => {
+                            setGuideSlot(q.slot);
+                            focusComposer();
+                          }}
+                          className={`h-2.5 rounded-full transition-all ${
+                            active
+                              ? "w-7 bg-[#66735E]"
+                              : answered
+                                ? "w-2.5 bg-[rgba(102,115,94,0.45)]"
+                                : "w-2.5 bg-[rgba(24,24,23,0.12)]"
+                          }`}
+                          aria-label={`第 ${i + 1} 题${active ? "（当前）" : ""}`}
+                        />
+                      );
+                    })}
+                  </div>
+                  {pendingQuestions.map((q) => {
+                    const active = q.slot === guideSlot;
+                    if (!active) return null;
                     const opts = choiceBySlot.get(q.slot);
+                    const draftAnswer = (slotDrafts[q.slot] || "").trim();
                     return (
-                      <div key={q.slot} className="space-y-2">
-                        <p className="text-[13px] leading-5 text-[#202124]">
+                      <div
+                        key={q.slot}
+                        className="space-y-3 rounded-[20px] border border-[rgba(102,115,94,0.35)] bg-[linear-gradient(165deg,#E8EDE4_0%,#F7F6F2_50%,#FFFFFF_100%)] px-4 py-4 shadow-[0_12px_32px_rgba(102,115,94,0.14)]"
+                      >
+                        <p className="text-[11px] font-medium tracking-[0.1em] text-[#4a5344]">
+                          当前要答 · 用底部说话或打字
+                        </p>
+                        <p className="text-[17px] font-semibold leading-6 tracking-[-0.02em] text-[#181817]">
                           {q.prompt}
                         </p>
                         {opts?.length ? (
@@ -820,40 +1178,73 @@ function AgentPageInner({ projectId }: { projectId: string }) {
                                 onClick={() =>
                                   void onPickChoice(q.slot, opt.value)
                                 }
-                                className="rounded-full border border-[rgba(24,24,23,0.12)] bg-[#F7F6F2] px-3 py-1.5 text-[12px] font-medium text-[#181817] disabled:opacity-50"
+                                className="min-h-11 rounded-[14px] border border-[rgba(24,24,23,0.12)] bg-white px-3.5 py-2 text-[13px] font-medium text-[#181817] shadow-[0_2px_8px_rgba(24,24,23,0.04)] transition active:scale-[0.98] disabled:opacity-50"
                               >
                                 {opt.label}
                               </button>
                             ))}
                           </div>
                         ) : (
-                          <input
-                            value={
-                              slotDrafts[q.slot] ?? slotDrafts[`q${i}`] ?? ""
-                            }
-                            onChange={(e) =>
-                              setSlotDrafts((s) => ({
-                                ...s,
-                                [`q${i}`]: e.target.value,
-                                [q.slot]: e.target.value,
-                              }))
-                            }
-                            placeholder="用一句话补充"
-                            className="w-full rounded-xl border border-[rgba(24,24,23,0.08)] px-3 py-2.5 text-[14px] outline-none focus:border-[#66735E]"
-                          />
+                          <div className="space-y-1.5">
+                            {draftAnswer ? (
+                              <p className="rounded-xl border border-[rgba(102,115,94,0.2)] bg-white/90 px-3 py-2 text-[13px] leading-5 text-[#3a3a38]">
+                                已记：{draftAnswer}
+                              </p>
+                            ) : null}
+                            <p className="text-[12px] leading-5 text-[#4a5344]">
+                              按住底部黑色麦克风说完即可，不必在卡片里打字。
+                            </p>
+                          </div>
                         )}
+                        {opts?.length ? (
+                          <p className="text-[11px] text-[#8a8680]">
+                            可点选项，也可对底部麦说选项原文
+                          </p>
+                        ) : pendingQuestions.some(
+                            (x) =>
+                              !choiceBySlot.has(x.slot) &&
+                              (slotDrafts[x.slot] || "").trim(),
+                          ) ? (
+                          <button
+                            type="button"
+                            disabled={busy}
+                            onClick={() => void onSubmitSlots()}
+                            className="min-h-11 w-full rounded-full bg-[#181817] text-[14px] font-medium text-white disabled:opacity-50"
+                          >
+                            已记几条，提交并继续
+                          </button>
+                        ) : null}
                       </div>
                     );
                   })}
-                  {pendingQuestions.some((q) => !choiceBySlot.has(q.slot)) ? (
-                    <button
-                      type="button"
-                      disabled={busy}
-                      onClick={() => void onSubmitSlots()}
-                      className="w-full rounded-full bg-[#181817] py-2.5 text-[14px] font-medium text-white disabled:opacity-50"
-                    >
-                      提交并继续
-                    </button>
+                  {/* 其余题：折叠色卡条，点一下移过来 */}
+                  {pendingQuestions.length > 1 ? (
+                    <div className="flex gap-2 overflow-x-auto pb-0.5">
+                      {pendingQuestions.map((q, i) => {
+                        if (q.slot === guideSlot) return null;
+                        const answered = Boolean(
+                          (slotDrafts[q.slot] || "").trim(),
+                        );
+                        return (
+                          <button
+                            key={q.slot}
+                            type="button"
+                            onClick={() => {
+                              setGuideSlot(q.slot);
+                              focusComposer();
+                            }}
+                            className="min-w-[7.5rem] shrink-0 rounded-2xl border border-[rgba(24,24,23,0.08)] bg-white px-3 py-2.5 text-left"
+                          >
+                            <p className="text-[10px] text-[#9a968e]">
+                              {answered ? "已记" : "待答"} · {i + 1}
+                            </p>
+                            <p className="mt-0.5 line-clamp-2 text-[12px] leading-4 text-[#3a3a38]">
+                              {q.prompt}
+                            </p>
+                          </button>
+                        );
+                      })}
+                    </div>
                   ) : null}
                 </div>
               ) : null}
@@ -944,15 +1335,35 @@ function AgentPageInner({ projectId }: { projectId: string }) {
               </button>
             </div>
           ) : null}
-          {speechUploading ? (
-            <p className="mb-1 px-1 text-[12px] text-[#66735E]">正在听成字…</p>
+          {goal?.status === "blocked" && guideSlot ? (
+            <p className="mb-1.5 px-1 text-[12px] leading-5 text-[#4a5344]">
+              底部回答色卡题：
+              <span className="font-medium">
+                {clip(
+                  pendingQuestions.find((q) => q.slot === guideSlot)?.prompt ||
+                    pendingQuestions[0]?.prompt ||
+                    "",
+                  28,
+                )}
+              </span>
+            </p>
           ) : null}
-          {speechError ? (
-            <p className="mb-1 px-1 text-[12px] text-[#B47C5C]">{speechError}</p>
-          ) : null}
-          {!speechSupported ? (
-            <p className="mb-1 px-1 text-[11px] text-[#9a968e]">
-              语音受限时可打字或点 + 上传
+          <HoldToTalkBanner
+            recording={recording && activeFieldId === "mobile-agent"}
+            seconds={recordingSeconds}
+            maxSeconds={maxVoiceSeconds}
+            tip={
+              speechError ||
+              (speechUploading
+                ? "正在听成字…"
+                : !speechSupported
+                  ? "语音受限时可打字或点 + 上传；微信请用系统浏览器打开以启用麦克风"
+                  : null)
+            }
+          />
+          {!recording && speechSupported ? (
+            <p className="mb-1 px-1 text-[11px] text-[#9a968e] lg:hidden">
+              手机主路径：按住说话 → 松手自动继续；有字时仍可接着说
             </p>
           ) : null}
 
@@ -972,21 +1383,30 @@ function AgentPageInner({ projectId }: { projectId: string }) {
               type="button"
               disabled={busy}
               onClick={() => fileRef.current?.click()}
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[#3a3a38] disabled:opacity-40"
+              className="flex h-12 w-11 shrink-0 items-center justify-center rounded-full text-[#3a3a38] disabled:opacity-40"
               aria-label="上传文件"
             >
               <Plus className="h-5 w-5" strokeWidth={2.2} />
             </button>
             <textarea
+              ref={composerRef}
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               rows={1}
               placeholder={
                 recording
                   ? "正在听你说…"
-                  : "说出经营目标，或描述问题…"
+                  : goal?.status === "blocked" && guideSlot
+                    ? `回答：${clip(
+                        pendingQuestions.find((q) => q.slot === guideSlot)
+                          ?.prompt || "",
+                        20,
+                      )}`
+                    : isEmpty
+                      ? "按住说话，或输入经营问题…"
+                      : "继续说，或打字追问…"
               }
-              className="max-h-28 min-h-[44px] flex-1 resize-none bg-transparent py-2.5 text-[15px] leading-6 text-[#181817] outline-none placeholder:text-[#9a968e]"
+              className="max-h-28 min-h-[48px] flex-1 resize-none bg-transparent py-3 text-[15px] leading-6 text-[#181817] outline-none placeholder:text-[#9a968e]"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
@@ -995,42 +1415,21 @@ function AgentPageInner({ projectId }: { projectId: string }) {
               }}
             />
             {busy && !recording ? (
-              <div className="flex h-11 w-11 items-center justify-center">
+              <div className="flex h-12 w-12 items-center justify-center">
                 <Loader2 className="h-4 w-4 animate-spin text-[#66735E]" />
               </div>
-            ) : hasContent && !recording ? (
-              <button
-                type="button"
-                onClick={() => void onSend()}
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#181817] text-white"
-                aria-label="发送"
-              >
-                <Send className="h-4 w-4" />
-              </button>
             ) : (
-              <button
-                type="button"
+              <HoldToTalkButton
+                recording={recording && activeFieldId === "mobile-agent"}
                 disabled={busy && !recording}
-                className={`flex h-11 w-11 shrink-0 touch-none select-none items-center justify-center rounded-full ${
-                  recording
-                    ? "bg-[#07C160] text-white"
-                    : "bg-[rgba(24,24,23,0.06)] text-[#181817]"
-                }`}
-                aria-label={recording ? "松开结束" : "按住说话"}
-                onPointerDown={(e) => {
-                  e.preventDefault();
-                  try {
-                    e.currentTarget.setPointerCapture(e.pointerId);
-                  } catch {
-                    /* ignore */
-                  }
+                hasContent={hasContent}
+                onSend={() => void onSend()}
+                onPressStart={() => {
+                  voiceTargetRef.current = "composer";
                   void startFieldRecording("mobile-agent", draft, setDraft);
                 }}
-                onPointerUp={() => stopRecording()}
-                onPointerCancel={() => stopRecording()}
-              >
-                <Mic className="h-5 w-5" />
-              </button>
+                onPressEnd={() => stopRecording()}
+              />
             )}
           </div>
           </div>

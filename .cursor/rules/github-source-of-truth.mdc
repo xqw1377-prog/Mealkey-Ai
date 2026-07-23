@@ -5,7 +5,7 @@ alwaysApply: true
 
 # GitHub 真源（工作流冻结）
 
-远端：`origin` → `https://github.com/xqw1377-prog/mealkey-agent-1.git`  
+远端：`origin` → `https://github.com/xqw1377-prog/Mealkey-Ai.git`  
 默认分支：`master`
 
 ## 铁律

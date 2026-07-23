@@ -1,4 +1,4 @@
-﻿﻿/**
+﻿/**
  * M-PNT 品牌战略咨询项目 tRPC
  */
 import { z } from "zod";
@@ -7,6 +7,7 @@ import { router, protectedProcedure } from "../trpc";
 import {
   getOrCreateBrandConsultingProject,
   saveBrandBasics,
+  ingestBrandDialogueTurn,
   completeDiscovery,
   answerBrief,
   compileAndCompleteBrief,
@@ -187,7 +188,7 @@ export const mPntConsultingRouter = router({
     .input(
       z.object({
         projectId: z.string(),
-        basics: z.record(z.string(), z.string().max(500)).optional(),
+        basics: z.record(z.string(), z.string().max(2000)).optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -202,13 +203,34 @@ export const mPntConsultingRouter = router({
       }
     }),
 
+  ingestDialogueTurn: protectedProcedure
+    .input(
+      z.object({
+        projectId: z.string(),
+        turnId: z.string().min(1).max(80),
+        utterance: z.string().min(2).max(2000),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      try {
+        return await ingestBrandDialogueTurn(
+          ctx.userId!,
+          input.projectId,
+          input.turnId,
+          input.utterance,
+        );
+      } catch (error) {
+        wrapError(error);
+      }
+    }),
+
   completeDiscovery: protectedProcedure
     .input(
       z.object({
         projectId: z.string(),
         notes: z.string().max(2000).optional(),
         businessGoal: z.string().max(500).optional(),
-        basics: z.record(z.string(), z.string().max(500)).optional(),
+        basics: z.record(z.string(), z.string().max(2000)).optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {

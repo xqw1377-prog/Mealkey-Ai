@@ -7,7 +7,7 @@ generator client {
 // 开发环境用 SQLite，生产环境用 PostgreSQL
 // 通过 DATABASE_URL 控制：file:./dev.db 或 postgresql://...
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -136,6 +136,7 @@ model Project {
   reports       Report[]
   conversations Conversation[]
   assets        Asset[]
+  /// Restaurant Brain 根（一项目一店脑）；SSOT 经营事实在此树下
   restaurant    Restaurant?
 
   @@index([ownerId])
@@ -1328,7 +1329,7 @@ model StrategyDocument {
 }
 
 // ═══════════════════════════════════════════════════════════════
-// Developer Portal / Partner Agent（与 schema.prisma 对齐）
+// Developer Portal Domain（外接生态入驻 · 不写 Brain/Decision）
 // 真源：docs/MEALKEY_DEVELOPER_PORTAL_IA_DATA_MODEL_V1.md
 // ═══════════════════════════════════════════════════════════════
 

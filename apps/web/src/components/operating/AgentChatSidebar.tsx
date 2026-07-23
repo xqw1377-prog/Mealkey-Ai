@@ -12,6 +12,7 @@ import {
   Search,
   Settings,
   SquarePen,
+  Trash2,
   User,
 } from "lucide-react";
 
@@ -35,6 +36,9 @@ type AgentChatSidebarProps = {
   history: AgentHistoryItem[];
   onNewChat: () => void;
   onSelectHistory: (item: AgentHistoryItem) => void;
+  /** 删除历史（资产 / 当前线程）；雷达动态不可删 */
+  onDeleteHistory?: (item: AgentHistoryItem) => void | Promise<void>;
+  deleteDisabled?: boolean;
   newChatDisabled?: boolean;
 };
 
@@ -53,9 +57,12 @@ export function AgentChatSidebar({
   history,
   onNewChat,
   onSelectHistory,
+  onDeleteHistory,
+  deleteDisabled,
   newChatDisabled,
 }: AgentChatSidebarProps) {
   const [query, setQuery] = useState("");
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const pinned = useMemo(
     () => history.filter((h) => h.active || h.kind === "current"),
@@ -143,13 +150,26 @@ export function AgentChatSidebar({
           </p>
         </div>
 
-        <div className="px-2 pb-2">
+        <div className="space-y-2 px-2 pb-2">
+          {/* GPT 式主入口：持续对话 / 新开一轮 */}
+          <button
+            type="button"
+            disabled={newChatDisabled}
+            onClick={() => {
+              onNewChat();
+              onClose();
+            }}
+            className="flex min-h-10 w-full items-center gap-2 rounded-lg bg-[#0d0d0d] px-3 text-[13px] font-semibold text-white hover:bg-black/90 disabled:opacity-40"
+          >
+            <SquarePen className="h-4 w-4 shrink-0" />
+            新对话
+          </button>
           <label className="flex min-h-9 items-center gap-2 rounded-lg bg-black/[0.04] px-2.5">
             <Search className="h-4 w-4 shrink-0 text-[#8e8e8e]" />
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="搜索聊天"
+              placeholder="搜索对话"
               className="w-full bg-transparent py-2 text-[13px] outline-none placeholder:text-[#8e8e8e]"
             />
           </label>
@@ -159,17 +179,39 @@ export function AgentChatSidebar({
           {!query.trim() && pinned.length > 0 ? (
             <section className="mb-3">
               <p className="px-2 pb-1 text-[12px] font-medium text-[#8e8e8e]">
-                已置顶
+                进行中
               </p>
               <ul className="space-y-0.5">
                 {pinned.map((item) => (
                   <HistoryRow
                     key={`pin-${item.id}`}
                     item={item}
+                    deleting={deletingId === item.id}
+                    canDelete={
+                      Boolean(onDeleteHistory) &&
+                      item.kind === "current" &&
+                      !deleteDisabled
+                    }
                     onSelect={() => {
                       onSelectHistory(item);
                       onClose();
                     }}
+                    onDelete={
+                      onDeleteHistory
+                        ? async () => {
+                            const ok = window.confirm(
+                              `清空「${item.title}」当前对话？历史资产会保留。`,
+                            );
+                            if (!ok) return;
+                            setDeletingId(item.id);
+                            try {
+                              await onDeleteHistory(item);
+                            } finally {
+                              setDeletingId(null);
+                            }
+                          }
+                        : undefined
+                    }
                   />
                 ))}
               </ul>
@@ -178,13 +220,13 @@ export function AgentChatSidebar({
 
           <section>
             <p className="px-2 pb-1 text-[12px] font-medium text-[#8e8e8e]">
-              {query.trim() ? "搜索结果" : "最近"}
+              {query.trim() ? "搜索结果" : "历史对话"}
             </p>
             {recent.length === 0 ? (
               <p className="px-2 py-3 text-[13px] leading-5 text-[#8e8e8e]">
                 {query.trim()
                   ? "没有匹配的对话。"
-                  : "开始聊经营问题后，会按内容自动归类出现在这里。"}
+                  : "下方输入经营问题，对话会留在这里；越聊越懂你的店。"}
               </p>
             ) : (
               <ul className="space-y-0.5">
@@ -192,10 +234,34 @@ export function AgentChatSidebar({
                   <HistoryRow
                     key={item.id}
                     item={item}
+                    deleting={deletingId === item.id}
+                    canDelete={
+                      Boolean(onDeleteHistory) &&
+                      (item.kind === "asset" || item.kind === "current") &&
+                      !deleteDisabled
+                    }
                     onSelect={() => {
                       onSelectHistory(item);
                       onClose();
                     }}
+                    onDelete={
+                      onDeleteHistory
+                        ? async () => {
+                            const ok = window.confirm(
+                              item.kind === "current"
+                                ? `清空「${item.title}」当前对话？历史资产会保留。`
+                                : `删除「${item.title}」？删除后不可恢复。`,
+                            );
+                            if (!ok) return;
+                            setDeletingId(item.id);
+                            try {
+                              await onDeleteHistory(item);
+                            } finally {
+                              setDeletingId(null);
+                            }
+                          }
+                        : undefined
+                    }
                   />
                 ))}
               </ul>
@@ -212,10 +278,10 @@ export function AgentChatSidebar({
               onNewChat();
               onClose();
             }}
-            className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-full bg-[#0d6efd] px-4 text-[14px] font-semibold text-white disabled:opacity-40"
+            className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-full bg-[#0d0d0d] px-4 text-[14px] font-semibold text-white disabled:opacity-40"
           >
             <SquarePen className="h-4 w-4" />
-            聊天
+            新对话
           </button>
           <Link
             href="/profile"
@@ -305,31 +371,59 @@ function IconLink({
 function HistoryRow({
   item,
   onSelect,
+  onDelete,
+  canDelete,
+  deleting,
 }: {
   item: AgentHistoryItem;
   onSelect: () => void;
+  onDelete?: () => void | Promise<void>;
+  canDelete?: boolean;
+  deleting?: boolean;
 }) {
   return (
-    <li>
-      <button
-        type="button"
-        onClick={onSelect}
-        className={`flex w-full items-start gap-2 rounded-lg px-2 py-2 text-left transition ${
+    <li className="group relative">
+      <div
+        className={`flex w-full items-start gap-1 rounded-lg pr-1 transition ${
           item.active
             ? "bg-black/[0.06] font-medium text-[#0d0d0d]"
             : "text-[#0d0d0d] hover:bg-black/[0.04]"
         }`}
       >
-        <MessageSquare className="mt-0.5 h-4 w-4 shrink-0 opacity-50" />
-        <span className="min-w-0 flex-1">
-          <span className="block truncate text-[13px] leading-5">{item.title}</span>
-          {item.categoryLabel ? (
-            <span className="mt-0.5 block truncate text-[11px] text-[#8e8e8e]">
-              {item.categoryLabel}
+        <button
+          type="button"
+          onClick={onSelect}
+          className="flex min-w-0 flex-1 items-start gap-2 px-2 py-2 text-left"
+        >
+          <MessageSquare className="mt-0.5 h-4 w-4 shrink-0 opacity-50" />
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-[13px] leading-5">
+              {item.title}
             </span>
-          ) : null}
-        </span>
-      </button>
+            {item.categoryLabel ? (
+              <span className="mt-0.5 block truncate text-[11px] text-[#8e8e8e]">
+                {item.categoryLabel}
+              </span>
+            ) : null}
+          </span>
+        </button>
+        {canDelete && onDelete ? (
+          <button
+            type="button"
+            disabled={deleting}
+            title="删除"
+            aria-label={`删除 ${item.title}`}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              void onDelete();
+            }}
+            className="mt-1.5 mr-1 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-[#8e8e8e] opacity-100 hover:bg-[#fce8e6] hover:text-[#8a3a2a] disabled:opacity-40 lg:opacity-0 lg:group-hover:opacity-100 lg:focus:opacity-100"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </button>
+        ) : null}
+      </div>
     </li>
   );
 }

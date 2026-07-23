@@ -15,6 +15,7 @@ import {
   founderCloseDecisionRoom,
   listCouncilSeats,
   assertCouncilIngressViaMkInsight,
+  mergeEvidencePacket,
   openDecisionRoom,
   validateSpecialRoster,
   type CouncilMeetingSession,
@@ -27,6 +28,7 @@ import {
   loadProjectExpertReports,
   type OpinionSource,
 } from "../founder-layer/council/decision-room-runtime";
+import { voiceIntakeToCouncilAssets } from "../founder-layer/council/voice-intake-mk-insight";
 import { isCouncilStubAllowedByEnv } from "@/server/services/engine-meeting-gate";
 
 /** 生产默认禁 stub；仅 ALLOW_COUNCIL_STUB=1 或非 production 可显式开启 */
@@ -205,6 +207,8 @@ export const decisionCouncilRouter = router({
         decisionQuestion: z.string().min(4).max(400),
         constraints: z.string().min(4).max(400),
         successLooksLike: z.string().min(4).max(400),
+        spokenTurns: z.array(z.string().max(2000)).max(12).optional(),
+        evidenceSummary: z.array(z.string().max(400)).max(8).optional(),
         allowStubReports: z.boolean().optional(),
         allowGaps: z.boolean().optional(),
         forceLevel: levelSchema.optional(),
@@ -246,9 +250,52 @@ export const decisionCouncilRouter = router({
         projectId: input.projectId,
         caseId,
       });
+      // 语音 Brief → Adapter：无咨询资产时作真源；有咨询资产且有口述时合并（不二选一）
+      const hasSpoken =
+        (input.spokenTurns || []).some((t) => t.trim().length > 0) ||
+        (input.evidenceSummary || []).some((t) => t.trim().length > 0);
+      const voice = voiceIntakeToCouncilAssets({
+        caseId,
+        topic: input.topic,
+        whyNow: input.whyNow,
+        decisionQuestion: input.decisionQuestion,
+        constraints: input.constraints,
+        successLooksLike: input.successLooksLike,
+        spokenTurns: input.spokenTurns,
+        evidenceSummary: input.evidenceSummary,
+      });
+      let insights = loaded.insights;
+      let evidencePacket = loaded.evidencePacket;
+      let voiceNote = "";
+      if (insights.length === 0) {
+        insights = voice.insights;
+        evidencePacket = voice.evidencePacket;
+        voiceNote = voice.sourceNote;
+      } else if (hasSpoken) {
+        insights = [...insights, ...voice.insights];
+        evidencePacket = mergeEvidencePacket({
+          caseId,
+          base: evidencePacket || {
+            caseId,
+            items: [],
+            gaps: [],
+            gapActions: [],
+          },
+          insights: voice.insights,
+          gaps: voice.evidencePacket.gaps,
+          gapActions: voice.gapActions,
+        });
+        voiceNote = `口述已并入 · ${voice.sourceNote}`;
+      } else if (evidencePacket) {
+        evidencePacket = mergeEvidencePacket({
+          caseId,
+          base: evidencePacket,
+          insights,
+        });
+      }
       try {
         assertCouncilIngressViaMkInsight({
-          insights: loaded.insights,
+          insights,
           allowEmpty: allowStubReports,
           label: "决策室开会",
         });
@@ -265,11 +312,17 @@ export const decisionCouncilRouter = router({
           roster: input.roster as CouncilRoleId[] | undefined,
           caseId,
           expertReports: loaded.reports,
-          insights: loaded.insights,
-          evidencePacket: loaded.evidencePacket,
+          insights,
+          evidencePacket,
         });
+        if (voiceNote) {
+          session = {
+            ...session,
+            cdoNote: `${session.cdoNote} | ${voiceNote}`,
+          };
+        }
         // 软门禁：证据缺口 / 领域强度未达标 → 写入 cdoNote，不硬拦开会
-        const gaps = loaded.evidencePacket?.gaps || [];
+        const gaps = evidencePacket?.gaps || [];
         if (gaps.length) {
           session = {
             ...session,
@@ -332,7 +385,7 @@ export const decisionCouncilRouter = router({
           // 校准失败不阻断开会
         }
         return serializeSession(session, {
-          expertNote: loaded.sourceNote,
+          expertNote: voiceNote || loaded.sourceNote,
           brandStrength: loaded.brandStrength,
           loadedEngines: loaded.loadedEngines,
         });
@@ -342,6 +395,61 @@ export const decisionCouncilRouter = router({
           message: e instanceof Error ? e.message : "无法召集决策室",
         });
       }
+    }),
+
+  /** Round1 前补一手证据：写入 session.evidencePacket，供后续质询/拍板使用 */
+  supplementEvidence: protectedProcedure
+    .input(
+      z.object({
+        projectId: z.string(),
+        session: sessionSchema,
+        gapId: z.string().min(1).max(80),
+        claim: z.string().min(2).max(2000),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      await assertProject(ctx.userId!, input.projectId);
+      const session = input.session;
+      const caseId = session.casePacket?.caseId || session.sessionId;
+      const packet = session.evidencePacket ?? {
+        caseId,
+        items: [],
+        gaps: [],
+        gapActions: [],
+      };
+      const gap = (packet.gapActions || []).find((g) => g.id === input.gapId);
+      const claim = input.claim.trim().slice(0, 400);
+      const nextItem = {
+        evidenceId: `founder-sup-${input.gapId}-${Date.now().toString(36)}`,
+        sourceAgent: "founder",
+        claim,
+        strength: "medium" as const,
+        category: "PRIMARY_FACT",
+      };
+      const nextActions = (packet.gapActions || []).filter(
+        (g) => g.id !== input.gapId,
+      );
+      const nextGaps = (packet.gaps || []).filter((g) => {
+        if (!gap) return true;
+        return g !== gap.detail && !g.includes(gap.label);
+      });
+      const nextSession: CouncilMeetingSession = {
+        ...session,
+        evidencePacket: {
+          ...packet,
+          caseId: packet.caseId || caseId,
+          items: [...(packet.items || []), nextItem].slice(0, 24),
+          gaps: nextGaps,
+          gapActions: nextActions,
+          generatedAt: new Date().toISOString(),
+        },
+        cdoNote: `${session.cdoNote || ""} · 已补「${gap?.label || input.gapId}」`
+          .replace(/^\s*·\s*/, "")
+          .trim(),
+      };
+      // 有 board 后才落进行中草稿；Round1 前由客户端持有 session
+      await persistAwaitingDraft(nextSession, ctx.userId!, input.projectId);
+      return serializeSession(nextSession);
     }),
 
   advanceDebate: protectedProcedure
@@ -477,6 +585,8 @@ export const decisionCouncilRouter = router({
         decisionQuestion: z.string().min(4).max(400),
         constraints: z.string().min(4).max(400),
         successLooksLike: z.string().min(4).max(400),
+        spokenTurns: z.array(z.string().max(2000)).max(12).optional(),
+        evidenceSummary: z.array(z.string().max(400)).max(8).optional(),
         allowStubReports: z.boolean().optional(),
         allowGaps: z.boolean().optional(),
         forceLevel: levelSchema.optional(),
@@ -515,9 +625,51 @@ export const decisionCouncilRouter = router({
         projectId: input.projectId,
         caseId,
       });
+      const hasSpoken =
+        (input.spokenTurns || []).some((t) => t.trim().length > 0) ||
+        (input.evidenceSummary || []).some((t) => t.trim().length > 0);
+      const voice = voiceIntakeToCouncilAssets({
+        caseId,
+        topic: input.topic,
+        whyNow: input.whyNow,
+        decisionQuestion: input.decisionQuestion,
+        constraints: input.constraints,
+        successLooksLike: input.successLooksLike,
+        spokenTurns: input.spokenTurns,
+        evidenceSummary: input.evidenceSummary,
+      });
+      let insights = loaded.insights;
+      let evidencePacket = loaded.evidencePacket;
+      let voiceNote = "";
+      if (insights.length === 0) {
+        insights = voice.insights;
+        evidencePacket = voice.evidencePacket;
+        voiceNote = voice.sourceNote;
+      } else if (hasSpoken) {
+        insights = [...insights, ...voice.insights];
+        evidencePacket = mergeEvidencePacket({
+          caseId,
+          base: evidencePacket || {
+            caseId,
+            items: [],
+            gaps: [],
+            gapActions: [],
+          },
+          insights: voice.insights,
+          gaps: voice.evidencePacket.gaps,
+          gapActions: voice.gapActions,
+        });
+        voiceNote = `口述已并入 · ${voice.sourceNote}`;
+      } else if (evidencePacket) {
+        evidencePacket = mergeEvidencePacket({
+          caseId,
+          base: evidencePacket,
+          insights,
+        });
+      }
       try {
         assertCouncilIngressViaMkInsight({
-          insights: loaded.insights,
+          insights,
           allowEmpty: allowStubReports,
           label: "决策室快速路径",
         });
@@ -534,9 +686,15 @@ export const decisionCouncilRouter = router({
           roster: input.roster as CouncilRoleId[] | undefined,
           caseId,
           expertReports: loaded.reports,
-          insights: loaded.insights,
-          evidencePacket: loaded.evidencePacket,
+          insights,
+          evidencePacket,
         });
+        if (voiceNote) {
+          session = {
+            ...session,
+            cdoNote: `${session.cdoNote} · ${voiceNote}`,
+          };
+        }
         const { opinions, source } = await generateCouncilOpinions({ session });
         session = advanceDecisionRoomToDebate(session, opinions);
         session = advanceDecisionRoomToBoard(session);
@@ -544,7 +702,7 @@ export const decisionCouncilRouter = router({
         persistSessionIfClosed(session, ctx.userId!, input.projectId);
         return serializeSession(session, {
           opinionSource: source,
-          expertNote: loaded.sourceNote,
+          expertNote: voiceNote || loaded.sourceNote,
           brandStrength: loaded.brandStrength,
           loadedEngines: loaded.loadedEngines,
         });

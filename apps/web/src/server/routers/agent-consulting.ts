@@ -15,6 +15,7 @@ import {
   openAgentWarRoom,
   resetAgentConsulting,
   runAgentResearch,
+  ingestAgentDialogueTurn,
   saveAgentBasics,
   signAgentStrategyReport,
   upsertAgentPrimaryFacts,
@@ -64,7 +65,8 @@ function makeAgentConsultingRouter(agentId: ConsultingAgentKind) {
       .input(
         z.object({
           projectId: z.string(),
-          basics: z.record(z.string(), z.string().max(500)),
+          // 语音转写可长于打字；与 Agent utterance 同量级
+          basics: z.record(z.string(), z.string().max(2000)),
           complete: z.boolean().optional(),
         }),
       )
@@ -76,6 +78,29 @@ function makeAgentConsultingRouter(agentId: ConsultingAgentKind) {
             agentId,
             input.basics,
             Boolean(input.complete),
+          );
+        } catch (error) {
+          wrapError(error);
+        }
+      }),
+
+    /** 口述拆解真源：一题一句 → 服务端解析入库 */
+    ingestDialogueTurn: protectedProcedure
+      .input(
+        z.object({
+          projectId: z.string(),
+          turnId: z.string().min(1).max(80),
+          utterance: z.string().min(2).max(2000),
+        }),
+      )
+      .mutation(async ({ ctx, input }) => {
+        try {
+          return await ingestAgentDialogueTurn(
+            ctx.userId!,
+            input.projectId,
+            agentId,
+            input.turnId,
+            input.utterance,
           );
         } catch (error) {
           wrapError(error);

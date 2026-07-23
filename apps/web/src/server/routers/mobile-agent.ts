@@ -393,6 +393,137 @@ export const mobileAgentRouter = router({
       };
     }),
 
+  /**
+   * 删除历史对话项：
+   * - asset：移除经营资产（侧栏「历史对话」主体）
+   * - current：清空当前线程（等同开新对话，保留其余资产）
+   */
+  deleteHistory: protectedProcedure
+    .input(
+      z.object({
+        projectId: z.string(),
+        kind: z.enum(["asset", "current"]),
+        id: z.string().min(1).max(120),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const project = await loadOwnedProject(ctx.userId!, input.projectId);
+      const profile = validateProfile(project.profile) as Record<string, unknown>;
+      const prev = readMobileAgentState(profile);
+      const now = new Date().toISOString();
+
+      let next = prev;
+      if (input.kind === "asset") {
+        const before = prev.assets.length;
+        const assets = prev.assets.filter((a) => a.assetId !== input.id);
+        if (assets.length === before) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "未找到该历史对话",
+          });
+        }
+        next = {
+          ...prev,
+          assets,
+          turns: prev.turns.filter(
+            (t) => !(t.artifactIds || []).includes(input.id),
+          ),
+          updatedAt: now,
+        };
+      } else {
+        // current：清对话线程，保留历史资产
+        next = {
+          ...emptyMobileAgentState(),
+          assets: prev.assets,
+          memoryHints: prev.memoryHints,
+          seedMetrics: prev.seedMetrics,
+          turns: [],
+          updatedAt: now,
+        };
+      }
+
+      const seedBase = next.seedMetrics ?? {
+        events: [],
+        compileCount: 0,
+        assetCount: next.assets.length,
+        returnCount: 0,
+      };
+      next = {
+        ...next,
+        seedMetrics: {
+          ...seedBase,
+          assetCount: next.assets.length,
+          events: [
+            ...seedBase.events,
+            {
+              name: "mobile.memory_signal" as const,
+              at: now,
+              payload: {
+                kind: "delete_history",
+                targetKind: input.kind,
+                id: input.id,
+              },
+            },
+          ].slice(-80),
+        },
+      };
+
+      try {
+        await updateProjectProfile(
+          project.id,
+          (current) => writeMobileAgentIntoProfile(current, next),
+          { ownerId: project.owner.id },
+        );
+      } catch (e) {
+        const conflict = toProfileConflictTRPC(e);
+        if (conflict) throw conflict;
+        throw e;
+      }
+      return { state: next, deleted: { kind: input.kind, id: input.id } };
+    }),
+
+  /** 色卡中间草稿：刷新可续填（正式写入仍走 compile.slotPatches） */
+  saveSlotDrafts: protectedProcedure
+    .input(
+      z.object({
+        projectId: z.string(),
+        drafts: z.record(z.string().max(2000)).refine(
+          (o) => Object.keys(o).length <= 24,
+          "草稿槽位过多",
+        ),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const project = await loadOwnedProject(ctx.userId!, input.projectId);
+      const profile = validateProfile(project.profile) as Record<string, unknown>;
+      const prev = readMobileAgentState(profile);
+      const pending = new Set(prev.pendingQuestions.map((q) => q.slot));
+      const drafts: Record<string, string> = {};
+      for (const [k, v] of Object.entries(input.drafts)) {
+        if (!pending.has(k)) continue;
+        const t = v.trim();
+        if (!t) continue;
+        drafts[k.slice(0, 80)] = t.slice(0, 2000);
+      }
+      const next = {
+        ...prev,
+        slotDrafts: drafts,
+        updatedAt: new Date().toISOString(),
+      };
+      try {
+        await updateProjectProfile(
+          project.id,
+          (current) => writeMobileAgentIntoProfile(current, next),
+          { ownerId: project.owner.id },
+        );
+      } catch (e) {
+        const conflict = toProfileConflictTRPC(e);
+        if (conflict) throw conflict;
+        throw e;
+      }
+      return { ok: true as const, slotDrafts: drafts };
+    }),
+
   /** 开启新目标（保留 memoryHints / 历史资产） */
   startFreshGoal: protectedProcedure
     .input(z.object({ projectId: z.string() }))

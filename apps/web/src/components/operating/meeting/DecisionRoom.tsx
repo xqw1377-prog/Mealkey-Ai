@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { ArrowLeft, ArrowRight, LoaderCircle } from "lucide-react";
+import { ArrowLeft, ArrowRight, LoaderCircle, Plus } from "lucide-react";
 import { ConfirmDialog } from "@/components/operating/ConfirmDialog";
 import {
   VoiceDecisionComposer,
@@ -14,6 +14,7 @@ import {
   DecisionClosedActions,
   DecisionLoopRail,
 } from "@/components/operating/DecisionLoopRail";
+import { VoiceInputRow } from "@/components/operating/VoiceInputRow";
 import {
   clearDecisionVoiceBrief,
   readDecisionVoiceBrief,
@@ -21,11 +22,13 @@ import {
 } from "@/lib/decision-voice-brief";
 import { buildDecisionBriefFromFocus } from "@/lib/decision-brief-from-scan";
 import { trpc } from "@/lib/trpc";
+import { formatTrpcMutationError } from "@/lib/trpc-mutation-error";
 import {
   buildCouncilArchiveExtras,
   decisionRoomPhaseLabel,
   type CouncilMeetingSession,
   type CouncilRoleId,
+  type EvidenceGapAction,
 } from "@mealkey/agents/founder-os";
 
 type Mode = "major" | "special";
@@ -36,6 +39,85 @@ const POSITION_LABEL: Record<string, string> = {
   oppose: "反对",
   conditional: "条件",
 };
+
+const DEBATE_PHASE_LINES = [
+  "正在召集七席…",
+  "各自独立阅读议程与证据…",
+  "战略 / 品牌席先表态…",
+  "财务 / 风控核对底线…",
+  "对齐冲突点…",
+  "马上进入质询矩阵…",
+];
+
+function WorkProgressPanel({
+  title,
+  phaseLine,
+  elapsedSec,
+  seats,
+  activeSeatIndex,
+}: {
+  title: string;
+  phaseLine: string;
+  elapsedSec: number;
+  seats?: string[];
+  activeSeatIndex?: number;
+}) {
+  const pct = Math.min(92, Math.round((elapsedSec / 18) * 100));
+  return (
+    <div
+      className="space-y-3 border border-[rgba(24,24,23,0.1)] bg-[#FBFAF7] px-4 py-3"
+      role="status"
+      aria-live="polite"
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="inline-flex items-center gap-2 text-[13px] font-semibold text-[#202124]">
+            <LoaderCircle className="h-4 w-4 shrink-0 animate-spin" />
+            {title}
+          </p>
+          <p className="mt-1 text-[13px] leading-5 text-[#5f6368]">{phaseLine}</p>
+        </div>
+        <p className="shrink-0 tabular-nums text-[12px] text-[#6f747b]">
+          {elapsedSec}s
+        </p>
+      </div>
+      <div className="h-1.5 overflow-hidden bg-[rgba(24,24,23,0.08)]">
+        <div
+          className="h-full bg-[#181817] transition-[width] duration-500 ease-out"
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      {seats && seats.length > 0 ? (
+        <ul className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
+          {seats.map((seat, i) => {
+            const done =
+              activeSeatIndex != null ? i < activeSeatIndex : false;
+            const active =
+              activeSeatIndex != null ? i === activeSeatIndex : false;
+            return (
+              <li
+                key={seat}
+                className={`px-2 py-1.5 text-[11px] font-medium ${
+                  active
+                    ? "bg-[#181817] text-white"
+                    : done
+                      ? "bg-[rgba(102,115,94,0.2)] text-[#3d4638]"
+                      : "bg-white text-[#9aa0a6] ring-1 ring-[rgba(24,24,23,0.08)]"
+                }`}
+              >
+                {seat}
+                {active ? " · 表态中" : done ? " · 已齐" : " · 等待"}
+              </li>
+            );
+          })}
+        </ul>
+      ) : null}
+      <p className="text-[11px] leading-4 text-[#9aa0a6]">
+        系统在工作，不是卡住。大约十几秒，请不要重复点击。
+      </p>
+    </div>
+  );
+}
 
 type Props = {
   projectId: string;
@@ -56,6 +138,7 @@ export function DecisionRoom({ projectId }: Props) {
   const debateMut = trpc.decisionCouncil.advanceDebate.useMutation();
   const boardMut = trpc.decisionCouncil.advanceBoard.useMutation();
   const founderMut = trpc.decisionCouncil.founderDecide.useMutation();
+  const supplementMut = trpc.decisionCouncil.supplementEvidence.useMutation();
   const dismissDraft = trpc.decisionCouncil.dismissActiveDraft.useMutation();
   const confirmArchive = trpc.decisionArchive.confirmFromMeeting.useMutation();
 
@@ -92,6 +175,13 @@ export function DecisionRoom({ projectId }: Props) {
     intakeMode === "ready" ? "oneshot" : "dialogue",
   );
   const [readyBrief, setReadyBrief] = useState<DecisionVoiceBrief | null>(null);
+  /** 判断页：正在补充的缺口 */
+  const [supplementGap, setSupplementGap] = useState<EvidenceGapAction | null>(
+    null,
+  );
+  const [supplementDraft, setSupplementDraft] = useState("");
+  /** 长任务等待秒数（质询/决策板/开案） */
+  const [workElapsedSec, setWorkElapsedSec] = useState(0);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmTitle, setConfirmTitle] = useState("");
   const [confirmDescription, setConfirmDescription] = useState<string | undefined>();
@@ -199,6 +289,8 @@ export function DecisionRoom({ projectId }: Props) {
         decisionQuestion: brief.decisionQuestion,
         constraints: brief.constraints,
         successLooksLike: brief.successLooksLike,
+        spokenTurns: brief.spokenTurns,
+        evidenceSummary: brief.evidenceSummary,
         allowStubReports,
         allowGaps,
         forceLevel,
@@ -207,8 +299,29 @@ export function DecisionRoom({ projectId }: Props) {
       clearDecisionVoiceBrief();
       applyPayload(payload);
       setStep("round1");
+      setSupplementGap(null);
+      setSupplementDraft("");
     } catch (e) {
       setError(e instanceof Error ? e.message : "开案失败");
+    }
+  }
+
+  async function applyGapSupplement(gap: EvidenceGapAction, text: string) {
+    const claim = text.trim();
+    if (!claim || !session) return;
+    setError(null);
+    try {
+      const payload = await supplementMut.mutateAsync({
+        projectId,
+        session,
+        gapId: gap.id,
+        claim,
+      });
+      applyPayload(payload);
+      setSupplementGap(null);
+      setSupplementDraft("");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "补证写入失败");
     }
   }
   useEffect(() => {
@@ -256,6 +369,38 @@ export function DecisionRoom({ projectId }: Props) {
     confirmArchive.isPending ||
     dismissDraft.isPending ||
     (resumeRequested && resumeQuery.isFetching && !session);
+
+  const workPending =
+    openMut.isPending || debateMut.isPending || boardMut.isPending;
+
+  useEffect(() => {
+    if (!workPending) {
+      setWorkElapsedSec(0);
+      return;
+    }
+    setWorkElapsedSec(0);
+    const started = Date.now();
+    const id = window.setInterval(() => {
+      setWorkElapsedSec(Math.floor((Date.now() - started) / 1000));
+    }, 400);
+    return () => window.clearInterval(id);
+  }, [workPending, openMut.isPending, debateMut.isPending, boardMut.isPending]);
+
+  const debatePhaseLine = useMemo(() => {
+    const i = Math.min(
+      DEBATE_PHASE_LINES.length - 1,
+      Math.floor(workElapsedSec / 3),
+    );
+    return DEBATE_PHASE_LINES[i]!;
+  }, [workElapsedSec]);
+
+  const debateActiveSeatIndex = useMemo(() => {
+    if (!session?.roster?.length) return 0;
+    return Math.min(
+      session.roster.length - 1,
+      Math.floor(workElapsedSec / 2.2),
+    );
+  }, [session?.roster, workElapsedSec]);
 
   useEffect(() => {
     if (!resumeRequested || resumedRef.current) return;
@@ -346,6 +491,9 @@ export function DecisionRoom({ projectId }: Props) {
         decisionQuestion: brief.decisionQuestion,
         constraints: brief.constraints,
         successLooksLike: brief.successLooksLike,
+        spokenTurns: [customTopic || topic, brief.whyNow, brief.constraints]
+          .map((s) => s.trim())
+          .filter(Boolean),
         allowStubReports,
         allowGaps,
         // major/special 均可带预设级别；专项会另传自选花名册
@@ -354,6 +502,8 @@ export function DecisionRoom({ projectId }: Props) {
       });
       applyPayload(payload);
       setStep("round1");
+      setSupplementGap(null);
+      setSupplementDraft("");
     } catch (e) {
       setError(e instanceof Error ? e.message : "开案失败");
     }
@@ -361,12 +511,13 @@ export function DecisionRoom({ projectId }: Props) {
 
   async function handleDebate() {
     if (!session) return;
+    setError(null);
     try {
       const payload = await debateMut.mutateAsync({ projectId, session });
       applyPayload(payload);
       setStep("debate");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "推进失败");
+      setError(formatTrpcMutationError(e) || "质询推进失败，请再点一次");
     }
   }
 
@@ -660,6 +811,21 @@ export function DecisionRoom({ projectId }: Props) {
           </Link>
         )}
       </div>
+      {workPending ? (
+        <div className="shrink-0 border-b border-[rgba(24,24,23,0.08)] bg-[#FBFAF7] px-4 py-2.5 md:px-6">
+          <p className="inline-flex items-center gap-2 text-[13px] font-medium text-[#202124]">
+            <LoaderCircle className="h-4 w-4 animate-spin" />
+            {debateMut.isPending
+              ? `质询进行中 · ${debatePhaseLine} · ${workElapsedSec}s`
+              : boardMut.isPending
+                ? `正在形成决策板 · ${workElapsedSec}s`
+                : openMut.isPending
+                  ? `正在开案 · ${workElapsedSec}s`
+                  : `处理中 · ${workElapsedSec}s`}
+          </p>
+        </div>
+      ) : null}
+
       <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 md:px-6 md:py-6">
       <div className="flex flex-col gap-5">
 
@@ -728,8 +894,45 @@ export function DecisionRoom({ projectId }: Props) {
         {session && expertNote ? (
           <p className="mt-2 text-[12px] leading-5 text-[#6f747b]">{expertNote}</p>
         ) : null}
-        {session?.evidencePacket?.gaps &&
-        session.evidencePacket.gaps.length > 0 ? (
+        {session?.evidencePacket?.gapActions &&
+        session.evidencePacket.gapActions.length > 0 ? (
+          <div className="mt-2 space-y-1.5">
+            <p className="text-[12px] leading-5 text-[#8A4F31]">
+              开会提醒：口述已挂载；下列为仍缺的客观数据，点按钮即可补。
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {session.evidencePacket.gapActions.slice(0, 3).map((gap) => (
+                <button
+                  key={gap.id}
+                  type="button"
+                  onClick={() => {
+                    setSupplementGap(gap);
+                    setSupplementDraft("");
+                    if (step !== "round1" && step !== "setup") {
+                      /* 保持当前阶段，仅展开补充 */
+                    }
+                  }}
+                  className="inline-flex min-h-10 items-center gap-1 border border-[rgba(138,79,49,0.28)] bg-[rgba(138,79,49,0.06)] px-3 text-[12px] font-medium text-[#8A4F31] touch-manipulation"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  补充{gap.label}
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => {
+                  setStep("setup");
+                  setSetupPath("dialogue");
+                  setSupplementGap(null);
+                }}
+                className="inline-flex min-h-10 items-center border border-[rgba(24,24,23,0.1)] bg-white px-3 text-[12px] font-medium text-[#3c4043] touch-manipulation"
+              >
+                回采集再补一轮
+              </button>
+            </div>
+          </div>
+        ) : session?.evidencePacket?.gaps &&
+          session.evidencePacket.gaps.length > 0 ? (
           <p className="mt-1.5 text-[12px] leading-5 text-[#8A4F31]">
             开会提醒：{session.evidencePacket.gaps.slice(0, 2).join("；")}
           </p>
@@ -1035,18 +1238,24 @@ export function DecisionRoom({ projectId }: Props) {
             <div className="space-y-2 border border-[rgba(24,24,23,0.06)] bg-[#FBFAF7] px-3 py-3">
               <p className="text-[11px] tracking-[0.08em] text-[#66735E]">
                 本次证据包 · {session.evidencePacket.items.length} 条
-                {session.evidencePacket.gaps?.length
-                  ? ` · 缺口 ${session.evidencePacket.gaps.length}`
-                  : ""}
+                {session.evidencePacket.gapActions?.length
+                  ? ` · 待补 ${session.evidencePacket.gapActions.length}`
+                  : session.evidencePacket.gaps?.length
+                    ? ` · 缺口 ${session.evidencePacket.gaps.length}`
+                    : ""}
               </p>
               <ul className="space-y-1.5">
-                {session.evidencePacket.items.slice(0, 5).map((item) => (
+                {session.evidencePacket.items.slice(0, 6).map((item) => (
                   <li
                     key={item.evidenceId}
                     className="text-[13px] leading-5 text-[#3c4043]"
                   >
                     <span className="font-medium text-[#66735E]">
-                      {item.evidenceId}
+                      {item.sourceAgent === "founder"
+                        ? "已补充"
+                        : item.sourceAgent === "mobile-agent"
+                          ? "口述"
+                          : item.evidenceId}
                     </span>
                     {item.strength ? (
                       <span className="text-[#9aa0a6]"> · {item.strength}</span>
@@ -1055,17 +1264,105 @@ export function DecisionRoom({ projectId }: Props) {
                   </li>
                 ))}
               </ul>
-              {session.evidencePacket.gaps &&
-              session.evidencePacket.gaps.length > 0 ? (
+              {(session.evidencePacket.gapActions?.length || 0) > 0 ? (
+                <div className="space-y-2 border-t border-[rgba(24,24,23,0.06)] pt-2">
+                  <p className="text-[12px] font-medium text-[#8A4F31]">
+                    还缺客观数据（口述不算数）· 点入口补充
+                  </p>
+                  <ul className="space-y-2">
+                    {session.evidencePacket.gapActions!.map((gap) => (
+                      <li key={gap.id} className="space-y-1.5">
+                        <p className="text-[12px] leading-5 text-[#5f6368]">
+                          {gap.detail}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSupplementGap(gap);
+                            setSupplementDraft("");
+                          }}
+                          className="inline-flex min-h-10 items-center gap-1 bg-[#181817] px-3 text-[12px] font-semibold text-white touch-manipulation"
+                        >
+                          <Plus className="h-3.5 w-3.5" />
+                          补充{gap.label}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setStep("setup");
+                      setSetupPath("dialogue");
+                    }}
+                    className="text-[12px] font-medium text-[#66735E] underline-offset-4 touch-manipulation hover:underline"
+                  >
+                    或回采集阶段再补一轮语音 →
+                  </button>
+                </div>
+              ) : session.evidencePacket.gaps &&
+                session.evidencePacket.gaps.length > 0 ? (
                 <p className="text-[12px] leading-5 text-[#8A4F31]">
                   {session.evidencePacket.gaps.slice(0, 2).join("；")}
                 </p>
               ) : null}
+              {supplementGap ? (
+                <div className="space-y-2 border border-[rgba(24,24,23,0.1)] bg-white px-3 py-3">
+                  <p className="text-[12px] font-medium text-[#202124]">
+                    补充 · {supplementGap.label}
+                  </p>
+                  <p className="text-[12px] text-[#6f747b]">
+                    {supplementGap.prompt}
+                  </p>
+                  <VoiceInputRow
+                    projectId={projectId}
+                    fieldId={`gap-${supplementGap.id}`}
+                    value={supplementDraft}
+                    onChange={setSupplementDraft}
+                    placeholder={supplementGap.prompt}
+                    voiceTitle={`决策室补证·${supplementGap.label}`}
+                    multiline
+                    rows={3}
+                    showSubmit
+                    disabled={supplementMut.isPending}
+                    submitLabel={
+                      supplementMut.isPending ? "写入中…" : "写入证据包"
+                    }
+                    onSubmit={() => {
+                      if (!supplementDraft.trim() || supplementMut.isPending) return;
+                      void applyGapSupplement(supplementGap, supplementDraft);
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSupplementGap(null);
+                      setSupplementDraft("");
+                    }}
+                    className="inline-flex min-h-10 items-center px-3 text-[13px] text-[#6f747b]"
+                  >
+                    取消
+                  </button>
+                </div>
+              ) : null}
             </div>
           ) : (
-            <p className="text-[12px] leading-5 text-[#8A4F31]">
-              尚无证据包：本轮意见将以降级置信度运行，补一手事实后再正式拍板更稳。
-            </p>
+            <div className="space-y-2">
+              <p className="text-[12px] leading-5 text-[#8A4F31]">
+                尚无证据包：本轮意见将以降级置信度运行，补一手事实后再正式拍板更稳。
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setStep("setup");
+                  setSetupPath("dialogue");
+                }}
+                className="inline-flex min-h-10 items-center gap-1 border border-[rgba(24,24,23,0.1)] px-3 text-[12px] font-medium text-[#202124]"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                回采集补充
+              </button>
+            </div>
           )}
           {session.insights && session.insights.length > 0 ? (
             <ul className="space-y-2">
@@ -1117,29 +1414,50 @@ export function DecisionRoom({ projectId }: Props) {
               ))}
             </ul>
           ) : null}
-          <ul className="space-y-2">
-            {session.roster.map((role) => (
-              <li
-                key={role}
-                className="border border-[rgba(24,24,23,0.06)] bg-[#FBFAF7] px-3 py-2 text-[13px] text-[#202124]"
-              >
-                <span className="font-semibold">{role}</span>
-                <span className="text-[#6f747b]">
-                  {" "}
-                  · Round1 Prompt 已就绪（禁止互看）
-                </span>
-              </li>
-            ))}
-          </ul>
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => void handleDebate()}
-            className="inline-flex min-h-11 items-center justify-center gap-2 bg-[#181817] px-5 text-[14px] font-semibold text-white"
-          >
-            进入质询碰撞
-            <ArrowRight className="h-4 w-4" />
-          </button>
+          {debateMut.isPending ? (
+            <WorkProgressPanel
+              title="七席质询进行中"
+              phaseLine={debatePhaseLine}
+              elapsedSec={workElapsedSec}
+              seats={session.roster}
+              activeSeatIndex={debateActiveSeatIndex}
+            />
+          ) : (
+            <ul className="space-y-2">
+              {session.roster.map((role) => (
+                <li
+                  key={role}
+                  className="border border-[rgba(24,24,23,0.06)] bg-[#FBFAF7] px-3 py-2 text-[13px] text-[#202124]"
+                >
+                  <span className="font-semibold">{role}</span>
+                  <span className="text-[#6f747b]">
+                    {" "}
+                    · Round1 Prompt 已就绪（禁止互看）
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+          <div className="space-y-2">
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void handleDebate()}
+              className="inline-flex min-h-11 w-full items-center justify-center gap-2 bg-[#181817] px-5 text-[14px] font-semibold text-white touch-manipulation disabled:opacity-60 sm:w-auto"
+            >
+              {debateMut.isPending ? (
+                <>
+                  <LoaderCircle className="h-4 w-4 animate-spin" />
+                  质询中 {workElapsedSec}s…
+                </>
+              ) : (
+                <>
+                  进入质询碰撞
+                  <ArrowRight className="h-4 w-4" />
+                </>
+              )}
+            </button>
+          </div>
         </section>
       ) : null}
 
@@ -1238,14 +1556,36 @@ export function DecisionRoom({ projectId }: Props) {
             </div>
           ) : null}
 
+          {boardMut.isPending ? (
+            <WorkProgressPanel
+              title="正在形成决策板"
+              phaseLine={
+                workElapsedSec < 2
+                  ? "汇总支持 / 条件 / 反对…"
+                  : workElapsedSec < 5
+                    ? "整理少数意见与红线…"
+                    : "写入决策板，马上好…"
+              }
+              elapsedSec={workElapsedSec}
+            />
+          ) : null}
           <button
             type="button"
             disabled={busy}
             onClick={() => void handleBoard()}
-            className="inline-flex min-h-11 items-center justify-center gap-2 bg-[#181817] px-5 text-[14px] font-semibold text-white"
+            className="inline-flex min-h-11 w-full items-center justify-center gap-2 bg-[#181817] px-5 text-[14px] font-semibold text-white touch-manipulation disabled:opacity-60 sm:w-auto"
           >
-            形成决策板
-            <ArrowRight className="h-4 w-4" />
+            {boardMut.isPending ? (
+              <>
+                <LoaderCircle className="h-4 w-4 animate-spin" />
+                决策板生成中 {workElapsedSec}s…
+              </>
+            ) : (
+              <>
+                形成决策板
+                <ArrowRight className="h-4 w-4" />
+              </>
+            )}
           </button>
         </section>
       ) : null}

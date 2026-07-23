@@ -37,8 +37,8 @@ export const MPNT_JOURNEY_LABEL: Record<
   },
   [MpntJourneyStep.THREE_ADVISORS]: {
     no: "03",
-    title: "七顾问",
-    feel: "七席专家各自出定位方案",
+    title: "三专家",
+    feel: "心智 / 空位 / 冲突各出一策",
   },
   [MpntJourneyStep.WAR_ROOM]: {
     no: "04",

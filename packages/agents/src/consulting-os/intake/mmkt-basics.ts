@@ -5,6 +5,7 @@ import {
   type IntakeFieldDef,
   type ModuleBasicsProfile,
 } from "./core";
+import { isDumpDuplicate, isVagueAnswer } from "./weak-answer";
 
 export const MMKT_BASICS_FIELDS: IntakeFieldDef[] = [
   {
@@ -99,6 +100,26 @@ export function generateMmktFollowups(
   const v = basics.values;
   const qs: AdaptiveFollowupQuestion[] = [];
   const push = (q: AdaptiveFollowupQuestion) => qs.push(q);
+
+  // 口述未拆开时，先补精准字段再谈场景
+  if (isDumpDuplicate(v, ["brandName", "category", "city"])) {
+    push({
+      id: "fq_split_who",
+      prompt: "分开说清三件事：店名、品类、主战场城市/商圈。",
+      whyNeeded: "开场信息揉在一起，调研无法对城对品。",
+      priority: "must",
+      triggeredBy: ["brandName", "category", "city"],
+    });
+  }
+  if (isVagueAnswer(v.targetCustomer || "", 4)) {
+    push({
+      id: "fq_customer_concrete",
+      prompt: "主客群再具体一点：什么人、什么时候来、为什么来？",
+      whyNeeded: "客群太泛，进入切口会漂。",
+      priority: "must",
+      triggeredBy: ["targetCustomer"],
+    });
+  }
 
   push({
     id: "fq_scene",

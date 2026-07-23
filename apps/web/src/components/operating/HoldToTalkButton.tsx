@@ -45,10 +45,12 @@ export function HoldToTalkButton({
       <button
         type="button"
         disabled={disabled && !recording}
-        className={`inline-flex min-h-11 min-w-11 touch-none select-none items-center justify-center rounded-full transition disabled:cursor-not-allowed disabled:opacity-50 ${
+        className={`relative inline-flex min-h-11 min-w-11 touch-none select-none items-center justify-center rounded-full transition disabled:cursor-not-allowed disabled:opacity-50 ${
           recording
-            ? "bg-[#07C160] text-white"
-            : "bg-[rgba(24,24,23,0.06)] text-[#202124]"
+            ? "animate-pulse bg-[#07C160] text-white shadow-[0_0_0_4px_rgba(7,193,96,0.22)]"
+            : hasContent
+              ? "border border-[rgba(24,24,23,0.14)] bg-white text-[#181817] active:scale-95"
+              : "bg-[#181817] text-white shadow-[0_6px_16px_rgba(24,24,23,0.18)] active:scale-95"
         }`}
         aria-label={recording ? "松开结束说话" : "按住说话"}
         title={recording ? "松开结束" : "按住说话，松手结束"}

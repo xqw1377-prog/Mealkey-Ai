@@ -251,6 +251,20 @@ export function generateAdaptiveFollowups(input: {
   const ticket = trim(v.avgTicket);
   const slogan = trim(v.slogan);
 
+  const whoDump =
+    trim(v.brandName).length >= 12 &&
+    trim(v.brandName) === trim(v.category) &&
+    trim(v.category) === trim(v.region);
+  if (whoDump) {
+    push({
+      id: "fq_split_brand_who",
+      prompt: "分开说清：品牌名、品类、主战场城市/商圈。",
+      whyNeeded: "开场信息未拆开，定位地图会对不准城与品。",
+      priority: "must",
+      triggeredBy: ["brandName", "category", "region"],
+    });
+  }
+
   push({
     id: "fq_occasion",
     prompt: "客人最常在什么场合来你们店？（例如：工作日午餐 / 朋友小聚 / 家庭周末）",

@@ -1,14 +1,66 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Check, Pencil, X } from "lucide-react";
+import { ArrowLeft, Pencil, X } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { PageContent } from "@/components/operating/PageContent";
 import { PageErrorBoundary } from "@/components/operating/PageErrorBoundary";
 import { PageLoadingState } from "@/components/operating/PageState";
+import { GuidedColorIntake } from "@/components/operating/GuidedColorIntake";
 import { MKBrand } from "@/components/brand/MKBrand";
 import type { RestaurantIntelligenceSnapshotV1 } from "@/server/founder-layer/contracts/restaurant-intelligence-profile";
+
+const RIP_REVISE_SLOTS = [
+  {
+    id: "stageLabel",
+    label: "经营阶段",
+    prompt: "现在处在哪一段？（筹备 / 单店验证 / 准备复制…）",
+    required: true as const,
+    choices: [
+      { label: "筹备中", value: "筹备中" },
+      { label: "单店验证", value: "单店验证" },
+      { label: "准备复制", value: "准备复制" },
+      { label: "多店经营", value: "多店经营" },
+    ],
+  },
+  {
+    id: "category",
+    label: "品类",
+    prompt: "客人会把你们归到哪一类？",
+    required: true as const,
+  },
+  {
+    id: "founderClaim",
+    label: "优势",
+    prompt: "你认为自己最硬的优势是什么？（可选）",
+    required: false as const,
+    choices: [
+      { label: "菜品品质", value: "菜品品质" },
+      { label: "性价比", value: "性价比" },
+      { label: "服务", value: "服务" },
+      { label: "环境", value: "环境" },
+      { label: "聚餐氛围", value: "聚餐氛围" },
+    ],
+  },
+];
+
+const RIP_CLAIM_SLOTS = [
+  {
+    id: "founderClaim",
+    label: "优势",
+    prompt: "你认为自己的优势是什么？（可跳过）",
+    required: false as const,
+    choices: [
+      { label: "菜品品质", value: "菜品品质" },
+      { label: "性价比", value: "性价比" },
+      { label: "服务", value: "服务" },
+      { label: "环境", value: "环境" },
+      { label: "聚餐氛围", value: "聚餐氛围" },
+    ],
+  },
+];
 
 type ViewPhase = "recognizing" | "portrait" | "revise";
 
@@ -152,6 +204,14 @@ function RestaurantIntelligenceFlow({ projectId }: { projectId: string }) {
     <PageContent>
       <div className="mx-auto w-full max-w-xl space-y-6 px-4 pb-16 pt-6 md:px-6">
         <header className="space-y-3">
+          <Link
+            href={`/projects/${projectId}/agent`}
+            prefetch={false}
+            className="mb-3 inline-flex min-h-10 items-center gap-1.5 text-[13px] font-medium text-[#66735E] no-underline lg:hidden"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            回对话
+          </Link>
           <MKBrand subtitle={null} />
           <p className="text-[11px] font-medium tracking-[0.14em] text-[#66735E]">
             餐启 · 经营认知档案
@@ -178,44 +238,29 @@ function RestaurantIntelligenceFlow({ projectId }: { projectId: string }) {
         ) : null}
 
         {showRevise ? (
-          <section className="space-y-4 border-y border-[rgba(24,24,23,0.08)] py-5">
-            <p className="text-[13px] text-[#66735E]">修改后仍需再确认一次</p>
-            <label className="block space-y-1.5">
-              <span className="text-[11px] tracking-[0.12em] text-[#66735E]">
-                经营阶段
-              </span>
-              <input
-                value={stageLabel}
-                onChange={(e) => setStageLabel(e.target.value)}
-                className="w-full rounded-[14px] border border-[rgba(24,24,23,0.12)] bg-white px-4 py-3 text-[15px] outline-none focus:border-[#66735E]"
-              />
-            </label>
-            <label className="block space-y-1.5">
-              <span className="text-[11px] tracking-[0.12em] text-[#66735E]">
-                品类
-              </span>
-              <input
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className="w-full rounded-[14px] border border-[rgba(24,24,23,0.12)] bg-white px-4 py-3 text-[15px] outline-none focus:border-[#66735E]"
-                placeholder="例如：湘菜 / 社区简餐"
-              />
-            </label>
-            <label className="block space-y-1.5">
-              <span className="text-[11px] tracking-[0.12em] text-[#66735E]">
-                你认为自己的优势（可选）
-              </span>
-              <input
-                value={founderClaim}
-                onChange={(e) => setFounderClaim(e.target.value)}
-                className="w-full rounded-[14px] border border-[rgba(24,24,23,0.12)] bg-white px-4 py-3 text-[15px] outline-none focus:border-[#66735E]"
-                placeholder="例如：菜品品质"
-              />
-            </label>
-            <button
-              type="button"
-              disabled={confirm.isPending}
-              onClick={() =>
+          <section className="space-y-3 border-y border-[rgba(24,24,23,0.08)] py-5 pb-[calc(env(safe-area-inset-bottom)+9rem)]">
+            <GuidedColorIntake
+              projectId={projectId}
+              title="改哪几处"
+              voiceTitle="门店体检·修订"
+              busy={confirm.isPending}
+              slots={RIP_REVISE_SLOTS}
+              values={{
+                stageLabel,
+                category,
+                founderClaim,
+              }}
+              onChange={(id, value) => {
+                if (id === "stageLabel") setStageLabel(value);
+                else if (id === "category") setCategory(value);
+                else setFounderClaim(value);
+              }}
+              completeLabel="保存修改"
+              completePending={confirm.isPending}
+              completeDisabled={
+                stageLabel.trim().length < 2 || category.trim().length < 2
+              }
+              onComplete={() =>
                 confirm.mutate({
                   projectId,
                   snapshotId: snapshot.snapshotId,
@@ -227,50 +272,30 @@ function RestaurantIntelligenceFlow({ projectId }: { projectId: string }) {
                   },
                 })
               }
-              className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[16px] bg-[#181817] px-5 text-[15px] font-semibold text-white"
-            >
-              保存修改
-              <ArrowRight className="h-4 w-4" />
-            </button>
-          </section>
-        ) : (
-          <section className="space-y-3">
-            <p className="text-[15px] font-medium text-[#202124]">
-              确认档案 · 准确吗？
-            </p>
-            <div className="space-y-2 rounded-[12px] border border-[rgba(24,24,23,0.08)] bg-[#FBFAF7] px-4 py-3">
-              <p className="text-[11px] tracking-[0.12em] text-[#66735E]">
-                你认为自己的优势（可选 · 写入经营决策习惯）
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {["菜品品质", "性价比", "服务", "环境", "聚餐氛围"].map(
-                  (chip) => (
-                    <button
-                      key={chip}
-                      type="button"
-                      onClick={() => setFounderClaim(chip)}
-                      className={`min-h-10 rounded-[12px] px-3 text-[13px] ${
-                        founderClaim === chip
-                          ? "bg-[#181817] text-white"
-                          : "border border-[rgba(24,24,23,0.12)] bg-white text-[#202124]"
-                      }`}
-                    >
-                      {chip}
-                    </button>
-                  ),
-                )}
-              </div>
-              <input
-                value={founderClaim}
-                onChange={(e) => setFounderClaim(e.target.value)}
-                placeholder="或自己写一句"
-                className="w-full rounded-[12px] border border-[rgba(24,24,23,0.12)] bg-white px-3 py-2.5 text-[15px] outline-none focus:border-[#66735E]"
-              />
-            </div>
+            />
             <button
               type="button"
               disabled={confirm.isPending}
-              onClick={() =>
+              onClick={() => setShowRevise(false)}
+              className="inline-flex min-h-10 w-full items-center justify-center text-[13px] text-[#6f747b]"
+            >
+              取消
+            </button>
+          </section>
+        ) : (
+          <section className="space-y-3 pb-[calc(env(safe-area-inset-bottom)+9rem)]">
+            <GuidedColorIntake
+              projectId={projectId}
+              title="确认档案"
+              subtitle="可选补一句优势，然后进入驾驶舱"
+              voiceTitle="门店体检·确认"
+              busy={confirm.isPending}
+              slots={RIP_CLAIM_SLOTS}
+              values={{ founderClaim }}
+              onChange={(_id, value) => setFounderClaim(value)}
+              completeLabel="确认档案，进入驾驶舱"
+              completePending={confirm.isPending}
+              onComplete={() =>
                 confirm.mutate({
                   projectId,
                   snapshotId: snapshot.snapshotId,
@@ -278,35 +303,33 @@ function RestaurantIntelligenceFlow({ projectId }: { projectId: string }) {
                   founderClaim: founderClaim.trim() || undefined,
                 })
               }
-              className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[16px] bg-[#181817] px-5 text-[15px] font-semibold text-white"
-            >
-              确认档案，进入驾驶舱
-              <Check className="h-4 w-4" />
-            </button>
-            <button
-              type="button"
-              disabled={confirm.isPending}
-              onClick={() => setShowRevise(true)}
-              className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[16px] border border-[rgba(24,24,23,0.12)] bg-white px-5 text-[15px] font-semibold text-[#181817]"
-            >
-              继续完善
-              <Pencil className="h-4 w-4" />
-            </button>
-            <button
-              type="button"
-              disabled={confirm.isPending}
-              onClick={() =>
-                confirm.mutate({
-                  projectId,
-                  snapshotId: snapshot.snapshotId,
-                  action: "reject",
-                })
-              }
-              className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[16px] border border-transparent px-5 text-[15px] font-medium text-[#6f747b]"
-            >
-              不符合，我来改
-              <X className="h-4 w-4" />
-            </button>
+            />
+            <div className="flex flex-col gap-2">
+              <button
+                type="button"
+                disabled={confirm.isPending}
+                onClick={() => setShowRevise(true)}
+                className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[16px] border border-[rgba(24,24,23,0.12)] bg-white px-5 text-[15px] font-semibold text-[#181817]"
+              >
+                继续完善
+                <Pencil className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                disabled={confirm.isPending}
+                onClick={() =>
+                  confirm.mutate({
+                    projectId,
+                    snapshotId: snapshot.snapshotId,
+                    action: "reject",
+                  })
+                }
+                className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[16px] border border-transparent px-5 text-[15px] font-medium text-[#6f747b]"
+              >
+                不符合，我来改
+                <X className="h-4 w-4" />
+              </button>
+            </div>
           </section>
         )}
 

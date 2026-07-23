@@ -4,6 +4,7 @@ import {
   type IntakeFieldDef,
   type ModuleBasicsProfile,
 } from "./core";
+import { isDumpDuplicate } from "./weak-answer";
 
 export const MED_BASICS_FIELDS: IntakeFieldDef[] = [
   {
@@ -97,6 +98,16 @@ export function generateMedFollowups(
 ): ReturnType<typeof createFollowupSession> {
   const v = basics.values;
   const qs: AdaptiveFollowupQuestion[] = [];
+
+  if (isDumpDuplicate(v, ["team", "founderCount", "capTableNow"])) {
+    qs.push({
+      id: "fq_split_cap",
+      prompt: "分开说清：核心团队、创始人数/是否签约、当前持股比例。",
+      whyNeeded: "人与股权揉在一起，结构扫描无法落表。",
+      priority: "must",
+      triggeredBy: ["team", "founderCount", "capTableNow"],
+    });
+  }
 
   qs.push({
     id: "fq_decision_rights",

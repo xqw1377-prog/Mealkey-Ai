@@ -98,6 +98,21 @@ export function readMobileAgentState(
         : s.interactionHints === null
           ? null
           : undefined,
+    slotDrafts:
+      s.slotDrafts && typeof s.slotDrafts === "object" && !Array.isArray(s.slotDrafts)
+        ? Object.fromEntries(
+            Object.entries(s.slotDrafts as Record<string, unknown>)
+              .filter(
+                ([k, v]) =>
+                  typeof k === "string" &&
+                  k.length <= 80 &&
+                  typeof v === "string" &&
+                  v.trim().length > 0,
+              )
+              .map(([k, v]) => [k, String(v).slice(0, 2000)])
+              .slice(0, 24),
+          )
+        : {},
     updatedAt: typeof s.updatedAt === "string" ? s.updatedAt : new Date().toISOString(),
   };
 }
@@ -149,6 +164,13 @@ export function applyCompileToState(
     ...prev.memoryHints.focus,
   ];
 
+  // 仅保留仍待答槽位的中间草稿；已答槽从 drafts 清掉
+  const pendingSlots = new Set(output.questions.map((q) => q.slot));
+  const nextDrafts: Record<string, string> = {};
+  for (const [k, v] of Object.entries(prev.slotDrafts || {})) {
+    if (pendingSlots.has(k) && v.trim()) nextDrafts[k] = v.slice(0, 2000);
+  }
+
   return {
     version: "v1",
     activeGoal: output.goal,
@@ -165,6 +187,7 @@ export function applyCompileToState(
     activeDrill: null,
     interactionHints: output.interactionHints ?? null,
     seedMetrics: prev.seedMetrics,
+    slotDrafts: nextDrafts,
     updatedAt: ts,
   };
 }

@@ -1,11 +1,13 @@
-﻿﻿"use client";
+﻿"use client";
 
 /**
  * M-MKT / M-BIZ / M-ED 共用六步咨询工作台
  * 视觉与交互对齐 M-PNT 品牌战略委员会
  */
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import {
+  ArrowLeft,
   ArrowRight,
   Check,
   Download,
@@ -19,7 +21,16 @@ import { ConfirmDialog } from "@/components/operating/ConfirmDialog";
 import { EngineDegradationBanner } from "@/components/operating/EngineDegradationBanner";
 import { MpntReportDoc } from "@/components/operating/MpntReportDoc";
 import { PageErrorState, PageLoadingState } from "@/components/operating/PageState";
+import { GuidedColorIntake } from "@/components/operating/GuidedColorIntake";
+import { IntakeHeardConfirm } from "@/components/operating/IntakeHeardConfirm";
 import { SeatPrimaryFactsEditor } from "@/components/operating/SeatPrimaryFactsEditor";
+import {
+  dialogueTurnsReady,
+  getIntakeDialogueTurns,
+  hydrateDialogueValues,
+  listWeakBasicsNotes,
+  type ParseUtteranceResult,
+} from "@/lib/intake-dialogue-turns";
 import { PRODUCT_BRAND_TITLE } from "@/lib/product-brand";
 import { trpc } from "@/lib/trpc";
 import {
@@ -153,6 +164,9 @@ export function AgentConsultingWorkspace({
   };
 
   const saveBasics = api.saveBasics.useMutation({ onSuccess: invalidate });
+  const ingestTurn = api.ingestDialogueTurn.useMutation({
+    onSuccess: invalidate,
+  });
   const answerFollowup = api.answerFollowup.useMutation({
     onSuccess: invalidate,
   });
@@ -178,21 +192,46 @@ export function AgentConsultingWorkspace({
   const [blendNote, setBlendNote] = useState("");
   const [actionError, setActionError] = useState<string | null>(null);
   const [basicsForm, setBasicsForm] = useState<Record<string, string>>({});
+  const [dialogueValues, setDialogueValues] = useState<Record<string, string>>(
+    {},
+  );
+  const [microSlots, setMicroSlots] = useState<
+    Array<{ id: string; label: string; prompt: string; keys: string[] }>
+  >([]);
+  const [lastParsed, setLastParsed] = useState<ParseUtteranceResult | null>(
+    null,
+  );
   const [followupAnswer, setFollowupAnswer] = useState("");
   const [basicsHydrated, setBasicsHydrated] = useState(false);
   const [resetOpen, setResetOpen] = useState(false);
+  const dialogueTurns = useMemo(
+    () => getIntakeDialogueTurns(agentId),
+    [agentId],
+  );
+  const intakeSlots = useMemo(
+    () => [
+      ...dialogueTurns.map((t) => ({
+        id: t.id,
+        label: t.label,
+        prompt: t.prompt,
+        hint: t.hint,
+        placeholder: "按住说话，或打字",
+        required: t.required !== false,
+      })),
+      ...microSlots.map((m) => ({
+        id: m.id,
+        label: m.label,
+        prompt: m.prompt,
+        placeholder: "按住说话，补这一条",
+        required: true,
+      })),
+    ],
+    [dialogueTurns, microSlots],
+  );
 
   const consulting = data?.consulting as AgentConsultingProject | undefined;
   const blueprint = data?.blueprint as AgentConsultingBlueprint | undefined;
   const nextStep = data?.nextStep as JourneyNextStep | undefined;
-  const basicsFields = (data?.basicsFields || []) as Array<{
-    key: string;
-    label: string;
-    prompt: string;
-    placeholder: string;
-    requirement: "must" | "should";
-    minLength: number;
-  }>;
   const followupUi = data?.followupUi as
     | {
         status: string;
@@ -206,31 +245,20 @@ export function AgentConsultingWorkspace({
       }
     | null
     | undefined;
-  const intakeChecklist = data?.intakeChecklist as
-    | {
-        summary: string;
-        items: Array<{
-          id: string;
-          label: string;
-          source: string;
-          ok: boolean;
-          detail: string;
-        }>;
-        canCompleteIntake: boolean;
-        canConfirmResearch: boolean;
-      }
-    | undefined;
-
   useEffect(() => {
     if (!data?.basicsUi || basicsHydrated) return;
     const values = (data.basicsUi as { values?: Record<string, string> })
       .values;
-    if (values) setBasicsForm(values);
+    if (values) {
+      setBasicsForm(values);
+      setDialogueValues(hydrateDialogueValues(dialogueTurns, values));
+    }
     setBasicsHydrated(true);
-  }, [data?.basicsUi, basicsHydrated]);
+  }, [data?.basicsUi, basicsHydrated, dialogueTurns]);
 
   const pending =
     saveBasics.isPending ||
+    ingestTurn.isPending ||
     answerFollowup.isPending ||
     runResearch.isPending ||
     confirmResearch.isPending ||
@@ -243,9 +271,12 @@ export function AgentConsultingWorkspace({
     exportPackage.isPending ||
     reset.isPending;
 
-  const basicsReady = basicsFields
-    .filter((f) => f.requirement === "must")
-    .every((f) => (basicsForm[f.key] || "").trim().length >= f.minLength);
+  const basicsReady =
+    dialogueTurnsReady(agentId, basicsForm) && microSlots.length === 0;
+  const weakNotes = useMemo(
+    () => listWeakBasicsNotes(agentId, basicsForm),
+    [agentId, basicsForm],
+  );
 
   const currentFollowup = useMemo(() => {
     if (!followupUi?.questions?.length) return null;
@@ -338,29 +369,24 @@ export function AgentConsultingWorkspace({
   const advisorsMeta = Object.fromEntries(
     blueprint.advisors.map((a) => [a.id, a]),
   );
-  const flowDescription = [
-    "采集",
-    blueprint.stepLabels[SixStepId.RESEARCH].title,
-    blueprint.stepLabels[SixStepId.ADVISORS].title,
-    blueprint.stepLabels[SixStepId.WAR_ROOM].title,
-    blueprint.reportTitle,
-    blueprint.stepLabels[SixStepId.EXECUTION_PATH].title,
-  ].join(" → ");
 
   return (
     <div className="mpnt-atelier mx-auto max-w-4xl space-y-8 pb-[calc(env(safe-area-inset-bottom)+12.5rem)] pt-6 md:pb-20 md:pt-10">
       <header className="space-y-4 px-1">
+        <Link
+          href={`/projects/${projectId}/agent`}
+          prefetch={false}
+          className="inline-flex min-h-10 items-center gap-1.5 text-[13px] font-medium text-[#5f6b4e] no-underline lg:hidden"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          回对话
+        </Link>
         <p className="text-[11px] font-medium tracking-[0.18em] text-[#5f6b4e]">
           {blueprint.committeeName}
         </p>
         <h1 className="font-serif-cn text-[32px] font-semibold leading-[1.15] tracking-[-0.03em] text-[#141413] md:text-[40px]">
           {blueprint.productName}
         </h1>
-        <p className="max-w-2xl text-[15px] leading-7 text-[#6f747b]">
-          {done
-            ? "本轮做完了。可回看报告，或重置再开一轮。"
-            : "按步骤走完：说清楚 → 调研 → 开会 → 确认 → 落地。"}
-        </p>
         <BrandSwitcher projectId={projectId} variant="full" />
       </header>
 
@@ -372,15 +398,20 @@ export function AgentConsultingWorkspace({
           <h2 className="mt-3 font-serif-cn text-[28px] font-semibold text-[#141413] md:text-[34px]">
             {done ? "本轮已完成" : nextStep.label.title}
           </h2>
-          <p className="mt-2 text-[15px] leading-7 text-[#6f747b]">
-            {done
-              ? "报告已定，可看落地路径。"
-              : nextStep.label.feel}
-          </p>
-          <p className="mt-2 text-[13px] leading-6 text-[#6f747b]">
-            {flowDescription}
-          </p>
-          <ol className="mpnt-step-rail mt-7 flex gap-2 overflow-x-auto pb-1 snap-x snap-mandatory lg:grid lg:grid-cols-6 lg:overflow-visible lg:pb-0 lg:snap-none">
+          {done || nextStep.label.feel ? (
+            <p className="mt-2 text-[15px] leading-7 text-[#6f747b]">
+              {done ? "报告已定。" : nextStep.label.feel}
+            </p>
+          ) : null}
+          <div className="mt-5 h-1 overflow-hidden rounded-full bg-[rgba(20,20,19,0.08)]">
+            <div
+              className="h-full rounded-full bg-[#66735E] transition-[width] duration-500 ease-out"
+              style={{
+                width: `${done ? 100 : Math.round(((stepRank(focus) + 1) / 6) * 100)}%`,
+              }}
+            />
+          </div>
+          <ol className="mpnt-step-rail mt-4 flex gap-2 overflow-x-auto pb-1 snap-x snap-mandatory lg:grid lg:grid-cols-6 lg:overflow-visible lg:pb-0 lg:snap-none">
             {SIX_STEP_ORDER.map((step, i) => {
               const meta = blueprint.stepLabels[step];
               const active = step === focus;
@@ -388,23 +419,23 @@ export function AgentConsultingWorkspace({
               return (
                 <li
                   key={step}
-                  className={`mpnt-rise relative min-h-14 min-w-[6.25rem] shrink-0 snap-start border px-3 py-3 lg:min-h-0 lg:min-w-0 lg:px-2.5 lg:py-2.5 ${
+                  className={`mpnt-rise relative min-h-[3.75rem] min-w-[7rem] shrink-0 snap-start rounded-[12px] border px-3 py-2.5 lg:min-h-0 lg:min-w-0 lg:rounded-none lg:px-2.5 lg:py-2.5 ${
                     active
-                      ? "border-[#141413] bg-[#141413] text-white"
+                      ? "border-[#141413] bg-[#141413] text-white shadow-[0_8px_20px_rgba(20,20,19,0.18)]"
                       : passed
-                        ? "border-[rgba(95,107,78,0.35)] bg-[rgba(95,107,78,0.08)] text-[#5f6b4e]"
-                        : "border-[rgba(20,20,19,0.08)] text-[#9aa0a6]"
+                        ? "border-[rgba(95,107,78,0.4)] bg-[rgba(95,107,78,0.1)] text-[#3d4638]"
+                        : "border-[rgba(20,20,19,0.1)] bg-white text-[#5c6168]"
                   }`}
                   style={{ animationDelay: `${i * 0.04}s` }}
                 >
-                  <p className="text-[10px] tracking-[0.12em] opacity-75">
+                  <p className="text-[10px] tracking-[0.12em] opacity-80">
                     {meta.no}
                   </p>
-                  <p className="mt-1 text-[13px] font-medium leading-4">
+                  <p className="mt-1 text-[14px] font-semibold leading-4 lg:text-[13px] lg:font-medium">
                     {meta.title}
                   </p>
                   {passed && !active ? (
-                    <Check className="absolute right-1.5 top-1.5 h-3 w-3 opacity-70" />
+                    <Check className="absolute right-1.5 top-1.5 h-3.5 w-3.5 opacity-80" />
                   ) : null}
                 </li>
               );
@@ -622,7 +653,7 @@ export function AgentConsultingWorkspace({
                 {blueprint.stepLabels[SixStepId.RESEARCH].title}准备开始
               </p>
               <p className="mx-auto mt-2 max-w-md text-[14px] leading-6 text-[#6f747b]">
-                点上方黑条开始{blueprint.stepLabels[SixStepId.RESEARCH].title}，不是空白表单。
+                点上方黑条开始
               </p>
             </div>
           ) : null}
@@ -638,141 +669,97 @@ export function AgentConsultingWorkspace({
       {consulting.intakeStatus !== "complete" ? (
         <section
           id="step-intake"
-          className="mpnt-rise border border-[rgba(20,20,19,0.1)] bg-white"
+          className="mpnt-rise border border-[rgba(20,20,19,0.1)] bg-white p-5 pb-[calc(env(safe-area-inset-bottom)+9rem)] md:p-7 md:pb-7"
         >
-          <div className="border-b border-[rgba(20,20,19,0.08)] bg-[var(--mpnt-field)] px-5 py-4 md:px-7">
-            <p className="text-[11px] tracking-[0.14em] text-[#5f6b4e]">
-              01 · INTAKE · 对齐 M-PNT
-            </p>
-            <p className="mt-1 text-[14px] text-[#6f747b]">
-              第一轮基础档案 → 第二轮动态追问 → 工具调研
-            </p>
-          </div>
-          <div className="space-y-6 p-5 md:p-7">
-            {intakeChecklist ? (
-              <div className="border border-[rgba(20,20,19,0.08)] bg-[var(--mpnt-field)] px-4 py-3 text-[13px]">
-                <p className="font-medium text-[#141413]">信息收集清单</p>
-                <p className="mt-1 text-[#6f747b]">{intakeChecklist.summary}</p>
-                <ul className="mt-2 space-y-1">
-                  {intakeChecklist.items.slice(0, 8).map((item) => (
-                    <li key={item.id} className="flex gap-2 text-[12px]">
-                      <span className={item.ok ? "text-[#5f6b4e]" : "text-[#a56b4d]"}>
-                        {item.ok ? "✓" : "○"}
-                      </span>
-                      <span className="text-[#141413]">{item.label}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
-
-            {consulting.assets.basics?.status !== "complete" ? (
-              <div className="space-y-4">
-                <h2 className="font-serif-cn text-[22px] font-semibold text-[#141413]">
-                  基础档案（固定必填）
-                </h2>
-                <div className="grid gap-3 md:grid-cols-2">
-                  {basicsFields.map((field) => (
-                    <label
-                      key={field.key}
-                      className={`flex flex-col gap-1 ${
-                        field.key.includes("pain") ||
-                        field.key.includes("rivals") ||
-                        field.key.includes("capTable") ||
-                        field.key.includes("unitEconomics")
-                          ? "md:col-span-2"
-                          : ""
-                      }`}
-                    >
-                      <span className="text-[13px] font-medium text-[#141413]">
-                        {field.label}
-                        {field.requirement === "must" ? (
-                          <span className="ml-1 text-[#a56b4d]">*</span>
-                        ) : null}
-                      </span>
-                      <span className="text-[12px] text-[#6f747b]">
-                        {field.prompt}
-                      </span>
-                      <input
-                        value={basicsForm[field.key] || ""}
-                        disabled={pending}
-                        placeholder={field.placeholder}
-                        onChange={(e) =>
-                          setBasicsForm((prev) => ({
-                            ...prev,
-                            [field.key]: e.target.value,
-                          }))
-                        }
-                        className="min-h-11 border border-[rgba(20,20,19,0.12)] bg-[var(--mpnt-field)] px-3 text-[14px] outline-none focus:border-[#141413]"
-                      />
-                    </label>
-                  ))}
-                </div>
-                <button
-                  type="button"
-                  disabled={pending || !basicsReady}
-                  onClick={() =>
-                    void run(() =>
-                      saveBasics.mutateAsync({
-                        projectId,
-                        basics: basicsForm,
-                        complete: true,
-                      }),
-                    )
-                  }
-                  className="inline-flex min-h-12 items-center gap-2 bg-[#141413] px-6 text-[15px] font-semibold text-white disabled:opacity-40"
-                >
-                  {saveBasics.isPending ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <ArrowRight className="h-4 w-4" />
-                  )}
-                  档案齐了，生成动态追问
-                </button>
-              </div>
-            ) : currentFollowup ? (
-              <div className="space-y-4">
-                <h2 className="font-serif-cn text-[22px] font-semibold text-[#141413]">
-                  动态追问
-                </h2>
-                <p className="text-[17px] font-medium text-[#141413]">
-                  {currentFollowup.prompt}
-                </p>
-                <p className="text-[13px] text-[#6f747b]">
-                  为什么问：{currentFollowup.whyNeeded}
-                </p>
-                <div className="flex gap-2">
-                  <input
-                    value={followupAnswer}
-                    onChange={(e) => setFollowupAnswer(e.target.value)}
-                    className="min-h-12 flex-1 border border-[rgba(20,20,19,0.12)] px-3 text-[14px] outline-none focus:border-[#141413]"
-                    placeholder="用具体事实回答"
-                  />
-                  <button
-                    type="button"
-                    disabled={pending || followupAnswer.trim().length < 2}
-                    onClick={() =>
-                      void run(async () => {
-                        await answerFollowup.mutateAsync({
-                          projectId,
-                          questionId: currentFollowup.id,
-                          answer: followupAnswer,
-                        });
-                        setFollowupAnswer("");
-                      })
+          {consulting.assets.basics?.status !== "complete" ? (
+            <div className="space-y-3">
+              {lastParsed ? (
+                <IntakeHeardConfirm
+                  parsed={lastParsed}
+                  onDismiss={() => setLastParsed(null)}
+                />
+              ) : null}
+              <GuidedColorIntake
+                projectId={projectId}
+                title="我先问你几句"
+                voiceTitle={`${consultingLabel}·口述档案`}
+                busy={pending}
+                slots={intakeSlots}
+                values={dialogueValues}
+                onChange={(id, value) => {
+                  setDialogueValues((prev) => ({ ...prev, [id]: value }));
+                }}
+                onCommitSlot={async (id, value) => {
+                  await run(async () => {
+                    const res = await ingestTurn.mutateAsync({
+                      projectId,
+                      turnId: id,
+                      utterance: value,
+                    });
+                    setBasicsForm(res.basicsValues || {});
+                    setDialogueValues((prev) => ({ ...prev, [id]: value }));
+                    setLastParsed(res.parsed);
+                    if (id.startsWith("micro_")) {
+                      setMicroSlots((prev) => prev.filter((m) => m.id !== id));
+                    } else {
+                      setMicroSlots(res.microSlots || []);
                     }
-                    className="bg-[#141413] px-5 text-[14px] font-medium text-white disabled:opacity-40"
-                  >
-                    提交
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <p className="text-[14px] text-[#6f747b]">
-                采集将完成编译，请稍候或点击上方「开始工具调研」。
-              </p>
-            )}
-          </div>
+                  });
+                }}
+                completeLabel="生成追问"
+                completePending={saveBasics.isPending}
+                completeDisabled={!basicsReady}
+                onComplete={() => {
+                  if (!basicsReady) {
+                    setActionError(
+                      weakNotes.length
+                        ? `还差更具体的信息：${weakNotes.join("；")}`
+                        : "还有信息没抓准，请先答完色卡追问",
+                    );
+                    return;
+                  }
+                  void run(() =>
+                    saveBasics.mutateAsync({
+                      projectId,
+                      basics: basicsForm,
+                      complete: true,
+                    }),
+                  );
+                }}
+              />
+            </div>
+          ) : currentFollowup ? (
+            <GuidedColorIntake
+              projectId={projectId}
+              title="还想确认一点"
+              voiceTitle={`${consultingLabel}·动态追问`}
+              busy={pending}
+              slots={[
+                {
+                  id: currentFollowup.id,
+                  label: "",
+                  prompt: currentFollowup.prompt,
+                  hint: currentFollowup.whyNeeded || undefined,
+                  placeholder: "按住说话，或打字",
+                  required: true,
+                },
+              ]}
+              values={{ [currentFollowup.id]: followupAnswer }}
+              onChange={(_id, value) => setFollowupAnswer(value)}
+              onCommitSlot={async (id, value) => {
+                await run(async () => {
+                  await answerFollowup.mutateAsync({
+                    projectId,
+                    questionId: id,
+                    answer: value,
+                  });
+                  setFollowupAnswer("");
+                });
+              }}
+            />
+          ) : (
+            <p className="text-[14px] text-[#6f747b]">信息齐了，可开始工具调研。</p>
+          )}
         </section>
       ) : null}
 
@@ -799,6 +786,9 @@ export function AgentConsultingWorkspace({
             await reset.mutateAsync({ projectId });
             setBasicsHydrated(false);
             setBasicsForm({});
+            setDialogueValues({});
+            setMicroSlots([]);
+            setLastParsed(null);
             setResetOpen(false);
           });
         }}

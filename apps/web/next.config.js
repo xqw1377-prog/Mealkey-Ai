@@ -10,13 +10,17 @@ const nextConfig = {
       { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
       {
         key: "Permissions-Policy",
-        value: "camera=(), microphone=(), geolocation=(), payment=()",
+        // Agent 语音输入需要麦克风；勿全局禁死
+        value: "camera=(), microphone=(self), geolocation=(), payment=()",
       },
       {
         key: "Content-Security-Policy",
-        // 生产环境应切换为 nonce 策略；当前移除 unsafe-eval 降低风险
+        // 开发态必须允许 unsafe-eval（Next/webpack），否则 SSR 有界面但按钮/API 全死
+        // 生产仍可收紧为 nonce；connect-src 含 ws/wss 供 HMR
         value:
-          "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://api.deepseek.com; object-src 'none'; base-uri 'self'; frame-ancestors 'none';",
+          process.env.NODE_ENV === "production"
+            ? "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://api.deepseek.com https://dashscope.aliyuncs.com; media-src 'self' blob:; object-src 'none'; base-uri 'self'; frame-ancestors 'none';"
+            : "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' ws: wss: http://localhost:* https://api.deepseek.com https://dashscope.aliyuncs.com; media-src 'self' blob:; object-src 'none'; base-uri 'self'; frame-ancestors 'none';",
       },
     ];
 

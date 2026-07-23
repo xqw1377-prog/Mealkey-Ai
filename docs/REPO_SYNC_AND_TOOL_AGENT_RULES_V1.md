@@ -17,11 +17,16 @@
 ## 2. Core 包结构（清理后）
 
 ```text
+apps/web/ · apps/mini-shell/
 packages/tool-agent-kit/          # L3 框架
 packages/agent-sdk/               # 含 platform Gateway Client
+packages/agents/                  # 四席 Consulting-OS + Founder 契约
 packages/business-signal-engine/
+agents/m-pnt|m-mkt|m-biz|m-ed/    # 四席侧车引擎（非 workspace）
+tool-agents/                      # L3 骨架说明（样板已外置）
 apps/web/.../agent-platform-gateway/  # Host Gateway
 # ❌ 已删除 packages/m-ops-diag、mealkey-agents/*
+# ❌ 已删除根目录嵌套镜像 M-BIZ/ M-ED/ M-PNT/ M-MKT/ M-OPS-Agent/
 ```
 
 Cursor 规则：

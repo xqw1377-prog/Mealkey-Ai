@@ -2,7 +2,7 @@
 
 > **V1.0 宏观架构已冻结** → 见 [`docs/FOUNDER_OS_V1_ARCHITECTURE_FREEZE.md`](../docs/FOUNDER_OS_V1_ARCHITECTURE_FREEZE.md)  
 > 配置真源：`architecture/v1_freeze.yaml`  
-> 下一阶段：**不再扩宏观架构**，进入四大 Engine 深度工程化（首选 M-PNT V2）。
+> 下一阶段：**不再扩宏观架构**；工程主线对齐 AUTHORITY —— **Council Runtime Engine** + Intelligence 接入。
 
 ## 三层（冻结）
 
@@ -30,9 +30,11 @@ founder-os/
   schemas/            # 运行时对象
 ```
 
-## 开发优先级（冻结）
+## 开发优先级（对齐 AUTHORITY）
 
-Phase 1: M-PNT → M-BIZ → M-MKT → M-ED  
-Phase 2: Evidence Layer  
-Phase 3: Decision Council 工程加深  
-Phase 4: Chief of Staff Agent  
+1. Council Intelligence Integration（四席 Adapter → MKInsight）  
+2. **Council Runtime Engine**（Session / Debate / Vote / Decision）  
+3. Memory / Growth（战绩 · 偏好 · User Intelligence）  
+4. Decision Room 产品化（后置）
+
+四席引擎深化挂在 Adapter / Provider 上，不另开「第五顾问席」。

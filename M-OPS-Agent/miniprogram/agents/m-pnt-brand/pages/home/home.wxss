@@ -1,7 +1,0 @@
-.page {
-  padding: 48rpx 40rpx;
-}
-
-.gap {
-  margin-top: 32rpx;
-}

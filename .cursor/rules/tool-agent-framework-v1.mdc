@@ -1,11 +1,11 @@
 ---
-description: L3 Tool Agent 框架 + m-ops-diag 经营感知器 — 可拆分可组合，禁止升格顾问席
+description: L3 Tool Agent 框架 — 可拆分可组合，禁止升格顾问席；样板已外置
 alwaysApply: true
 ---
 
 # Tool Agent Framework V1（冻结）
 
-权威：`docs/MEALKEY_TOOL_AGENT_FRAMEWORK_V1.md` · `docs/M_OPS_DIAG_AGENT_V1.md` · `docs/AUTHORITY.md`（13u / 13v）
+权威：`docs/MEALKEY_TOOL_AGENT_FRAMEWORK_V1.md` · `docs/M_OPS_DIAG_EXTERNAL_POINTER_V1.md` · `docs/AUTHORITY.md`（13u / 13v / 13ag）
 
 ## 三层
 
@@ -23,16 +23,15 @@ Manifest · Engine（零 Prisma）· Ports · Host Bridge（可选）
 ## 目录
 
 - 框架包：`packages/tool-agent-kit`
-- 引擎包：`packages/<agent>` 或 `tool-agents/`
-- Host：`apps/web` 只做薄 Bridge
+- 引擎落点：外置仓（默认）或 `tool-agents/<folder>/` / `packages/<agent>`（须过闸门）
+- Host：`apps/web` 只做薄 Bridge / Gateway
 
-## 样板：m-ops-diag
+## 样板：m-ops-diag（外置）
 
-- ID / 包：`m-ops-diag` / `@mealkey/m-ops-diag`
-- 产品名：**餐启经营诊断**（UI 禁裸技术名当主标题）
+- ID：`m-ops-diag`；产品名：**餐启经营诊断**（UI 禁裸技术名当主标题）
 - 定位：**经营感知器**（看见→识别→证据→洞察），不是咨询师
-- V1：纯 TS 进程内，不 HTTP
+- 真源：独立仓 `M-OPS-Agent`；Core 仅保留 Gateway + 指针文档
 - 出口优先级：BusinessSignal→今日驾驶舱 **先于** VerticalInsight→决策室
-- MVP 竖切：消费者反馈诊断
+- **禁止**把外置诊断整仓嵌回 Core（勿再提交顶层 `M-OPS-Agent/`）
 
 新 L3 必须先过框架上架清单，再写代码。

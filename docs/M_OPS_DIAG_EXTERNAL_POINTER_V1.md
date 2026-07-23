@@ -24,7 +24,8 @@
 | 诊断引擎 / Skill / Web UI | `C:\Users\xqw13\M-OPS-Agent` |
 | 产品文档（架构/UX/采集/模型） | `C:\Users\xqw13\M-OPS-Agent\docs\M_OPS_DIAG_*.md` |
 
-原 MealKey 内 `packages/m-ops-diag`、`mealkey-agents/restaurant-diagnosis-agent`、进程内 tRPC bridge **已删除**。
+原 MealKey 内 `packages/m-ops-diag`、`mealkey-agents/restaurant-diagnosis-agent`、进程内 tRPC bridge **已删除**。  
+根目录嵌套镜像 `M-OPS-Agent/` **已出库**，禁止再提交进 Core。
 
 垂直能力只经：**外置 Agent → Gateway Context/Ingress → OS**。
 

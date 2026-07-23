@@ -1,8 +1,0 @@
-node_modules
-web/dist
-dist
-*.tsbuildinfo
-.env
-.env.local
-.DS_Store
-.mops-data/

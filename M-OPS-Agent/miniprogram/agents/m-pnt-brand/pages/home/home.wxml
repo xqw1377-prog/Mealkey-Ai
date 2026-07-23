@@ -1,5 +1,0 @@
-<view class="page">
-  <text class="h1">品牌定位助手</text>
-  <text class="lede">占位页：证明同一 Shell 可挂多个 Agent。正式能力上架后共享当前餐厅档案。</text>
-  <button class="btn btn-block gap" bindtap="goHome">返回 MealKey</button>
-</view>

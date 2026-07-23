@@ -174,6 +174,7 @@
 13x–13z. **M-OPS-DIAG UX / 采集 / 诊断模型** 原文已迁至外置仓 `C:\Users\xqw13\M-OPS-Agent\docs\`（`M_OPS_DIAG_UX_V1` · `M_OPS_DIAG_DATA_COLLECTION_V1` · `M_OPS_DIAG_DIAGNOSIS_MODEL_V1`）。MealKey 仅保留指针 `M_OPS_DIAG_EXTERNAL_POINTER_V1.md`，禁止把诊断产品文档回流本仓。  
 
 13w. **GitHub 真源 + 仓库清理**（2026-07-21；2026-07-23 迁仓）：远端 `Mealkey-Ai`（`https://github.com/xqw1377-prog/Mealkey-Ai.git`）为唯一真源；禁止本地长期堆积未推送；`.vercel/` / `*.tsbuildinfo` 出库；Cursor 规则 `tool-agent-framework-v1` · `github-source-of-truth`；说明 `REPO_SYNC_AND_TOOL_AGENT_RULES_V1.md`。  
+13wi. **Core 仓布局收口**（2026-07-23）：根目录禁止再嵌套 `M-BIZ/` `M-ED/` `M-PNT/` `M-MKT/` `M-OPS-Agent/` 整仓；四席侧车仅 `agents/*`；诊断仅外置仓 + Gateway 指针；密钥文件（含 `.env.vercel*`）永不入库。  
 18. **Experience Blueprint P0–P5 工程已收口（2026-07-19）**：契约 · Candidate/Inbox · Challenge/Readiness · 经营决策习惯 · M-INTEL 锚点门禁均已接线；真源 `MEALKEY_DECISION_EXPERIENCE_ENGINEERING_BLUEPRINT_V1.md`。黄金路径手测仍有效。**2026-07-21 起主线收束为 MVP 90天飞轮**（不再并行开新能力专题）。禁止 Scan 滥造 Decision、无锚点装懂外部、对外「决策人格」字样。  
 18b. **Restaurant Intelligence Profile V1 已正式冻结**（2026-07-19）：第一次登录 = **建立经营认知**（非信息采集）；Identity 速写 → M-INTEL Evidence → 《餐厅经营画像》Snapshot → 确认门禁 → Brain 投影 → 驾驶舱。三层：**事实=Brain / 理解=RIP / 决策=DIE**。契约 `founder-layer/contracts/restaurant-intelligence-profile.ts`。真源：`MEALKEY_RESTAURANT_INTELLIGENCE_PROFILE_V1.md`。**下一工程刀 = R1 经营速写+确认门禁（可先 Identity-only 画像）**。  
 14. **Restaurant Brain 后端 V1 已冻结**（2026-07-18）：包 `@mealkey/restaurant-brain`；表 `RestaurantBrain` / `RestaurantDnaEvent` / `DecisionMemory`；铁律「Agent 先读 Brain」。实现切片 B0–B6 见 `MEALKEY_RESTAURANT_BRAIN_BACKEND_V1.md`。  

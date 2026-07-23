@@ -452,8 +452,8 @@ export async function generateCouncilOpinions(input: {
   }
 
   const provider = resolveLlmProvider();
-  const llm = tryCreateSharedLlmAdapter();
-  if (!llm || provider === "none") {
+  const llmAdapter = tryCreateSharedLlmAdapter();
+  if (!llmAdapter || provider === "none") {
     return { opinions: fallback, source: "heuristic" };
   }
 
@@ -488,7 +488,7 @@ export async function generateCouncilOpinions(input: {
       calibrationHint +
       "\n\n## 输出要求\n只返回合法 JSON，不要 Markdown 围栏。必须包含完整的判断。";
 
-    const chatPromise = llm.chat({
+    const chatPromise = llmAdapter.chat({
       model,
       temperature: 0.4,
       maxTokens: 1500,

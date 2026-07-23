@@ -767,7 +767,7 @@ export function DecisionRoom({ projectId }: Props) {
   }, []);
 
   return (
-    <div className="mx-auto flex h-[var(--decision-room-vvh,100dvh)] max-h-[var(--decision-room-vvh,100dvh)] max-w-4xl flex-col md:max-w-5xl">
+    <div className="mx-auto flex h-[var(--decision-room-vvh,100dvh)] max-h-[var(--decision-room-vvh,100dvh)] max-w-6xl flex-col md:max-w-7xl">
       <ConfirmDialog
         open={confirmOpen}
         title={confirmTitle}
@@ -780,17 +780,17 @@ export function DecisionRoom({ projectId }: Props) {
       />
       <div className="flex shrink-0 items-center gap-2 border-b border-[rgba(24,24,23,0.08)] bg-[rgba(250,249,246,0.98)] px-3 py-2 pt-[calc(env(safe-area-inset-top)+0.5rem)] md:px-4">
         <Link
-          href="/dashboard"
+          href={`/projects/${projectId}/agent`}
           prefetch={false}
           className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-[12px] border border-[rgba(24,24,23,0.12)] bg-white text-[#6f747b] no-underline touch-manipulation"
-          aria-label="退出决策室，回到今日"
+          aria-label="退出决策室，回到对话"
         >
           <ArrowLeft className="h-4 w-4" />
         </Link>
         <div className="min-w-0 flex-1">
           <p className="truncate text-[15px] font-medium text-[#202124]">决策室</p>
           <p className="truncate text-[11px] tracking-[0.08em] text-[#6f747b]">
-            回到今日决策
+            语音开案 · 回对话继续经营
           </p>
         </div>
         {session ? (
@@ -803,7 +803,7 @@ export function DecisionRoom({ projectId }: Props) {
           </button>
         ) : (
           <Link
-            href="/dashboard"
+            href={`/projects/${projectId}/agent`}
             prefetch={false}
             className="inline-flex min-h-11 items-center rounded-[12px] px-3 text-[13px] font-medium text-[#66735E] no-underline touch-manipulation"
           >
@@ -829,15 +829,15 @@ export function DecisionRoom({ projectId }: Props) {
       <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 md:px-6 md:py-6">
       <div className="flex flex-col gap-5">
 
-      <header className="rounded-[12px] border border-[rgba(24,24,23,0.08)] bg-white p-5 md:p-8">
+      <header className="space-y-2 border-b border-[rgba(24,24,23,0.08)] pb-5">
         <p className="text-[11px] font-medium tracking-[0.14em] text-[#66735E]">
-          决策室 · 语音对话开案
+          决策室 · 语音开案
         </p>
-        <h1 className="mt-2 font-display text-[30px] font-semibold leading-[1.1] tracking-[-0.045em] text-[#202124] md:text-[36px]">
+        <h1 className="font-display text-[30px] font-semibold leading-[1.1] tracking-[-0.045em] text-[#202124] md:text-[36px]">
           我问你说，采齐再拍
         </h1>
-        <p className="mt-2 max-w-2xl text-[15px] leading-7 text-[#3a3d41]">
-          手机不用打字：语音引导采集 → 判断 → 你来拍板 → 回今日跟进。
+        <p className="max-w-2xl text-[15px] leading-7 text-[#6f747b]">
+          语音采集 → 常委判断 → 你来拍板 → 回对话跟进。
         </p>
         {step === "setup" ? (
           <div className="mt-4">

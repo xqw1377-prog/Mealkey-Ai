@@ -138,23 +138,25 @@
 }
 
 @layer components {
+  /* 与产品台 MKPageHeader CTA 对齐：#181817 · 16px 圆角（不再用绿渐变 pill） */
   .btn-primary {
-    @apply inline-flex items-center justify-center rounded-full px-5 py-3 text-sm font-medium
-           text-white shadow-[0_14px_32px_rgba(83,101,116,0.18)] transition duration-200
+    @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-[16px] px-5 py-3 text-[15px] font-semibold
+           text-white transition duration-200
            hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2
            focus-visible:outline-offset-2 active:scale-[0.98] no-underline;
-    background: linear-gradient(135deg, var(--mk-green-deep), var(--mk-green));
-    outline-color: rgba(119, 128, 95, 0.30);
+    background: #181817;
+    box-shadow: 0 8px 22px rgba(24, 24, 23, 0.14);
+    outline-color: rgba(24, 24, 23, 0.35);
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center rounded-full border px-5 py-3 text-sm font-medium
-           text-[#202124] shadow-[0_10px_26px_rgba(32,33,36,0.06)] transition duration-200
+    @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-[16px] border px-5 py-3 text-[15px] font-semibold
+           text-[#181817] transition duration-200
            hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2
            focus-visible:outline-offset-2 active:scale-[0.98] no-underline;
-    border-color: rgba(32, 33, 36, 0.08);
-    background: rgba(255, 255, 255, 0.85);
-    outline-color: rgba(119, 128, 95, 0.20);
+    border-color: rgba(24, 24, 23, 0.12);
+    background: #ffffff;
+    outline-color: rgba(102, 115, 94, 0.28);
   }
 
   .card {

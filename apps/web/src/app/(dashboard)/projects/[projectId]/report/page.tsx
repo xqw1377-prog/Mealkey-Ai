@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { ArrowRight, ShieldAlert, History } from "lucide-react";
 import { MKPageHeader } from "@/components/operating";
+import { OpsSecondaryLinks } from "@/components/operating/OpsSecondaryLinks";
+import { PageContent } from "@/components/operating/PageContent";
 import { PageEmptyState, PageErrorState, PageLoadingState } from "@/components/operating/PageState";
 import { trpc } from "@/lib/trpc";
 
@@ -78,7 +80,7 @@ export default function ReportPage({
 
   if (!report?.latestReport) {
     return (
-      <div className="space-y-5 pb-2">
+      <PageContent width="console" inset="shell" className="space-y-8">
         <MKPageHeader
           eyebrow="报告"
           title="报告"
@@ -88,9 +90,21 @@ export default function ReportPage({
               暂无报告
             </div>
           }
+          meta={
+            <OpsSecondaryLinks
+              projectId={project.id}
+              links={[
+                { href: `/projects/${project.id}/agent`, label: "回对话" },
+                {
+                  href: `/projects/${project.id}/decision-room`,
+                  label: "决策室",
+                },
+              ]}
+            />
+          }
         />
 
-        <section className="rounded-[22px] border border-[rgba(24,24,23,0.08)] bg-[linear-gradient(180deg,#fbfaf7_0%,#eef1ea_100%)] p-5 shadow-[0_14px_30px_rgba(24,24,23,0.04)]">
+        <section className="border-y border-[rgba(24,24,23,0.08)] py-5">
           <p className="text-[13px] leading-5 tracking-[0.01em] text-[#66735E]">还没有报告</p>
           <p className="mt-2 text-[22px] leading-[1.3] tracking-[-0.03em] text-[#202124]">
             先开一场会，留下第一次判断
@@ -116,12 +130,12 @@ export default function ReportPage({
             </Link>
           </div>
         </section>
-      </div>
+      </PageContent>
     );
   }
 
   return (
-    <div className="space-y-5 pb-2">
+    <PageContent width="console" inset="shell" className="space-y-8">
       <MKPageHeader
         eyebrow="报告"
         title="报告"
@@ -131,9 +145,21 @@ export default function ReportPage({
             {report.reportTypeLabel}
           </div>
         }
+        meta={
+          <OpsSecondaryLinks
+            projectId={project.id}
+            links={[
+              { href: `/projects/${project.id}/agent`, label: "回对话" },
+              {
+                href: `/projects/${project.id}/decision-room`,
+                label: "决策室",
+              },
+            ]}
+          />
+        }
       />
 
-      <section className="rounded-[22px] border border-[rgba(24,24,23,0.08)] bg-[linear-gradient(180deg,#fbfaf7_0%,#eef1ea_100%)] p-4 shadow-[0_14px_30px_rgba(24,24,23,0.04)]">
+      <section className="border-y border-[rgba(24,24,23,0.08)] py-4">
         <div className="flex items-center justify-between gap-3">
           <div>
             <p className="text-[13px] leading-5 tracking-[0.01em] text-[#66735E]">结论</p>
@@ -181,7 +207,7 @@ export default function ReportPage({
         </div>
       </section>
 
-      <section className="rounded-[22px] border border-[rgba(24,24,23,0.08)] bg-white p-4 shadow-[0_14px_28px_rgba(24,24,23,0.04)]">
+      <section className="border-y border-[rgba(24,24,23,0.08)] py-4">
         <div className="flex items-center justify-between gap-3">
           <div>
             <p className="text-[13px] leading-5 tracking-[0.01em] text-[#66735E]">依据</p>
@@ -197,7 +223,7 @@ export default function ReportPage({
         </div>
       </section>
 
-      <section className="rounded-[22px] border border-[rgba(24,24,23,0.14)] bg-[linear-gradient(180deg,#ffffff_0%,rgba(180,124,92,0.12)_100%)] p-4 shadow-[0_14px_28px_rgba(24,24,23,0.04)]">
+      <section className="border-y border-[rgba(180,124,92,0.22)] py-4">
         <div className="flex items-center justify-between gap-3">
           <div>
             <p className="text-[13px] leading-5 tracking-[0.01em] text-[#66735E]">反方</p>
@@ -238,6 +264,6 @@ export default function ReportPage({
           </Link>
         </div>
       </section>
-    </div>
+    </PageContent>
   );
 }

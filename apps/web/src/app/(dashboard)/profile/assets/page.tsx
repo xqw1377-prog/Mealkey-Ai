@@ -4,6 +4,8 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowUpRight, FileAudio, FileImage, FileText, FileVideo, Trash2 } from "lucide-react";
 import { MKPageHeader } from "@/components/operating";
+import { OpsSecondaryLinks } from "@/components/operating/OpsSecondaryLinks";
+import { PageContent } from "@/components/operating/PageContent";
 import { PageErrorState, PageLoadingState } from "@/components/operating/PageState";
 import { useProjectStore } from "@/stores/projectStore";
 import { trpc } from "@/lib/trpc";
@@ -90,7 +92,7 @@ export default function AssetCenterPage() {
   }
 
   return (
-    <div className="space-y-5 pb-2">
+    <PageContent width="console" inset="shell" className="space-y-8">
       <MKPageHeader
         eyebrow="资料中心"
         title="资料"
@@ -100,10 +102,23 @@ export default function AssetCenterPage() {
             长期
           </div>
         }
+        meta={
+          <OpsSecondaryLinks
+            projectId={projectId}
+            links={
+              projectId
+                ? [
+                    { href: `/projects/${projectId}/agent`, label: "回对话" },
+                    { href: "/profile", label: "我的" },
+                  ]
+                : [{ href: "/profile", label: "我的" }]
+            }
+          />
+        }
       />
 
       {aiAssets.length > 0 ? (
-        <section className="rounded-[22px] border border-[rgba(24,24,23,0.08)] bg-white p-4">
+        <section className="border-y border-[rgba(24,24,23,0.08)] py-4">
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="text-[13px] text-[#66735E]">AI 经营资产</p>
@@ -155,7 +170,7 @@ export default function AssetCenterPage() {
         </section>
       ) : null}
 
-      <section className="rounded-[22px] border border-[rgba(24,24,23,0.08)] bg-[linear-gradient(180deg,#fbfaf7_0%,#eef1ea_100%)] p-4 shadow-[0_14px_30px_rgba(24,24,23,0.04)]">
+      <section className="border-y border-[rgba(24,24,23,0.08)] py-4">
         <div className="grid gap-3 md:grid-cols-4">
           <div className="rounded-[16px] bg-white/75 p-4">
             <p className="text-[12px] leading-5 tracking-[0.01em] text-[#6f747b]">资料总量</p>
@@ -176,7 +191,7 @@ export default function AssetCenterPage() {
         </div>
       </section>
 
-      <section className="rounded-[22px] border border-[rgba(24,24,23,0.08)] bg-white p-4 shadow-[0_14px_28px_rgba(24,24,23,0.04)]">
+      <section className="border-y border-[rgba(24,24,23,0.08)] py-4">
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
@@ -206,7 +221,7 @@ export default function AssetCenterPage() {
         </div>
       </section>
 
-      <section className="rounded-[22px] border border-[rgba(24,24,23,0.08)] bg-white p-4 shadow-[0_14px_28px_rgba(24,24,23,0.04)]">
+      <section className="border-y border-[rgba(24,24,23,0.08)] py-4">
         <div className="flex items-center justify-between gap-3">
           <div>
             <p className="text-[13px] leading-5 tracking-[0.01em] text-[#66735E]">分类管理</p>
@@ -308,6 +323,6 @@ export default function AssetCenterPage() {
           </div>
         ) : null}
       </section>
-    </div>
+    </PageContent>
   );
 }

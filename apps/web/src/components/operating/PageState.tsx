@@ -47,7 +47,7 @@ function ActionButtons({
   );
 }
 
-/** 加载态 — 对齐晨间字号阶梯 */
+/** 加载态 — 对齐 Ops 页头字号阶梯 */
 export function PageLoadingState({
   eyebrow = PRODUCT_BRAND_EYEBROW,
   title = "正在打开…",
@@ -57,14 +57,20 @@ export function PageLoadingState({
     { label: "整理", status: "active" },
     { label: "就绪", status: "pending" },
   ],
+  /** shell：OperatingShell 已有水平 padding，避免再叠一层 */
+  inset = "page",
 }: {
   eyebrow?: string;
   title?: string;
   description?: string;
   steps?: StateStep[];
+  inset?: "shell" | "page";
 }) {
+  const padX = inset === "shell" ? "px-0" : "px-4 md:px-6";
   return (
-    <div className="mx-auto w-full max-w-xl space-y-5 px-4 pb-10 pt-6 md:px-6 md:pt-8">
+    <div
+      className={`mx-auto w-full max-w-xl space-y-5 ${padX} pb-10 pt-6 md:pt-8`}
+    >
       <header className="space-y-2">
         <p className="text-[11px] font-medium tracking-[0.14em] text-[#66735E]">
           {eyebrow}
@@ -113,15 +119,20 @@ export function PageEmptyState({
   description,
   primaryAction,
   secondaryAction,
+  inset = "page",
 }: {
   eyebrow: string;
   title: string;
   description: string;
   primaryAction?: ActionLink;
   secondaryAction?: ActionLink;
+  inset?: "shell" | "page";
 }) {
+  const padX = inset === "shell" ? "px-0" : "px-4 md:px-6";
   return (
-    <section className="mx-auto w-full max-w-xl border-y border-[rgba(24,24,23,0.08)] px-4 py-8 md:px-6">
+    <section
+      className={`mx-auto w-full max-w-xl border-y border-[rgba(24,24,23,0.08)] ${padX} py-8`}
+    >
       <p className="text-[11px] font-medium tracking-[0.14em] text-[#66735E]">
         {eyebrow}
       </p>
@@ -144,6 +155,7 @@ export function PageErrorState({
   primaryAction,
   secondaryAction,
   highlights = [],
+  inset = "page",
 }: {
   eyebrow: string;
   title: string;
@@ -151,9 +163,13 @@ export function PageErrorState({
   primaryAction?: ActionLink;
   secondaryAction?: ActionLink;
   highlights?: string[];
+  inset?: "shell" | "page";
 }) {
+  const padX = inset === "shell" ? "px-0" : "px-4 md:px-6";
   return (
-    <section className="mx-auto w-full max-w-xl border-y border-[rgba(180,124,92,0.22)] px-4 py-8 md:px-6">
+    <section
+      className={`mx-auto w-full max-w-xl border-y border-[rgba(180,124,92,0.22)] ${padX} py-8`}
+    >
       <p className="inline-flex items-center gap-1.5 text-[11px] font-medium tracking-[0.14em] text-[#B47C5C]">
         <AlertCircle className="h-3.5 w-3.5" />
         {eyebrow}

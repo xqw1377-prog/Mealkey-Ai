@@ -5,6 +5,8 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ArrowRight } from "lucide-react";
 import { BrandSwitcher } from "@/components/operating/BrandSwitcher";
+import { MKPageHeader } from "@/components/operating/MKPageHeader";
+import { OpsSecondaryLinks } from "@/components/operating/OpsSecondaryLinks";
 import { PageContent } from "@/components/operating/PageContent";
 import { PageErrorState, PageLoadingState } from "@/components/operating/PageState";
 import {
@@ -249,38 +251,44 @@ export default function RuntimeHubPage() {
     }
     if (tab === "execution") {
       return {
-        eyebrow: "今日",
-        title: "回今日勾进度",
-        href: "/dashboard",
+        eyebrow: "经营动态",
+        title: "回经营动态勾进度",
+        href: "/dashboard?radar=1",
         tone: "olive" as const,
       };
     }
     return {
-      eyebrow: "今日",
-      title: "回今日",
-      href: "/dashboard",
+      eyebrow: "对话",
+      title: "回对话",
+      href: `/projects/${projectId}/agent`,
       tone: "olive" as const,
     };
   })();
 
   if (!projectId) {
     return (
-      <PageErrorState
-        eyebrow="管理"
-        title="先选企业"
-        description="风险、机会和执行都挂在具体企业上。"
-        primaryAction={{ href: "/projects", label: "选企业" }}
-      />
+      <PageContent width="console" inset="shell">
+        <PageErrorState
+          eyebrow="管理"
+          title="先选企业"
+          description="风险、机会和执行都挂在具体企业上。"
+          primaryAction={{ href: "/projects", label: "选企业" }}
+          inset="shell"
+        />
+      </PageContent>
     );
   }
 
   if (homeLoading && !homeResponse) {
     return (
-      <PageLoadingState
-        eyebrow="管理"
-        title="正在打开…"
-        description="准备风险、机会与执行。"
-      />
+      <PageContent width="console" inset="shell">
+        <PageLoadingState
+          eyebrow="管理"
+          title="正在打开…"
+          description="准备风险、机会与执行。"
+          inset="shell"
+        />
+      </PageContent>
     );
   }
 
@@ -290,40 +298,32 @@ export default function RuntimeHubPage() {
     "你的企业";
 
   return (
-    <PageContent width="default" inset="shell" className="space-y-8">
-      <header className="space-y-3">
-        <p className="text-[11px] tracking-[0.14em] text-[#66735E]">管理</p>
-        <h1 className="font-display text-[28px] font-semibold leading-[1.15] tracking-[-0.04em] text-[#202124] md:text-[34px]">
-          {name}
-        </h1>
-        <p className="max-w-2xl text-[15px] leading-7 text-[#6f747b]">
-          管风险、机会和执行。要拍板去决策会议室。
-        </p>
-        <BrandSwitcher projectId={projectId} variant="full" />
-        <div className="flex flex-wrap gap-x-4 gap-y-2 text-[13px]">
-          <Link
-            href={`/projects/${projectId}/decision-case`}
-            prefetch={false}
-            className="font-medium text-[#66735E] no-underline underline-offset-4 hover:underline"
-          >
-            决策会议室
-          </Link>
-          <Link
-            href={`/projects/${projectId}/capability`}
-            prefetch={false}
-            className="font-medium text-[#66735E] no-underline underline-offset-4 hover:underline"
-          >
-            能力
-          </Link>
-          <Link
-            href="/dashboard"
-            prefetch={false}
-            className="font-medium text-[#66735E] no-underline underline-offset-4 hover:underline"
-          >
-            回今日
-          </Link>
-        </div>
-      </header>
+    <PageContent width="console" inset="shell" className="space-y-8">
+      <MKPageHeader
+        eyebrow="管理"
+        title={name}
+        description="管风险、机会和执行。要拍板去决策室。"
+        meta={
+          <>
+            <BrandSwitcher projectId={projectId} variant="full" />
+            <OpsSecondaryLinks
+              projectId={projectId}
+              links={[
+                { href: `/projects/${projectId}/agent`, label: "回对话" },
+                {
+                  href: `/projects/${projectId}/decision-room`,
+                  label: "决策室",
+                },
+                {
+                  href: `/projects/${projectId}/capability`,
+                  label: "能力一览",
+                },
+                { href: "/dashboard?radar=1", label: "经营动态" },
+              ]}
+            />
+          </>
+        }
+      />
 
       <section className="space-y-5 border-y border-[rgba(24,24,23,0.1)] py-6">
         <div>

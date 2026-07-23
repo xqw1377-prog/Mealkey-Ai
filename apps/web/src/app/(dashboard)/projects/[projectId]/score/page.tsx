@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { MKPageHeader } from "@/components/operating";
+import { OpsSecondaryLinks } from "@/components/operating/OpsSecondaryLinks";
+import { PageContent } from "@/components/operating/PageContent";
 import { PageEmptyState, PageErrorState, PageLoadingState } from "@/components/operating/PageState";
 import { trpc } from "@/lib/trpc";
 
@@ -94,14 +96,26 @@ export default function ScorePage({
   const scorecard = data.scorecard;
 
   return (
-    <div className="space-y-5 pb-2">
+    <PageContent width="console" inset="shell" className="space-y-8">
       <MKPageHeader
         eyebrow="记分卡"
         title={project.name}
         description="一眼看健康度；分数要有验证才可信。"
+        meta={
+          <OpsSecondaryLinks
+            projectId={project.id}
+            links={[
+              { href: `/projects/${project.id}/agent`, label: "回对话" },
+              {
+                href: `/projects/${project.id}/decision-room`,
+                label: "决策室",
+              },
+            ]}
+          />
+        }
       />
 
-      <section className="rounded-[22px] border border-[rgba(24,24,23,0.08)] bg-[linear-gradient(180deg,#fbfaf7_0%,#eef1ea_100%)] p-4 shadow-[0_14px_30px_rgba(24,24,23,0.04)]">
+      <section className="border-y border-[rgba(24,24,23,0.08)] py-4">
         <div className="text-center">
           <p className="font-display text-[78px] leading-none tracking-[-0.05em] text-[#202124] md:text-[108px]">{displayScore}</p>
           <p className="mt-2 text-[16px] font-medium tracking-[-0.02em] text-[#202124]">
@@ -118,7 +132,7 @@ export default function ScorePage({
         </div>
       </section>
 
-      <section className="rounded-[22px] border border-[rgba(24,24,23,0.08)] bg-white p-4 shadow-[0_14px_28px_rgba(24,24,23,0.04)]">
+      <section className="border-y border-[rgba(24,24,23,0.08)] py-4">
         <div className="flex items-center justify-between gap-3">
           <div>
             <p className="text-[13px] leading-5 tracking-[0.01em] text-[#66735E]">建议</p>
@@ -150,7 +164,7 @@ export default function ScorePage({
         </div>
       </section>
 
-      <section className="rounded-[22px] border border-[rgba(24,24,23,0.08)] bg-white p-4 shadow-[0_14px_28px_rgba(24,24,23,0.04)]">
+      <section className="border-y border-[rgba(24,24,23,0.08)] py-4">
         <div className="flex items-center justify-between gap-3">
           <div>
             <p className="text-[13px] leading-5 tracking-[0.01em] text-[#66735E]">分项</p>
@@ -175,6 +189,6 @@ export default function ScorePage({
           ))}
         </div>
       </section>
-    </div>
+    </PageContent>
   );
 }

@@ -5,7 +5,15 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { understandMissionGoal } from "@/lib/mission";
+import {
+  MKPageHeader,
+  mkPageHeaderPrimaryCtaClass,
+  mkPageHeaderSecondaryCtaClass,
+} from "@/components/operating/MKPageHeader";
+import { OpsSecondaryLinks } from "@/components/operating/OpsSecondaryLinks";
+import { PageContent } from "@/components/operating/PageContent";
 import { PageErrorBoundary } from "@/components/operating/PageErrorBoundary";
+import { PageLoadingState } from "@/components/operating/PageState";
 
 function MissionContent({ projectId }: { projectId: string }) {
   const searchParams = useSearchParams();
@@ -29,54 +37,55 @@ function MissionContent({ projectId }: { projectId: string }) {
   }, [submitted, goal]);
 
   return (
-    <div className="mx-auto max-w-2xl space-y-8 pb-10 pt-6 md:pt-10">
-      <header className="space-y-2">
-        <p className="text-[13px] tracking-[0.08em] text-[#66735E]">新议题</p>
-        <h1 className="font-display text-[30px] font-semibold leading-none tracking-[-0.04em] text-[#202124]">
-          一句话说目标
-        </h1>
-        <p className="text-[15px] leading-7 text-[#6f747b]">
-          说完就开会，不用填表。
-        </p>
-      </header>
+    <PageContent width="console" inset="shell" className="space-y-8">
+      <MKPageHeader
+        eyebrow="新议题"
+        title="一句话说目标"
+        description="说完进决策室，不用填表。"
+        meta={
+          <OpsSecondaryLinks
+            projectId={projectId}
+            links={[
+              { href: `/projects/${projectId}/agent`, label: "回对话" },
+              {
+                href: `/projects/${projectId}/decision-room`,
+                label: "决策室",
+              },
+            ]}
+          />
+        }
+      />
 
       {!understanding ? (
-        <section className="space-y-4">
+        <section className="space-y-4 border-y border-[rgba(24,24,23,0.08)] py-6">
           <textarea
             value={goal}
             onChange={(e) => setGoal(e.target.value)}
             rows={4}
             placeholder="例如：我想把湘宴做到100家店。"
-            className="w-full resize-none rounded-[18px] border border-[rgba(24,24,23,0.08)] bg-white px-4 py-3 text-[16px] leading-7 text-[#202124] placeholder:text-[#9a968e] focus:outline-none focus:ring-2 focus:ring-[rgba(102,115,94,0.25)]"
+            className="w-full resize-none rounded-[16px] border border-[rgba(24,24,23,0.12)] bg-white px-4 py-3 text-[16px] leading-7 text-[#202124] placeholder:text-[#9a968e] focus:outline-none focus:ring-2 focus:ring-[rgba(102,115,94,0.25)]"
           />
           <button
             type="button"
             disabled={!goal.trim()}
             onClick={() => setSubmitted(true)}
-            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[16px] bg-[#181817] px-5 text-[15px] font-semibold text-white disabled:opacity-50"
+            className={mkPageHeaderPrimaryCtaClass}
           >
             <Sparkles className="h-4 w-4" />
             下一步
           </button>
-          <Link
-            href={`/projects/${projectId}`}
-            prefetch={false}
-            className="inline-flex text-[13px] text-[#66735E] no-underline"
-          >
-            回企业
-          </Link>
         </section>
       ) : (
         <section className="space-y-6">
           <div className="space-y-2 border-y border-[rgba(24,24,23,0.08)] py-6">
-            <p className="text-[12px] tracking-[0.08em] text-[#6f747b]">理解成</p>
-            <h2 className="text-[22px] font-semibold leading-snug tracking-[-0.02em] text-[#202124]">
+            <p className="text-[11px] tracking-[0.12em] text-[#6f747b]">理解成</p>
+            <h2 className="font-display text-[22px] font-semibold leading-snug tracking-[-0.02em] text-[#202124]">
               {understanding.understoodGoal}
             </h2>
           </div>
 
           <div>
-            <p className="text-[12px] tracking-[0.08em] text-[#6f747b]">开会先谈</p>
+            <p className="text-[11px] tracking-[0.12em] text-[#6f747b]">开会先谈</p>
             <ol className="mt-3 space-y-2">
               {understanding.questions.map((q, i) => (
                 <li key={q} className="text-[15px] leading-7 text-[#202124]">
@@ -87,12 +96,12 @@ function MissionContent({ projectId }: { projectId: string }) {
           </div>
 
           <div>
-            <p className="text-[12px] tracking-[0.08em] text-[#6f747b]">谁会到场</p>
+            <p className="text-[11px] tracking-[0.12em] text-[#6f747b]">谁会到场</p>
             <div className="mt-3 flex flex-wrap gap-2">
               {understanding.invitedExperts.map((expert) => (
                 <span
                   key={expert.displayName}
-                  className="rounded-[14px] border border-[rgba(24,24,23,0.08)] bg-[#FBFAF7] px-3 py-2 text-[13px] text-[#202124]"
+                  className="rounded-[12px] border border-[rgba(24,24,23,0.08)] bg-[#FBFAF7] px-3 py-2 text-[13px] text-[#202124]"
                 >
                   {expert.displayName}
                   <span className="ml-1 text-[#9a968e]">· {expert.duty}</span>
@@ -101,13 +110,13 @@ function MissionContent({ projectId }: { projectId: string }) {
             </div>
           </div>
 
-          <div className="flex flex-col gap-2 sm:flex-row">
+          <div className="flex flex-col gap-2.5 sm:flex-row sm:flex-wrap">
             <Link
               href={understanding.meetingHref(projectId)}
               prefetch={false}
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[16px] bg-[#181817] px-5 text-[15px] font-semibold text-white no-underline"
+              className={mkPageHeaderPrimaryCtaClass}
             >
-              开始开会
+              进决策室
               <ArrowRight className="h-4 w-4" />
             </Link>
             <button
@@ -116,14 +125,14 @@ function MissionContent({ projectId }: { projectId: string }) {
                 setSubmitted(false);
                 setGoal(understanding.rawGoal);
               }}
-              className="inline-flex min-h-11 items-center justify-center rounded-[14px] border border-[rgba(24,24,23,0.08)] bg-white px-4 text-[14px] font-medium text-[#202124]"
+              className={mkPageHeaderSecondaryCtaClass}
             >
               改目标
             </button>
           </div>
         </section>
       )}
-    </div>
+    </PageContent>
   );
 }
 
@@ -136,9 +145,14 @@ export default function MissionPage({
     <PageErrorBoundary fallbackTitle="目标页暂时打不开">
       <Suspense
         fallback={
-          <div className="flex min-h-[40vh] items-center justify-center text-[14px] text-[#6f747b]">
-            正在打开目标页…
-          </div>
+          <PageContent width="console" inset="shell">
+            <PageLoadingState
+              eyebrow="新议题"
+              title="正在打开…"
+              description="准备一句话目标。"
+              inset="shell"
+            />
+          </PageContent>
         }
       >
         <MissionContent projectId={params.projectId} />

@@ -24,6 +24,8 @@ import {
   ExecutionRuntimePanel,
   CouncilTracePanel,
 } from "@/components/operating";
+import { MKPageHeader } from "@/components/operating/MKPageHeader";
+import { OpsSecondaryLinks } from "@/components/operating/OpsSecondaryLinks";
 import { PageContent } from "@/components/operating/PageContent";
 import { PageEmptyState, PageErrorState, PageLoadingState } from "@/components/operating/PageState";
 import { PageErrorBoundary } from "@/components/operating/PageErrorBoundary";
@@ -515,27 +517,41 @@ function DecisionsArchivePageInner() {
           : "暂无行动";
 
   return (
-    <PageContent width="default" inset="shell" className="space-y-3">
-      <header className="flex items-start justify-between gap-3 pt-1">
-        <div className="min-w-0">
-          <p className="text-[11px] font-medium tracking-[0.14em] text-[#66735E]">行动</p>
-          <h1 className="mt-1 font-display text-[24px] font-semibold leading-[1.15] tracking-[-0.04em] text-[#202124] md:text-[28px]">
-            跟进验证
-          </h1>
-        </div>
-        <div className="inline-flex shrink-0 items-center gap-1.5 rounded-[10px] border border-[rgba(24,24,23,0.08)] bg-[#FBFAF7] px-2.5 py-1 text-[12px] text-[#6f747b]">
-          <History className="h-3.5 w-3.5" />
-          近3日 {recentDecisions.length}
-          {historyDecisions.length > 0 ? (
-            <span className="text-[#9aa0a6]">· 历史 {historyDecisions.length}</span>
-          ) : null}
-        </div>
-      </header>
-      <BrandSwitcher projectId={projectId} variant="full" />
+    <PageContent width="console" inset="shell" className="space-y-8">
+      <MKPageHeader
+        eyebrow="行动"
+        title="跟进验证"
+        description="拍板后的验证与学习跟进。"
+        badge={
+          <div className="inline-flex shrink-0 items-center gap-1.5 rounded-[10px] border border-[rgba(24,24,23,0.08)] bg-[#FBFAF7] px-2.5 py-1 text-[12px] text-[#6f747b]">
+            <History className="h-3.5 w-3.5" />
+            近3日 {recentDecisions.length}
+            {historyDecisions.length > 0 ? (
+              <span className="text-[#9aa0a6]">· 历史 {historyDecisions.length}</span>
+            ) : null}
+          </div>
+        }
+        meta={
+          <>
+            <BrandSwitcher projectId={projectId} variant="full" />
+            <OpsSecondaryLinks
+              projectId={projectId}
+              links={[
+                { href: `/projects/${projectId}/agent`, label: "回对话" },
+                {
+                  href: `/projects/${projectId}/decision-room`,
+                  label: "决策室",
+                },
+                { href: "/dashboard?radar=1", label: "经营动态" },
+              ]}
+            />
+          </>
+        }
+      />
 
       <section
         id="validation"
-        className="border-y border-[rgba(24,24,23,0.08)] py-3"
+        className="border-y border-[rgba(24,24,23,0.08)] py-4"
       >
         <div className="flex items-baseline justify-between gap-3">
           <h2 className="font-display text-[18px] font-semibold tracking-[-0.02em] text-[#202124]">

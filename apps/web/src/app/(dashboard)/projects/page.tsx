@@ -3,8 +3,17 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowRight } from "lucide-react";
+import {
+  MKPageHeader,
+  mkPageHeaderPrimaryCtaClass,
+} from "@/components/operating/MKPageHeader";
+import { OpsSecondaryLinks } from "@/components/operating/OpsSecondaryLinks";
 import { PageContent } from "@/components/operating/PageContent";
-import { PageErrorState, PageLoadingState } from "@/components/operating/PageState";
+import {
+  PageEmptyState,
+  PageErrorState,
+  PageLoadingState,
+} from "@/components/operating/PageState";
 import { trpc } from "@/lib/trpc";
 import type { ProjectProfile } from "@/types/operating";
 
@@ -23,56 +32,58 @@ export default function ProjectsPage() {
 
   if (isLoading) {
     return (
-      <PageLoadingState
-        eyebrow="企业"
-        title="正在打开…"
-        description="读取你的企业。"
-      />
+      <PageContent width="console" inset="shell">
+        <PageLoadingState
+          eyebrow="企业"
+          title="正在打开…"
+          description="读取你的企业。"
+          inset="shell"
+        />
+      </PageContent>
     );
   }
 
   if (error) {
     return (
-      <PageContent width="narrow" inset="shell">
+      <PageContent width="console" inset="shell">
         <PageErrorState
           eyebrow="企业"
           title="暂时打不开"
-          description="先回今日。"
-          primaryAction={{ href: "/dashboard", label: "回今日" }}
-          secondaryAction={{ href: "/profile", label: "成长" }}
+          description="先回对话。"
+          primaryAction={{ href: "/dashboard", label: "回对话" }}
+          secondaryAction={{ href: "/profile", label: "我的" }}
+          inset="shell"
         />
       </PageContent>
     );
   }
 
   return (
-    <PageContent width="narrow" inset="shell" className="space-y-8">
-      <header className="space-y-2">
-        <p className="text-[11px] tracking-[0.14em] text-[#66735E]">企业</p>
-        <h1 className="font-display text-[30px] font-semibold leading-none tracking-[-0.04em] text-[#202124] md:text-[34px]">
-          我的企业
-        </h1>
-        <p className="text-[14px] leading-6 text-[#6f747b]">
-          选一家进入今日与会议。
-        </p>
-      </header>
+    <PageContent width="console" inset="shell" className="space-y-8">
+      <MKPageHeader
+        eyebrow="企业"
+        title="我的企业"
+        description="选一家进入对话与决策。"
+        meta={<OpsSecondaryLinks links={[{ href: "/profile", label: "我的" }]} />}
+      >
+        <button
+          type="button"
+          onClick={() => createProjectMutation.mutate({ name: "我的企业" })}
+          disabled={createProjectMutation.isPending}
+          className={mkPageHeaderPrimaryCtaClass}
+        >
+          {createProjectMutation.isPending ? "创建中…" : "创建企业"}
+          <ArrowRight className="h-4 w-4" />
+        </button>
+      </MKPageHeader>
 
       {items.length === 0 ? (
-        <section className="space-y-4 border-y border-[rgba(24,24,23,0.08)] py-6">
-          <p className="text-[18px] font-semibold text-[#202124]">还没有企业</p>
-          <p className="text-[14px] leading-6 text-[#6f747b]">
-            先创建，才能开始用。
-          </p>
-          <button
-            type="button"
-            onClick={() => createProjectMutation.mutate({ name: "我的企业" })}
-            disabled={createProjectMutation.isPending}
-            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[16px] bg-[#181817] px-5 text-[15px] font-semibold text-white touch-manipulation active:scale-[0.98] disabled:opacity-60"
-          >
-            {createProjectMutation.isPending ? "创建中…" : "创建企业"}
-            <ArrowRight className="h-4 w-4" />
-          </button>
-        </section>
+        <PageEmptyState
+          eyebrow="企业"
+          title="还没有企业"
+          description="先创建，才能开始用。"
+          inset="shell"
+        />
       ) : (
         <div className="divide-y divide-[rgba(24,24,23,0.08)] border-y border-[rgba(24,24,23,0.08)]">
           {items.map((item) => {

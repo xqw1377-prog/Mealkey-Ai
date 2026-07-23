@@ -16,12 +16,11 @@ const STAGES: Array<{ id: DecisionLoopStage; label: string }> = [
   { id: "decide", label: "拍板" },
   { id: "act", label: "执行" },
   { id: "review", label: "复盘" },
-  { id: "today", label: "今日" },
+  { id: "today", label: "对话" },
 ];
 
 /**
- * 决策闭环轨道：统一视觉语言，让用户随时知道「我在环的哪一环」。
- * 能力 / 交互 / 视觉共用同一叙事：碰到决策 → 想到餐启 → 走完再回今日。
+ * 决策闭环轨道：采集 → 判断 → 拍板 → 执行 → 复盘 → 回对话。
  */
 export function DecisionLoopRail({
   current,
@@ -38,7 +37,7 @@ export function DecisionLoopRail({
       className={
         compact
           ? "space-y-1.5"
-          : "space-y-2 rounded-[14px] border border-[rgba(24,24,23,0.08)] bg-[#FBFAF7] px-3 py-3"
+          : "space-y-2 border-y border-[rgba(24,24,23,0.08)] py-3"
       }
     >
       {!compact ? (
@@ -53,7 +52,7 @@ export function DecisionLoopRail({
           return (
             <li key={s.id} className="flex min-w-0 flex-1 items-center gap-1">
               <span
-                className={`flex h-8 w-full items-center justify-center rounded-full text-[11px] font-medium tracking-wide ${
+                className={`flex h-8 w-full items-center justify-center rounded-[12px] text-[11px] font-medium tracking-wide ${
                   active
                     ? "bg-[#181817] text-white"
                     : done
@@ -79,11 +78,11 @@ export function DecisionLoopRail({
         <p className="text-[12px] leading-5 text-[#6f747b]">
           拍板后记得{" "}
           <Link
-            href="/dashboard"
+            href={`/projects/${projectId}/agent`}
             prefetch={false}
             className="font-medium text-[#181817] underline-offset-2 hover:underline"
           >
-            回今日
+            回对话
           </Link>
           跟进。
         </p>
@@ -92,7 +91,7 @@ export function DecisionLoopRail({
   );
 }
 
-/** 拍板成功后的标准三 CTA：回今日（主）· 去执行 · 再开一笔 */
+/** 拍板成功后的标准三 CTA：回对话（主）· 去执行 · 再开一笔 */
 export function DecisionClosedActions({
   projectId,
   onRestart,
@@ -111,21 +110,21 @@ export function DecisionClosedActions({
         </p>
         <p className="mt-1 text-[13px] leading-6 text-[#5f6368]">
           {archiveOk
-            ? "回今日看收件箱，或去行动打卡。下次有判断，还从今日进。"
-            : "可回今日，或去行动跟进。"}
+            ? "回对话继续经营，或去行动打卡。下次有判断，还从对话进。"
+            : "可回对话，或去行动跟进。"}
         </p>
         <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
           <Link
-            href="/dashboard"
+            href={`/projects/${projectId}/agent`}
             prefetch={false}
-            className="inline-flex min-h-12 items-center justify-center rounded-[14px] bg-[#181817] px-5 text-[15px] font-semibold text-white no-underline touch-manipulation"
+            className="inline-flex min-h-12 items-center justify-center rounded-[16px] bg-[#181817] px-5 text-[15px] font-semibold text-white no-underline touch-manipulation"
           >
-            回今日
+            回对话
           </Link>
           <Link
             href={`/projects/${projectId}/decisions`}
             prefetch={false}
-            className="inline-flex min-h-12 items-center justify-center rounded-[14px] border border-[rgba(24,24,23,0.12)] bg-white px-5 text-[14px] font-semibold text-[#181817] no-underline touch-manipulation"
+            className="inline-flex min-h-12 items-center justify-center rounded-[16px] border border-[rgba(24,24,23,0.12)] bg-white px-5 text-[14px] font-semibold text-[#181817] no-underline touch-manipulation"
           >
             去打卡执行
           </Link>
@@ -133,7 +132,7 @@ export function DecisionClosedActions({
             <button
               type="button"
               onClick={onRestart}
-              className="inline-flex min-h-12 items-center justify-center rounded-[14px] px-4 text-[13px] font-medium text-[#6f747b] touch-manipulation"
+              className="inline-flex min-h-12 items-center justify-center rounded-[16px] px-4 text-[13px] font-medium text-[#6f747b] touch-manipulation"
             >
               再开一笔决策
             </button>

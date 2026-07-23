@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { ArrowRight, Sparkles } from "lucide-react";
+import { MKPageHeader } from "@/components/operating/MKPageHeader";
+import { OpsSecondaryLinks } from "@/components/operating/OpsSecondaryLinks";
 import { PageContent } from "@/components/operating/PageContent";
 import {
   PageEmptyState,
@@ -77,23 +79,31 @@ export default function MyRestaurantPage() {
 
   const data = overview.data;
   return (
-    <PageContent width="narrow" inset="shell" className="space-y-8">
-      <header className="space-y-2">
-        <p className="text-[11px] tracking-[0.14em] text-[#66735E]">我的餐厅</p>
-        <h1 className="font-display text-[30px] font-semibold leading-none tracking-[-0.04em] text-[#202124] md:text-[36px]">
-          {data.name}
-        </h1>
-        <p className="text-[14px] leading-6 text-[#6f747b]">
-          {[
-            data.profile.category || null,
-            data.profile.city || null,
-            data.profile.stage,
-            `门店 ${data.profile.storeCount}`,
-          ]
-            .filter(Boolean)
-            .join(" · ")}
-        </p>
-      </header>
+    <PageContent width="console" inset="shell" className="space-y-8">
+      <MKPageHeader
+        eyebrow="我的餐厅"
+        title={data.name}
+        description={[
+          data.profile.category || null,
+          data.profile.city || null,
+          data.profile.stage,
+          `门店 ${data.profile.storeCount}`,
+        ]
+          .filter(Boolean)
+          .join(" · ")}
+        meta={
+          <OpsSecondaryLinks
+            projectId={projectId}
+            links={[
+              { href: `/projects/${projectId}/agent`, label: "回对话" },
+              {
+                href: `/projects/${projectId}/capability`,
+                label: "能力一览",
+              },
+            ]}
+          />
+        }
+      />
 
       <section className="space-y-3 border-y border-[rgba(24,24,23,0.1)] py-6">
         <p className="text-[11px] tracking-[0.12em] text-[#66735E]">认知状态</p>

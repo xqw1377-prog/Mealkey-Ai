@@ -214,12 +214,12 @@ export function BrandConsultingWorkspace({ projectId }: { projectId: string }) {
   }
 
   return (
-    <div className="mpnt-atelier mx-auto max-w-4xl space-y-5 pb-[calc(env(safe-area-inset-bottom)+7.5rem)] pt-4 md:space-y-8 md:pb-20 md:pt-10">
+    <div className="mpnt-atelier mx-auto max-w-4xl space-y-5 px-4 pb-[calc(env(safe-area-inset-bottom)+7.5rem)] pt-[calc(env(safe-area-inset-top)+1rem)] md:space-y-8 md:px-6 md:pb-20 md:pt-10">
       <header className="space-y-3 px-1 md:space-y-4">
         <Link
           href={`/projects/${projectId}/agent`}
           prefetch={false}
-          className="inline-flex min-h-10 items-center gap-1.5 text-[13px] font-medium text-[#5f6b4e] no-underline lg:hidden"
+          className="inline-flex min-h-10 items-center gap-1.5 text-[13px] font-medium text-[#5f6b4e] no-underline"
         >
           <ArrowLeft className="h-4 w-4" />
           回对话

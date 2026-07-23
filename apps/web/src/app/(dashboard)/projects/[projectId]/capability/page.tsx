@@ -5,6 +5,8 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { BrandSwitcher } from "@/components/operating/BrandSwitcher";
 import { CapabilityEightRadar } from "@/components/operating/CapabilityEightRadar";
+import { MKPageHeader } from "@/components/operating/MKPageHeader";
+import { OpsSecondaryLinks } from "@/components/operating/OpsSecondaryLinks";
 import { PageContent } from "@/components/operating/PageContent";
 import { PageErrorState, PageLoadingState } from "@/components/operating/PageState";
 import { useProjectId } from "@/hooks/useProjectId";
@@ -169,30 +171,42 @@ export default function CapabilityHubPage() {
     weakTopic && projectId ? decisionTopicHref(projectId, weakTopic) : null;
 
   return (
-    <PageContent width="narrow" inset="shell">
-      {projectId ? (
-        <div className="mb-5 rounded-[16px] border border-[rgba(24,24,23,0.1)] bg-[#F7F6F2] px-4 py-3 text-[13px] leading-6 text-[#5f6368]">
-          Phase 1 主入口是对话里的餐饮经营 AI，不逛能力目录。
-          <Link
-            href={`/projects/${projectId}/agent`}
-            prefetch={false}
-            className="ml-2 font-medium text-[#181817] underline-offset-2 hover:underline"
-          >
-            回对话 →
-          </Link>
-        </div>
-      ) : null}
-      <header className="space-y-1.5">
-        <p className="text-[11px] font-medium tracking-[0.14em] text-[#66735E]">
-          能力
-        </p>
-        <h1 className="font-display text-[24px] font-semibold leading-[1.15] tracking-[-0.04em] text-[#202124] md:text-[28px]">
-          {name}
-        </h1>
-        <BrandSwitcher projectId={projectId} variant="full" />
-      </header>
+    <PageContent width="console" inset="shell" className="space-y-8">
+      <MKPageHeader
+        eyebrow="能力"
+        title={name}
+        description="按能力查阅与校准；日常判断从对话发起。"
+        meta={
+          <>
+            {projectId ? (
+              <BrandSwitcher projectId={projectId} variant="full" />
+            ) : null}
+            <OpsSecondaryLinks
+              projectId={projectId}
+              links={
+                projectId
+                  ? [
+                      {
+                        href: `/projects/${projectId}/agent`,
+                        label: "回对话",
+                      },
+                      {
+                        href: "/dashboard?radar=1",
+                        label: "经营动态",
+                      },
+                      {
+                        href: `/projects/${projectId}/decision-room`,
+                        label: "决策室",
+                      },
+                    ]
+                  : undefined
+              }
+            />
+          </>
+        }
+      />
 
-      <section className="mt-4 border-y border-[rgba(24,24,23,0.08)] py-2.5">
+      <section className="border-y border-[rgba(24,24,23,0.08)] py-3">
         <p className="text-[11px] font-medium tracking-[0.12em] text-[#66735E]">
           可信度
         </p>

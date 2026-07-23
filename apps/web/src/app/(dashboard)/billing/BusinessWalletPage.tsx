@@ -7,6 +7,7 @@ import { ArrowRight, Check, CreditCard, Sparkles } from "lucide-react";
 import { WechatNativePayPanel } from "@/components/billing/WechatNativePayPanel";
 import { InAppBrowserBanner } from "@/components/InAppBrowserBanner";
 import { MKPageHeader } from "@/components/operating";
+import { OpsSecondaryLinks } from "@/components/operating/OpsSecondaryLinks";
 import { PageContent } from "@/components/operating/PageContent";
 import {
   RECHARGE_PACKS,
@@ -220,7 +221,7 @@ export default function BusinessWalletPage() {
   ];
 
   return (
-    <PageContent width="narrow" inset="shell" className="space-y-6 pb-4">
+    <PageContent width="console" inset="shell" className="space-y-6 pb-4">
       <MKPageHeader
         eyebrow="经营点"
         title="充值与余额"
@@ -229,6 +230,14 @@ export default function BusinessWalletPage() {
           <div className="inline-flex min-h-7 items-center rounded-[12px] border border-[rgba(24,24,23,0.08)] bg-[#FBFAF7] px-3 text-[13px] text-[#6f747b]">
             {mode === "sandbox" ? "演示" : "正式"}
           </div>
+        }
+        meta={
+          <OpsSecondaryLinks
+            links={[
+              { href: "/profile", label: "我的" },
+              { href: "/dashboard", label: "回经营台" },
+            ]}
+          />
         }
       />
 

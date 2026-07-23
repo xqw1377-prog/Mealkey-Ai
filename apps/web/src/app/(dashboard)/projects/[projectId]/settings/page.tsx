@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Plus } from "lucide-react";
 import { BrandSwitcher } from "@/components/operating/BrandSwitcher";
+import { MKPageHeader } from "@/components/operating/MKPageHeader";
+import { OpsSecondaryLinks } from "@/components/operating/OpsSecondaryLinks";
 import { PageContent } from "@/components/operating/PageContent";
 import { PageErrorState, PageLoadingState } from "@/components/operating/PageState";
 import { refreshBrandAcrossApp } from "@/lib/invalidate-brand-queries";
@@ -96,38 +98,46 @@ export default function ProjectSettingsPage() {
   ];
 
   return (
-    <PageContent width="narrow" inset="shell" className="space-y-8">
-      <header className="space-y-3">
-        <p className="text-[12px] tracking-[0.14em] text-[#66735E]">企业设置</p>
-        <h1 className="font-display text-[32px] font-semibold leading-[1.15] tracking-[-0.04em] text-[#202124]">
-          品牌设置
-        </h1>
-        <p className="text-[15px] leading-7 text-[#6f747b]">
-          改这里之后，会议、行动、能力都按当前品牌走。
-        </p>
-        <BrandSwitcher
-          projectId={projectId}
-          variant="full"
-          dirtyGuard={editing}
-          onDiscardDirty={() => {
-            setEditing(false);
-            if (data.activeBrand) {
-              setDraft({
-                id: data.activeBrand.id,
-                brandName: data.activeBrand.brandName || "",
-                category: data.activeBrand.category || "",
-                mentalPosition: data.activeBrand.mentalPosition || "",
-                targetCustomers: data.activeBrand.targetCustomers || "",
-                priceRange: data.activeBrand.priceRange || "",
-                differentiation: data.activeBrand.differentiation || "",
-                oneLiner: data.activeBrand.oneLiner || "",
-              });
-            } else {
-              setDraft(emptyDraft());
-            }
-          }}
-        />
-      </header>
+    <PageContent width="console" inset="shell" className="space-y-8">
+      <MKPageHeader
+        eyebrow="企业设置"
+        title="品牌设置"
+        description="改这里之后，会议、行动、能力都按当前品牌走。"
+        meta={
+          <>
+            <BrandSwitcher
+              projectId={projectId}
+              variant="full"
+              dirtyGuard={editing}
+              onDiscardDirty={() => {
+                setEditing(false);
+                if (data.activeBrand) {
+                  setDraft({
+                    id: data.activeBrand.id,
+                    brandName: data.activeBrand.brandName || "",
+                    category: data.activeBrand.category || "",
+                    mentalPosition: data.activeBrand.mentalPosition || "",
+                    targetCustomers: data.activeBrand.targetCustomers || "",
+                    priceRange: data.activeBrand.priceRange || "",
+                    differentiation: data.activeBrand.differentiation || "",
+                    oneLiner: data.activeBrand.oneLiner || "",
+                  });
+                } else {
+                  setDraft(emptyDraft());
+                }
+              }}
+            />
+            <OpsSecondaryLinks
+              projectId={projectId}
+              links={[
+                { href: `/projects/${projectId}/agent`, label: "回对话" },
+                { href: `/projects/${projectId}/capability`, label: "能力一览" },
+                { href: "/profile", label: "我的" },
+              ]}
+            />
+          </>
+        }
+      />
 
       <section className="space-y-3 border-y border-[rgba(24,24,23,0.08)] py-6">
         <div className="flex items-center justify-between gap-3">

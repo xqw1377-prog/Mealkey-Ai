@@ -15,6 +15,7 @@ export {
   mkPageHeaderPrimaryCtaClass,
   mkPageHeaderSecondaryCtaClass,
 } from "./MKPageHeader";
+export { OpsSecondaryLinks } from "./OpsSecondaryLinks";
 export { MKStatusHero } from "./MKStatusHero";
 export { MKDecisionTimeline } from "./MKDecisionTimeline";
 export { MKGrowthMap } from "./MKGrowthMap";

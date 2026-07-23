@@ -67,7 +67,7 @@ export function VoiceInputRow({
 
   const sharedClass =
     inputClassName ||
-    "min-h-12 w-full border border-[rgba(20,20,19,0.12)] bg-white px-3 text-[15px] outline-none focus:border-[#141413]";
+    "min-h-12 w-full bg-transparent px-3 text-[15px] text-[#181817] outline-none placeholder:text-[#9a968e]";
 
   return (
     <div className={`space-y-2 ${className}`}>
@@ -78,9 +78,9 @@ export function VoiceInputRow({
         tip={tip}
       />
       <div
-        className={`flex items-end gap-2 rounded-[16px] p-1 transition-shadow ${
+        className={`flex items-end gap-1.5 rounded-[20px] border border-[rgba(24,24,23,0.12)] bg-white px-1.5 py-1.5 shadow-[0_8px_22px_rgba(24,24,23,0.06)] transition-shadow ${
           fieldRecording
-            ? "bg-[rgba(7,193,96,0.06)] shadow-[0_0_0_1px_rgba(7,193,96,0.35)]"
+            ? "border-[rgba(7,193,96,0.45)] bg-[rgba(7,193,96,0.06)]"
             : ""
         }`}
       >
@@ -93,11 +93,7 @@ export function VoiceInputRow({
               fieldRecording ? "正在听你说…" : placeholder
             }
             onChange={(e) => onChange(e.target.value)}
-            className={`${sharedClass} resize-none rounded-[12px] py-3 ${
-              fieldRecording
-                ? "border-[#07C160] ring-2 ring-[rgba(7,193,96,0.18)]"
-                : ""
-            }`}
+            className={`${sharedClass} max-h-28 resize-none py-3`}
           />
         ) : (
           <input
@@ -107,11 +103,7 @@ export function VoiceInputRow({
               fieldRecording ? "正在听你说…" : placeholder
             }
             onChange={(e) => onChange(e.target.value)}
-            className={`${sharedClass} rounded-[12px] ${
-              fieldRecording
-                ? "border-[#07C160] ring-2 ring-[rgba(7,193,96,0.18)]"
-                : ""
-            }`}
+            className={sharedClass}
             onKeyDown={(e) => {
               if (e.key === "Enter" && onSubmit) {
                 e.preventDefault();
@@ -136,13 +128,13 @@ export function VoiceInputRow({
           type="button"
           disabled={disabled || value.trim().length < 1}
           onClick={onSubmit}
-          className="inline-flex min-h-12 w-full items-center justify-center rounded-[14px] bg-[#141413] px-4 text-[14px] font-semibold text-white disabled:opacity-40 sm:hidden"
+          className="inline-flex min-h-12 w-full items-center justify-center rounded-[16px] bg-[#181817] px-4 text-[14px] font-semibold text-white disabled:opacity-40 sm:hidden"
         >
           {submitLabel}
         </button>
       ) : (
-        <p className="text-[11px] leading-4 text-[#5c6168] lg:hidden">
-          按住黑色麦克风说话，松手写入；也可直接打字。
+        <p className="text-[11px] leading-4 text-[#9a968e] lg:hidden">
+          按住说话松手写入；也可点按/空格切换，或直接打字
         </p>
       )}
     </div>

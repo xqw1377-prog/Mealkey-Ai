@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { ArrowRight, Sparkles } from "lucide-react";
+import { MKPageHeader } from "@/components/operating/MKPageHeader";
+import { OpsSecondaryLinks } from "@/components/operating/OpsSecondaryLinks";
 import { PageContent } from "@/components/operating/PageContent";
 import {
   PageEmptyState,
@@ -97,22 +99,38 @@ export default function ProjectDetailPage() {
   ];
 
   return (
-    <PageContent width="narrow" inset="shell" className="space-y-8">
-      <header className="space-y-2">
-        <p className="text-[11px] tracking-[0.14em] text-[#66735E]">企业</p>
-        <h1 className="font-display text-[30px] font-semibold leading-none tracking-[-0.04em] text-[#202124] md:text-[36px]">
-          {project.name}
-        </h1>
-        <p className="text-[14px] leading-6 text-[#6f747b]">
-          {[
-            project.category,
-            project.city,
-            overview.currentStageLabel || project.stage,
-          ]
-            .filter(Boolean)
-            .join(" · ")}
-        </p>
-      </header>
+    <PageContent width="console" inset="shell" className="space-y-8">
+      <MKPageHeader
+        eyebrow="企业"
+        title={project.name}
+        description={[
+          project.category,
+          project.city,
+          overview.currentStageLabel || project.stage,
+        ]
+          .filter(Boolean)
+          .join(" · ")}
+        meta={
+          <OpsSecondaryLinks
+            projectId={project.id}
+            links={[
+              { href: `/projects/${project.id}/agent`, label: "回对话" },
+              {
+                href: `/projects/${project.id}/decision-room`,
+                label: "决策室",
+              },
+              {
+                href: `/projects/${project.id}/capability`,
+                label: "能力一览",
+              },
+              {
+                href: `/projects/${project.id}/settings`,
+                label: "企业设置",
+              },
+            ]}
+          />
+        }
+      />
 
       <section className="space-y-4 border-y border-[rgba(24,24,23,0.1)] py-6">
         <p className="text-[11px] tracking-[0.12em] text-[#66735E]">现在这样</p>

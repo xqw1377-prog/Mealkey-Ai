@@ -735,61 +735,64 @@ function AgentPageInner({ projectId }: { projectId: string }) {
       {/* 主列：ChatGPT Web = 轻顶栏 + 居中消息列 + 底 Composer */}
       <div className="relative flex min-w-0 flex-1 flex-col bg-[#F7F6F2] lg:bg-white">
         {(isLoading || isFetching) && !data && !syncGaveUp ? (
-          <div className="flex shrink-0 items-center justify-between gap-2 bg-[#F1F3EC] px-3 py-2 text-[12px] text-[#5f6368]">
+          <div className="flex shrink-0 items-center justify-between gap-2 border-b border-[rgba(102,115,94,0.18)] bg-[#F1F3EC] px-3 py-2 text-[12px] text-[#5f6368]">
             <span>正在同步经营上下文…</span>
-            <a href="/clear" className="underline">
+            <a href="/clear" className="font-medium underline underline-offset-2">
               打不开？清理缓存
             </a>
           </div>
         ) : null}
         {syncGaveUp && !data ? (
-          <div className="flex shrink-0 items-center justify-between gap-2 bg-[#FCE8E6] px-3 py-2 text-[12px] text-[#8A4F31]">
-            <span>同步较慢，可先点下方场景试用；或</span>
+          <div className="flex shrink-0 items-center justify-between gap-2 border-b border-[rgba(180,124,92,0.28)] bg-[#FFF6F0] px-3 py-2 text-[12px] text-[#8A4F31]">
+            <span>同步较慢，可先点下方场景试用</span>
             <button
               type="button"
-              className="underline"
+              className="font-medium underline underline-offset-2"
               onClick={() => {
                 setSyncGaveUp(false);
                 void refetch();
               }}
             >
-              重试同步
+              重试
             </button>
           </div>
         ) : null}
-        <header className="flex shrink-0 items-center justify-between gap-2 px-2 pb-1.5 pt-[max(0.4rem,env(safe-area-inset-top))] lg:border-b lg:border-[rgba(0,0,0,0.06)] lg:px-4 lg:py-2">
+        <header className="flex shrink-0 items-center justify-between gap-1 border-b border-[rgba(24,24,23,0.06)] px-2 pb-1.5 pt-[max(0.4rem,env(safe-area-inset-top))] lg:px-4 lg:py-2">
           <button
             type="button"
             onClick={() => setSidebarOpen((v) => !v)}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-[#202124] hover:bg-black/[0.04]"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-[12px] text-[#202124] hover:bg-black/[0.04]"
             aria-label={sidebarOpen ? "收起菜单" : "打开菜单"}
           >
             <Menu className="h-5 w-5" />
           </button>
 
           <div className="min-w-0 flex-1 text-center lg:text-left">
-            <button
-              type="button"
-              className="mx-auto inline-flex max-w-full items-center gap-1.5 rounded-lg px-2 py-1 hover:bg-black/[0.04] lg:mx-0"
-              aria-label="当前助手"
-            >
+            <div className="mx-auto inline-flex max-w-full flex-col items-center lg:mx-0 lg:items-start">
               <span className="truncate font-display text-[15px] font-semibold tracking-[-0.03em] text-[#181817]">
                 MealKey
+                <span className="ml-1.5 hidden font-sans text-[13px] font-normal text-[#8a8680] sm:inline">
+                  · {headerTitle === "MealKey" ? "餐饮经营 AI" : headerTitle}
+                </span>
               </span>
-              <span className="hidden truncate text-[13px] text-[#8a8680] sm:inline">
-                · {headerTitle === "MealKey" ? "餐饮经营 AI" : headerTitle}
-              </span>
-            </button>
-            <p className="truncate text-[11px] text-[#8a8680] lg:hidden">
-              {contextLine || "餐饮经营 AI"}
-            </p>
+              <p className="truncate text-[11px] text-[#8a8680] lg:hidden">
+                {contextLine || "餐饮经营 AI"}
+              </p>
+            </div>
           </div>
 
+          <Link
+            href={`/projects/${projectId}/decision-room`}
+            prefetch={false}
+            className="hidden h-11 items-center rounded-[12px] px-2.5 text-[13px] font-medium text-[#66735E] no-underline hover:bg-black/[0.04] sm:inline-flex"
+          >
+            决策室
+          </Link>
           <button
             type="button"
             disabled={busy}
             onClick={onNewChat}
-            className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg px-2 text-[#202124] hover:bg-black/[0.04] disabled:opacity-40"
+            className="inline-flex h-11 items-center justify-center gap-1.5 rounded-[12px] px-2 text-[#202124] hover:bg-black/[0.04] disabled:opacity-40"
             aria-label="新对话"
             title="新对话"
           >
@@ -826,7 +829,7 @@ function AgentPageInner({ projectId }: { projectId: string }) {
                 有经营问题直接说；多轮追问，越聊越懂你的店
               </p>
               {knownLine ? (
-                <p className="mt-3 max-w-[22em] rounded-full bg-[rgba(102,115,94,0.1)] px-3 py-1.5 text-[12px] leading-5 text-[#4a5344]">
+                <p className="mt-3 max-w-[22em] border-y border-[rgba(24,24,23,0.08)] py-2 text-[12px] leading-5 text-[#4a5344]">
                   已了解：{knownLine}
                 </p>
               ) : null}
@@ -836,7 +839,7 @@ function AgentPageInner({ projectId }: { projectId: string }) {
                 </p>
               ) : (
                 <p className="mt-2 max-w-[24em] text-[13px] leading-6 text-[#5c6168]">
-                  下方进专业能力，或按住底部麦克风开口。
+                  按住底部麦克风开口，或点场景进入专业能力。
                 </p>
               )}
               <button
@@ -847,18 +850,44 @@ function AgentPageInner({ projectId }: { projectId: string }) {
                   focusComposer();
                   window.setTimeout(() => setFileHint(null), 4000);
                 }}
-                className="mt-7 inline-flex min-h-[3.25rem] w-full max-w-md items-center justify-center gap-2 rounded-[16px] bg-[#181817] px-5 text-[15px] font-semibold text-white shadow-[0_10px_28px_rgba(24,24,23,0.16)] transition active:scale-[0.98] disabled:opacity-50"
+                className="mt-7 inline-flex min-h-12 w-full max-w-md items-center justify-center gap-2 rounded-[16px] bg-[#181817] px-5 text-[15px] font-semibold text-white shadow-[0_8px_22px_rgba(24,24,23,0.14)] transition active:scale-[0.98] disabled:opacity-50"
               >
                 <MessageCircle className="h-4 w-4" />
                 开始聊经营
               </button>
+              <nav
+                aria-label="相关入口"
+                className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-[13px]"
+              >
+                <Link
+                  href={`/projects/${projectId}/decision-room`}
+                  prefetch={false}
+                  className="font-medium text-[#66735E] no-underline underline-offset-2 hover:underline"
+                >
+                  决策室
+                </Link>
+                <Link
+                  href="/dashboard?radar=1"
+                  prefetch={false}
+                  className="font-medium text-[#66735E] no-underline underline-offset-2 hover:underline"
+                >
+                  经营动态
+                </Link>
+                <Link
+                  href={`/projects/${projectId}/capability`}
+                  prefetch={false}
+                  className="font-medium text-[#66735E] no-underline underline-offset-2 hover:underline"
+                >
+                  能力一览
+                </Link>
+              </nav>
               <div className="mt-5 grid w-full max-w-lg grid-cols-2 gap-2 sm:grid-cols-3">
                 {scenarioStarts.map((s) => (
                   <Link
                     key={s.label}
                     href={s.href}
                     prefetch={false}
-                    className="inline-flex min-h-11 items-center justify-center rounded-[14px] border border-[rgba(24,24,23,0.1)] bg-white px-3 text-[13px] font-medium text-[#202124] no-underline transition active:scale-[0.98] hover:border-[rgba(24,24,23,0.2)] hover:bg-[#FBFAF7]"
+                    className="inline-flex min-h-11 items-center justify-center rounded-[16px] border border-[rgba(24,24,23,0.12)] bg-white px-3 text-[13px] font-medium text-[#181817] no-underline transition active:scale-[0.98] hover:bg-[#FBFAF7]"
                   >
                     {s.label}
                   </Link>
@@ -924,7 +953,7 @@ function AgentPageInner({ projectId }: { projectId: string }) {
                       signalId: primary?.id,
                     })
                   }
-                  className="mt-8 max-w-[min(100%,20rem)] rounded-full border border-[rgba(24,24,23,0.1)] bg-white px-4 py-2.5 text-left text-[13px] leading-5 text-[#3a3a38] disabled:opacity-50"
+                  className="mt-8 max-w-[min(100%,20rem)] rounded-[16px] border border-[rgba(24,24,23,0.12)] bg-white px-4 py-2.5 text-left text-[13px] leading-5 text-[#3a3a38] disabled:opacity-50"
                 >
                   <span className="text-[#8a8680]">经营动态 · </span>
                   {aiSuggestion}
@@ -1324,8 +1353,8 @@ function AgentPageInner({ projectId }: { projectId: string }) {
         <footer className="shrink-0 bg-[#F7F6F2] px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2 lg:bg-white lg:px-6 lg:pb-6 lg:pt-3">
           <div className="mx-auto max-w-3xl">
           {pendingFile ? (
-            <div className="mb-2 flex items-center justify-between rounded-full bg-white px-3 py-2 text-[13px] lg:border lg:border-[rgba(0,0,0,0.06)]">
-              <span className="truncate">📎 {pendingFile.label}</span>
+            <div className="mb-2 flex items-center justify-between rounded-[16px] border border-[rgba(24,24,23,0.08)] bg-white px-3 py-2 text-[13px]">
+              <span className="truncate">{pendingFile.label}</span>
               <button
                 type="button"
                 onClick={() => setPendingFile(null)}
@@ -1363,11 +1392,11 @@ function AgentPageInner({ projectId }: { projectId: string }) {
           />
           {!recording && speechSupported ? (
             <p className="mb-1 px-1 text-[11px] text-[#9a968e] lg:hidden">
-              手机主路径：按住说话 → 松手自动继续；有字时仍可接着说
+              按住说话松手继续；也可点按或按空格切换录音
             </p>
           ) : null}
 
-          <div className="flex items-end gap-1.5 rounded-[28px] border border-[rgba(24,24,23,0.1)] bg-white px-1.5 py-1.5 shadow-[0_8px_28px_rgba(24,24,23,0.06)] lg:rounded-[26px] lg:shadow-[0_0_0_1px_rgba(0,0,0,0.06),0_8px_24px_rgba(0,0,0,0.04)]">
+          <div className="flex items-end gap-1.5 rounded-[20px] border border-[rgba(24,24,23,0.12)] bg-white px-1.5 py-1.5 shadow-[0_8px_22px_rgba(24,24,23,0.06)] lg:rounded-[18px]">
             <input
               ref={fileRef}
               type="file"

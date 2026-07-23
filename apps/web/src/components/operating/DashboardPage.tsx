@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { DecisionCenterMorning } from "@/components/operating/DecisionCenterMorning";
+import { MKPageHeader } from "@/components/operating/MKPageHeader";
+import { OpsSecondaryLinks } from "@/components/operating/OpsSecondaryLinks";
 import { PageContent } from "@/components/operating/PageContent";
 import { greetingByHour } from "@/lib/time-greeting";
 import { trpc } from "@/lib/trpc";
@@ -186,24 +188,21 @@ function CouncilPendingBanner({
 /** 无企业：引导首次/补填基础信息（不旁路空壳建店） */
 function EmptyWorldGate({ greeting }: { greeting: string }) {
   return (
-    <PageContent width="narrow" inset="shell" className="space-y-5">
-      <p className="text-[11px] font-medium tracking-[0.16em] text-[#66735E]">
-        餐启 · 首次登录
-      </p>
-      <h1 className="font-display text-[34px] font-semibold leading-[1.12] tracking-[-0.045em] text-[#202124]">
-        {greeting}
-      </h1>
-      <p className="max-w-md text-[15px] leading-7 text-[#6f747b]">
-        先花一分钟告诉我你的店和当下最想解决的事，再进入对话。
-      </p>
-      <Link
-        href="/onboarding?force=1"
-        prefetch={false}
-        className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[16px] bg-[#181817] px-5 text-[15px] font-semibold text-white no-underline touch-manipulation active:scale-[0.98]"
+    <PageContent width="console" inset="shell" className="space-y-8">
+      <MKPageHeader
+        eyebrow="首次登录"
+        title={greeting}
+        description="先花一分钟告诉我你的店和当下最想解决的事，再进入对话。"
       >
-        填写基础信息
-        <ArrowRight className="h-4 w-4" />
-      </Link>
+        <Link
+          href="/onboarding?force=1"
+          prefetch={false}
+          className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[16px] bg-[#181817] px-5 text-[15px] font-semibold text-white no-underline touch-manipulation active:scale-[0.98]"
+        >
+          填写基础信息
+          <ArrowRight className="h-4 w-4" />
+        </Link>
+      </MKPageHeader>
     </PageContent>
   );
 }
@@ -231,8 +230,30 @@ export function DashboardPage({
   );
 
   return (
-    <PageContent width="narrow" inset="shell" className="relative pb-8">
+    <PageContent width="console" inset="shell" className="relative space-y-6 pb-8">
       <div className="pointer-events-none absolute inset-x-0 -top-6 h-56 bg-[radial-gradient(ellipse_at_top,_rgba(102,115,94,0.09),_transparent_68%)]" />
+
+      <MKPageHeader
+        eyebrow="经营动态"
+        title={greeting}
+        description={`${home.todayLabel} · ${currentProject.name}`}
+        meta={
+          <OpsSecondaryLinks
+            projectId={currentProject.id}
+            links={[
+              { href: `/projects/${currentProject.id}/agent`, label: "回对话" },
+              {
+                href: `/projects/${currentProject.id}/decision-room`,
+                label: "决策室",
+              },
+              {
+                href: `/projects/${currentProject.id}/capability`,
+                label: "能力一览",
+              },
+            ]}
+          />
+        }
+      />
 
       {home.pendingCouncilAdjudication ? (
         <CouncilPendingBanner

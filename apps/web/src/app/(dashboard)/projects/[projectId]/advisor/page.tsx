@@ -1689,8 +1689,14 @@ function AdvisorPageContent({
           eyebrow="会议"
           title="会议暂时打不开"
           description="上下文还在同步，稍后再试。"
-          primaryAction={{ href: "/dashboard", label: "回今日" }}
-          secondaryAction={{ href: `/projects/${params.projectId}/capability`, label: "能力" }}
+          primaryAction={{
+            href: `/projects/${params.projectId}/agent`,
+            label: "回对话",
+          }}
+          secondaryAction={{
+            href: `/projects/${params.projectId}/decision-room`,
+            label: "决策室",
+          }}
         />
       </div>
     );
@@ -1702,8 +1708,11 @@ function AdvisorPageContent({
         <PageEmptyState
           eyebrow="会议"
           title="还进不了这场会"
-          description="先回今日，再从会议入口进入。"
-          primaryAction={{ href: "/dashboard", label: "回今日" }}
+          description="先回对话，再从决策室或专业能力进入。"
+          primaryAction={{
+            href: `/projects/${params.projectId}/agent`,
+            label: "回对话",
+          }}
           secondaryAction={{ href: "/projects", label: "企业" }}
         />
       </div>
@@ -2267,21 +2276,30 @@ function AdvisorPageContent({
       />
       <div className="flex shrink-0 items-center gap-2 border-b border-[rgba(24,24,23,0.08)] bg-[rgba(250,249,246,0.98)] px-3 py-2 pt-[calc(env(safe-area-inset-top)+0.5rem)] md:px-4">
         <Link
-          href="/dashboard"
+          href={`/projects/${params.projectId}/agent`}
           prefetch={false}
           className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-[12px] border border-[rgba(24,24,23,0.12)] bg-white text-[#6f747b] no-underline touch-manipulation"
-          aria-label="退出会议"
+          aria-label="退出会议，回到对话"
         >
           <ArrowLeft className="h-4 w-4" />
         </Link>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[15px] font-medium text-[#202124]">会议</p>
-          <p className="truncate text-[11px] tracking-[0.08em] text-[#6f747b]">退出回到今日</p>
+          <p className="truncate text-[15px] font-medium text-[#202124]">顾问会议</p>
+          <p className="truncate text-[11px] tracking-[0.08em] text-[#6f747b]">
+            拍板请用决策室 · 回对话继续
+          </p>
         </div>
         <Link
-          href="/dashboard"
+          href={`/projects/${params.projectId}/decision-room`}
           prefetch={false}
           className="inline-flex min-h-11 items-center rounded-[12px] px-3 text-[13px] font-medium text-[#66735E] no-underline touch-manipulation"
+        >
+          决策室
+        </Link>
+        <Link
+          href={`/projects/${params.projectId}/agent`}
+          prefetch={false}
+          className="inline-flex min-h-11 items-center rounded-[12px] px-3 text-[13px] font-medium text-[#6f747b] no-underline touch-manipulation"
         >
           退出
         </Link>

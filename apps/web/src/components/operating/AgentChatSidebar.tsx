@@ -278,7 +278,7 @@ export function AgentChatSidebar({
               onNewChat();
               onClose();
             }}
-            className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-full bg-[#0d0d0d] px-4 text-[14px] font-semibold text-white disabled:opacity-40"
+            className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-[16px] bg-[#181817] px-4 text-[14px] font-semibold text-white disabled:opacity-40"
           >
             <SquarePen className="h-4 w-4" />
             新对话
@@ -287,7 +287,7 @@ export function AgentChatSidebar({
             href="/profile"
             prefetch={false}
             onClick={onClose}
-            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-black/[0.08] no-underline"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-[16px] border border-black/[0.08] no-underline"
             aria-label="设置"
           >
             <Settings className="h-5 w-5" />

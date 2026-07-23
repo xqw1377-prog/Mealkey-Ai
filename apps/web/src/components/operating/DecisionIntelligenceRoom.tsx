@@ -142,7 +142,7 @@ export function DecisionIntelligenceRoom({ projectId }: { projectId: string }) {
     const detail =
       error ||
       query.error?.message ||
-      "专项决策暂时打不开，可重试或回今日。";
+      "专项决策暂时打不开，可重试或回对话。";
     return (
       <div className="space-y-5 pb-2 pt-6 md:pt-8">
         <PageErrorState
@@ -153,7 +153,10 @@ export function DecisionIntelligenceRoom({ projectId }: { projectId: string }) {
             href: `/projects/${projectId}/decision-case?retry=${Date.now()}`,
             label: "重试打开",
           }}
-          secondaryAction={{ href: "/dashboard", label: "回今日" }}
+          secondaryAction={{
+            href: `/projects/${projectId}/agent`,
+            label: "回对话",
+          }}
         />
       </div>
     );
@@ -215,15 +218,15 @@ export function DecisionIntelligenceRoom({ projectId }: { projectId: string }) {
                 : c.status;
 
   return (
-    <PageContent width="default" inset="shell" className="space-y-8">
+    <PageContent width="console" inset="shell" className="space-y-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Link
-          href="/dashboard"
+          href={`/projects/${projectId}/agent`}
           prefetch={false}
-          className="inline-flex min-h-11 items-center gap-1 border border-[rgba(24,24,23,0.08)] bg-white px-3 text-[13px] font-medium text-[#66735E] no-underline touch-manipulation"
+          className="inline-flex min-h-11 items-center gap-1 rounded-[12px] border border-[rgba(24,24,23,0.12)] bg-white px-3 text-[13px] font-medium text-[#66735E] no-underline touch-manipulation"
         >
           <ArrowLeft className="h-4 w-4" />
-          回今日
+          回对话
         </Link>
         <button
           type="button"
@@ -602,11 +605,11 @@ export function DecisionIntelligenceRoom({ projectId }: { projectId: string }) {
             </button>
             <div className="flex flex-wrap gap-2">
               <Link
-                href="/dashboard"
+                href={`/projects/${projectId}/agent`}
                 prefetch={false}
                 className={secondaryBtnClass}
               >
-                回今日
+                回对话
               </Link>
               <Link
                 href={`/projects/${projectId}/decisions`}

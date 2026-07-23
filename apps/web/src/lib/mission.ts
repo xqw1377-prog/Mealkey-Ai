@@ -3,7 +3,6 @@
  */
 import { detectDepartmentFromTopic, type MeetingDepartment } from "./meeting";
 import { getExpertsForDepartment } from "./meeting-deliberation";
-import { buildMeetingHref } from "./meeting";
 
 export type MissionUnderstanding = {
   rawGoal: string;
@@ -97,9 +96,8 @@ export function understandMissionGoal(rawGoal: string): MissionUnderstanding {
     department: multiDept ? "general" : department,
     meetingTitle,
     meetingHref: (projectId: string) => {
-      return buildMeetingHref(projectId, topic, multiDept ? "general" : department, {
-        autoStart: true,
-      });
+      // Phase 1 拍板入口收束到决策室（不再进顾问 SSE）
+      return `/projects/${projectId}/decision-room?topic=${encodeURIComponent(topic)}`;
     },
   };
 }

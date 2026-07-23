@@ -4,6 +4,8 @@ import Link from "next/link";
 import { BrandSwitcher } from "@/components/operating/BrandSwitcher";
 import { BusinessPointsStrip } from "@/components/operating/BusinessPointsStrip";
 import { IntelligenceProfilePanel } from "@/components/operating/IntelligenceProfilePanel";
+import { MKPageHeader } from "@/components/operating/MKPageHeader";
+import { OpsSecondaryLinks } from "@/components/operating/OpsSecondaryLinks";
 import { PageContent } from "@/components/operating/PageContent";
 import { PageErrorState, PageLoadingState } from "@/components/operating/PageState";
 import { useBusinessWallet } from "@/hooks/useBusinessWallet";
@@ -101,17 +103,20 @@ export default function ProfilePage() {
   const agentHref = projectId ? `/projects/${projectId}/agent` : "/dashboard";
 
   return (
-    <PageContent width="default" inset="shell" className="space-y-8">
-      <header className="space-y-2">
-        <p className="text-[11px] tracking-[0.14em] text-[#66735E]">我的</p>
-        <h1 className="font-display text-[28px] font-semibold leading-tight tracking-[-0.04em] text-[#202124] md:text-[34px]">
-          {enterpriseName}
-        </h1>
-        <p className="text-[14px] leading-6 text-[#6f747b]">
-          账户与经营习惯。目标与方案请回对话。
-        </p>
-        {projectId ? <BrandSwitcher projectId={projectId} variant="full" /> : null}
-      </header>
+    <PageContent width="console" inset="shell" className="space-y-8">
+      <MKPageHeader
+        eyebrow="我的"
+        title={enterpriseName}
+        description="账户与经营习惯。目标与方案请回对话。"
+        meta={
+          <>
+            {projectId ? (
+              <BrandSwitcher projectId={projectId} variant="full" />
+            ) : null}
+            <OpsSecondaryLinks projectId={projectId} />
+          </>
+        }
+      />
 
       {!walletLoading ? (
         <section className="space-y-2">

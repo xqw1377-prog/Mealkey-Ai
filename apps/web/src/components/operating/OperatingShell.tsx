@@ -58,6 +58,17 @@ export function OperatingShell({ children }: OperatingShellProps) {
     /^\/projects\/[^/]+\/advisor$/.test(pathname) ||
     /^\/projects\/[^/]+\/decision-room$/.test(pathname) ||
     /^\/projects\/[^/]+\/decision-case$/.test(pathname);
+  /** 桌面操作台：放宽版心；不碰 Agent 窄栏对话 */
+  const isOpsConsole =
+    isMeetingFullscreen ||
+    /^\/projects\/[^/]+\/(capability|settings|decisions|score|report|knowledge|restaurant|runtime|mission)$/.test(
+      pathname,
+    ) ||
+    /^\/projects\/[^/]+$/.test(pathname) ||
+    pathname === "/projects" ||
+    pathname === "/profile" ||
+    pathname === "/billing" ||
+    pathname === "/dashboard";
   // 专业 Agent 席：移动端藏 BottomNav，避免挡住按住说话底区
   const isConsultingVoiceSurface =
     /^\/projects\/[^/]+\/(positioning|market|business|equity|restaurant-intelligence)$/.test(
@@ -65,7 +76,9 @@ export function OperatingShell({ children }: OperatingShellProps) {
     );
   const hideBottomNav =
     isMeetingFullscreen || isAgentSurface || isConsultingVoiceSurface;
-  const hideShellHeader = isMeetingFullscreen || isAgentSurface;
+  /** 对话面统一：Agent / 决策沉浸 / 咨询席均自管顶栏，避免双顶栏 */
+  const hideShellHeader =
+    isMeetingFullscreen || isAgentSurface || isConsultingVoiceSurface;
   const [platformAccess, setPlatformAccess] = useState<PlatformAccessState>({
     loading: isPlatformSurface,
     isAdmin: false,
@@ -170,7 +183,7 @@ export function OperatingShell({ children }: OperatingShellProps) {
                 href="/dashboard"
                 className="inline-flex min-h-9 items-center rounded-[12px] border border-[rgba(24,24,23,0.08)] bg-white px-3 text-[13px] font-medium text-[#5f6368]"
               >
-                回今日
+                回经营台
               </a>
             </div>
           </header>
@@ -194,8 +207,10 @@ export function OperatingShell({ children }: OperatingShellProps) {
         className={`relative mx-auto ${
           isAgentSurface
             ? "max-w-none px-0 pb-0 pt-0"
-            : isMeetingFullscreen
-              ? "max-w-4xl px-4 pb-4 pt-0 md:max-w-5xl md:px-6 md:pb-10 md:pt-6"
+            : isOpsConsole
+              ? isMeetingFullscreen
+                ? "max-w-6xl px-4 pb-4 pt-0 md:max-w-7xl md:px-6 md:pb-10 md:pt-6"
+                : "max-w-6xl px-4 pb-[calc(env(safe-area-inset-bottom)+5.75rem)] pt-0 md:max-w-7xl md:px-6 md:pb-14 md:pt-6"
               : "max-w-4xl px-4 pb-[calc(env(safe-area-inset-bottom)+5.75rem)] pt-0 md:max-w-5xl md:px-6 md:pb-14 md:pt-6"
         }`}
       >

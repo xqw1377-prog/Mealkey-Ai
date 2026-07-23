@@ -4,7 +4,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
+import { MKPageHeader } from "@/components/operating/MKPageHeader";
+import { OpsSecondaryLinks } from "@/components/operating/OpsSecondaryLinks";
 import { PageContent } from "@/components/operating/PageContent";
+import { PageEmptyState } from "@/components/operating/PageState";
 
 type MyAgent = {
   id: string;
@@ -59,32 +62,38 @@ export default function MyAgentsPage() {
   }
 
   return (
-    <PageContent width="narrow" inset="shell">
-      <header className="mb-8">
-        <p className="text-[12px] font-semibold tracking-[0.12em] text-[#66735E]">MY AGENTS</p>
-        <h1 className="mt-2 font-display text-[28px] font-semibold tracking-[-0.03em] text-[#171717]">
-          我的 Agent
-        </h1>
-        <p className="mt-2 text-[14px] leading-6 text-[#5f6368]">
-          安装 = 授权进经营台。停用后 Gateway 将对该 Agent 返回未安装 403。
-        </p>
-      </header>
+    <PageContent width="console" inset="shell" className="space-y-8">
+      <MKPageHeader
+        eyebrow="我的 Agent"
+        title="已安装能力"
+        description="安装 = 授权进经营台。停用后 Gateway 对该 Agent 返回未安装。"
+        meta={
+          <OpsSecondaryLinks
+            links={[
+              { href: "/profile", label: "我的" },
+              { href: "/store", label: "能力商店" },
+            ]}
+          />
+        }
+      />
 
-      {error ? <p className="mb-4 text-[13px] text-[#8b3a2f]">{error}</p> : null}
+      {error ? <p className="text-[13px] text-[#8b3a2f]">{error}</p> : null}
 
       {agents.length === 0 ? (
-        <div className="rounded-[14px] border border-[rgba(24,24,23,0.08)] bg-white/70 px-5 py-6 text-[14px] text-[#6f747b]">
-          尚未安装 Agent。
-          <Link href="/store" className="ml-2 font-medium text-[#465240] underline-offset-2 hover:underline">
-            去 Store 浏览
-          </Link>
-        </div>
+        <PageEmptyState
+          eyebrow="我的 Agent"
+          title="尚未安装 Agent"
+          description="去商店浏览并安装，再回到经营台使用。"
+          primaryAction={{ href: "/store", label: "去商店" }}
+          secondaryAction={{ href: "/profile", label: "我的" }}
+          inset="shell"
+        />
       ) : (
-        <div className="space-y-3">
+        <div className="divide-y divide-[rgba(24,24,23,0.08)] border-y border-[rgba(24,24,23,0.08)]">
           {agents.map((agent) => (
             <div
               key={agent.id}
-              className="flex flex-wrap items-center justify-between gap-3 rounded-[14px] border border-[rgba(24,24,23,0.08)] bg-white/80 px-4 py-4"
+              className="flex flex-wrap items-center justify-between gap-3 py-4"
             >
               <div>
                 <p className="text-[15px] font-semibold text-[#171717]">{agent.agentCode}</p>
@@ -109,17 +118,6 @@ export default function MyAgentsPage() {
         </div>
       )}
 
-      <div className="mt-8 flex flex-wrap gap-4 text-[13px]">
-        <Link href="/store" className="font-medium text-[#465240] underline-offset-2 hover:underline">
-          Store
-        </Link>
-        <Link href="/billing" className="font-medium text-[#465240] underline-offset-2 hover:underline">
-          经营点
-        </Link>
-        <Link href="/dashboard" className="font-medium text-[#465240] underline-offset-2 hover:underline">
-          今日
-        </Link>
-      </div>
     </PageContent>
   );
 }

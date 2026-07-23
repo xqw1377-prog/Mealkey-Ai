@@ -36,7 +36,7 @@ const CAPABILITY_META: CapabilityMeta[] = [
       { label: "市场机会", href: (id) => `/projects/${id}/market` },
       { label: "品牌定位", href: (id) => `/projects/${id}/positioning` },
       { label: "商业模式", href: (id) => `/projects/${id}/business` },
-      { label: "咨询会议", href: (id) => `/projects/${id}/advisor` },
+      { label: "经营对话", href: (id) => `/projects/${id}/agent` },
       { label: "餐厅认知", href: (id) => `/projects/${id}/restaurant` },
       { label: "经营者档", href: () => "/profile" },
     ],

@@ -68,8 +68,8 @@ export default function ScorePage({
           description="数据还在同步。"
           primaryAction={{ href: "/dashboard", label: "回今日" }}
           secondaryAction={{
-            href: `/projects/${params.projectId}/advisor`,
-            label: "去开会",
+            href: `/projects/${params.projectId}/decision-room`,
+            label: "进决策室",
           }}
         />
       </div>

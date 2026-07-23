@@ -155,16 +155,10 @@ export async function rateLimit(
   const redisResult = await redisRateLimit(key, limit, windowMs);
   if (redisResult) return redisResult;
 
-  // Redis 未配置时允许内存回退（单实例安全）
-  // Redis 配置但失败时才 fail-closed（防止多实例限流失效）
-  const redisCfg = redisConfig();
-  if (!redisCfg) {
-    // Redis 未配置：允许内存回退
-    return memoryRateLimit(key, limit, windowMs);
-  }
-
+  // 未配 Redis，或 Redis 调用失败：
+  // - 生产默认 fail-closed（防多实例限流失效）
+  // - 非生产 / 显式 RATE_LIMIT_ALLOW_MEMORY=1 才回退内存桶
   if (!allowMemoryRateLimitFallback()) {
-    // Redis 配置但失败，且不允许内存回退：拒绝请求
     return {
       ok: false,
       remaining: 0,

@@ -1175,8 +1175,8 @@ export function buildDashboardHome(bundle: ProjectInsightBundle) {
     actionOutput: "一条可执行判断 + 下一步动作",
     actionDuration: "15-25 分钟",
     secondaryCta: {
-      href: `/projects/${bundle.project.id}/advisor`,
-      label: "进入经营会议",
+      href: `/projects/${bundle.project.id}/decision-room`,
+      label: "进决策室",
     },
     growthPlan,
     lastMeetingDecision: latest
@@ -1402,8 +1402,8 @@ export function buildProjectOverview(bundle: ProjectInsightBundle) {
         description: isInitialWorld
           ? `先把“${currentChallenge}”压成第一条经营判断。`
           : tasks[0].description,
-        href: `/projects/${bundle.project.id}/advisor`,
-        meetingHref: buildFounderMeetingLink(bundle.project.id, meetingTopic),
+        href: `/projects/${bundle.project.id}/decision-room`,
+        meetingHref: `/projects/${bundle.project.id}/decision-room?topic=${encodeURIComponent(meetingTopic)}`,
         actions: isInitialWorld
           ? ["重定义问题", "锁定关键变量", "形成第一条判断"]
           : tasks.map((t) => t.title),

@@ -96,4 +96,14 @@ describe("voiceIntakeToCouncilAssets", () => {
     expect(claims).toMatch(/热度|商圈口述/);
     expect(claims.includes("待决：")).toBe(false);
   });
+
+  it("无合法 MKInsight 且 allowEmpty=false → 拒开案", () => {
+    expect(() =>
+      assertCouncilIngressViaMkInsight({
+        insights: [],
+        allowEmpty: false,
+        label: "决策室开会",
+      }),
+    ).toThrow(/缺少合法 MKInsight/);
+  });
 });

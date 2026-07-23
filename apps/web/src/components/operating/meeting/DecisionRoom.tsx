@@ -881,15 +881,29 @@ export function DecisionRoom({ projectId }: Props) {
               </span>
             ) : null}
             {opinionSource ? (
-              <span className="border border-[rgba(24,24,23,0.08)] bg-[#FBFAF7] px-2.5 py-1 text-[11px] text-[#66735E]">
+              <span
+                className={
+                  opinionSource === "llm"
+                    ? "border border-[rgba(24,24,23,0.08)] bg-[#FBFAF7] px-2.5 py-1 text-[11px] text-[#66735E]"
+                    : "border border-[#C45C26]/40 bg-[#FFF6F0] px-2.5 py-1 text-[11px] text-[#8A4F31]"
+                }
+              >
                 {opinionSource === "llm"
                   ? "深度意见"
                   : opinionSource === "mixed"
-                    ? "混合意见"
-                    : "快速意见"}
+                    ? "部分降级·含启发式"
+                    : "强制降级·非正式意见"}
               </span>
             ) : null}
           </div>
+        ) : null}
+        {session &&
+        (opinionSource === "heuristic" || opinionSource === "mixed") ? (
+          <p className="mt-2 border border-[#C45C26]/25 bg-[#FFF6F0] px-3 py-2 text-[12px] leading-5 text-[#8A4F31]">
+            {opinionSource === "heuristic"
+              ? "本轮常委意见为启发式强制降级，非正式深度审议；勿当作已签字结论。"
+              : "本轮意见含启发式降级席位，深度与非正式混杂；拍板前请核对证据与缺口。"}
+          </p>
         ) : null}
         {session && expertNote ? (
           <p className="mt-2 text-[12px] leading-5 text-[#6f747b]">{expertNote}</p>
@@ -1124,17 +1138,20 @@ export function DecisionRoom({ projectId }: Props) {
                   />
                 </label>
               ))}
-              <label className="flex items-start gap-2 text-[13px] text-[#3c4043]">
-                <input
-                  type="checkbox"
-                  checked={allowStubReports}
-                  onChange={(e) => setAllowStubReports(e.target.checked)}
-                  className="mt-1"
-                />
-                <span>
-                  仅演示：没有完整咨询报告时仍用草案开会（生产默认禁止）
-                </span>
-              </label>
+              {process.env.NODE_ENV !== "production" ? (
+                <label className="flex items-start gap-2 text-[13px] text-[#3c4043]">
+                  <input
+                    type="checkbox"
+                    checked={allowStubReports}
+                    onChange={(e) => setAllowStubReports(e.target.checked)}
+                    className="mt-1"
+                  />
+                  <span>
+                    仅开发演示：没有完整咨询报告时仍用草案开会（生产禁用；需
+                    ALLOW_COUNCIL_STUB=1）
+                  </span>
+                </label>
+              ) : null}
               <label className="flex items-start gap-2 text-[13px] text-[#3c4043]">
                 <input
                   type="checkbox"

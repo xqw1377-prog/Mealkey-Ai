@@ -32,8 +32,8 @@ export default function ProjectKnowledgePage({
           description="数据还在同步。"
           primaryAction={{ href: `/projects/${params.projectId}`, label: "回企业" }}
           secondaryAction={{
-            href: `/projects/${params.projectId}/advisor`,
-            label: "去开会",
+            href: `/projects/${params.projectId}/decision-room`,
+            label: "进决策室",
           }}
         />
       </div>
@@ -166,7 +166,10 @@ export default function ProjectKnowledgePage({
           eyebrow="知识库"
           title="还没有可引用的经验"
           description="先开会或留下决策，经验会慢慢沉淀。"
-          primaryAction={{ href: `/projects/${project.id}/advisor`, label: "去开会" }}
+          primaryAction={{
+            href: `/projects/${project.id}/decision-room`,
+            label: "进决策室",
+          }}
           secondaryAction={{ href: `/projects/${project.id}`, label: "回企业" }}
         />
       )}

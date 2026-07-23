@@ -46,7 +46,10 @@ export default function ReportPage({
           eyebrow="报告"
           title="暂时打不开"
           description="数据还在同步。先去开会。"
-          primaryAction={{ href: `/projects/${params.projectId}/advisor`, label: "去开会" }}
+          primaryAction={{
+            href: `/projects/${params.projectId}/decision-room`,
+            label: "进决策室",
+          }}
           secondaryAction={{ href: "/projects", label: "我的企业" }}
         />
       </div>
@@ -98,10 +101,10 @@ export default function ReportPage({
 
           <div className="mt-5 grid gap-3 md:grid-cols-2">
             <Link
-              href={`/projects/${project.id}/advisor`}
+              href={`/projects/${project.id}/decision-room`}
               className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-[14px] bg-[#181817] px-4 text-[15px] font-semibold text-white no-underline transition hover:-translate-y-0.5 active:scale-[0.98]"
             >
-              <span>去开会</span>
+              <span>进决策室</span>
               <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
@@ -227,10 +230,10 @@ export default function ReportPage({
             <span>决策历史</span>
           </Link>
           <Link
-            href={`/projects/${project.id}/advisor`}
+            href={`/projects/${project.id}/decision-room`}
             className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-[14px] bg-[#181817] px-4 text-[15px] font-semibold text-white no-underline transition hover:-translate-y-0.5 active:scale-[0.98]"
           >
-            <span>进入会议</span>
+            <span>进决策室</span>
             <ArrowRight className="h-4 w-4" />
           </Link>
         </div>

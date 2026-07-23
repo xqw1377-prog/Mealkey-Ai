@@ -40,7 +40,7 @@ function RestaurantIntelligenceFlow({ projectId }: { projectId: string }) {
       await utils.dashboard.getHome.invalidate();
       await utils.restaurantIntelligence.get.invalidate({ projectId });
       if (payload.redirectTo === "/dashboard") {
-        router.replace("/dashboard");
+        router.replace("/dashboard?radar=1");
       } else {
         setPhase("portrait");
         setShowRevise(payload.snapshot.status === "rejected");
@@ -76,7 +76,7 @@ function RestaurantIntelligenceFlow({ projectId }: { projectId: string }) {
   useEffect(() => {
     if (!snapshot) return;
     if (snapshot.status === "confirmed") {
-      router.replace("/dashboard");
+      router.replace("/dashboard?radar=1");
       return;
     }
     const timer = window.setTimeout(() => {

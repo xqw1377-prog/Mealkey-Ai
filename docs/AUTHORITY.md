@@ -1,9 +1,21 @@
 # MealKey / Founder OS — 文档权威（AUTHORITY）
 
-> 生效日：2026-07-17（…；**核心产品闭环最终冻结 + MVP 90天路线：2026-07-21**；**Agent Mini Program 平台：2026-07-22**）  
+> 生效日：2026-07-17（…；**核心产品闭环最终冻结 + MVP 90天路线：2026-07-21**；**Agent Mini Program 平台：2026-07-22**；**AI Native 表现层范式：2026-07-23**）  
 > 状态：**唯一入口**。改产品路径或交付语义前先读本文件。  
 > 原则：老板 UX 与签字门禁以代码 + 下列权威文档为准；其余 `docs/M_PNT_*` 多为设计草稿或归档，**不得覆盖**本表。  
-> **当前主线（2026-07-21 起）：** 不再扩能力面；只跑通「一家餐厅老板每天打开」第一条飞轮（见 L0 战略收口）。
+> **当前主线（2026-07-21 起）：** 不再扩能力面；只跑通「一家餐厅老板每天打开」第一条飞轮（见 L0 战略收口）。  
+> **表现层范式（2026-07-23 起）：** 进目标，不进模块；Chat 是入口，状态与决策是本体。  
+> **交互宪法（2026-07-23）：** 协作法则（非 UI）——目标优先·主动理解·能力隐藏·资产目的·有判断·能力提升·持续进化；禁餐饮版 GPT。真源 `MEALKEY_INTERACTION_CONSTITUTION_V1.md`。  
+> **智能体定义（2026-07-23）：** MealKey = **持续理解餐饮人的专业 AI**，把行业无限知识转化为可使用的经营能力（增强老板，非 AI 副总）。  
+
+> **工程表面顺序（2026-07-23）：** **先 Mobile Agent（关系+意图+产出）→ 再 Web Studio**（见 `MEALKEY_MOBILE_AGENT_V1.md`）。  
+> **行为引擎（2026-07-23）：** 专业感=行为逻辑；五态 Explore→Reflect；真源 `MEALKEY_AI_BEHAVIOR_ENGINE_V1.md`。  
+> **产品架构 V2（2026-07-23）：** 餐饮经营 AI 操作系统——交互/能力/认知三层；Agent 幕后；文件=经营输入；真源 `MEALKEY_PRODUCT_ARCHITECTURE_V2.md`。  
+> **商业闭环（2026-07-23）：** 先老板/创业者；三场景开店·诊断·菜单；Core 免费+能力包收费；冷启动 100 老板陪跑；真源 `MEALKEY_GTM_MONETIZATION_V1.md`。  
+
+
+
+> **认知护城河（2026-07-23）：** 通用大模型 = 推理发动机；MealKey = Intelligence Model + Knowledge Graph + **Skill Engine** + **Learning & Evolution Loop**（知识→能力→飞轮）；下一章 MVP 0.1 验证；真源见 L0 认知护城河。
 
 ---
 
@@ -11,7 +23,13 @@
 
 | 层级 | 文件 / 代码 | 管什么 | 可否改老板路径 |
 |------|-------------|--------|----------------|
-| **L0 战略收口** | `docs/MEALKEY_CORE_PRODUCT_LOOP_V1.md` · `docs/MEALKEY_MVP_90DAY_ROADMAP_V1.md` · `docs/MEALKEY_COMMERCIAL_DELIVERY_CHECKLIST_V1.md` · `docs/MEALKEY_PRODUCTION_DEPLOY_V1.md` | 产品一句·五层架构·日活判断书·停扩闸门·MVP 唯一场景·90天·**商业交付 env/验收**·**生产部署/域名/冒烟** | **否** — 飞轮未验证前禁止新 Agent/新层；收费前必须过交付清单；上线按部署手册 |
+| **L0 战略收口** | `docs/MEALKEY_CORE_PRODUCT_LOOP_V1.md` · `docs/MEALKEY_MVP_90DAY_ROADMAP_V1.md` · `docs/MEALKEY_COMMERCIAL_DELIVERY_CHECKLIST_V1.md` · `docs/MEALKEY_PRODUCTION_DEPLOY_V1.md` | 产品一句·日活五层飞轮·停扩闸门·MVP 唯一场景·90天·商业交付·生产部署 | **否** — 飞轮未验证前禁止新 Agent/新层；收费前必须过交付清单；上线按部署手册 |
+| **L0 产品架构 V2** | `docs/MEALKEY_PRODUCT_ARCHITECTURE_V2.md` | **OS 形态**：Interaction · Capability · Cognitive；Agent 幕后；文件=经营输入 | **否** — 禁功能大厅；禁 Agent 菜单化 |
+| **L0 商业闭环** | `docs/MEALKEY_GTM_MONETIZATION_V1.md` | **GTM**：P1=老板/创业者；卖「你的餐饮经营AI」非聊天/非副总；三场景开店·诊断·菜单；Core免费+Capability Pack收费；企业版后置；100老板冷启动；数据飞轮（合法） | **否** — 禁大而全冷启动；禁 Agent 商店货架收费；收费仍过交付清单；下一章 MVP 0.1 |
+| **L0 交互宪法** | `docs/MEALKEY_INTERACTION_CONSTITUTION_V1.md`（`INTERACTION_PRINCIPLE` 已 redirect） | **如何与餐饮人协作**（十条原则）；改交互前闸门 | **否** — 禁 Agent 菜单化；禁被动问答壳；服从 Behavior Engine |
+| **L0 行为引擎** | `docs/MEALKEY_AI_BEHAVIOR_ENGINE_V1.md` · `docs/MEALKEY_AGENT_PERSONA_V1.md` | Persona=它是谁；**Behavior=五态** · 主动/沉默 · 结构化判断 · 挑战；映射 Runtime Mode | **否** — 禁骚扰式主动；禁无判断附和；禁只有聊天态 |
+| **L0 表现层范式** | `docs/MEALKEY_AI_NATIVE_INTERACTION_ARCHITECTURE_V1.md` · `docs/MEALKEY_AI_NATIVE_CORE_LOOP_V1.md` · `docs/MEALKEY_PERSISTENT_BUSINESS_AGENT_V1.md` · `docs/MEALKEY_AI_AGENT_CORE_ARCHITECTURE_V1.md` · `docs/MEALKEY_AGENT_PERSONA_V1.md` · `docs/MEALKEY_GOAL_COMPILER_V1.md` · `docs/MEALKEY_BUSINESS_OBJECT_MODEL_V1.md` · `docs/MEALKEY_AGENT_RUNTIME_ARCHITECTURE_V1.md` · `docs/MEALKEY_MOBILE_AGENT_V1.md` · `docs/MEALKEY_LLM_HOST_VS_TOOL_AGENT_V1.md` | **餐饮经营 AI**·宿主**大模型始终在线**·工具 Agent 可无模型·Mobile First | **否** — 禁无模型冒充宿主主路径；Phase1 未验证前禁 Studio 主线；服从交互宪法 |
+| **L0 认知护城河** | `docs/MEALKEY_RESTAURANT_INTELLIGENCE_MODEL_V1.md` · `docs/MEALKEY_RESTAURANT_KNOWLEDGE_GRAPH_V1.md` · `docs/MEALKEY_SKILL_ENGINE_V1.md` · `docs/MEALKEY_LEARNING_EVOLUTION_LOOP_V1.md` | 理解世界（Model+Graph）+ **能力成长（Skill）** + **学习进化闭环（系统飞轮）**；岗位=认知视角非新系统；薄调度 skill/business/council/tool；≠餐饮 ChatGPT | **否** — 禁第七 Runtime / 学习顾问席；禁闲聊当燃料；禁未 opt-in 行业贡献；P1 店长竖切；下一章 MVP 0.1 |
 | **L0 决策壁垒** | `docs/MEALKEY_DECISION_INTELLIGENCE_ENGINE_V1.md` | DIE 五对象（Signal/Case/Context/Option/Learning）· 11 步 Pipeline · Confidence Score · Brain/M-INTEL/常委/M-EXEC 接口 | **否** — 决策形成系统；≠聊天/报表；Case.id≡MKDecision.id |
 | **L0 决策证据** | `docs/MEALKEY_M_INTEL_V1.md` | M-INTEL = **Decision Evidence Engine**；State；Event→Evidence；Signal | **否** — 非爬虫/非顾问席；只产 Evidence |
 | **L1 决策上下文** | `docs/MEALKEY_DECISION_CONTEXT_V1.md` | Context 资产树；Evidence / Score / 常委输入 | **否** — 挂 Case；非 Prompt；禁止私编事实 |
@@ -97,6 +115,31 @@
 13f. **Decision Context V1 已冻结**（2026-07-18）：系统资产非 Prompt；真源 `MEALKEY_DECISION_CONTEXT_V1.md`。  
 13g. **Decision Center 产品交互 V1 已冻结**（2026-07-18）：会议室/Feed/Journey 细节参考。**老板可见路径冲突时以 Decision Experience V1 为准。** 真源：`MEALKEY_DECISION_CENTER_INTERACTION_V1.md`。  
 13g2. **Decision Experience V1 已正式冻结**（2026-07-18·架构审查定稿；2026-07-19 增补）：今日决策 = **工作中的决策事项**；语音对话采集；**决策闭环打透**（一词一路·拍板回今日·收件箱四桶真连·复盘不进咨询）；三易·四层能力。真源：`MEALKEY_DECISION_EXPERIENCE_V1.md` §0 / §3.1b / §3.1c。  
+13g3. **AI Native Interaction Architecture V1.0 已正式冻结**（2026-07-23）：表现层范式升级——MealKey = **餐饮经营目标编译器**；最高原则 **进目标，不进模块；Chat 是入口，状态与决策是本体**；核心公式 Human Intent→Understanding→Goal Compilation→Agent Execution→Decision Asset→Business Evolution；Goal Seed（一句话≠任务）；Goal Awareness（监控目标进度，非假监控门店）；三层协作面（对话+目标状态+专业成果）；Agent = 编译器函数非入口。真源：`MEALKEY_AI_NATIVE_INTERACTION_ARCHITECTURE_V1.md`。服从交互宪法。  
+13g3b. **Interaction Constitution V1.0（交互宪法）已正式冻结**（2026-07-23）：**协作法则非 UI**——十条原则；产品句升级；`INTERACTION_PRINCIPLE` redirect。真源：`MEALKEY_INTERACTION_CONSTITUTION_V1.md`。  
+13g3c. **AI Behavior Engine V1.0 已正式冻结**（2026-07-23）：专业感=行为逻辑——四能力；五态；主动 T1–T4 / 沉默；结构化判断；挑战能力。真源：`MEALKEY_AI_BEHAVIOR_ENGINE_V1.md`。  
+13g3d. **Product Architecture V2.0 已正式冻结**（2026-07-23）：餐饮经营 AI 操作系统——三层 Interaction/Capability/Cognitive；Agent 隐藏；文件=经营输入。真源：`MEALKEY_PRODUCT_ARCHITECTURE_V2.md`。  
+13g3e. **GTM & Monetization V1.0 已正式冻结**（2026-07-23）：商业闭环——P1 老板/创业者；三场景开店决策·经营诊断·菜单优化；Core 免费建关系 + Capability Pack 收费（禁 Agent 货架）；企业 SaaS 后置；100 老板×30 天冷启动；壁垒=合法数据飞轮。真源：`MEALKEY_GTM_MONETIZATION_V1.md`。下一章：MVP 0.1 第一性验证。  
+
+
+
+
+
+13g4. **AI Native Core Loop V1.0 已正式冻结**（2026-07-23）：生命周期闭环——First Open(Identity+RIP)→First Goal→Compile→Materialize→Decide(决策室)→Execute→Remember→Evolve & Return；与 `MEALKEY_CORE_PRODUCT_LOOP_V1` 分工为「人机协作生命周期」vs「能力日活飞轮」；设计问题五问（何时/为何/知道什么/推什么/如何成资产）。真源：`MEALKEY_AI_NATIVE_CORE_LOOP_V1.md`。  
+13g5. **Persistent Business Agent V1.0 已正式冻结**（2026-07-23）：交互定义——**餐饮老板的 AI 经营智能体**；持续学习·自然语言+文件→专业决策与执行；四大核心 **Personality · Memory · Goal Compiler · Workspace**；手机=AI 秘书 / Web=AI Coding Workspace（自然语言编程，非教老板写代码）；Intent=说+上传+观察；真资产=用户经营上下文。真源：`MEALKEY_PERSISTENT_BUSINESS_AGENT_V1.md`。  
+13g6. **AI Agent Core Architecture V1.0 已正式冻结**（2026-07-23；**同日身份校准**）：MealKey = **餐饮经营 AI**——持续学习场景·理解目标·知识→能力；**增强老板，非 AI 副总**；三能力懂餐饮/懂用户/想法→专业结果；Agent=专业能力模块非部门副总；Memory 四层投影；废弃产品定位「AI COO」。真源：`MEALKEY_AI_AGENT_CORE_ARCHITECTURE_V1.md`。七常委 COO 席保留且 **≠** 产品自称。  
+13g7. **Goal Compiler V1.0 已正式冻结**（2026-07-23）：经营 coding——五层 Intent/Goal/Gap/Workflow/Orchestration + 11 步工程管道；动态 Workflow（非固定 Wizard）；NL 编程隐喻；协作四阶段探索→编译→生成→优化。真源：`MEALKEY_GOAL_COMPILER_V1.md`。  
+13g8. **Business Object Model V1.0 已正式冻结**（2026-07-23）：经营世界模型——核心链 Owner→Context→Goal→Decision|Workflow→Asset→Memory；七对象；Memory 三类 Fact/Decision/Pattern；既有 Chief/Council/MKDecision/Workflow/Knowledge 统一归宿；编译产物≠聊天记录。真源：`MEALKEY_BUSINESS_OBJECT_MODEL_V1.md`。  
+13g9. **Agent Runtime Architecture V1.0 已正式冻结**（2026-07-23）：可运行编排——Turn Loop T0–T9；Mode Select；Routing（四席映射）；Council 介入条件；Decision/Memory 写入时机；**ChiefAgent=入口不是大脑**。真源：`MEALKEY_AGENT_RUNTIME_ARCHITECTURE_V1.md`。服从 Runtime Boundary V2 / 权限 V2。  
+13g10. **Agent Persona V1.0 已正式冻结**（2026-07-23）：人格与行为规范——专业克制的餐饮经营 AI；三支柱懂餐饮/懂用户/增强不替代；自称禁副总；主动=专业提醒非假管理；回合自检五问。真源：`MEALKEY_AGENT_PERSONA_V1.md`。时机状态机见 `MEALKEY_AI_BEHAVIOR_ENGINE_V1`。  
+
+13g11. **Mobile Agent V1.0 已正式冻结**（2026-07-23）：**工程先移动端**——验证「愿不愿意持续把经营问题交给 MealKey」；闭环表达→理解→追问→认知→有价值结果→资产；IA=说/给/看+Goal 条；三能力理解/追问/产出；Web=MealKey Studio 后置（Phase 2）。真源：`MEALKEY_MOBILE_AGENT_V1.md`。  
+13g12. **宿主 LLM vs 工具 Agent 已正式冻结**（2026-07-23）：MealKey 宿主（理解/Goal Compiler/Persona/对话）**大模型始终在线**；独立 L3 工具 Agent 可不依赖大模型；禁止把无模型启发式当正式主路径；生产缺 Key → 明确失败；`ALLOW_COMPILER_STUB=1` 仅开发桩。真源：`MEALKEY_LLM_HOST_VS_TOOL_AGENT_V1.md`。  
+13g13. **Restaurant Intelligence Model V1.0 已正式冻结**（2026-07-23）：核心资产层——五层 Ontology/Rules/Scenario/Business Model/Decision；护城河=**经营因果图**（非百科）；岗位=经营模型执行节点；战略=通用 LLM 之上建餐饮认知层，不自训替代大模型。真源：`MEALKEY_RESTAURANT_INTELLIGENCE_MODEL_V1.md`。  
+13g14. **Restaurant Knowledge Graph V1.0 已正式冻结**（2026-07-23）：底层资产骨架——**可推理的餐饮经营世界模型**（≠传统知识库）；八域实体；关系/因果链/规则/决策模板五类构件；类型层 vs Brain 实例层；P1 先利润/开店/菜单。真源：`MEALKEY_RESTAURANT_KNOWLEDGE_GRAPH_V1.md`。  
+13g15. **Skill Engine V1.0 已正式冻结**（2026-07-23）：能力成长层——`Skill=Role×Scenario×Behavior×Outcome`；L1–L5 等级（非考试分）；AI 训练场陪练；闭环学习→练习→工作→反馈→升级；连图谱经营结果；与 User Intelligence 燃料分轨；≠课程 SaaS / ≠ Protocol Decision Skill。真源：`MEALKEY_SKILL_ENGINE_V1.md`。**P1 竖切已接线**：`founder-layer/skill-engine` + `mobileAgent.compile` 拦截「练习/陪练」；剧本含老板营业额诊断 / 店长人效 / 店长营业额诊断 / 服务员家庭推荐。  
+13g16. **Learning & Evolution Loop V1.0 已正式冻结**（2026-07-23）：系统级飞轮——合法燃料分轨；Evolution Event；薄调度 `skill|business_capability|council|tool_agent|reflect`；挂 Memory/Growth/Skill/Decision Quality；**禁止第七 Runtime**；岗位=Role Perspective 非新架构。真源：`MEALKEY_LEARNING_EVOLUTION_LOOP_V1.md`。**竖切已接线**：`founder-layer/evolution-loop` + compile/陪练回写。下一章：MVP 0.1 验证。  
+
 13h. **决策质量提升机制 V1.0 已冻结**（2026-07-18）：Pre/Post Decision Quality·Evidence Weight·Confidence Model·Similar Memory·Counterfactual·Challenge·Evolution Loop；目标 Level 5 经营大脑。真源：`MEALKEY_DECISION_QUALITY_MECHANISM_V1.md`。  
 13i. **Decision Intelligence Data Contract V1 已冻结**（2026-07-18）：Decision 第一公民；七对象（Case/Context/Evidence/Option/Simulation/Assessment/Learning）+ Unknowns + Trace；不存答案/Prompt 存推理。V1 范围=**第二家店闭环**。代码 SSOT `decision-intelligence-data-contract.ts`。真源：`MEALKEY_DECISION_INTELLIGENCE_DATA_CONTRACT_V1.md`。  
 13j. **Business Signal Engine 数据契约 V1 已冻结**（2026-07-21）：Signal 五层（观察/模式/意义/影响/行动）；六类 type（FINANCE→OPERATION）；Ranking=`impact×urgency×confidence×relevance`；DailyRadarOutput；Signal→Case Promote Gate（Case.id≡MKDecision.id）；调查追问字段预留。代码 SSOT `@mealkey/business-signal-engine`。真源：`BUSINESS_SIGNAL_ENGINE_DATA_CONTRACT_V1.md`。  

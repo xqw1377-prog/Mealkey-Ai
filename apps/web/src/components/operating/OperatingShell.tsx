@@ -19,24 +19,46 @@ type PlatformAccessState = {
   isAdmin: boolean;
 };
 
+function isPlatformPath(pathname: string) {
+  return pathname.startsWith("/platform");
+}
+
 export function OperatingShell({ children }: OperatingShellProps) {
   const pathname = usePathname() ?? "";
   const currentProjectId = useProjectStore((s) => s.currentProjectId);
   const currentProject = useProjectStore((s) => s.currentProject);
+  const setCurrentProjectId = useProjectStore((s) => s.setCurrentProjectId);
   const pathProjectId = pathname.match(/^\/projects\/([^/]+)/)?.[1] ?? null;
-  const defaultProjectId = pathProjectId ?? currentProjectId ?? currentProject?.id ?? null;
+  const isPlatformSurface = isPlatformPath(pathname);
+
+  // 无 store 时拉企业列表，保证顶栏「对话」始终指向 /agent（不再落回旧驾驶舱）
+  const { data: projectList } = trpc.project.list.useQuery(undefined, {
+    staleTime: 30_000,
+    enabled: !isPlatformSurface,
+  });
+  const listedProjectId = projectList?.[0]?.id ?? null;
+
+  useEffect(() => {
+    if (!currentProjectId && listedProjectId) {
+      setCurrentProjectId(listedProjectId);
+    }
+  }, [currentProjectId, listedProjectId, setCurrentProjectId]);
+
+  const defaultProjectId =
+    pathProjectId ?? currentProjectId ?? currentProject?.id ?? listedProjectId ?? null;
   const navItems = createShellNavItems(defaultProjectId);
   const { section: currentSection, contextHref, contextLabel } = resolveShellNavigation(
     pathname,
     defaultProjectId,
   );
   // 决策沉浸：决策室 / 决策案；顾问咨询仍可全屏但不占底栏「决策」语义
+  // Agent 是 Mobile 主入口：藏 ShellHeader + 底栏，页内 ChatGPT 壳自管导航
+  const isAgentSurface = /^\/projects\/[^/]+\/agent$/.test(pathname);
   const isMeetingFullscreen =
     /^\/projects\/[^/]+\/advisor$/.test(pathname) ||
     /^\/projects\/[^/]+\/decision-room$/.test(pathname) ||
     /^\/projects\/[^/]+\/decision-case$/.test(pathname);
-  // 管理平台独立壳：不挂老板底栏 / 不占「成长」导航语义
-  const isPlatformSurface = pathname.startsWith("/platform");
+  const hideShellHeader = isMeetingFullscreen || isAgentSurface;
   const [platformAccess, setPlatformAccess] = useState<PlatformAccessState>({
     loading: isPlatformSurface,
     isAdmin: false,
@@ -153,16 +175,24 @@ export function OperatingShell({ children }: OperatingShellProps) {
   }
 
   return (
-    <div className="min-h-screen bg-[#faf9f6] text-[#202124]">
-      <div className="pointer-events-none fixed inset-0 mk-shell-surface" />
+    <div
+      className={`min-h-screen text-[#202124] ${
+        isAgentSurface ? "bg-[#F7F6F2]" : "bg-[#faf9f6]"
+      }`}
+    >
+      {isAgentSurface ? null : (
+        <div className="pointer-events-none fixed inset-0 mk-shell-surface" />
+      )}
       <div
-        className={`relative mx-auto max-w-4xl px-4 pt-0 md:max-w-5xl md:px-6 md:pt-6 ${
-          isMeetingFullscreen
-            ? "pb-4 md:pb-10"
-            : "pb-[calc(env(safe-area-inset-bottom)+5.75rem)] md:pb-14"
+        className={`relative mx-auto ${
+          isAgentSurface
+            ? "max-w-none px-0 pb-0 pt-0"
+            : isMeetingFullscreen
+              ? "max-w-4xl px-4 pb-4 pt-0 md:max-w-5xl md:px-6 md:pb-10 md:pt-6"
+              : "max-w-4xl px-4 pb-[calc(env(safe-area-inset-bottom)+5.75rem)] pt-0 md:max-w-5xl md:px-6 md:pb-14 md:pt-6"
         }`}
       >
-        {isMeetingFullscreen ? null : (
+        {hideShellHeader ? null : (
           <ShellHeader
             items={navItems}
             currentSection={currentSection}
@@ -172,10 +202,11 @@ export function OperatingShell({ children }: OperatingShellProps) {
           />
         )}
 
-        <InAppBrowserBanner variant="sticky" />
+        {isAgentSurface ? null : <InAppBrowserBanner variant="sticky" />}
 
         <main className="relative">{children}</main>
-        {isMeetingFullscreen ? null : (
+        {/* Agent = ChatGPT 壳：导航进左侧栏，不再叠底栏三 Tab */}
+        {isMeetingFullscreen || isAgentSurface ? null : (
           <BottomNav items={navItems} currentSection={currentSection} />
         )}
       </div>

@@ -38,7 +38,7 @@ function describePlatformDenied(
         href: `/login?callbackUrl=${callback}`,
         label: "去登录管理员账号",
       },
-      secondaryAction: { href: "/dashboard", label: "回今日看板" },
+      secondaryAction: { href: "/dashboard?radar=1", label: "回今日看板" },
     };
   }
 
@@ -57,7 +57,7 @@ function describePlatformDenied(
         href: `/login?callbackUrl=${callback}`,
         label: "切换账号登录",
       },
-      secondaryAction: { href: "/dashboard", label: "回今日看板" },
+      secondaryAction: { href: "/dashboard?radar=1", label: "回今日看板" },
     };
   }
 
@@ -66,7 +66,7 @@ function describePlatformDenied(
       surface === "admin" ? "平台管理端暂时无法打开" : "平台监控暂时无法生成",
     description: message,
     highlights: currentEmail ? [emailHint] : [],
-    primaryAction: { href: "/dashboard", label: "回今日看板" },
+    primaryAction: { href: "/dashboard?radar=1", label: "回今日看板" },
     secondaryAction: { href: "/projects", label: "我的企业" },
   };
 }

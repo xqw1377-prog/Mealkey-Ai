@@ -48,13 +48,15 @@ export function DashboardRouteClient({
       },
     );
 
-  // 硬门禁：未确认经营认知档案不得停留在驾驶舱
+  // Phase 1：有企业后默认进对话 Agent；?radar=1 留在经营动态看板。
+  // 未确认 RIP 不再整页拦截看板（只顶部提示），避免「看板打不开」。
   useEffect(() => {
-    if (!gateProjectId || !ripFetched) return;
-    if (ripGate?.needsConfirm) {
-      router.replace(`/projects/${gateProjectId}/restaurant-intelligence`);
-    }
-  }, [gateProjectId, ripFetched, ripGate?.needsConfirm, router]);
+    if (!gateProjectId) return;
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("radar") === "1") return;
+    router.replace(`/projects/${gateProjectId}/agent`);
+  }, [gateProjectId, router]);
 
   const errorMessage = error?.message?.toLowerCase() ?? "";
   const errorCode = error?.data?.code;
@@ -78,20 +80,6 @@ export function DashboardRouteClient({
 
   if (awaitingFirstHome) {
     return <DashboardRouteSkeleton />;
-  }
-
-  if (gateProjectId && ripFetched && ripGate?.needsConfirm) {
-    return (
-      <PageErrorState
-        eyebrow="经营认知"
-        title="请先确认经营认知档案"
-        description="MealKey 需要先认识你的生意，确认后才会进入今日驾驶舱。"
-        primaryAction={{
-          href: `/projects/${gateProjectId}/restaurant-intelligence`,
-          label: "去确认档案",
-        }}
-      />
-    );
   }
 
   if (error && !homeResponse) {

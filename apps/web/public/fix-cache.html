@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>清理本地缓存 · MealKey</title>
+  </head>
+  <body style="font-family: system-ui, sans-serif; max-width: 36rem; margin: 3rem auto; padding: 0 1.25rem; line-height: 1.6; color: #202124;">
+    <h1 style="font-size: 1.25rem;">清理本地缓存</h1>
+    <p>若对话页白屏卡在「加载中」，多半是浏览器里旧的 Service Worker / Cache 在捣乱。</p>
+    <p id="status">正在清理…</p>
+    <p><a href="/login">清理完成后去登录</a></p>
+    <script>
+      (async function () {
+        var status = document.getElementById("status");
+        try {
+          if ("serviceWorker" in navigator) {
+            var regs = await navigator.serviceWorker.getRegistrations();
+            await Promise.all(regs.map(function (r) { return r.unregister(); }));
+          }
+          if ("caches" in window) {
+            var keys = await caches.keys();
+            await Promise.all(keys.map(function (k) { return caches.delete(k); }));
+          }
+          status.textContent = "已清理完成。请关闭本页，再用无痕或硬刷新打开应用。";
+        } catch (e) {
+          status.textContent = "清理失败：" + (e && e.message ? e.message : String(e));
+        }
+      })();
+    </script>
+  </body>
+</html>

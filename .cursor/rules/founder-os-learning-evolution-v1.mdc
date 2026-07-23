@@ -1,0 +1,26 @@
+# Learning & Evolution Loop V1（冻结）
+
+权威：`docs/MEALKEY_LEARNING_EVOLUTION_LOOP_V1.md` · `docs/AUTHORITY.md`（13g16）  
+代码：`apps/web/src/server/founder-layer/evolution-loop/`
+
+## 是什么
+
+系统级飞轮收口：交互 → 判断 → 结果 → 反馈 → Skill/习惯/Memory 升级。  
+**不是**第七 Runtime，**不是** `M-LEARN` 顾问席，**不是**新岗位总架构。
+
+## 铁律
+
+- 岗位 = 认知层 Role Perspective，不是入口
+- Agent = Intelligence Provider，不拍板
+- 合法燃料分轨（Decision / Skill / Compile）；禁闲聊当燃料
+- `contributeToIndustryModel` 默认关
+- 战略终局服从权限模型 V2；Loop 只记 Evolution Event
+
+## 薄调度车道
+
+`skill` | `business_capability` | `council` | `tool_agent` | `reflect`  
+UI 不暴露车道菜单。
+
+## 工程主线
+
+Loop 竖切 → 店长 Skill → MVP 0.1；停扩 Agent / 岗位大全 / 企业套件。

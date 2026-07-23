@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowUpRight, FileAudio, FileImage, FileText, FileVideo, Trash2 } from "lucide-react";
 import { MKPageHeader } from "@/components/operating";
 import { PageErrorState, PageLoadingState } from "@/components/operating/PageState";
+import { useProjectStore } from "@/stores/projectStore";
 import { trpc } from "@/lib/trpc";
 
 function getKindLabel(kind: string) {
@@ -35,6 +36,12 @@ function getKindIcon(kind: string) {
 
 export default function AssetCenterPage() {
   const utils = trpc.useUtils();
+  const projectId = useProjectStore((s) => s.currentProjectId);
+  const { data: agentBundle } = trpc.mobileAgent.getState.useQuery(
+    { projectId: projectId! },
+    { enabled: Boolean(projectId) },
+  );
+  const aiAssets = agentBundle?.state?.assets ?? [];
   const { data: categories = [], isLoading: loadingCategories, error: categoryError } = trpc.asset.categories.useQuery();
   const { data: assets = [], isLoading: loadingAssets, error: assetError } = trpc.asset.list.useQuery({ limit: 100 });
   const updateAsset = trpc.asset.update.useMutation({
@@ -87,13 +94,66 @@ export default function AssetCenterPage() {
       <MKPageHeader
         eyebrow="资料中心"
         title="资料"
-        description="开会会用到的材料，不是附件堆。"
+        description="上传材料与 AI 产出的经营资产。"
         badge={
           <div className="inline-flex min-h-7 items-center rounded-[12px] border border-[rgba(24,24,23,0.08)] bg-white px-3 text-[13px] leading-5 tracking-[0.01em] text-[#6f747b]">
             长期
           </div>
         }
       />
+
+      {aiAssets.length > 0 ? (
+        <section className="rounded-[22px] border border-[rgba(24,24,23,0.08)] bg-white p-4">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-[13px] text-[#66735E]">AI 经营资产</p>
+              <h2 className="mt-1 text-[18px] font-semibold text-[#202124]">
+                对话产出（按内容自动分类）
+              </h2>
+            </div>
+            {projectId ? (
+              <Link
+                href={`/projects/${projectId}/agent`}
+                prefetch={false}
+                className="text-[13px] font-medium text-[#181817] no-underline"
+              >
+                回对话 →
+              </Link>
+            ) : null}
+          </div>
+          <div className="mt-3 space-y-4">
+            {Object.entries(
+              aiAssets.reduce<Record<string, typeof aiAssets>>((acc, a) => {
+                const key = a.categoryLabel || "其他经营";
+                (acc[key] ??= []).push(a);
+                return acc;
+              }, {}),
+            ).map(([label, list]) => (
+              <div key={label}>
+                <p className="text-[12px] font-medium tracking-[0.04em] text-[#66735E]">
+                  {label}
+                  <span className="ml-1 text-[#9a968e]">· {list.length}</span>
+                </p>
+                <ul className="mt-2 space-y-2">
+                  {list.slice(0, 6).map((a) => (
+                    <li
+                      key={a.assetId}
+                      className="rounded-[14px] border border-[rgba(24,24,23,0.06)] bg-[#FBFAF7] px-3 py-2.5"
+                    >
+                      <p className="text-[15px] font-medium text-[#202124]">
+                        {a.title}
+                      </p>
+                      <p className="mt-0.5 text-[12px] text-[#6f747b]">
+                        {a.version} · {a.type} · {a.status}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       <section className="rounded-[22px] border border-[rgba(24,24,23,0.08)] bg-[linear-gradient(180deg,#fbfaf7_0%,#eef1ea_100%)] p-4 shadow-[0_14px_30px_rgba(24,24,23,0.04)]">
         <div className="grid gap-3 md:grid-cols-4">

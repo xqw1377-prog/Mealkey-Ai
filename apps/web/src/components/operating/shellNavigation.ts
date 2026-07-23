@@ -1,22 +1,23 @@
-import { Compass, Layers, Sparkles, Target, TrendingUp } from "lucide-react";
+import { MessageCircle, Sparkles, TrendingUp } from "lucide-react";
 import type { ShellNavItem } from "./BottomNav";
 import type { NavSection } from "@/types/operating";
 
 /**
- * Founder OS V2 一级导航（决策闭环）
- * 今日 → 能力 → 决策 → 行动 → 我的（账户/余额）
+ * Mobile Agent Phase 1 一级导航（冻结：说/给/看为主，禁五 Tab 功能墙）
+ * 对话（Agent）→ 决策室 → 我的
+ * 雷达/能力沉到 Agent 内链与「我的」，不占底栏。
  */
 export function createShellNavItems(defaultProjectId?: string | null): ShellNavItem[] {
   const hasWorld = Boolean(defaultProjectId);
 
   return [
-    { label: "今日", href: "/dashboard", section: "today", icon: Compass },
     {
-      label: "能力",
-      href: hasWorld ? `/projects/${defaultProjectId}/capability` : "/capability",
-      section: "capability",
-      icon: Layers,
-      disabled: !hasWorld,
+      label: "对话",
+      // 无企业时也进 dashboard：空态会一键建店并直达 Agent
+      href: hasWorld ? `/projects/${defaultProjectId}/agent` : "/dashboard",
+      section: "today",
+      icon: MessageCircle,
+      disabled: false,
       disabledHint: "先建立企业",
     },
     {
@@ -26,14 +27,6 @@ export function createShellNavItems(defaultProjectId?: string | null): ShellNavI
         : "/projects",
       section: "meeting",
       icon: Sparkles,
-      disabled: !hasWorld,
-      disabledHint: "先建立企业",
-    },
-    {
-      label: "行动",
-      href: hasWorld ? `/projects/${defaultProjectId}/decisions` : "/projects",
-      section: "action",
-      icon: Target,
       disabled: !hasWorld,
       disabledHint: "先建立企业",
     },
@@ -55,42 +48,36 @@ function normalizeSection(section: NavSection): NavSection {
 
 export function detectShellSection(pathname: string): NavSection {
   if (pathname.startsWith("/dashboard")) return "today";
-  if (pathname.startsWith("/capability")) return "capability";
-  // 管理平台有独立壳，不占用老板端「成长」导航高亮
+  // Mobile Agent = 主对话入口
+  if (pathname.startsWith("/projects/") && pathname.includes("/agent")) return "today";
+  if (pathname.startsWith("/capability")) return "growth";
   if (pathname.startsWith("/platform")) return "today";
   if (pathname.startsWith("/projects/") && pathname.includes("/capability")) {
-    return "capability";
+    return "growth";
   }
-  if (pathname.startsWith("/projects/") && pathname.includes("/restaurant")) {
-    return "capability";
-  }
-  if (pathname.startsWith("/projects/") && pathname.includes("/mission")) return "capability";
-  // 顾问咨询 = 能力（可另设咨询品牌），不与今日决策抢主导航高亮
-  if (pathname.startsWith("/projects/") && pathname.includes("/advisor")) return "capability";
-  if (pathname.startsWith("/projects/") && pathname.includes("/decision-room")) return "meeting";
-  if (pathname.startsWith("/projects/") && pathname.includes("/decision-case")) return "meeting";
-  if (pathname.startsWith("/projects/") && pathname.includes("/positioning")) return "capability";
-  if (pathname.startsWith("/projects/") && pathname.includes("/market")) return "capability";
-  if (pathname.startsWith("/projects/") && pathname.includes("/equity")) return "capability";
-  if (pathname.startsWith("/projects/") && pathname.includes("/business")) return "capability";
-  if (pathname.startsWith("/projects/") && pathname.includes("/decisions")) return "action";
-  // 成长 Tab 深链到 Runtime·成长；其余 Runtime 子流程也归成长（流程权入口）
-  if (pathname.startsWith("/projects/") && pathname.includes("/runtime")) return "growth";
-  if (pathname.startsWith("/projects/") && pathname.includes("/report")) return "action";
-  // 我的餐厅 = Restaurant Brain 读模型，归成长（认知沉淀）
   if (pathname.startsWith("/projects/") && pathname.includes("/restaurant")) {
     return "growth";
   }
-
-  if (pathname.startsWith("/projects/") && pathname.includes("/score")) return "capability";
-  if (pathname.startsWith("/projects/") && pathname.includes("/detail")) return "capability";
+  if (pathname.startsWith("/projects/") && pathname.includes("/mission")) return "today";
+  if (pathname.startsWith("/projects/") && pathname.includes("/advisor")) return "today";
+  if (pathname.startsWith("/projects/") && pathname.includes("/decision-room")) return "meeting";
+  if (pathname.startsWith("/projects/") && pathname.includes("/decision-case")) return "meeting";
+  if (pathname.startsWith("/projects/") && pathname.includes("/positioning")) return "growth";
+  if (pathname.startsWith("/projects/") && pathname.includes("/market")) return "growth";
+  if (pathname.startsWith("/projects/") && pathname.includes("/equity")) return "growth";
+  if (pathname.startsWith("/projects/") && pathname.includes("/business")) return "growth";
+  if (pathname.startsWith("/projects/") && pathname.includes("/decisions")) return "meeting";
+  if (pathname.startsWith("/projects/") && pathname.includes("/runtime")) return "growth";
+  if (pathname.startsWith("/projects/") && pathname.includes("/report")) return "meeting";
+  if (pathname.startsWith("/projects/") && pathname.includes("/score")) return "growth";
+  if (pathname.startsWith("/projects/") && pathname.includes("/detail")) return "growth";
   if (pathname.startsWith("/projects/") && pathname.includes("/knowledge")) return "growth";
-  if (pathname.startsWith("/projects")) return "capability";
+  if (pathname.startsWith("/projects")) return "today";
   if (pathname.startsWith("/knowledge")) return "growth";
-  if (pathname.startsWith("/advisor")) return "capability";
-  if (pathname.startsWith("/report")) return "action";
-  if (pathname.startsWith("/score")) return "capability";
-  if (pathname.startsWith("/reports/")) return "action";
+  if (pathname.startsWith("/advisor")) return "today";
+  if (pathname.startsWith("/report")) return "meeting";
+  if (pathname.startsWith("/score")) return "growth";
+  if (pathname.startsWith("/reports/")) return "meeting";
   if (pathname.startsWith("/profile")) return "growth";
   if (pathname.startsWith("/my-agents")) return "growth";
   if (pathname.includes("/settings")) return "growth";
@@ -106,45 +93,62 @@ type ShellContext = {
 function resolveShellContext(pathname: string, projectId: string | null): ShellContext {
   if (!projectId) {
     if (pathname.startsWith("/projects") || pathname.startsWith("/profile")) {
-      return { contextHref: "/dashboard", contextLabel: "回到今日" };
+      return { contextHref: "/dashboard?radar=1", contextLabel: "经营动态" };
     }
     return { contextHref: null, contextLabel: null };
   }
 
+  if (/^\/projects\/[^/]+\/agent$/.test(pathname)) {
+    return {
+      contextHref: `/dashboard?radar=1`,
+      contextLabel: "经营动态",
+    };
+  }
+
   if (/^\/projects\/[^/]+\/advisor$/.test(pathname)) {
-    return { contextHref: `/projects/${projectId}/capability`, contextLabel: "返回能力" };
+    return { contextHref: `/projects/${projectId}/agent`, contextLabel: "回对话" };
   }
 
   if (/^\/projects\/[^/]+\/(decision-room|decision-case)$/.test(pathname)) {
-    return { contextHref: "/dashboard", contextLabel: "回到今日" };
+    return { contextHref: `/projects/${projectId}/agent`, contextLabel: "回对话" };
   }
 
   if (/^\/projects\/[^/]+\/decisions$/.test(pathname)) {
-    return { contextHref: "/dashboard", contextLabel: "回到今日" };
+    return { contextHref: `/projects/${projectId}/agent`, contextLabel: "回对话" };
   }
 
   if (/^\/projects\/[^/]+\/runtime$/.test(pathname)) {
-    return { contextHref: `/projects/${projectId}/capability`, contextLabel: "返回能力" };
+    return { contextHref: `/projects/${projectId}/agent`, contextLabel: "回对话" };
   }
 
   if (/^\/projects\/[^/]+\/capability$/.test(pathname)) {
-    return { contextHref: "/dashboard", contextLabel: "回到今日" };
+    return { contextHref: `/projects/${projectId}/agent`, contextLabel: "回对话" };
   }
 
   if (/^\/projects\/[^/]+\/restaurant$/.test(pathname)) {
-    return { contextHref: `/projects/${projectId}`, contextLabel: "回企业" };
+    return { contextHref: `/projects/${projectId}/agent`, contextLabel: "回对话" };
   }
 
   if (/^\/projects\/[^/]+\/(report|score|positioning|knowledge|equity|market|business|runtime|restaurant)$/.test(pathname)) {
-    return { contextHref: `/projects/${projectId}/capability`, contextLabel: "返回能力" };
+    return { contextHref: `/projects/${projectId}/agent`, contextLabel: "回对话" };
   }
 
   if (/^\/projects\/[^/]+$/.test(pathname)) {
-    return { contextHref: `/projects/${projectId}/capability`, contextLabel: "进入能力" };
+    return { contextHref: `/projects/${projectId}/agent`, contextLabel: "进入对话" };
+  }
+
+  if (pathname.startsWith("/dashboard")) {
+    return {
+      contextHref: `/projects/${projectId}/agent`,
+      contextLabel: "回对话",
+    };
   }
 
   if (pathname.startsWith("/platform") || pathname.startsWith("/profile") || pathname.startsWith("/billing")) {
-    return { contextHref: "/dashboard", contextLabel: "回到今日" };
+    return {
+      contextHref: projectId ? `/projects/${projectId}/agent` : "/dashboard",
+      contextLabel: "回对话",
+    };
   }
 
   return { contextHref: null, contextLabel: null };

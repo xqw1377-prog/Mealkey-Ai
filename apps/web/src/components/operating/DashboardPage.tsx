@@ -43,6 +43,13 @@ type DashboardHomeData = {
     statusLabel: string;
     href: string;
   } | null;
+  pendingMobileDecision?: {
+    title: string;
+    reason: string;
+    goalTitle?: string | null;
+    href: string;
+    agentHref: string;
+  } | null;
   founderIntelligence?: {
     headline: string;
     styleLine: string;
@@ -176,6 +183,31 @@ function CouncilPendingBanner({
   );
 }
 
+/** 无企业：引导首次/补填基础信息（不旁路空壳建店） */
+function EmptyWorldGate({ greeting }: { greeting: string }) {
+  return (
+    <PageContent width="narrow" inset="shell" className="space-y-5">
+      <p className="text-[11px] font-medium tracking-[0.16em] text-[#66735E]">
+        餐启 · 首次登录
+      </p>
+      <h1 className="font-display text-[34px] font-semibold leading-[1.12] tracking-[-0.045em] text-[#202124]">
+        {greeting}
+      </h1>
+      <p className="max-w-md text-[15px] leading-7 text-[#6f747b]">
+        先花一分钟告诉我你的店和当下最想解决的事，再进入对话。
+      </p>
+      <Link
+        href="/onboarding?force=1"
+        prefetch={false}
+        className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[16px] bg-[#181817] px-5 text-[15px] font-semibold text-white no-underline touch-manipulation active:scale-[0.98]"
+      >
+        填写基础信息
+        <ArrowRight className="h-4 w-4" />
+      </Link>
+    </PageContent>
+  );
+}
+
 /**
  * 今日决策看板 — Phase 1 细节打磨
  * 今日经营动态 → 值得关注 → 决策室（拍板只在决策室）
@@ -190,27 +222,7 @@ export function DashboardPage({
   const greeting = greetingByHour();
 
   if (!currentProject || !home) {
-    return (
-      <PageContent width="narrow" inset="shell" className="space-y-5">
-        <p className="text-[11px] font-medium tracking-[0.16em] text-[#66735E]">
-          餐启 · 今日决策
-        </p>
-        <h1 className="font-display text-[34px] font-semibold leading-[1.12] tracking-[-0.045em] text-[#202124]">
-          {greeting}
-        </h1>
-        <p className="max-w-md text-[15px] leading-7 text-[#6f747b]">
-          先建立你的企业，才能帮你判断今天该拍什么板。
-        </p>
-        <Link
-          href="/onboarding"
-          prefetch={false}
-          className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[16px] bg-[#181817] px-5 text-[15px] font-semibold text-white no-underline touch-manipulation active:scale-[0.98]"
-        >
-          创建企业
-          <ArrowRight className="h-4 w-4" />
-        </Link>
-      </PageContent>
-    );
+    return <EmptyWorldGate greeting={greeting} />;
   }
 
   const scan = home.dailyScan;
@@ -227,6 +239,38 @@ export function DashboardPage({
           projectId={currentProject.id}
           item={home.pendingCouncilAdjudication}
         />
+      ) : null}
+
+      {!home.pendingCouncilAdjudication && home.pendingMobileDecision ? (
+        <section className="relative mt-5 flex flex-col gap-3 border-l-2 border-[#181817] bg-[rgba(24,24,23,0.04)] py-3.5 pl-4 pr-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+          <div className="min-w-0">
+            <p className="text-[11px] tracking-[0.1em] text-[#66735E]">
+              对话里待确认
+            </p>
+            <p className="mt-1 text-[15px] font-medium leading-6 text-[#202124] sm:truncate">
+              {home.pendingMobileDecision.title}
+            </p>
+            <p className="mt-0.5 text-[12px] text-[#6f747b]">
+              {home.pendingMobileDecision.reason}
+            </p>
+          </div>
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:items-end">
+            <Link
+              href={home.pendingMobileDecision.href}
+              prefetch={false}
+              className="inline-flex min-h-12 w-full items-center justify-center gap-1 rounded-[16px] bg-[#181817] px-5 text-[15px] font-semibold text-white no-underline touch-manipulation sm:w-auto"
+            >
+              去决策室 <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+            <Link
+              href={home.pendingMobileDecision.agentHref}
+              prefetch={false}
+              className="text-center text-[12px] text-[#66735E] no-underline underline-offset-2 hover:underline"
+            >
+              回对话
+            </Link>
+          </div>
+        </section>
       ) : null}
 
       {home.pendingMeetingDraft && !isConsultingDraft ? (
@@ -330,32 +374,25 @@ export function DashboardPage({
 
           <div className="flex flex-wrap gap-x-1 gap-y-1">
             <Link
-              href={`/projects/${currentProject.id}/decision-room`}
+              href={`/projects/${currentProject.id}/agent`}
               prefetch={false}
               className="inline-flex min-h-11 items-center px-2 text-[13px] font-medium text-[#181817] no-underline underline-offset-4 touch-manipulation hover:underline"
+            >
+              回对话
+            </Link>
+            <Link
+              href={`/projects/${currentProject.id}/decision-room`}
+              prefetch={false}
+              className="inline-flex min-h-11 items-center px-2 text-[13px] font-medium text-[#66735E] no-underline underline-offset-4 touch-manipulation hover:underline"
             >
               决策室
             </Link>
             <Link
-              href={`/projects/${currentProject.id}/decisions`}
+              href="/profile"
               prefetch={false}
               className="inline-flex min-h-11 items-center px-2 text-[13px] font-medium text-[#66735E] no-underline underline-offset-4 touch-manipulation hover:underline"
             >
-              行动打卡
-            </Link>
-            <Link
-              href={`/projects/${currentProject.id}/restaurant-intelligence`}
-              prefetch={false}
-              className="inline-flex min-h-11 items-center px-2 text-[13px] font-medium text-[#66735E] no-underline underline-offset-4 touch-manipulation hover:underline"
-            >
-              经营画像
-            </Link>
-            <Link
-              href={`/projects/${currentProject.id}/capability`}
-              prefetch={false}
-              className="inline-flex min-h-11 items-center px-2 text-[13px] font-medium text-[#66735E] no-underline underline-offset-4 touch-manipulation hover:underline"
-            >
-              能力
+              我的
             </Link>
           </div>
         </div>

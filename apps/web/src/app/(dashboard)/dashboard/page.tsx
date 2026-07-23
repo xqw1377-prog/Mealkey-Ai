@@ -1,9 +1,18 @@
+import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { resolveHomeData } from "@/server/routers/dashboard";
 import { DashboardRouteClient } from "./DashboardRouteClient";
 
-export default async function DashboardRoutePage() {
+/**
+ * Phase 1：默认进 ChatGPT 式对话页。
+ * 仅 ?radar=1 留在经营动态驾驶舱。
+ */
+export default async function DashboardRoutePage({
+  searchParams,
+}: {
+  searchParams?: { radar?: string };
+}) {
   let initialHomeResponse:
     | Awaited<ReturnType<typeof resolveHomeData>>
     | null = null;
@@ -27,5 +36,15 @@ export default async function DashboardRoutePage() {
     initialHomeResponse = null;
   }
 
-  return <DashboardRouteClient initialHomeResponse={initialHomeResponse ?? undefined} />;
+  const stayOnRadar = searchParams?.radar === "1";
+  const projectId = initialHomeResponse?.currentProject?.id;
+  if (!stayOnRadar && projectId) {
+    redirect(`/projects/${projectId}/agent`);
+  }
+
+  return (
+    <DashboardRouteClient
+      initialHomeResponse={initialHomeResponse ?? undefined}
+    />
+  );
 }

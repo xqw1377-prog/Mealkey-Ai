@@ -295,8 +295,11 @@ export class PrismaRestaurantBrainService implements RestaurantBrainService {
     empty.profile = { ...empty.profile, ...thin.profile };
     empty.evolution = recomputeEvolution(empty);
 
-    const created = await this.prisma.restaurant.create({
-      data: {
+    // projectId 唯一：并发/重复 ensure 时用 upsert，避免 Unique constraint 打爆页面
+    const created = await this.prisma.restaurant.upsert({
+      where: { projectId: project.id },
+      update: {},
+      create: {
         projectId: project.id,
         ownerId: project.ownerId,
         name,

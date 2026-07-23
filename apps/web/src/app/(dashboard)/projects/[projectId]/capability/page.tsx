@@ -45,7 +45,7 @@ const CAPABILITY_META: CapabilityMeta[] = [
     id: "decision",
     label: "关键决策",
     entries: [
-      { label: "今日经营", href: () => "/dashboard" },
+      { label: "今日经营", href: () => "/dashboard?radar=1" },
       { label: "决策会议", href: (id) => `/projects/${id}/decision-room` },
       { label: "扩店决策", href: (id) => `/projects/${id}/decision-case` },
       { label: "股权结构", href: (id) => `/projects/${id}/equity` },
@@ -170,6 +170,18 @@ export default function CapabilityHubPage() {
 
   return (
     <PageContent width="narrow" inset="shell">
+      {projectId ? (
+        <div className="mb-5 rounded-[16px] border border-[rgba(24,24,23,0.1)] bg-[#F7F6F2] px-4 py-3 text-[13px] leading-6 text-[#5f6368]">
+          Phase 1 主入口是对话里的餐饮经营 AI，不逛能力目录。
+          <Link
+            href={`/projects/${projectId}/agent`}
+            prefetch={false}
+            className="ml-2 font-medium text-[#181817] underline-offset-2 hover:underline"
+          >
+            回对话 →
+          </Link>
+        </div>
+      ) : null}
       <header className="space-y-1.5">
         <p className="text-[11px] font-medium tracking-[0.14em] text-[#66735E]">
           能力

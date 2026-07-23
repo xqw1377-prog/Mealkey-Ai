@@ -24,6 +24,7 @@ import {
   buildFounderIntelligenceProfile,
   buildIntelligenceBriefSummary,
 } from "@/server/founder-layer/intelligence";
+import { readMobileAgentState } from "@/server/founder-layer/goal-compiler/persist";
 
 // ─── Types ───
 
@@ -617,6 +618,21 @@ export function buildDashboardHome(bundle: ProjectInsightBundle) {
       }
     : null;
 
+  /** Mobile Agent 编译产出的待确认决策（非终局） */
+  const mobileAgentState = readMobileAgentState(
+    profile as Record<string, unknown>,
+  );
+  const mobilePending = mobileAgentState.pendingDecisions[0];
+  const pendingMobileDecision = mobilePending
+    ? {
+        title: mobilePending.title,
+        reason: mobilePending.reason,
+        goalTitle: mobileAgentState.activeGoal?.title ?? null,
+        href: `/projects/${bundle.project.id}/decision-room?topic=${encodeURIComponent(mobilePending.title)}`,
+        agentHref: `/projects/${bundle.project.id}/agent`,
+      }
+    : null;
+
   const validationTasksRaw = Array.isArray((profile as Record<string, unknown>).validationTasks)
     ? ((profile as Record<string, unknown>).validationTasks as Array<Record<string, unknown>>)
     : [];
@@ -1104,6 +1120,7 @@ export function buildDashboardHome(bundle: ProjectInsightBundle) {
     positioningReviewAlert,
     pendingMeetingDraft,
     pendingCouncilAdjudication,
+    pendingMobileDecision,
     activeValidationTask,
     pendingRedeision:
       riskBlocksOpportunity && openRiskView?.suggestedTopic

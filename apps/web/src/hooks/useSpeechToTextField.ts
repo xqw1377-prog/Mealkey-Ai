@@ -38,6 +38,11 @@ export type SpeechCloudUploadOptions = {
    * 一手事实场景：禁止把浏览器听写当作 transcriptHint 冒充转写
    */
   forbidTranscriptHint?: boolean;
+  /**
+   * 松手转写完成后回调完整字段值（含原有 draft）
+   * Mobile Agent 用于「说完即编译」
+   */
+  onFinalTranscript?: (fullText: string) => void;
 };
 
 function getSpeechRecognitionCtor(): BrowserSpeechRecognitionCtor | null {
@@ -321,8 +326,13 @@ export function useSpeechToTextField(cloud?: SpeechCloudUploadOptions) {
               .filter(Boolean)
               .join("\n");
             onChangeRef.current?.(nextValue);
+            cloud?.onFinalTranscript?.(nextValue);
           } else if (transcriptHint && !cloud?.forbidTranscriptHint) {
+            const nextValue = [initialValueRef.current, transcriptHint]
+              .filter(Boolean)
+              .join("\n");
             applyPreview(transcriptHint);
+            cloud?.onFinalTranscript?.(nextValue);
           }
         };
 
@@ -389,6 +399,17 @@ export function useSpeechToTextField(cloud?: SpeechCloudUploadOptions) {
         recognitionRef.current = null;
         setRecording(false);
         setActiveFieldId(null);
+        // 纯 Web Speech 回退：松手即回调；云端路径由 MediaRecorder.onstop 负责，避免双发
+        const finalText = [
+          initialValueRef.current,
+          finalizedTranscriptRef.current.trim(),
+        ]
+          .filter(Boolean)
+          .join("\n");
+        if (finalText.trim()) {
+          onChangeRef.current?.(finalText);
+          cloud?.onFinalTranscript?.(finalText);
+        }
       };
       recognitionRef.current = recognition;
       try {

@@ -30,6 +30,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="zh-CN">
+      <head>
+        {/* 清掉其他项目留在 localhost:3000 的 Service Worker，避免白屏卡「加载中」 */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{if(!("serviceWorker" in navigator))return;navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister();});});if("caches" in window){caches.keys().then(function(ks){ks.forEach(function(k){caches.delete(k);});});}}catch(e){}})();`,
+          }}
+        />
+      </head>
       <body className="font-sans-cn">
         <Providers>{children}</Providers>
       </body>

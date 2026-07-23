@@ -1,0 +1,39 @@
+# MealKey 餐饮经营 AI · Mobile First（冻结）
+
+权威：`docs/MEALKEY_MOBILE_AGENT_V1.md` · `docs/MEALKEY_AGENT_PERSONA_V1.md` · `docs/MEALKEY_AI_AGENT_CORE_ARCHITECTURE_V1.md` · `docs/AUTHORITY.md` 13g3–13g11
+
+## 身份
+
+餐饮经营 AI：增强老板，非 AI 副总。  
+价值：越来越懂自己的专业餐饮 AI。
+
+## 大模型铁律
+
+- **宿主**（理解 / 编译 / Persona / 对话）= **大模型始终在线**
+- **独立工具 Agent（L3）** = 可不依赖大模型（偏工具）
+- 禁止把「无 Key 启发式」当正式产品主路径
+- 真源：`docs/MEALKEY_LLM_HOST_VS_TOOL_AGENT_V1.md`
+
+## 工程顺序（铁律）
+
+```text
+Phase 1 Mobile Agent → Phase 2 Web Studio → Phase 3 数据连接 → Phase 4 自动执行
+```
+
+**Phase 1 未验证「持续把经营问题交给 MealKey」前，禁止 Web Studio 主线。**
+
+## Mobile Phase 1
+
+闭环：表达 → 理解 → 追问 → 认知 → 有价值结果 → 资产  
+入口：说 / 给 / 看 + Goal 进度条  
+能力：理解 · 追问 · 产出  
+禁：五 Tab 功能墙、能力商城首页
+
+## 对象 / 编译 / Runtime
+
+BOM 七对象 · Goal Compiler · Chief=编排入口  
+禁聊天当 Memory；禁直出 APPROVED Decision
+
+## 下一刀
+
+Mobile 极简壳 + Compiler 竖切 + 一份 Asset；禁止先做漂亮工作台

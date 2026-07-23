@@ -1,7 +1,7 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { FormEvent, Suspense, useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowRight } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { MKBrand } from "@/components/brand/MKBrand";
@@ -20,7 +20,23 @@ import { InAppBrowserBanner } from "@/components/InAppBrowserBanner";
 type Phase = "interview" | "understanding";
 
 export default function OnboardingPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="min-h-screen bg-[#F6F3ED] px-6 py-10 text-[#171717]">
+          <p className="text-sm text-[#6c685f]">正在打开…</p>
+        </main>
+      }
+    >
+      <OnboardingPageInner />
+    </Suspense>
+  );
+}
+
+function OnboardingPageInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const forceBasics = searchParams?.get("force") === "1";
   const { update } = useSession();
   const setCurrentProjectId = useProjectStore((s) => s.setCurrentProjectId);
   const { data: profile, isLoading } = trpc.user.getProfile.useQuery();
@@ -77,10 +93,11 @@ export default function OnboardingPage() {
   }, [answers]);
 
   useEffect(() => {
-    if (profile?.onboarded) {
+    // 已完成且非补填：回主入口；?force=1 允许重修基础信息
+    if (profile?.onboarded && !forceBasics) {
       router.replace("/dashboard");
     }
-  }, [profile?.onboarded, router]);
+  }, [forceBasics, profile?.onboarded, router]);
 
   function commitAnswer(value: string) {
     const trimmed = value.trim();
@@ -143,18 +160,18 @@ export default function OnboardingPage() {
           <InAppBrowserBanner variant="blocking" />
           <div className="space-y-2">
             <p className="text-[12px] leading-5 tracking-[0.08em] text-[#77805F]">
-              建立经营认知 ·{" "}
-              {phase === "interview" ? "经营速写" : "下一步生成画像"}
+              首次登录 · 基础信息
+              {phase === "interview" ? " · 经营速写" : " · 确认后进入对话"}
             </p>
             <h1 className="font-display text-[28px] font-semibold leading-[1.12] tracking-[-0.05em] text-[#171717] md:text-[34px]">
               {phase === "interview"
-                ? "先告诉我，你希望我帮你经营哪一家生意？"
-                : "我已经初步认识你的经营"}
+                ? "先认识你的生意，再开始对话"
+                : "基础信息已齐，可以进入对话了"}
             </h1>
             <p className="max-w-xl text-[15px] leading-[1.8] text-[#5f5b54]">
               {phase === "interview"
-                ? "不是填资料。最少信息后，我会马上认识你的生意并生成经营画像。"
-                : "确认速写无误后，生成《经营画像》——确认画像后再进驾驶舱。"}
+                ? "店名、位置、规模和当下最想解决的事——一两分钟填完，餐饮经营 AI 才知道该怎么帮你。"
+                : "确认无误后进入对话。之后还能在对话里继续补充经营认知。"}
             </p>
           </div>
         </header>
@@ -168,7 +185,7 @@ export default function OnboardingPage() {
                 <div className="rounded-[18px] border border-[rgba(102,115,94,0.16)] bg-[linear-gradient(180deg,#FBFAF7_0%,#F1F3EC_100%)] p-4">
                   <p className="text-[13px] font-medium text-[#2F3A28]">已有企业</p>
                   <p className="mt-1 text-[13px] leading-6 text-[#5f5b54]">
-                    可直接进入驾驶舱，不必重答。
+                    可直接进入对话，不必重答。
                   </p>
                   <button
                     type="button"
@@ -176,7 +193,7 @@ export default function OnboardingPage() {
                     disabled={resumeWorkspace.isPending}
                     className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full border border-[rgba(24,24,23,0.08)] bg-[#181817] px-4 py-2 text-[14px] font-medium text-white transition active:scale-[0.98]"
                   >
-                    <span>{resumeWorkspace.isPending ? "进入中…" : "进入今日驾驶舱"}</span>
+                    <span>{resumeWorkspace.isPending ? "进入中…" : "进入对话"}</span>
                     <ArrowRight className="h-4 w-4" />
                   </button>
                 </div>
@@ -346,8 +363,8 @@ export default function OnboardingPage() {
                   >
                     <span>
                       {completeOnboarding.isPending
-                        ? "正在建立经营认知…"
-                        : "生成经营画像"}
+                        ? "正在保存基础信息…"
+                        : "完成并进入对话"}
                     </span>
                     <ArrowRight className="h-4 w-4" />
                   </button>

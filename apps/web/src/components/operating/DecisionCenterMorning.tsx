@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowRight, RefreshCw } from "lucide-react";
 import { greetingByHour } from "@/lib/time-greeting";
@@ -234,6 +235,14 @@ export function DecisionCenterMorning({
             44,
           )}
         </p>
+        <Link
+          href={`/projects/${projectId}/agent`}
+          prefetch={false}
+          className="inline-flex min-h-11 items-center gap-2 rounded-[14px] border border-[rgba(24,24,23,0.1)] bg-white px-4 text-[14px] font-medium text-[#181817] no-underline touch-manipulation"
+        >
+          今天想解决什么？跟餐饮经营 AI 说
+          <ArrowRight className="h-4 w-4" />
+        </Link>
       </header>
 
       {/* 模块栏：门店经营 */}

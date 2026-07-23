@@ -8,6 +8,7 @@ export * from "./meeting";
 export * from "./memory";
 export * from "./memory-runtime";
 export * from "./mission";
+export * from "./goal-compiler";
 export * from "./capability";
 export * from "./execution-runtime";
 export * from "./growth-runtime";

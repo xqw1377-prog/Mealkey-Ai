@@ -1,14 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Compass } from "lucide-react";
 import { BrandSwitcher } from "@/components/operating/BrandSwitcher";
 import { BusinessPointsStrip } from "@/components/operating/BusinessPointsStrip";
 import { IntelligenceProfilePanel } from "@/components/operating/IntelligenceProfilePanel";
 import { PageContent } from "@/components/operating/PageContent";
 import { PageErrorState, PageLoadingState } from "@/components/operating/PageState";
 import { useBusinessWallet } from "@/hooks/useBusinessWallet";
-import { trendTone } from "@/lib/format";
 import { useProjectStore } from "@/stores/projectStore";
 import { trpc } from "@/lib/trpc";
 
@@ -33,6 +31,11 @@ export default function ProfilePage() {
   );
 
   const { data: brands } = trpc.project.listBrands.useQuery(
+    { projectId: projectId! },
+    { enabled: Boolean(projectId) },
+  );
+
+  const { data: agentState } = trpc.mobileAgent.getState.useQuery(
     { projectId: projectId! },
     { enabled: Boolean(projectId) },
   );
@@ -74,36 +77,13 @@ export default function ProfilePage() {
   const styleLabel =
     (profilePref && PREFERENCE_LABEL[profilePref]) || "稳健增长型";
 
-  const capScores = capability?.scores ?? [];
-  const strongestCap = capScores.length
-    ? [...capScores].sort((a, b) => b.score - a.score)[0]
-    : null;
-  const weakestCap = capScores.length
-    ? [...capScores].sort((a, b) => a.score - b.score)[0]
-    : null;
-
   const growthDelta = capability?.lastGrowthDelta;
   const reflections = growthDelta?.reflections?.filter(Boolean) ?? [];
   const learningNext = growthDelta?.learningNext?.filter(Boolean) ?? [];
 
-  const strengths = [
-    strongestCap ? `${strongestCap.label}相对更稳（${strongestCap.score}）` : null,
-    portrait?.strongestCapability && !strongestCap
-      ? portrait.strongestCapability
-      : null,
-    portrait?.roleLabel,
-  ].filter(Boolean) as string[];
-
-  const risks = [
-    weakestCap
-      ? `${weakestCap.label}是当前短板（${weakestCap.score}）：${weakestCap.note}`
-      : portrait?.weakestCapability
-        ? `${portrait.weakestCapability}相关能力偏弱`
-        : null,
-    portrait?.bottleneckReason && !weakestCap
-      ? portrait.bottleneckReason
-      : null,
-  ].filter(Boolean) as string[];
+  const focus = agentState?.known?.focus ?? [];
+  const aiAssets = agentState?.state?.assets ?? [];
+  const activeGoal = agentState?.state?.activeGoal;
 
   const isInitial = Boolean(
     (portrait as { isInitialPortrait?: boolean } | undefined)?.isInitialPortrait,
@@ -118,12 +98,7 @@ export default function ProfilePage() {
     portrait?.stateJudgement ||
     `你是一家运营能力相对扎实，但品牌与组织资产仍需强化的餐饮企业。经营风格偏${styleLabel}。`;
 
-  const meetingHref = projectId
-    ? `/projects/${projectId}/advisor`
-    : "/dashboard";
-  const capabilityHref = projectId
-    ? `/projects/${projectId}/capability`
-    : "/capability";
+  const agentHref = projectId ? `/projects/${projectId}/agent` : "/dashboard";
 
   return (
     <PageContent width="default" inset="shell" className="space-y-8">
@@ -133,7 +108,7 @@ export default function ProfilePage() {
           {enterpriseName}
         </h1>
         <p className="text-[14px] leading-6 text-[#6f747b]">
-          账户、经营习惯与能力短板。
+          账户与经营习惯。目标与方案请回对话。
         </p>
         {projectId ? <BrandSwitcher projectId={projectId} variant="full" /> : null}
       </header>
@@ -149,6 +124,17 @@ export default function ProfilePage() {
         <p className="text-[11px] tracking-[0.12em] text-[#6f747b]">现在这样</p>
         <p className="text-[17px] leading-[1.7] text-[#202124]">{summary}</p>
         <p className="text-[13px] text-[#6f747b]">风格：{styleLabel}</p>
+        {focus.length ? (
+          <p className="text-[13px] text-[#66735E]">
+            AI 记得你关注：{focus.join("、")}
+          </p>
+        ) : null}
+        {activeGoal ? (
+          <p className="text-[13px] text-[#6f747b]">
+            进行中：{activeGoal.title}
+            {activeGoal.currentStage ? ` · ${activeGoal.currentStage}` : ""}
+          </p>
+        ) : null}
       </section>
 
       {projectId ? (
@@ -157,36 +143,25 @@ export default function ProfilePage() {
         </section>
       ) : null}
 
-      {capScores.length > 0 ? (
-        <section className="space-y-3">
+      {aiAssets.length > 0 ? (
+        <section className="space-y-2 border-b border-[rgba(24,24,23,0.08)] pb-6">
           <div className="flex items-baseline justify-between gap-3">
-            <p className="text-[12px] tracking-[0.08em] text-[#66735E]">能力</p>
+            <p className="text-[12px] tracking-[0.08em] text-[#66735E]">
+              AI 产出资产
+            </p>
             <Link
-              href={capabilityHref}
+              href="/profile/assets"
               prefetch={false}
               className="text-[13px] font-medium text-[#66735E] no-underline"
             >
-              全部 →
+              资料中心 →
             </Link>
           </div>
-          <ul className="divide-y divide-[rgba(24,24,23,0.08)] border-y border-[rgba(24,24,23,0.08)]">
-            {capScores.map((s) => (
-              <li
-                key={s.id}
-                className="flex items-baseline justify-between gap-4 py-3"
-              >
-                <div>
-                  <p className="text-[15px] font-medium text-[#202124]">{s.label}</p>
-                  <p className="mt-0.5 text-[13px] leading-5 text-[#6f747b]">
-                    {s.note}
-                  </p>
-                </div>
-                <p
-                  className={`font-display text-[22px] font-semibold tracking-[-0.03em] ${trendTone(s.trendGlyph)}`}
-                >
-                  {s.score}
-                  <span className="ml-1 text-[14px]">{s.trendGlyph}</span>
-                </p>
+          <ul className="space-y-1.5">
+            {aiAssets.slice(0, 4).map((a) => (
+              <li key={a.assetId} className="text-[15px] leading-7 text-[#202124]">
+                · {a.title}
+                <span className="ml-2 text-[12px] text-[#9a968e]">{a.version}</span>
               </li>
             ))}
           </ul>
@@ -205,30 +180,6 @@ export default function ProfilePage() {
           </ul>
         </section>
       ) : null}
-
-      <section className="space-y-2 border-t border-[rgba(24,24,23,0.08)] pt-6">
-        <p className="text-[12px] tracking-[0.08em] text-[#66735E]">优势</p>
-        <ul className="space-y-1.5">
-          {(strengths.length ? strengths : ["还在观察中"]).map((item) => (
-            <li key={item} className="text-[15px] leading-7 text-[#202124]">
-              · {item}
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <section className="space-y-2 border-t border-[rgba(24,24,23,0.08)] pt-6">
-        <p className="text-[12px] tracking-[0.08em] text-[#B47C5C]">瓶颈</p>
-        <ul className="space-y-1.5">
-          {(risks.length ? risks : ["验证还少，画像还在形成"]).map(
-            (item) => (
-              <li key={item} className="text-[15px] leading-7 text-[#202124]">
-                · {item}
-              </li>
-            ),
-          )}
-        </ul>
-      </section>
 
       {learningNext.length > 0 ? (
         <section className="space-y-2 border-t border-[rgba(24,24,23,0.08)] pt-6">
@@ -256,47 +207,25 @@ export default function ProfilePage() {
 
       <section className="flex flex-col gap-2.5 border-t border-[rgba(24,24,23,0.08)] pt-6 sm:flex-row sm:flex-wrap">
         <Link
-          href={
-            projectId
-              ? `/projects/${projectId}/decision-case`
-              : meetingHref
-          }
+          href={agentHref}
           prefetch={false}
           className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[16px] bg-[#181817] px-5 text-[14px] font-semibold text-white no-underline touch-manipulation active:scale-[0.98]"
         >
-          去拍板
-          <Compass className="h-4 w-4" />
+          回对话
         </Link>
         <Link
-          href="/dashboard"
+          href="/profile/assets"
           prefetch={false}
           className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[16px] border border-[rgba(24,24,23,0.12)] bg-white px-5 text-[14px] font-semibold text-[#181817] no-underline touch-manipulation"
         >
-          回今日
+          经营资产
         </Link>
-        {projectId ? (
-          <Link
-            href={`/projects/${projectId}/runtime?tab=growth`}
-            prefetch={false}
-            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[16px] border border-[rgba(24,24,23,0.12)] bg-white px-5 text-[14px] font-medium text-[#66735E] no-underline touch-manipulation"
-          >
-            成长 Runtime
-            <ArrowRight className="h-4 w-4" />
-          </Link>
-        ) : null}
         <Link
           href="/billing"
           prefetch={false}
           className="inline-flex min-h-12 items-center justify-center gap-2 text-[14px] font-medium text-[#66735E] no-underline underline-offset-4 hover:underline"
         >
           经营点
-        </Link>
-        <Link
-          href="/my-agents"
-          prefetch={false}
-          className="inline-flex min-h-12 items-center justify-center gap-2 text-[14px] font-medium text-[#66735E] no-underline underline-offset-4 hover:underline"
-        >
-          我的 Agent
         </Link>
       </section>
     </PageContent>

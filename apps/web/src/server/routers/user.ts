@@ -197,6 +197,10 @@ export const userRouter = router({
       };
 
       let projectId = existingProject?.id;
+      const withAgentRoute = (id: string) => ({
+        ...mergedProfile,
+        nextSuggestedRoute: `/projects/${id}/agent`,
+      });
 
       if (existingProject) {
         try {
@@ -204,7 +208,7 @@ export const userRouter = router({
             existingProject.id,
             (existingProfile) => ({
               ...existingProfile,
-              ...mergedProfile,
+              ...withAgentRoute(existingProject.id),
             }),
             {
               ownerId: owner.id,
@@ -242,6 +246,12 @@ export const userRouter = router({
           },
         });
         projectId = project.id;
+        await prisma.project.update({
+          where: { id: project.id },
+          data: {
+            profile: stringifyJsonField(withAgentRoute(project.id)),
+          },
+        });
       }
 
       if (projectId) {
@@ -290,9 +300,12 @@ export const userRouter = router({
         }
       }
 
+      // Phase 1：基础信息收集完成后进对话 Agent（画像可在对话侧继续确认）
       return {
         projectId,
-        redirectTo: projectId ? ripPagePath(projectId) : "/dashboard",
+        redirectTo: projectId
+          ? `/projects/${projectId}/agent`
+          : "/onboarding",
       };
     }),
 
@@ -354,7 +367,9 @@ export const userRouter = router({
 
     return {
       projectId: project.id,
-      redirectTo: needsRip ? ripPagePath(project.id) : "/dashboard",
+      redirectTo: needsRip
+        ? ripPagePath(project.id)
+        : `/projects/${project.id}/agent`,
     };
   }),
 });

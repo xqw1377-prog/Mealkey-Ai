@@ -303,66 +303,68 @@ export function ConsultingSixStepJourney({
         </ol>
       </div>
 
-      {/* Sticky command */}
-      <div
-        className={`mpnt-sticky-cta sticky top-0 z-30 flex flex-col gap-3 border-b px-5 py-3.5 md:flex-row md:items-center md:justify-between md:px-8 md:py-4 ${
-          done
-            ? "border-[rgba(95,107,78,0.3)] bg-[rgba(95,107,78,0.1)]"
-            : "border-[#141413] bg-[#141413] text-white"
-        }`}
-      >
-        <div className="min-w-0">
-          <p
-            className={`text-[11px] tracking-[0.12em] ${
-              done ? "text-[#5f6b4e]" : "text-white/60"
-            }`}
-          >
-            {done ? "已完成" : "现在只做这一步"}
-          </p>
-          <p
-            className={`mt-1 text-[16px] font-semibold leading-6 ${
-              done ? "text-[#141413]" : "text-white"
-            }`}
-          >
-            {next.title}
-          </p>
-          <p
-            className={`mt-0.5 hidden text-[13px] leading-5 md:block ${
-              done ? "text-[#5f6b4e]" : "text-white/70"
-            }`}
-          >
-            {next.detail}
-          </p>
+      {/* 采集期不渲染阶段条：底栏只留给对话；其它阶段贴顶单层精简 */}
+      {next.actionId !== "intake.continue" ? (
+        <div
+          className={`mpnt-sticky-cta sticky top-0 z-30 flex flex-col gap-2 border-b px-5 py-2.5 md:flex-row md:items-center md:justify-between md:gap-3 md:px-8 md:py-3.5 ${
+            done
+              ? "border-[rgba(95,107,78,0.3)] bg-[rgba(95,107,78,0.1)]"
+              : "border-[#141413] bg-[#141413] text-white"
+          }`}
+        >
+          <div className="min-w-0 md:flex-1">
+            <p
+              className={`text-[11px] tracking-[0.12em] ${
+                done ? "text-[#5f6b4e]" : "text-white/60"
+              }`}
+            >
+              {done ? "已完成" : "现在只做这一步"}
+            </p>
+            <p
+              className={`mt-0.5 text-[15px] font-semibold leading-5 md:mt-1 md:text-[16px] md:leading-6 ${
+                done ? "text-[#141413]" : "text-white"
+              }`}
+            >
+              {next.title}
+            </p>
+            <p
+              className={`mt-0.5 hidden text-[13px] leading-5 md:block ${
+                done ? "text-[#5f6b4e]" : "text-white/70"
+              }`}
+            >
+              {next.detail}
+            </p>
+          </div>
+          {next.actionId !== "warroom.vote" && next.actionId !== "done" ? (
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void handleCta()}
+              className="inline-flex min-h-11 w-full shrink-0 items-center justify-center gap-2 rounded-[14px] bg-white px-5 text-[14px] font-semibold text-[#141413] transition touch-manipulation hover:bg-[#f3f1eb] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 md:min-h-11 md:w-auto md:rounded-none"
+            >
+              {busy ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  {next.actionId === "research.run"
+                    ? "情报采集中…"
+                    : next.actionId === "research.confirm"
+                      ? "确认并召集顾问…"
+                      : next.actionId?.includes("advisor")
+                        ? "三席出策中…"
+                        : next.actionId?.includes("war")
+                          ? "开会中…"
+                          : "处理中…"}
+                </>
+              ) : (
+                <>
+                  <ArrowRight className="h-4 w-4" />
+                  {next.ctaLabel}
+                </>
+              )}
+            </button>
+          ) : null}
         </div>
-        {next.actionId !== "warroom.vote" && next.actionId !== "done" ? (
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => void handleCta()}
-            className="inline-flex min-h-[3.25rem] w-full shrink-0 items-center justify-center gap-2 rounded-[14px] bg-white px-5 text-[15px] font-semibold text-[#141413] shadow-[0_8px_24px_rgba(0,0,0,0.18)] transition touch-manipulation hover:bg-[#f3f1eb] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 md:min-h-11 md:w-auto md:rounded-none md:text-[14px] md:shadow-none"
-          >
-            {busy ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                {next.actionId === "research.run"
-                  ? "情报采集中…"
-                  : next.actionId === "research.confirm"
-                    ? "确认并召集顾问…"
-                    : next.actionId?.includes("advisor")
-                      ? "三席出策中…"
-                      : next.actionId?.includes("war")
-                        ? "开会中…"
-                        : "处理中…"}
-              </>
-            ) : (
-              <>
-                <ArrowRight className="h-4 w-4" />
-                {next.ctaLabel}
-              </>
-            )}
-          </button>
-        ) : null}
-      </div>
+      ) : null}
 
       <div className="space-y-8 px-5 py-7 md:px-8 md:py-9">
         {ctaError ? (

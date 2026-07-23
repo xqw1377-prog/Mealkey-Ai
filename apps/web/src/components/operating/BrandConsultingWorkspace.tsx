@@ -214,7 +214,7 @@ export function BrandConsultingWorkspace({ projectId }: { projectId: string }) {
   }
 
   return (
-    <div className="mpnt-atelier mx-auto max-w-4xl space-y-5 pb-[calc(env(safe-area-inset-bottom)+12.5rem)] pt-4 md:space-y-8 md:pb-20 md:pt-10">
+    <div className="mpnt-atelier mx-auto max-w-4xl space-y-5 pb-[calc(env(safe-area-inset-bottom)+7.5rem)] pt-4 md:space-y-8 md:pb-20 md:pt-10">
       <header className="space-y-3 px-1 md:space-y-4">
         <Link
           href={`/projects/${projectId}/agent`}
@@ -261,7 +261,7 @@ export function BrandConsultingWorkspace({ projectId }: { projectId: string }) {
       {!briefDone ? (
         <section
           id="step-intake"
-          className="mpnt-rise border border-[rgba(20,20,19,0.1)] bg-white p-5 pb-[calc(env(safe-area-inset-bottom)+9rem)] md:p-7 md:pb-7"
+          className="mpnt-rise border border-[rgba(20,20,19,0.1)] bg-white p-5 pb-[calc(env(safe-area-inset-bottom)+6.5rem)] md:p-7 md:pb-7"
         >
           {stage === "DISCOVERY" || !stage ? (
             <div className="space-y-3">

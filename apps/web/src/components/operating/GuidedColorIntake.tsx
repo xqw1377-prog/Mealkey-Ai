@@ -273,7 +273,7 @@ export function GuidedColorIntake({
         </div>
       ) : null}
 
-      {completeLabel && onComplete && (mustOk || allOk || completeDisabled) ? (
+      {completeLabel && onComplete && (mustOk || allOk) ? (
         <div className="space-y-2">
           <button
             type="button"

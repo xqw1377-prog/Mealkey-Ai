@@ -378,7 +378,7 @@ export function AgentConsultingWorkspace({
   );
 
   return (
-    <div className="mpnt-atelier mx-auto max-w-4xl space-y-8 pb-[calc(env(safe-area-inset-bottom)+12.5rem)] pt-6 md:pb-20 md:pt-10">
+    <div className="mpnt-atelier mx-auto max-w-4xl space-y-8 pb-[calc(env(safe-area-inset-bottom)+7.5rem)] pt-6 md:pb-20 md:pt-10">
       <header className="space-y-4 px-1">
         <Link
           href={`/projects/${projectId}/agent`}
@@ -450,14 +450,15 @@ export function AgentConsultingWorkspace({
           </ol>
         </div>
 
+        {nextStep.actionId !== "intake.continue" ? (
         <div
-          className={`mpnt-sticky-cta sticky top-0 z-30 flex flex-col gap-3 border-b px-5 py-4 md:flex-row md:items-center md:justify-between md:px-8 ${
+          className={`mpnt-sticky-cta sticky top-0 z-30 flex flex-col gap-2 border-b px-5 py-2.5 md:flex-row md:items-center md:justify-between md:gap-3 md:px-8 md:py-3.5 ${
             done
               ? "border-[rgba(95,107,78,0.3)] bg-[rgba(95,107,78,0.1)]"
               : "border-[#141413] bg-[#141413] text-white"
           }`}
         >
-          <div>
+          <div className="min-w-0 md:flex-1">
             <p
               className={`text-[11px] tracking-[0.12em] ${
                 done ? "text-[#5f6b4e]" : "text-white/55"
@@ -466,14 +467,14 @@ export function AgentConsultingWorkspace({
               {done ? "已交付" : "现在 · 只做这一步"}
             </p>
             <p
-              className={`mt-1 text-[16px] font-semibold ${
+              className={`mt-0.5 text-[15px] font-semibold leading-5 md:mt-1 md:text-[16px] ${
                 done ? "text-[#141413]" : "text-white"
               }`}
             >
               {nextStep.title}
             </p>
             <p
-              className={`mt-0.5 text-[13px] ${
+              className={`mt-0.5 hidden text-[13px] md:block ${
                 done ? "text-[#5f6b4e]" : "text-white/65"
               }`}
             >
@@ -485,7 +486,7 @@ export function AgentConsultingWorkspace({
               type="button"
               disabled={pending}
               onClick={() => void handleCta()}
-              className="inline-flex min-h-12 w-full items-center justify-center gap-2 bg-white px-5 text-[14px] font-semibold text-[#141413] touch-manipulation active:scale-[0.98] disabled:opacity-50 md:min-h-11 md:w-auto"
+              className="inline-flex min-h-11 w-full items-center justify-center gap-2 bg-white px-5 text-[14px] font-semibold text-[#141413] touch-manipulation active:scale-[0.98] disabled:opacity-50 md:min-h-11 md:w-auto"
             >
               {pending ? (
                 <>
@@ -514,6 +515,7 @@ export function AgentConsultingWorkspace({
             </button>
           ) : null}
         </div>
+        ) : null}
 
         <div className="space-y-8 px-5 py-7 md:px-8 md:py-9">
           {assets.research &&
@@ -676,7 +678,7 @@ export function AgentConsultingWorkspace({
       {consulting.intakeStatus !== "complete" ? (
         <section
           id="step-intake"
-          className="mpnt-rise border border-[rgba(20,20,19,0.1)] bg-white p-5 pb-[calc(env(safe-area-inset-bottom)+9rem)] md:p-7 md:pb-7"
+          className="mpnt-rise border border-[rgba(20,20,19,0.1)] bg-white p-5 pb-[calc(env(safe-area-inset-bottom)+6.5rem)] md:p-7 md:pb-7"
         >
           {consulting.assets.basics?.status !== "complete" ? (
             <div className="space-y-3">

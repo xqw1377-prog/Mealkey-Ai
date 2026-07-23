@@ -5,8 +5,7 @@ import { PRODUCT_BRAND } from "@/lib/product-brand";
 
 /**
  * 老板产品入口（用户 Web）
- * 与营销橱窗 `/store`、开发者门户 `/developers`、运营管理台 `/platform/admin` 分离：
- * 本页只服务「进入经营台」，不并列生态/开发/运营入口。
+ * 本页只服务「进入经营台」；营销橱窗 / 开发者门户走独立路由，不在此页脚混排。
  */
 export default function HomePage() {
   return (
@@ -45,8 +44,8 @@ export default function HomePage() {
         <circle cx="176" cy="72" r="5" fill="#66735E" />
       </svg>
 
-      <div className="relative mx-auto flex min-h-[100dvh] w-full max-w-xl flex-col justify-between px-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-[max(1.5rem,env(safe-area-inset-top))] md:max-w-2xl md:px-10 md:pb-10 md:pt-10">
-        <div className="flex flex-1 flex-col justify-center py-6 md:py-10">
+      <div className="relative mx-auto flex min-h-[100dvh] w-full max-w-xl flex-col justify-center px-6 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-[max(1.5rem,env(safe-area-inset-top))] md:max-w-2xl md:px-10 md:pb-10 md:pt-10">
+        <div className="flex flex-col justify-center py-6 md:py-10">
           <header className="mpnt-rise">
             <MKBrand size="landing" />
           </header>
@@ -77,27 +76,7 @@ export default function HomePage() {
               <span>注册账号</span>
             </Link>
           </div>
-          <p className="mpnt-rise mpnt-rise-delay-2 mt-3 text-[12px] leading-5 text-[#6f747b]">
-            面向餐饮老板的日常经营入口。能力市场与开发者门户已拆到独立页面，不在此混排。
-          </p>
         </div>
-
-        <footer className="mpnt-rise mpnt-rise-delay-3 shrink-0 space-y-2 border-t border-[rgba(24,24,23,0.08)] pt-4 text-[12px] leading-5 tracking-[0.02em] text-[#6f747b]">
-          <p>
-            {PRODUCT_BRAND.nameZh} · {PRODUCT_BRAND.nameEn} · {PRODUCT_BRAND.positioning}
-          </p>
-          <p className="flex flex-wrap gap-x-3 gap-y-1">
-            <Link href="/store" className="underline-offset-2 hover:underline">
-              能力市场（营销）
-            </Link>
-            <span className="text-[rgba(24,24,23,0.2)]" aria-hidden>
-              ·
-            </span>
-            <Link href="/developers" className="underline-offset-2 hover:underline">
-              开发者门户
-            </Link>
-          </p>
-        </footer>
       </div>
     </main>
   );

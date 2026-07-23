@@ -472,24 +472,24 @@
   .mpnt-turn-in { animation: none; }
 }
 
-/* 六步移动端：步条横滑；主 CTA 贴底（叠在底栏之上） */
+/* 六步移动端：步条横滑；阶段 CTA 贴顶精简条（采集期不贴底，避免与语音底栏叠两层） */
 @media (max-width: 767px) {
   .mpnt-sticky-cta {
-    position: fixed;
-    left: 0;
-    right: 0;
-    top: auto;
-    bottom: calc(4.25rem + env(safe-area-inset-bottom, 0px));
-    z-index: 35;
-    border-bottom: none;
-    border-top: 1px solid rgba(20, 20, 19, 0.12);
-    box-shadow: 0 -10px 28px rgba(20, 20, 19, 0.1);
-    padding-left: max(1.25rem, env(safe-area-inset-left, 0px));
-    padding-right: max(1.25rem, env(safe-area-inset-right, 0px));
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    gap: 0.5rem;
+    padding-top: 0.65rem;
+    padding-bottom: 0.65rem;
+    box-shadow: 0 8px 20px rgba(20, 20, 19, 0.08);
   }
   .mpnt-sticky-cta > button {
     width: 100%;
-    min-height: 3rem;
+    min-height: 2.75rem;
+  }
+  /* 信息采集进行中：完全隐藏阶段贴条，底栏只留给对话 */
+  .mpnt-sticky-cta[data-intake="1"] {
+    display: none;
   }
   .mpnt-step-rail {
     -webkit-overflow-scrolling: touch;

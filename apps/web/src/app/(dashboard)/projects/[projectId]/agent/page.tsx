@@ -10,7 +10,6 @@ import {
   Loader2,
   Menu,
   SquarePen,
-  MessageCircle,
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { PageErrorBoundary } from "@/components/operating/PageErrorBoundary";
@@ -18,6 +17,7 @@ import {
   AgentChatSidebar,
   type AgentHistoryItem,
 } from "@/components/operating/AgentChatSidebar";
+import { AgentEmptyThreeEasy } from "@/components/operating/AgentEmptyThreeEasy";
 import {
   HoldToTalkBanner,
   HoldToTalkButton,
@@ -817,149 +817,52 @@ function AgentPageInner({ projectId }: { projectId: string }) {
           ) : null}
 
           {isEmpty ? (
-            <div className="mx-auto flex min-h-[58dvh] max-w-3xl flex-col items-center justify-center px-5 text-center lg:min-h-[62dvh]">
-              <p className="text-[11px] font-medium tracking-[0.16em] text-[#66735E]">
-                你的餐饮经营 AI
-              </p>
-              <h1 className="mt-4 font-display text-[30px] font-semibold leading-[1.15] tracking-[-0.045em] text-[#181817] lg:mt-5 lg:text-[36px]">
-                {greeting}
-                {data?.ownerName ? `，${data.ownerName}` : ""}
-              </h1>
-              <p className="mt-4 max-w-[20em] text-[16px] font-medium leading-7 tracking-[-0.02em] text-[#202124] lg:mt-5 lg:max-w-[24em] lg:text-[18px]">
-                有经营问题直接说；多轮追问，越聊越懂你的店
-              </p>
-              {knownLine ? (
-                <p className="mt-3 max-w-[22em] border-y border-[rgba(24,24,23,0.08)] py-2 text-[12px] leading-5 text-[#4a5344]">
-                  已了解：{knownLine}
-                </p>
-              ) : null}
-              {radar?.summaryLine ? (
-                <p className="mt-2 max-w-[22em] text-[13px] leading-6 text-[#5c6168]">
-                  {clip(radar.summaryLine, 48)}
-                </p>
-              ) : (
-                <p className="mt-2 max-w-[24em] text-[13px] leading-6 text-[#5c6168]">
-                  按住底部麦克风开口，或点场景进入专业能力。
-                </p>
-              )}
-              <button
-                type="button"
-                disabled={busy}
-                onClick={() => {
-                  setFileHint("在下方开口或打字，直接说你的经营问题。");
-                  focusComposer();
-                  window.setTimeout(() => setFileHint(null), 4000);
-                }}
-                className="mt-7 inline-flex min-h-12 w-full max-w-md items-center justify-center gap-2 rounded-[16px] bg-[#181817] px-5 text-[15px] font-semibold text-white shadow-[0_8px_22px_rgba(24,24,23,0.14)] transition active:scale-[0.98] disabled:opacity-50"
-              >
-                <MessageCircle className="h-4 w-4" />
-                开始聊经营
-              </button>
-              <nav
-                aria-label="相关入口"
-                className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-[13px]"
-              >
-                <Link
-                  href={`/projects/${projectId}/decision-room`}
-                  prefetch={false}
-                  className="font-medium text-[#66735E] no-underline underline-offset-2 hover:underline"
-                >
-                  决策室
-                </Link>
-                <Link
-                  href="/dashboard?radar=1"
-                  prefetch={false}
-                  className="font-medium text-[#66735E] no-underline underline-offset-2 hover:underline"
-                >
-                  经营动态
-                </Link>
-                <Link
-                  href={`/projects/${projectId}/capability`}
-                  prefetch={false}
-                  className="font-medium text-[#66735E] no-underline underline-offset-2 hover:underline"
-                >
-                  能力一览
-                </Link>
-              </nav>
-              <div className="mt-5 grid w-full max-w-lg grid-cols-2 gap-2 sm:grid-cols-3">
-                {scenarioStarts.map((s) => (
-                  <Link
-                    key={s.label}
-                    href={s.href}
-                    prefetch={false}
-                    className="inline-flex min-h-11 items-center justify-center rounded-[16px] border border-[rgba(24,24,23,0.12)] bg-white px-3 text-[13px] font-medium text-[#181817] no-underline transition active:scale-[0.98] hover:bg-[#FBFAF7]"
-                  >
-                    {s.label}
-                  </Link>
-                ))}
-              </div>
-              <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-[13px]">
-                <button
-                  type="button"
-                  disabled={busy}
-                  onClick={() => fileRef.current?.click()}
-                  className="font-medium text-[#66735E] underline-offset-2 hover:underline disabled:opacity-50"
-                >
-                  上传经营资料
-                </button>
-                <button
-                  type="button"
-                  disabled={busy}
-                  onClick={() =>
-                    void runCompile({
-                      trigger: "utterance",
-                      utterance: "最近生意不好，帮我做一次门店体检",
-                    })
-                  }
-                  className="font-medium text-[#66735E] underline-offset-2 hover:underline disabled:opacity-50"
-                >
-                  对话里做体检
-                </button>
-                {assets[0] ? (
-                  <button
-                    type="button"
-                    disabled={busy}
-                    onClick={() => {
-                      setViewAsset(assets[0]!);
-                    }}
-                    className="font-medium text-[#66735E] underline-offset-2 hover:underline disabled:opacity-50"
-                  >
-                    继续上次资产
-                  </button>
-                ) : null}
-                {assets[0] ? (
-                  <button
-                    type="button"
-                    disabled={busy}
-                    onClick={() =>
-                      focusComposer(
-                        `关于「${clip(assets[0]!.title, 24)}」，我想继续追问：`,
-                      )
-                    }
-                    className="font-medium text-[#66735E] underline-offset-2 hover:underline disabled:opacity-50"
-                  >
-                    就上次结果继续聊
-                  </button>
-                ) : null}
-              </div>
-              {aiSuggestion && observeUtterance ? (
-                <button
-                  type="button"
-                  disabled={busy}
-                  onClick={() =>
-                    void runCompile({
-                      trigger: "observe",
-                      utterance: observeUtterance,
-                      signalId: primary?.id,
-                    })
-                  }
-                  className="mt-8 max-w-[min(100%,20rem)] rounded-[16px] border border-[rgba(24,24,23,0.12)] bg-white px-4 py-2.5 text-left text-[13px] leading-5 text-[#3a3a38] disabled:opacity-50"
-                >
-                  <span className="text-[#8a8680]">经营动态 · </span>
-                  {aiSuggestion}
-                </button>
-              ) : null}
-            </div>
+            <AgentEmptyThreeEasy
+              greeting={greeting}
+              ownerName={data?.ownerName}
+              knownLine={knownLine}
+              primaryQuestion={
+                radar?.summaryLine
+                  ? clip(radar.summaryLine, 48)
+                  : "今天最想先解决哪一件经营事？"
+              }
+              busy={busy}
+              projectId={projectId}
+              scenarioStarts={scenarioStarts}
+              assets={assets}
+              aiSuggestion={aiSuggestion}
+              observeUtterance={observeUtterance}
+              onStartTalk={() => {
+                setFileHint("按住底部绿色麦克风说话；也可打字。");
+                focusComposer();
+                window.setTimeout(() => setFileHint(null), 4000);
+              }}
+              onUpload={() => fileRef.current?.click()}
+              onDiagnose={() =>
+                void runCompile({
+                  trigger: "utterance",
+                  utterance: "最近生意不好，帮我做一次门店体检",
+                })
+              }
+              onViewAsset={() => {
+                if (assets[0]) setViewAsset(assets[0]);
+              }}
+              onContinueAsset={() => {
+                if (assets[0]) {
+                  focusComposer(
+                    `关于「${clip(assets[0].title, 24)}」，我想继续追问：`,
+                  );
+                }
+              }}
+              onObserve={() => {
+                if (!observeUtterance) return;
+                void runCompile({
+                  trigger: "observe",
+                  utterance: observeUtterance,
+                  signalId: primary?.id,
+                });
+              }}
+            />
           ) : (
             <div className="mx-auto max-w-3xl space-y-4 pb-4 lg:pb-8">
               {(knownLine || interactionHints || goal) &&

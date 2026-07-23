@@ -9,6 +9,7 @@ import { MKPageHeader } from "@/components/operating/MKPageHeader";
 import { OpsSecondaryLinks } from "@/components/operating/OpsSecondaryLinks";
 import { PageContent } from "@/components/operating/PageContent";
 import { PageErrorState, PageLoadingState } from "@/components/operating/PageState";
+import { ThreeEasyLanes } from "@/components/operating/ThreeEasyGuide";
 import { useProjectId } from "@/hooks/useProjectId";
 import { trendTone } from "@/lib/format";
 import { useProjectStore } from "@/stores/projectStore";
@@ -175,7 +176,7 @@ export default function CapabilityHubPage() {
       <MKPageHeader
         eyebrow="能力"
         title={name}
-        description="按能力查阅与校准；日常判断从对话发起。"
+        description="三易主路径在上：学→做→管；下面是能力目录。"
         meta={
           <>
             {projectId ? (
@@ -191,12 +192,12 @@ export default function CapabilityHubPage() {
                         label: "回对话",
                       },
                       {
-                        href: "/dashboard?radar=1",
-                        label: "经营动态",
-                      },
-                      {
                         href: `/projects/${projectId}/decision-room`,
                         label: "决策室",
+                      },
+                      {
+                        href: `/projects/${projectId}/decisions`,
+                        label: "跟进",
                       },
                     ]
                   : undefined
@@ -205,6 +206,8 @@ export default function CapabilityHubPage() {
           </>
         }
       />
+
+      {projectId ? <ThreeEasyLanes projectId={projectId} /> : null}
 
       <section className="border-y border-[rgba(24,24,23,0.08)] py-3">
         <p className="text-[11px] font-medium tracking-[0.12em] text-[#66735E]">
@@ -256,7 +259,11 @@ export default function CapabilityHubPage() {
         </section>
       ) : null}
 
-      <section className="mt-3 divide-y divide-[rgba(24,24,23,0.08)] border-y border-[rgba(24,24,23,0.08)]">
+      <section className="mt-3 space-y-2">
+        <p className="text-[11px] font-medium tracking-[0.12em] text-[#6f747b]">
+          能力目录 · 需要时再点
+        </p>
+        <div className="divide-y divide-[rgba(24,24,23,0.08)] border-y border-[rgba(24,24,23,0.08)]">
         {CAPABILITY_META.map((cap) => {
           const live = scoreById.get(cap.id);
           const score =
@@ -313,6 +320,7 @@ export default function CapabilityHubPage() {
             </div>
           );
         })}
+        </div>
       </section>
     </PageContent>
   );

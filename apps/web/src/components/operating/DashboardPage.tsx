@@ -236,7 +236,7 @@ export function DashboardPage({
       <MKPageHeader
         eyebrow="经营动态"
         title={greeting}
-        description={`${home.todayLabel} · ${currentProject.name}`}
+        description={`${home.todayLabel} · ${currentProject.name} · 一眼看清今天最该做的事`}
         meta={
           <OpsSecondaryLinks
             projectId={currentProject.id}
@@ -247,8 +247,8 @@ export function DashboardPage({
                 label: "决策室",
               },
               {
-                href: `/projects/${currentProject.id}/capability`,
-                label: "能力一览",
+                href: `/projects/${currentProject.id}/decisions`,
+                label: "跟进",
               },
             ]}
           />
@@ -319,10 +319,11 @@ export function DashboardPage({
       ) : null}
 
       {scan ? (
-        <div className="relative mt-7">
+        <div className="relative mt-2">
           <DecisionCenterMorning
             scan={scan}
             projectId={currentProject.id}
+            embedded
           />
         </div>
       ) : (

@@ -99,9 +99,12 @@ function ChangeCard({
 export function DecisionCenterMorning({
   scan,
   projectId,
+  /** embedded：外层已有问候/页头时，跳过重复英雄位（三易 L1） */
+  embedded = false,
 }: {
   scan: DailyScanV1;
   projectId: string;
+  embedded?: boolean;
   onToggleAction?: (actionId: string) => void;
   pendingActionId?: string | null;
   actionStatus?: {
@@ -207,10 +210,10 @@ export function DecisionCenterMorning({
 
   return (
     <div className="space-y-8">
-      <header className="space-y-2">
+      {embedded ? (
         <div className="flex items-center justify-between gap-3">
-          <p className="text-[11px] font-medium tracking-[0.16em] text-[#66735E]">
-            今日经营
+          <p className="text-[11px] font-medium tracking-[0.14em] text-[#66735E]">
+            今天最值得关注
           </p>
           <button
             type="button"
@@ -224,28 +227,99 @@ export function DecisionCenterMorning({
             {refreshWorld.isPending ? "刷新中…" : "刷新"}
           </button>
         </div>
-        <h1 className="font-display text-[28px] font-semibold leading-[1.15] tracking-[-0.04em] text-[#202124]">
-          {greeting}，{d.greetingName}
-        </h1>
-        <p className="text-[14px] leading-6 text-[#6f747b]">
-          {clipLine(
-            radar?.summaryLine ||
-              scan.worldScanSummary ||
-              "当天动态与变化解读都在这一页。",
-            44,
-          )}
-        </p>
-        <Link
-          href={`/projects/${projectId}/agent`}
-          prefetch={false}
-          className="inline-flex min-h-11 items-center gap-2 rounded-[14px] border border-[rgba(24,24,23,0.1)] bg-white px-4 text-[14px] font-medium text-[#181817] no-underline touch-manipulation"
-        >
-          今天想解决什么？跟餐饮经营 AI 说
-          <ArrowRight className="h-4 w-4" />
-        </Link>
-      </header>
+      ) : (
+        <header className="space-y-2">
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-[11px] font-medium tracking-[0.16em] text-[#66735E]">
+              今日经营
+            </p>
+            <button
+              type="button"
+              disabled={refreshWorld.isPending}
+              onClick={() => refreshWorld.mutate({ projectId, force: true })}
+              className="inline-flex min-h-10 items-center gap-1.5 text-[12px] font-medium text-[#66735E] touch-manipulation"
+            >
+              <RefreshCw
+                className={`h-3.5 w-3.5 ${refreshWorld.isPending ? "animate-spin" : ""}`}
+              />
+              {refreshWorld.isPending ? "刷新中…" : "刷新"}
+            </button>
+          </div>
+          <h1 className="font-display text-[28px] font-semibold leading-[1.15] tracking-[-0.04em] text-[#202124]">
+            {greeting}，{d.greetingName}
+          </h1>
+          <p className="text-[14px] leading-6 text-[#6f747b]">
+            {clipLine(
+              radar?.summaryLine ||
+                scan.worldScanSummary ||
+                "当天动态与变化解读都在这一页。",
+              44,
+            )}
+          </p>
+          <Link
+            href={`/projects/${projectId}/agent`}
+            prefetch={false}
+            className="inline-flex min-h-11 items-center gap-2 rounded-[16px] border border-[rgba(24,24,23,0.12)] bg-white px-4 text-[14px] font-medium text-[#181817] no-underline touch-manipulation"
+          >
+            今天想解决什么？跟餐饮经营 AI 说
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+        </header>
+      )}
 
-      {/* 模块栏：门店经营 */}
+      {/* 三易·易做：变化解读主位先于模块墙 */}
+      <section className="space-y-4 border-y border-[rgba(24,24,23,0.1)] py-5">
+        {!embedded ? (
+          <p className="text-[11px] tracking-[0.14em] text-[#66735E]">
+            变化解读 · 今天最值得关注
+          </p>
+        ) : null}
+        {primary ? (
+          <>
+            <h2 className="font-display text-[22px] font-semibold leading-snug tracking-[-0.03em] text-[#202124]">
+              {primary.title}
+            </h2>
+            {primaryReading ? (
+              <p className="text-[15px] leading-6 text-[#3a3d41]">
+                {primaryReading}
+              </p>
+            ) : null}
+            {primary.suggestion ? (
+              <p className="text-[13px] leading-5 text-[#6f747b]">
+                建议 · {clipLine(primary.suggestion, 56)}
+              </p>
+            ) : null}
+          </>
+        ) : (
+          <p className="text-[14px] leading-6 text-[#6f747b]">
+            {clipLine(
+              radar?.emptyIntelNote ||
+                "今天没有尖锐变化。可先进对话说清一件事，或进决策室开案。",
+              72,
+            )}
+          </p>
+        )}
+
+        <div className="flex flex-col gap-2.5 sm:flex-row">
+          <button
+            type="button"
+            onClick={() => enterDecisionRoom(Boolean(primary))}
+            className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-[16px] bg-[#181817] px-5 text-[15px] font-semibold text-white touch-manipulation"
+          >
+            {primary ? "带着这条去拍板" : "进入决策室"}
+            <ArrowRight className="h-4 w-4" />
+          </button>
+          <Link
+            href={`/projects/${projectId}/agent`}
+            prefetch={false}
+            className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[16px] border border-[rgba(24,24,23,0.12)] bg-white px-5 text-[14px] font-semibold text-[#181817] no-underline touch-manipulation"
+          >
+            回对话先说清楚
+          </Link>
+        </div>
+      </section>
+
+      {/* 模块栏：门店经营（L2） */}
       <DynamicModule
         eyebrow="门店经营"
         emptyText="接通餐厅数据或上传周报后，这里显示客流/客单等变化与解读。"
@@ -323,64 +397,6 @@ export function DecisionCenterMorning({
           </ul>
         ) : null}
       </DynamicModule>
-
-      {/* 变化解读主位：就在本页，不跳二级 */}
-      <section className="space-y-4 border-y border-[rgba(24,24,23,0.1)] py-6">
-        <p className="text-[11px] tracking-[0.14em] text-[#66735E]">
-          变化解读 · 今天最值得关注
-        </p>
-        {primary ? (
-          <>
-            <h2 className="font-display text-[22px] font-semibold leading-snug tracking-[-0.03em] text-[#202124]">
-              {primary.title}
-            </h2>
-            {primaryReading ? (
-              <p className="text-[15px] leading-6 text-[#3a3d41]">
-                {primaryReading}
-              </p>
-            ) : null}
-            {primary.impact ? (
-              <p className="text-[13px] leading-5 text-[#6f747b]">
-                影响 · {clipLine(primary.impact, 56)}
-              </p>
-            ) : null}
-            {primary.suggestion ? (
-              <p className="text-[13px] leading-5 text-[#6f747b]">
-                建议 · {clipLine(primary.suggestion, 56)}
-              </p>
-            ) : null}
-            {(primary.evidenceChain || []).length > 0 ? (
-              <ul className="space-y-1.5 border-t border-[rgba(24,24,23,0.06)] pt-3">
-                {(primary.evidenceChain || []).slice(0, 2).map((step) => (
-                  <li
-                    key={`${step.order}-${step.claim.slice(0, 16)}`}
-                    className="text-[12px] leading-5 text-[#6f747b]"
-                  >
-                    · {clipLine(step.claim, 56)}
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-          </>
-        ) : (
-          <p className="text-[14px] leading-6 text-[#6f747b]">
-            {clipLine(
-              radar?.emptyIntelNote ||
-                "今天没有尖锐变化需要解读。可进入决策室发起议题。",
-              72,
-            )}
-          </p>
-        )}
-
-        <button
-          type="button"
-          onClick={() => enterDecisionRoom(Boolean(primary))}
-          className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[16px] bg-[#181817] px-5 text-[15px] font-semibold text-white touch-manipulation"
-        >
-          进入决策室
-          <ArrowRight className="h-4 w-4" />
-        </button>
-      </section>
 
       {refreshWorld.error ? (
         <p className="text-[12px] text-[#8A4F31]">{refreshWorld.error.message}</p>

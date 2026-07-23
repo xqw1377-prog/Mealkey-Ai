@@ -16,6 +16,12 @@ export {
   mkPageHeaderSecondaryCtaClass,
 } from "./MKPageHeader";
 export { OpsSecondaryLinks } from "./OpsSecondaryLinks";
+export {
+  ThreeEasyHint,
+  ThreeEasyLanes,
+  buildThreeEasyLanes,
+} from "./ThreeEasyGuide";
+export { AgentEmptyThreeEasy } from "./AgentEmptyThreeEasy";
 export { MKStatusHero } from "./MKStatusHero";
 export { MKDecisionTimeline } from "./MKDecisionTimeline";
 export { MKGrowthMap } from "./MKGrowthMap";

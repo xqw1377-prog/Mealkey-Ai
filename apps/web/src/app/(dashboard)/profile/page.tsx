@@ -8,6 +8,7 @@ import { MKPageHeader } from "@/components/operating/MKPageHeader";
 import { OpsSecondaryLinks } from "@/components/operating/OpsSecondaryLinks";
 import { PageContent } from "@/components/operating/PageContent";
 import { PageErrorState, PageLoadingState } from "@/components/operating/PageState";
+import { ThreeEasyLanes } from "@/components/operating/ThreeEasyGuide";
 import { useBusinessWallet } from "@/hooks/useBusinessWallet";
 import { useProjectStore } from "@/stores/projectStore";
 import { trpc } from "@/lib/trpc";
@@ -105,18 +106,88 @@ export default function ProfilePage() {
   return (
     <PageContent width="console" inset="shell" className="space-y-8">
       <MKPageHeader
-        eyebrow="我的"
+        eyebrow="我的 · 易管"
         title={enterpriseName}
-        description="账户与经营习惯。目标与方案请回对话。"
+        description="拍板之后跟住：行动、经营动态、回对话。"
         meta={
           <>
             {projectId ? (
               <BrandSwitcher projectId={projectId} variant="full" />
             ) : null}
-            <OpsSecondaryLinks projectId={projectId} />
+            <OpsSecondaryLinks
+              projectId={projectId}
+              links={
+                projectId
+                  ? [
+                      {
+                        href: `/projects/${projectId}/decisions`,
+                        label: "行动跟进",
+                      },
+                      {
+                        href: "/dashboard?radar=1",
+                        label: "经营动态",
+                      },
+                      {
+                        href: `/projects/${projectId}/agent`,
+                        label: "回对话",
+                      },
+                    ]
+                  : undefined
+              }
+            />
           </>
         }
       />
+
+      {projectId ? (
+        <section className="space-y-1">
+          <p className="text-[11px] tracking-[0.12em] text-[#66735E]">
+            三易 · 主路径
+          </p>
+          <ThreeEasyLanes projectId={projectId} />
+        </section>
+      ) : null}
+
+      {projectId ? (
+        <section className="space-y-3 border-y border-[rgba(24,24,23,0.1)] py-5">
+          <p className="text-[11px] tracking-[0.12em] text-[#66735E]">
+            易管 · 跟进这几件
+          </p>
+          <div className="flex flex-col gap-2.5 sm:flex-row sm:flex-wrap">
+            <Link
+              href={`/projects/${projectId}/decisions`}
+              prefetch={false}
+              className="inline-flex min-h-12 flex-1 items-center justify-center rounded-[16px] bg-[#181817] px-5 text-[14px] font-semibold text-white no-underline touch-manipulation active:scale-[0.98]"
+            >
+              行动跟进
+            </Link>
+            <Link
+              href="/dashboard?radar=1"
+              prefetch={false}
+              className="inline-flex min-h-12 flex-1 items-center justify-center rounded-[16px] border border-[rgba(24,24,23,0.12)] bg-white px-5 text-[14px] font-semibold text-[#181817] no-underline touch-manipulation"
+            >
+              经营动态
+            </Link>
+            <Link
+              href={`/projects/${projectId}/mission`}
+              prefetch={false}
+              className="inline-flex min-h-12 items-center justify-center px-3 text-[14px] font-medium text-[#66735E] no-underline underline-offset-4 hover:underline"
+            >
+              任务推进
+            </Link>
+          </div>
+          {activeGoal ? (
+            <p className="text-[13px] text-[#6f747b]">
+              进行中：{activeGoal.title}
+              {activeGoal.currentStage ? ` · ${activeGoal.currentStage}` : ""}
+            </p>
+          ) : (
+            <p className="text-[13px] text-[#6f747b]">
+              还没有进行中的目标时，先回对话说清楚一件事。
+            </p>
+          )}
+        </section>
+      ) : null}
 
       {!walletLoading ? (
         <section className="space-y-2">
@@ -132,12 +203,6 @@ export default function ProfilePage() {
         {focus.length ? (
           <p className="text-[13px] text-[#66735E]">
             AI 记得你关注：{focus.join("、")}
-          </p>
-        ) : null}
-        {activeGoal ? (
-          <p className="text-[13px] text-[#6f747b]">
-            进行中：{activeGoal.title}
-            {activeGoal.currentStage ? ` · ${activeGoal.currentStage}` : ""}
           </p>
         ) : null}
       </section>
@@ -210,27 +275,27 @@ export default function ProfilePage() {
         </p>
       </section>
 
-      <section className="flex flex-col gap-2.5 border-t border-[rgba(24,24,23,0.08)] pt-6 sm:flex-row sm:flex-wrap">
-        <Link
-          href={agentHref}
-          prefetch={false}
-          className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[16px] bg-[#181817] px-5 text-[14px] font-semibold text-white no-underline touch-manipulation active:scale-[0.98]"
-        >
-          回对话
-        </Link>
+      <section className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-[rgba(24,24,23,0.08)] pt-6 text-[13px]">
         <Link
           href="/profile/assets"
           prefetch={false}
-          className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[16px] border border-[rgba(24,24,23,0.12)] bg-white px-5 text-[14px] font-semibold text-[#181817] no-underline touch-manipulation"
+          className="font-medium text-[#66735E] no-underline underline-offset-2 hover:underline"
         >
           经营资产
         </Link>
         <Link
           href="/billing"
           prefetch={false}
-          className="inline-flex min-h-12 items-center justify-center gap-2 text-[14px] font-medium text-[#66735E] no-underline underline-offset-4 hover:underline"
+          className="font-medium text-[#66735E] no-underline underline-offset-2 hover:underline"
         >
           经营点
+        </Link>
+        <Link
+          href={agentHref}
+          prefetch={false}
+          className="font-medium text-[#66735E] no-underline underline-offset-2 hover:underline"
+        >
+          回对话
         </Link>
       </section>
     </PageContent>

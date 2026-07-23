@@ -40,6 +40,8 @@ type Props = {
   completePending?: boolean;
   /** 完成按钮额外禁用（如必填未齐） */
   completeDisabled?: boolean;
+  /** 禁用时的原因提示 */
+  completeHint?: string;
 };
 
 function clip(s: string, n: number) {
@@ -70,6 +72,7 @@ export function GuidedColorIntake({
   onComplete,
   completePending,
   completeDisabled,
+  completeHint,
 }: Props) {
   const composerRef = useRef<HTMLTextAreaElement>(null);
   const [draft, setDraft] = useState("");
@@ -270,20 +273,27 @@ export function GuidedColorIntake({
         </div>
       ) : null}
 
-      {completeLabel && onComplete && (mustOk || allOk) ? (
-        <button
-          type="button"
-          disabled={busy || completePending || completeDisabled || !mustOk}
-          onClick={() => onComplete()}
-          className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[16px] bg-[#141413] px-6 text-[15px] font-semibold text-white disabled:opacity-40"
-        >
-          {completePending ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <ArrowRight className="h-4 w-4" />
-          )}
-          {completeLabel}
-        </button>
+      {completeLabel && onComplete && (mustOk || allOk || completeDisabled) ? (
+        <div className="space-y-2">
+          <button
+            type="button"
+            disabled={busy || completePending || completeDisabled || !mustOk}
+            onClick={() => onComplete()}
+            className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[16px] bg-[#141413] px-6 text-[15px] font-semibold text-white disabled:opacity-40"
+          >
+            {completePending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <ArrowRight className="h-4 w-4" />
+            )}
+            {completeLabel}
+          </button>
+          {completeDisabled && completeHint ? (
+            <p className="text-center text-[12px] leading-5 text-[#a56b4d]">
+              {completeHint}
+            </p>
+          ) : null}
+        </div>
       ) : null}
 
       {/* 底栏固定对话 */}

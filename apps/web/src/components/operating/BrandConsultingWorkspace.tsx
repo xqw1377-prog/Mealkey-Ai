@@ -18,6 +18,7 @@ import {
   getIntakeDialogueTurns,
   hydrateDialogueValues,
   listWeakBasicsNotes,
+  microSlotsForBasics,
   type ParseUtteranceResult,
 } from "@/lib/intake-dialogue-turns";
 import { buildMeetingHref } from "@/lib/meeting";
@@ -127,6 +128,9 @@ export function BrandConsultingWorkspace({ projectId }: { projectId: string }) {
     setDialogueValues(
       hydrateDialogueValues(dialogueTurns, values as Record<string, string>),
     );
+    setMicroSlots(
+      microSlotsForBasics("m-pnt", values as Record<string, string>),
+    );
     setHydrated(true);
   }, [basicsUi, hydrated, dialogueTurns]);
 
@@ -155,12 +159,17 @@ export function BrandConsultingWorkspace({ projectId }: { projectId: string }) {
   );
 
   const basicsAsRecord = basicsForm as Record<string, string>;
-  const basicsReady =
-    dialogueTurnsReady("m-pnt", basicsAsRecord) && microSlots.length === 0;
   const weakNotes = useMemo(
     () => listWeakBasicsNotes("m-pnt", basicsAsRecord),
     [basicsAsRecord],
   );
+  const basicsReady =
+    dialogueTurnsReady("m-pnt", basicsAsRecord) && weakNotes.length === 0;
+
+  useEffect(() => {
+    if (!hydrated) return;
+    setMicroSlots(microSlotsForBasics("m-pnt", basicsAsRecord));
+  }, [hydrated, basicsAsRecord]);
 
   const currentFollowup = useMemo(() => {
     if (!followupUi?.questions?.length) return null;
@@ -262,6 +271,16 @@ export function BrandConsultingWorkspace({ projectId }: { projectId: string }) {
                   onDismiss={() => setLastParsed(null)}
                 />
               ) : null}
+              {weakNotes.length ? (
+                <div className="rounded-2xl border border-[rgba(165,107,77,0.35)] bg-[rgba(165,107,77,0.08)] px-4 py-3 text-[13px] leading-5 text-[#8a5a3d]">
+                  <p className="font-medium">还差几条具体事实，答完才能生成追问：</p>
+                  <ul className="mt-1.5 list-disc space-y-0.5 pl-4">
+                    {weakNotes.map((n) => (
+                      <li key={n}>{n}</li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
               <GuidedColorIntake
                 projectId={projectId}
                 title="我先问你几句"
@@ -279,23 +298,30 @@ export function BrandConsultingWorkspace({ projectId }: { projectId: string }) {
                       turnId: id,
                       utterance: value,
                     });
-                    setBasicsForm(
-                      (res.basicsValues || {}) as Partial<
-                        Record<BrandBasicsFieldKey, string>
-                      >,
-                    );
+                    const nextBasics = (res.basicsValues || {}) as Partial<
+                      Record<BrandBasicsFieldKey, string>
+                    >;
+                    setBasicsForm(nextBasics);
                     setDialogueValues((prev) => ({ ...prev, [id]: value }));
                     setLastParsed(res.parsed);
-                    if (id.startsWith("micro_")) {
-                      setMicroSlots((prev) => prev.filter((m) => m.id !== id));
-                    } else {
-                      setMicroSlots(res.microSlots || []);
-                    }
+                    setMicroSlots(
+                      res.microSlots?.length
+                        ? res.microSlots
+                        : microSlotsForBasics(
+                            "m-pnt",
+                            nextBasics as Record<string, string>,
+                          ),
+                    );
                   });
                 }}
                 completeLabel="生成追问"
                 completePending={completeDiscovery.isPending}
                 completeDisabled={!basicsReady}
+                completeHint={
+                  !basicsReady
+                    ? "请先回答上方橙色提示里的缺口（底栏继续说）"
+                    : undefined
+                }
                 onComplete={() => {
                   if (!basicsReady) {
                     setActionError(

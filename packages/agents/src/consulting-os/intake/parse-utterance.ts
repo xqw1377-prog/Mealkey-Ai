@@ -141,9 +141,32 @@ function takeSlogan(text: string): string | null {
 
 type Extractor = (text: string, parts: string[]) => string | null;
 
+function takeLabeled(text: string, patterns: RegExp[]): string | null {
+  for (const re of patterns) {
+    const m = text.match(re);
+    const hit = m?.[1]?.trim();
+    if (hit && hit.length >= 1 && hit.length <= 32) return hit;
+  }
+  return null;
+}
+
 const EXTRACTORS: Record<string, Extractor> = {
-  city: (t) => takeCity(t),
-  region: (t) => takeCity(t),
+  brandName: (t) =>
+    takeLabeled(t, [
+      /品牌(?:名|名字)?(?:叫|是|为)\s*[「"']?([^\s，,。；;"'」]{1,20})/,
+      /(?:店名|项目名)(?:叫|是|为)\s*[「"']?([^\s，,。；;"'」]{1,20})/,
+    ]),
+  category: (t) =>
+    takeLabeled(t, [
+      /品类(?:是|为)\s*([^\s，,。；;]{1,28})/,
+      /做(?:的是)?\s*([^\s，,。；;]{2,20}(?:馆|店|餐|菜|鱼|锅|面|咖啡|茶|烧烤)?)/,
+    ]),
+  city: (t) =>
+    takeLabeled(t, [/主战场(?:在|是)\s*([^\s，,。；;]{2,20})/, /在\s*([^\s，,。；;]{2,12}(?:市|区|县)?)/]) ||
+    takeCity(t),
+  region: (t) =>
+    takeLabeled(t, [/主战场(?:在|是)\s*([^\s，,。；;]{2,20})/, /商圈(?:在|是)\s*([^\s，,。；;]{2,20})/]) ||
+    takeCity(t),
   ticketBand: (t) => takeTicket(t),
   avgTicket: (t) => takeTicket(t),
   storeCount: (t) => takeStore(t),
@@ -369,6 +392,43 @@ export function microSlotsFromUnresolved(
       `再具体一点：${LABEL[key] || key}？`,
     keys: [key],
   }));
+}
+
+/**
+ * 全题弱字段 → 微追问（避免色卡显示「已记」但服务端未齐套、按钮灰死且无提示）
+ * 一次最多 4 条，按题组顺序。
+ */
+export function buildMicroSlotsForWeakBasics(
+  agent: ConsultingDialogueAgent,
+  basics: Record<string, string>,
+): Array<{ id: string; label: string; prompt: string; keys: string[] }> {
+  const gate = evaluateDialogueBasicsReady(agent, basics);
+  if (gate.ready) return [];
+  const weak = new Set(gate.weakKeys);
+  const slots: Array<{
+    id: string;
+    label: string;
+    prompt: string;
+    keys: string[];
+  }> = [];
+  const seen = new Set<string>();
+  for (const turn of getIntakeDialogueTurns(agent)) {
+    if (turn.required === false) continue;
+    for (const key of turn.keys) {
+      if (!weak.has(key) || seen.has(key)) continue;
+      seen.add(key);
+      slots.push({
+        id: `micro_${turn.id}_${key}`,
+        label: LABEL[key] || key,
+        prompt:
+          turn.microPrompts?.[key] ||
+          `再具体一点：${LABEL[key] || key}？`,
+        keys: [key],
+      });
+      if (slots.length >= 4) return slots;
+    }
+  }
+  return slots;
 }
 
 /** 多题口述全部展开后，检查 must 是否真正可用 */

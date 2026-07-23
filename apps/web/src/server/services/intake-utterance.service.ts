@@ -4,6 +4,7 @@
  */
 
 import {
+  buildMicroSlotsForWeakBasics,
   evaluateDialogueBasicsReady,
   getDialogueTurn,
   getIntakeDialogueTurns,
@@ -133,7 +134,12 @@ export async function ingestDialogueUtterance(input: {
       heardSummary: slice.slice(0, 48),
       overallConfidence: "high",
     };
-    return { parsed, values, microSlots: [], source: "micro" };
+    return {
+      parsed,
+      values,
+      microSlots: buildMicroSlotsForWeakBasics(input.agent, values),
+      source: "micro",
+    };
   }
 
   let parsed = parseDialogueUtterance({
@@ -190,10 +196,15 @@ export async function ingestDialogueUtterance(input: {
   }
 
   const values = mergeValues(input.prior || {}, parsed.values);
-  const microSlots =
+  const turnMicros =
     turn && parsed.unresolved.length
       ? microSlotsFromUnresolved(turn, parsed.unresolved)
       : [];
+  // 跨题弱字段也要出微追问，否则 UI 显示「已记」但生成追问一直灰
+  const gateMicros = buildMicroSlotsForWeakBasics(input.agent, values);
+  const byId = new Map<string, (typeof turnMicros)[number]>();
+  for (const s of [...turnMicros, ...gateMicros]) byId.set(s.id, s);
+  const microSlots = [...byId.values()].slice(0, 4);
 
   return { parsed, values, microSlots, source };
 }

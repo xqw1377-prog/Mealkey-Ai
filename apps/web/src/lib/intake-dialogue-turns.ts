@@ -8,6 +8,7 @@ export {
   parseDialogueUtterance,
   parseTurnUtterance,
   microSlotsFromUnresolved,
+  buildMicroSlotsForWeakBasics,
   evaluateDialogueBasicsReady,
   type DialogueTurnDef as DialogueTurn,
   type ConsultingDialogueAgent,
@@ -15,11 +16,19 @@ export {
 } from "@mealkey/agents/consulting-os";
 
 import {
+  buildMicroSlotsForWeakBasics,
   evaluateDialogueBasicsReady,
   getIntakeDialogueTurns,
   type ConsultingDialogueAgent,
   type DialogueTurnDef,
 } from "@mealkey/agents/consulting-os";
+
+export function microSlotsForBasics(
+  agent: ConsultingDialogueAgent,
+  basics: Record<string, string>,
+) {
+  return buildMicroSlotsForWeakBasics(agent, basics);
+}
 
 /** 必填字段是否真正可用（非整句复制、非泛词） */
 export function dialogueTurnsReady(

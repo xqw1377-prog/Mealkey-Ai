@@ -29,6 +29,7 @@ import {
   getIntakeDialogueTurns,
   hydrateDialogueValues,
   listWeakBasicsNotes,
+  microSlotsForBasics,
   type ParseUtteranceResult,
 } from "@/lib/intake-dialogue-turns";
 import { PRODUCT_BRAND_TITLE } from "@/lib/product-brand";
@@ -252,9 +253,10 @@ export function AgentConsultingWorkspace({
     if (values) {
       setBasicsForm(values);
       setDialogueValues(hydrateDialogueValues(dialogueTurns, values));
+      setMicroSlots(microSlotsForBasics(agentId, values));
     }
     setBasicsHydrated(true);
-  }, [data?.basicsUi, basicsHydrated, dialogueTurns]);
+  }, [data?.basicsUi, basicsHydrated, dialogueTurns, agentId]);
 
   const pending =
     saveBasics.isPending ||
@@ -271,12 +273,17 @@ export function AgentConsultingWorkspace({
     exportPackage.isPending ||
     reset.isPending;
 
-  const basicsReady =
-    dialogueTurnsReady(agentId, basicsForm) && microSlots.length === 0;
   const weakNotes = useMemo(
     () => listWeakBasicsNotes(agentId, basicsForm),
     [agentId, basicsForm],
   );
+  const basicsReady =
+    dialogueTurnsReady(agentId, basicsForm) && weakNotes.length === 0;
+
+  useEffect(() => {
+    if (!basicsHydrated) return;
+    setMicroSlots(microSlotsForBasics(agentId, basicsForm));
+  }, [basicsHydrated, agentId, basicsForm]);
 
   const currentFollowup = useMemo(() => {
     if (!followupUi?.questions?.length) return null;
@@ -679,6 +686,16 @@ export function AgentConsultingWorkspace({
                   onDismiss={() => setLastParsed(null)}
                 />
               ) : null}
+              {weakNotes.length ? (
+                <div className="rounded-2xl border border-[rgba(165,107,77,0.35)] bg-[rgba(165,107,77,0.08)] px-4 py-3 text-[13px] leading-5 text-[#8a5a3d]">
+                  <p className="font-medium">还差几条具体事实，答完才能生成追问：</p>
+                  <ul className="mt-1.5 list-disc space-y-0.5 pl-4">
+                    {weakNotes.map((n) => (
+                      <li key={n}>{n}</li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
               <GuidedColorIntake
                 projectId={projectId}
                 title="我先问你几句"
@@ -696,19 +713,25 @@ export function AgentConsultingWorkspace({
                       turnId: id,
                       utterance: value,
                     });
-                    setBasicsForm(res.basicsValues || {});
+                    const nextBasics = res.basicsValues || {};
+                    setBasicsForm(nextBasics);
                     setDialogueValues((prev) => ({ ...prev, [id]: value }));
                     setLastParsed(res.parsed);
-                    if (id.startsWith("micro_")) {
-                      setMicroSlots((prev) => prev.filter((m) => m.id !== id));
-                    } else {
-                      setMicroSlots(res.microSlots || []);
-                    }
+                    setMicroSlots(
+                      res.microSlots?.length
+                        ? res.microSlots
+                        : microSlotsForBasics(agentId, nextBasics),
+                    );
                   });
                 }}
                 completeLabel="生成追问"
                 completePending={saveBasics.isPending}
                 completeDisabled={!basicsReady}
+                completeHint={
+                  !basicsReady
+                    ? "请先回答上方橙色提示里的缺口（底栏继续说）"
+                    : undefined
+                }
                 onComplete={() => {
                   if (!basicsReady) {
                     setActionError(

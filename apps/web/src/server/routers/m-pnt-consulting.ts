@@ -101,38 +101,73 @@ export const mPntConsultingRouter = router({
   })),
 
   getProject: protectedProcedure
-    .input(z.object({ projectId: z.string() }))
+    .input(z.object({ projectId: z.string().min(1) }))
     .query(async ({ ctx, input }) => {
       try {
-        const data = await getOrCreateBrandConsultingProject(ctx.userId!, input.projectId);
+        const data = await getOrCreateBrandConsultingProject(
+          ctx.userId!,
+          input.projectId,
+        );
+        const stage = data.consulting.stage;
+        const stageContract =
+          STAGE_CONTRACTS[stage] ?? STAGE_CONTRACTS[BrandProjectStage.DISCOVERY];
         const layer = data.interview?.layer || "enterprise";
-        const questions = getCurrentLayerQuestions(layer).map((q: { id: string; prompt: string }) => ({
-          id: q.id,
-          prompt: q.prompt,
-          answered: Boolean(data.interview?.answers[q.id]),
-          answer: data.interview?.answers[q.id] || "",
-        }));
-        const coverageChecklist = getConsultingCoverageChecklist({
-          stage: data.consulting.stage,
-          ledger: data.consulting.assets.evidenceLedger,
-          categorySelected: Boolean(
-            data.consulting.assets.categoryDiagnosis?.decision?.selectedOptionId,
-          ),
-          brandSystemComplete:
-            data.consulting.assets.brandSystem?.status === "complete",
-          reportSigned:
-            data.consulting.assets.reportOutline?.signOffStatus === "signed",
-        });
+        let questions: Array<{
+          id: string;
+          prompt: string;
+          answered: boolean;
+          answer: string;
+        }> = [];
+        try {
+          questions = getCurrentLayerQuestions(layer).map(
+            (q: { id: string; prompt: string }) => ({
+              id: q.id,
+              prompt: q.prompt,
+              answered: Boolean(data.interview?.answers[q.id]),
+              answer: data.interview?.answers[q.id] || "",
+            }),
+          );
+        } catch {
+          questions = [];
+        }
+        let coverageChecklist: ReturnType<
+          typeof getConsultingCoverageChecklist
+        > | null = null;
+        try {
+          coverageChecklist = getConsultingCoverageChecklist({
+            stage: data.consulting.stage,
+            ledger: data.consulting.assets.evidenceLedger,
+            categorySelected: Boolean(
+              data.consulting.assets.categoryDiagnosis?.decision
+                ?.selectedOptionId,
+            ),
+            brandSystemComplete:
+              data.consulting.assets.brandSystem?.status === "complete",
+            reportSigned:
+              data.consulting.assets.reportOutline?.signOffStatus === "signed",
+          });
+        } catch {
+          coverageChecklist = null;
+        }
         const basics = data.consulting.assets.brandBasics;
         const followups = data.consulting.assets.adaptiveFollowups;
         const fuProgress = followups
           ? adaptiveFollowupProgress(followups)
           : null;
-        const intakeChecklist = evaluatePositioningIntakeChecklist(
-          data.consulting,
-        );
+        let intakeChecklist: ReturnType<
+          typeof evaluatePositioningIntakeChecklist
+        > | null = null;
+        try {
+          intakeChecklist = evaluatePositioningIntakeChecklist(
+            data.consulting,
+          );
+        } catch {
+          intakeChecklist = null;
+        }
         return {
           ...data,
+          stageLabel: stageContract.label,
+          stageContract,
           coverageChecklist,
           intakeChecklist,
           basicsFields: BRAND_BASICS_FIELDS,

@@ -152,7 +152,24 @@ export function AgentConsultingWorkspace({
   // 三席 router 同构；按 agent 选客户端
   const api = (trpc as any)[routerKey] as typeof trpc.mMktConsulting;
 
-  const { data, isLoading, error } = api.getProject.useQuery({ projectId });
+  const [loadTimedOut, setLoadTimedOut] = useState(false);
+  const { data, isLoading, isFetching, error, refetch } = api.getProject.useQuery(
+    { projectId },
+    { enabled: Boolean(projectId), retry: 1, retryDelay: 600 },
+  );
+
+  useEffect(() => {
+    if (!projectId || data || error) {
+      setLoadTimedOut(false);
+      return;
+    }
+    if (!isLoading && !isFetching) {
+      setLoadTimedOut(false);
+      return;
+    }
+    const timer = window.setTimeout(() => setLoadTimedOut(true), 12_000);
+    return () => window.clearTimeout(timer);
+  }, [projectId, data, error, isLoading, isFetching]);
   const invalidate = () => {
     switch (agentId) {
       case "m-mkt":
@@ -346,12 +363,51 @@ export function AgentConsultingWorkspace({
     }
   }
 
-  if (isLoading) {
+  if ((isLoading || isFetching) && !data) {
+    if (loadTimedOut) {
+      return (
+        <div className="space-y-3">
+          <PageErrorState
+            eyebrow={consultingLabel}
+            title="打开超时"
+            description="咨询卷宗读取超过 12 秒仍未完成。可重试，或先回对话。"
+            primaryAction={{
+              href: `/projects/${projectId}/agent`,
+              label: "回对话",
+            }}
+            secondaryAction={{
+              href: `/projects/${projectId}/capability`,
+              label: "回能力",
+            }}
+          />
+          <div className="px-4 md:px-6">
+            <button
+              type="button"
+              onClick={() => {
+                setLoadTimedOut(false);
+                void refetch();
+              }}
+              className="inline-flex min-h-11 items-center text-[13px] font-medium text-[#66735E] underline-offset-2 hover:underline"
+            >
+              再试一次
+            </button>
+          </div>
+        </div>
+      );
+    }
     return (
       <PageLoadingState
         eyebrow={consultingLabel}
         title="正在打开…"
         description="准备这一轮咨询。"
+        primaryAction={{
+          href: `/projects/${projectId}/agent`,
+          label: "回对话",
+        }}
+        secondaryAction={{
+          href: `/projects/${projectId}/capability`,
+          label: "回能力",
+        }}
       />
     );
   }
@@ -361,8 +417,12 @@ export function AgentConsultingWorkspace({
       <PageErrorState
         eyebrow={consultingLabel}
         title="暂时打不开"
-        description={error?.message || "回能力页再进一次。"}
+        description={error?.message || "回对话或能力页再进一次。"}
         primaryAction={{
+          href: `/projects/${projectId}/agent`,
+          label: "回对话",
+        }}
+        secondaryAction={{
           href: `/projects/${projectId}/capability`,
           label: "回能力",
         }}

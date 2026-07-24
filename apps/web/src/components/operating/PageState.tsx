@@ -59,12 +59,19 @@ export function PageLoadingState({
   ],
   /** shell：OperatingShell 已有水平 padding，避免再叠一层 */
   inset = "page",
+  /** 加载过久时的逃生口，避免用户卡死在「整理」 */
+  primaryAction,
+  secondaryAction,
+  slowHint,
 }: {
   eyebrow?: string;
   title?: string;
   description?: string;
   steps?: StateStep[];
   inset?: "shell" | "page";
+  primaryAction?: ActionLink;
+  secondaryAction?: ActionLink;
+  slowHint?: string | null;
 }) {
   const padX = inset === "shell" ? "px-0" : "px-4 md:px-6";
   return (
@@ -108,7 +115,14 @@ export function PageLoadingState({
             </li>
           ))}
         </ul>
+        {slowHint ? (
+          <p className="mt-4 text-[13px] leading-6 text-[#B47C5C]">{slowHint}</p>
+        ) : null}
       </section>
+      <ActionButtons
+        primaryAction={primaryAction}
+        secondaryAction={secondaryAction}
+      />
     </div>
   );
 }

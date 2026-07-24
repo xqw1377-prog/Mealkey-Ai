@@ -28,11 +28,33 @@ import {
   type BrandStrategyProject,
 } from "@mealkey/agents/m-pnt/consulting";
 
+const LOAD_TIMEOUT_MS = 12_000;
+
 export function BrandConsultingWorkspace({ projectId }: { projectId: string }) {
   const utils = trpc.useUtils();
-  const { data, isLoading, error } = trpc.mPntConsulting.getProject.useQuery({
-    projectId,
-  });
+  const [loadTimedOut, setLoadTimedOut] = useState(false);
+  const { data, isLoading, isFetching, error, refetch } =
+    trpc.mPntConsulting.getProject.useQuery(
+      { projectId },
+      {
+        enabled: Boolean(projectId),
+        retry: 1,
+        retryDelay: 600,
+      },
+    );
+
+  useEffect(() => {
+    if (!projectId || data || error) {
+      setLoadTimedOut(false);
+      return;
+    }
+    if (!isLoading && !isFetching) {
+      setLoadTimedOut(false);
+      return;
+    }
+    const timer = window.setTimeout(() => setLoadTimedOut(true), LOAD_TIMEOUT_MS);
+    return () => window.clearTimeout(timer);
+  }, [projectId, data, error, isLoading, isFetching]);
 
   const invalidate = () =>
     utils.mPntConsulting.getProject.invalidate({ projectId });
@@ -189,12 +211,68 @@ export function BrandConsultingWorkspace({ projectId }: { projectId: string }) {
     }
   }
 
-  if (isLoading) {
+  if (!projectId) {
+    return (
+      <PageErrorState
+        eyebrow="定位"
+        title="找不到企业"
+        description="请从对话或能力页重新进入。"
+        primaryAction={{ href: "/dashboard?radar=1", label: "经营动态" }}
+        secondaryAction={{ href: "/projects", label: "企业列表" }}
+      />
+    );
+  }
+
+  if ((isLoading || isFetching) && !data) {
+    if (loadTimedOut) {
+      return (
+        <div className="space-y-3">
+          <PageErrorState
+            eyebrow="定位"
+            title="打开超时"
+            description="品牌方案读取超过 12 秒仍未完成。可重试，或先回对话继续经营。"
+            primaryAction={{
+              href: `/projects/${projectId}/agent`,
+              label: "回对话",
+            }}
+            secondaryAction={{
+              href: `/projects/${projectId}/capability`,
+              label: "回能力",
+            }}
+          />
+          <div className="px-4 md:px-6">
+            <button
+              type="button"
+              onClick={() => {
+                setLoadTimedOut(false);
+                void refetch();
+              }}
+              className="inline-flex min-h-11 items-center text-[13px] font-medium text-[#66735E] underline-offset-2 hover:underline"
+            >
+              再试一次
+            </button>
+          </div>
+        </div>
+      );
+    }
     return (
       <PageLoadingState
         eyebrow="定位"
         title="正在打开…"
         description="准备你的品牌方案。"
+        primaryAction={{
+          href: `/projects/${projectId}/agent`,
+          label: "回对话",
+        }}
+        secondaryAction={{
+          href: `/projects/${projectId}/capability`,
+          label: "回能力",
+        }}
+        slowHint={
+          isFetching
+            ? "若超过十余秒仍停在「整理」，多半是档案读取卡住——可先回对话。"
+            : null
+        }
       />
     );
   }
@@ -204,8 +282,12 @@ export function BrandConsultingWorkspace({ projectId }: { projectId: string }) {
       <PageErrorState
         eyebrow="定位"
         title="暂时打不开"
-        description={error?.message || "先回能力页再试。"}
+        description={error?.message || "先回对话或能力页再试。"}
         primaryAction={{
+          href: `/projects/${projectId}/agent`,
+          label: "回对话",
+        }}
+        secondaryAction={{
           href: `/projects/${projectId}/capability`,
           label: "回能力",
         }}

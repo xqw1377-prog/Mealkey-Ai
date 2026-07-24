@@ -343,15 +343,24 @@ export async function getOrCreateBrandConsultingProject(
   ) {
     const nextInterview = createBriefInterviewSession(consulting.brandProjectId);
     await persist(project.id, profile, consulting, nextInterview);
+    const briefStage = STAGE_CONTRACTS[consulting.stage]
+      ? consulting.stage
+      : BrandProjectStage.DISCOVERY;
     return {
       consulting,
       interview: nextInterview,
-      stageLabel: STAGE_CONTRACTS[consulting.stage].label,
-      stageContract: STAGE_CONTRACTS[consulting.stage],
+      stageLabel: STAGE_CONTRACTS[briefStage].label,
+      stageContract: STAGE_CONTRACTS[briefStage],
     };
   }
 
-  const stage = consulting.stage;
+  const stage = STAGE_CONTRACTS[consulting.stage]
+    ? consulting.stage
+    : BrandProjectStage.DISCOVERY;
+  if (stage !== consulting.stage) {
+    consulting = { ...consulting, stage, stageStatus: "active" };
+    await persist(project.id, profile, consulting, interview);
+  }
   return {
     consulting,
     interview,

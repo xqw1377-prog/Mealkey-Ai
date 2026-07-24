@@ -616,7 +616,7 @@ export function DecisionIntelligenceRoom({ projectId }: { projectId: string }) {
                 prefetch={false}
                 className={secondaryBtnClass}
               >
-                去行动打卡
+                去跟进
               </Link>
             </div>
           </div>

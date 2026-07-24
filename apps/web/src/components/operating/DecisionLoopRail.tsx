@@ -91,7 +91,7 @@ export function DecisionLoopRail({
   );
 }
 
-/** 拍板成功后的标准三 CTA：回对话（主）· 去执行 · 再开一笔 */
+/** 拍板成功后的标准三出口：回对话 · 去跟进 · 经营动态 */
 export function DecisionClosedActions({
   projectId,
   onRestart,
@@ -102,43 +102,47 @@ export function DecisionClosedActions({
   archiveOk?: boolean;
 }) {
   return (
-    <div className="space-y-3">
-      <DecisionLoopRail current="today" projectId={projectId} />
-      <div className="border border-[rgba(102,115,94,0.28)] bg-[#EEF1EA] p-4">
-        <p className="text-[14px] font-semibold text-[#202124]">
-          {archiveOk ? "已拍板" : "本轮决策已结束"}
-        </p>
-        <p className="mt-1 text-[13px] leading-6 text-[#5f6368]">
-          {archiveOk
-            ? "回对话继续经营，或去行动打卡。下次有判断，还从对话进。"
-            : "可回对话，或去行动跟进。"}
-        </p>
-        <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-          <Link
-            href={`/projects/${projectId}/agent`}
-            prefetch={false}
-            className="inline-flex min-h-12 items-center justify-center rounded-[16px] bg-[#181817] px-5 text-[15px] font-semibold text-white no-underline touch-manipulation"
-          >
-            回对话
-          </Link>
-          <Link
-            href={`/projects/${projectId}/decisions`}
-            prefetch={false}
-            className="inline-flex min-h-12 items-center justify-center rounded-[16px] border border-[rgba(24,24,23,0.12)] bg-white px-5 text-[14px] font-semibold text-[#181817] no-underline touch-manipulation"
-          >
-            去打卡执行
-          </Link>
-          {onRestart ? (
-            <button
-              type="button"
-              onClick={onRestart}
-              className="inline-flex min-h-12 items-center justify-center rounded-[16px] px-4 text-[13px] font-medium text-[#6f747b] touch-manipulation"
-            >
-              再开一笔决策
-            </button>
-          ) : null}
-        </div>
+    <div className="border border-[rgba(102,115,94,0.28)] bg-[#EEF1EA] p-4">
+      <p className="text-[14px] font-semibold text-[#202124]">
+        {archiveOk ? "已拍板" : "本轮决策已结束"}
+      </p>
+      <p className="mt-1 text-[13px] leading-6 text-[#5f6368]">
+        {archiveOk
+          ? "回对话继续说，或去跟进执行与复盘。"
+          : "可回对话，或去跟进。"}
+      </p>
+      <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+        <Link
+          href={`/projects/${projectId}/agent`}
+          prefetch={false}
+          className="inline-flex min-h-12 items-center justify-center rounded-[16px] bg-[#181817] px-5 text-[15px] font-semibold text-white no-underline touch-manipulation"
+        >
+          回对话
+        </Link>
+        <Link
+          href={`/projects/${projectId}/decisions`}
+          prefetch={false}
+          className="inline-flex min-h-12 items-center justify-center rounded-[16px] border border-[rgba(24,24,23,0.12)] bg-white px-5 text-[14px] font-semibold text-[#181817] no-underline touch-manipulation"
+        >
+          去跟进
+        </Link>
+        <Link
+          href="/dashboard?radar=1"
+          prefetch={false}
+          className="inline-flex min-h-12 items-center justify-center rounded-[16px] border border-[rgba(24,24,23,0.12)] bg-white px-5 text-[14px] font-semibold text-[#181817] no-underline touch-manipulation"
+        >
+          经营动态
+        </Link>
       </div>
+      {onRestart ? (
+        <button
+          type="button"
+          onClick={onRestart}
+          className="mt-2 inline-flex min-h-10 items-center justify-center text-[13px] font-medium text-[#6f747b] touch-manipulation"
+        >
+          再开一笔
+        </button>
+      ) : null}
     </div>
   );
 }

@@ -1809,32 +1809,23 @@ export function DecisionRoom({ projectId }: Props) {
                 onRestart={() => void reset()}
               />
               {archiveOk ? (
-                <div className="space-y-1 text-[12px] leading-5 text-[#6f747b]">
-                  <p>
-                    已裁决归档
-                    {session.insights?.length
-                      ? `（洞察 ${session.insights.length} 条）`
-                      : ""}
-                    。
-                  </p>
-                  {executionStarted ? (
-                    <p className="text-[#465240]">
-                      已自动进入执行，并挂上第 7 天复盘提醒。下次从经营动态或对话进。
-                    </p>
-                  ) : (
-                    <p className="text-[#8A4F31]">
-                      裁决已保存，但自动创建行动未完成
-                      {executionError ? `：${executionError}` : ""}
-                      。请到「行动」页手动开启执行。
-                    </p>
-                  )}
-                </div>
+                <p
+                  className={`text-[12px] leading-5 ${
+                    executionStarted ? "text-[#465240]" : "text-[#8A4F31]"
+                  }`}
+                >
+                  {executionStarted
+                    ? "已归档并挂上第 7 天复盘提醒。"
+                    : `已归档，但自动创建行动未完成${
+                        executionError ? `：${executionError}` : ""
+                      }。请到「跟进」页手动开启。`}
+                </p>
               ) : null}
               {session.decisionTrace ? (
-                <div className="border border-[rgba(24,24,23,0.08)] bg-[#FBFAF7] p-4">
-                  <p className="text-[12px] tracking-[0.08em] text-[#66735E]">
-                    决策过程
-                  </p>
+                <details className="rounded-[12px] border border-[rgba(24,24,23,0.08)] bg-[#FBFAF7] px-4 py-3">
+                  <summary className="cursor-pointer text-[12px] font-medium text-[#66735E]">
+                    决策过程痕迹
+                  </summary>
                   <p className="mt-2 text-[13px] leading-6 text-[#3c4043]">
                     洞察 × {session.decisionTrace.insights.length}
                     {" → "}
@@ -1845,16 +1836,7 @@ export function DecisionRoom({ projectId }: Props) {
                     {" → "}
                     {session.decisionTrace.outcome?.status || "pending"}
                   </p>
-                  {session.decisionTrace.resolution?.majorityView?.length ? (
-                    <ul className="mt-2 space-y-1 text-[12px] leading-5 text-[#6f747b]">
-                      {session.decisionTrace.resolution.majorityView
-                        .slice(0, 3)
-                        .map((line) => (
-                          <li key={line}>· {line}</li>
-                        ))}
-                    </ul>
-                  ) : null}
-                </div>
+                </details>
               ) : null}
             </div>
           )}

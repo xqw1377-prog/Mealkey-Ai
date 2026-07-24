@@ -51,7 +51,7 @@ export function OperatingShell({ children }: OperatingShellProps) {
     pathname,
     defaultProjectId,
   );
-  // 决策沉浸：决策室 / 决策案；顾问咨询仍可全屏但不占底栏「决策」语义
+  // 决策沉浸：决策室 / 决策案；顾问咨询仍可全屏但不占底栏「拍板」语义
   // Agent 是 Mobile 主入口：藏 ShellHeader + 底栏，页内语音壳自管导航
   const isAgentSurface = /^\/projects\/[^/]+\/agent$/.test(pathname);
   const isMeetingFullscreen =

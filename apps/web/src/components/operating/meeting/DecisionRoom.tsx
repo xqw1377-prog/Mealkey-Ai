@@ -694,7 +694,7 @@ export function DecisionRoom({ projectId }: Props) {
         setStep("board");
         setError(
           archiveErr instanceof Error
-            ? `裁决已形成，但写入行动失败：${archiveErr.message}。可重试，或从今日「待拍板」续裁。`
+            ? `裁决已形成，但写入行动失败：${archiveErr.message}。可重试，或从经营动态「待拍板」续裁。`
             : "裁决已形成，但写入行动失败，请重试",
         );
       }
@@ -706,7 +706,7 @@ export function DecisionRoom({ projectId }: Props) {
   async function handleDismissDraft() {
     const ok = await requestConfirm({
       title: "放弃本次决策？",
-      description: "清除今日「待裁决」提醒，不写入行动。",
+      description: "清除经营动态「待裁决」提醒，不写入行动。",
       danger: true,
     });
     if (!ok) return;
@@ -831,71 +831,34 @@ export function DecisionRoom({ projectId }: Props) {
 
       <header className="space-y-2 border-b border-[rgba(24,24,23,0.08)] pb-5">
         <p className="text-[11px] font-medium tracking-[0.14em] text-[#66735E]">
-          决策室 · 语音开案
+          {step === "board" || step === "closed"
+            ? "决策室 · 拍板"
+            : "决策室 · 语音开案"}
         </p>
         <h1 className="font-display text-[30px] font-semibold leading-[1.1] tracking-[-0.045em] text-[#202124] md:text-[36px]">
-          {step === "setup" ? "今天要拍什么板？" : "我问你说，采齐再拍"}
+          {step === "setup"
+            ? "今天要拍什么板？"
+            : step === "board" || step === "closed"
+              ? "决策板 · 请拍板"
+              : "我问你说，采齐再拍"}
         </h1>
         <p className="max-w-2xl text-[15px] leading-7 text-[#6f747b]">
           {step === "setup"
             ? "说清一件事，采齐再进常委判断。"
-            : "语音采集 → 常委判断 → 你来拍板 → 回对话跟进。"}
+            : step === "board"
+              ? "先看建议与争议，再拍板。"
+              : step === "closed"
+                ? "裁决已形成，可回对话跟进。"
+                : "语音采集 → 常委判断 → 你来拍板 → 回对话跟进。"}
         </p>
-        {/* 闭环轨道不进 setup 首屏（三易 L1）；开案后再露出 */}
-        {step === "setup" ? null : step === "board" ? (
-          <div className="mt-4">
-            <DecisionLoopRail current="decide" projectId={projectId} compact />
-          </div>
-        ) : step === "closed" ? null : (
+        {/* 闭环轨道：不进 setup / board / closed 首屏 */}
+        {step === "setup" ||
+        step === "board" ||
+        step === "closed" ? null : (
           <div className="mt-4">
             <DecisionLoopRail current="judge" projectId={projectId} compact />
           </div>
         )}
-        {session ? (
-          <div className="mt-3 flex flex-wrap gap-1.5">
-            {phaseLabel ? (
-              <span className="rounded-[12px] border border-[rgba(24,24,23,0.08)] bg-[#FBFAF7] px-2.5 py-1 text-[11px] text-[#66735E]">
-                {phaseLabel}
-              </span>
-            ) : null}
-            <span className="rounded-[12px] border border-[rgba(24,24,23,0.08)] bg-[#FBFAF7] px-2.5 py-1 text-[11px] text-[#66735E]">
-              {session.agenda.level}
-            </span>
-            {session.roster.slice(0, 4).map((seat) => (
-              <span
-                key={seat}
-                className="rounded-[12px] border border-[rgba(24,24,23,0.08)] bg-[#FBFAF7] px-2.5 py-1 text-[11px] text-[#66735E]"
-              >
-                {seat}
-              </span>
-            ))}
-            {session.roster.length > 4 ? (
-              <span className="border border-[rgba(24,24,23,0.08)] bg-[#FBFAF7] px-2.5 py-1 text-[11px] text-[#66735E]">
-                +{session.roster.length - 4}
-              </span>
-            ) : null}
-            {brandStrength != null ? (
-              <span className="border border-[rgba(24,24,23,0.08)] bg-[#FBFAF7] px-2.5 py-1 text-[11px] text-[#66735E]">
-                品牌力 {brandStrength}
-              </span>
-            ) : null}
-            {opinionSource ? (
-              <span
-                className={
-                  opinionSource === "llm"
-                    ? "border border-[rgba(24,24,23,0.08)] bg-[#FBFAF7] px-2.5 py-1 text-[11px] text-[#66735E]"
-                    : "border border-[#C45C26]/40 bg-[#FFF6F0] px-2.5 py-1 text-[11px] text-[#8A4F31]"
-                }
-              >
-                {opinionSource === "llm"
-                  ? "深度意见"
-                  : opinionSource === "mixed"
-                    ? "部分降级·含启发式"
-                    : "强制降级·非正式意见"}
-              </span>
-            ) : null}
-          </div>
-        ) : null}
         {session &&
         (opinionSource === "heuristic" || opinionSource === "mixed") ? (
           <p className="mt-2 border border-[#C45C26]/25 bg-[#FFF6F0] px-3 py-2 text-[12px] leading-5 text-[#8A4F31]">
@@ -904,51 +867,161 @@ export function DecisionRoom({ projectId }: Props) {
               : "本轮意见含启发式降级席位，深度与非正式混杂；拍板前请核对证据与缺口。"}
           </p>
         ) : null}
-        {session && expertNote ? (
-          <p className="mt-2 text-[12px] leading-5 text-[#6f747b]">{expertNote}</p>
-        ) : null}
-        {session?.evidencePacket?.gapActions &&
-        session.evidencePacket.gapActions.length > 0 ? (
-          <div className="mt-2 space-y-1.5">
-            <p className="text-[12px] leading-5 text-[#8A4F31]">
-              开案提醒：口述已挂载；下列为仍缺的客观数据，点按钮即可补。
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {session.evidencePacket.gapActions.slice(0, 3).map((gap) => (
-                <button
-                  key={gap.id}
-                  type="button"
-                  onClick={() => {
-                    setSupplementGap(gap);
-                    setSupplementDraft("");
-                    if (step !== "round1" && step !== "setup") {
-                      /* 保持当前阶段，仅展开补充 */
-                    }
-                  }}
-                  className="inline-flex min-h-10 items-center gap-1 border border-[rgba(138,79,49,0.28)] bg-[rgba(138,79,49,0.06)] px-3 text-[12px] font-medium text-[#8A4F31] touch-manipulation"
+        {session && (step === "board" || step === "closed") ? (
+          <details className="mt-3 rounded-[12px] border border-[rgba(24,24,23,0.08)] bg-[#FBFAF7] px-3 py-2">
+            <summary className="cursor-pointer text-[12px] font-medium text-[#66735E]">
+              席位与证据细节
+              {opinionSource && opinionSource !== "llm"
+                ? " · 含降级"
+                : ""}
+            </summary>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {phaseLabel ? (
+                <span className="rounded-[12px] border border-[rgba(24,24,23,0.08)] bg-white px-2.5 py-1 text-[11px] text-[#66735E]">
+                  {phaseLabel}
+                </span>
+              ) : null}
+              <span className="rounded-[12px] border border-[rgba(24,24,23,0.08)] bg-white px-2.5 py-1 text-[11px] text-[#66735E]">
+                {session.agenda.level}
+              </span>
+              {session.roster.slice(0, 4).map((seat) => (
+                <span
+                  key={seat}
+                  className="rounded-[12px] border border-[rgba(24,24,23,0.08)] bg-white px-2.5 py-1 text-[11px] text-[#66735E]"
                 >
-                  <Plus className="h-3.5 w-3.5" />
-                  补充{gap.label}
-                </button>
+                  {seat}
+                </span>
               ))}
-              <button
-                type="button"
-                onClick={() => {
-                  setStep("setup");
-                  setSetupPath("dialogue");
-                  setSupplementGap(null);
-                }}
-                className="inline-flex min-h-10 items-center border border-[rgba(24,24,23,0.1)] bg-white px-3 text-[12px] font-medium text-[#3c4043] touch-manipulation"
-              >
-                回采集再补一轮
-              </button>
+              {session.roster.length > 4 ? (
+                <span className="border border-[rgba(24,24,23,0.08)] bg-white px-2.5 py-1 text-[11px] text-[#66735E]">
+                  +{session.roster.length - 4}
+                </span>
+              ) : null}
+              {brandStrength != null ? (
+                <span className="border border-[rgba(24,24,23,0.08)] bg-white px-2.5 py-1 text-[11px] text-[#66735E]">
+                  品牌力 {brandStrength}
+                </span>
+              ) : null}
+              {opinionSource ? (
+                <span
+                  className={
+                    opinionSource === "llm"
+                      ? "border border-[rgba(24,24,23,0.08)] bg-white px-2.5 py-1 text-[11px] text-[#66735E]"
+                      : "border border-[#C45C26]/40 bg-[#FFF6F0] px-2.5 py-1 text-[11px] text-[#8A4F31]"
+                  }
+                >
+                  {opinionSource === "llm"
+                    ? "深度意见"
+                    : opinionSource === "mixed"
+                      ? "部分降级·含启发式"
+                      : "强制降级·非正式意见"}
+                </span>
+              ) : null}
             </div>
-          </div>
-        ) : session?.evidencePacket?.gaps &&
-          session.evidencePacket.gaps.length > 0 ? (
-          <p className="mt-1.5 text-[12px] leading-5 text-[#8A4F31]">
-            开案提醒：{session.evidencePacket.gaps.slice(0, 2).join("；")}
-          </p>
+            {expertNote ? (
+              <p className="mt-2 text-[12px] leading-5 text-[#6f747b]">
+                {expertNote}
+              </p>
+            ) : null}
+            {session.evidencePacket?.gaps &&
+            session.evidencePacket.gaps.length > 0 ? (
+              <p className="mt-2 text-[12px] leading-5 text-[#8A4F31]">
+                证据缺口：
+                {session.evidencePacket.gaps.slice(0, 2).join("；")}
+              </p>
+            ) : null}
+          </details>
+        ) : session ? (
+          <>
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {phaseLabel ? (
+                <span className="rounded-[12px] border border-[rgba(24,24,23,0.08)] bg-[#FBFAF7] px-2.5 py-1 text-[11px] text-[#66735E]">
+                  {phaseLabel}
+                </span>
+              ) : null}
+              <span className="rounded-[12px] border border-[rgba(24,24,23,0.08)] bg-[#FBFAF7] px-2.5 py-1 text-[11px] text-[#66735E]">
+                {session.agenda.level}
+              </span>
+              {session.roster.slice(0, 4).map((seat) => (
+                <span
+                  key={seat}
+                  className="rounded-[12px] border border-[rgba(24,24,23,0.08)] bg-[#FBFAF7] px-2.5 py-1 text-[11px] text-[#66735E]"
+                >
+                  {seat}
+                </span>
+              ))}
+              {session.roster.length > 4 ? (
+                <span className="border border-[rgba(24,24,23,0.08)] bg-[#FBFAF7] px-2.5 py-1 text-[11px] text-[#66735E]">
+                  +{session.roster.length - 4}
+                </span>
+              ) : null}
+              {brandStrength != null ? (
+                <span className="border border-[rgba(24,24,23,0.08)] bg-[#FBFAF7] px-2.5 py-1 text-[11px] text-[#66735E]">
+                  品牌力 {brandStrength}
+                </span>
+              ) : null}
+              {opinionSource ? (
+                <span
+                  className={
+                    opinionSource === "llm"
+                      ? "border border-[rgba(24,24,23,0.08)] bg-[#FBFAF7] px-2.5 py-1 text-[11px] text-[#66735E]"
+                      : "border border-[#C45C26]/40 bg-[#FFF6F0] px-2.5 py-1 text-[11px] text-[#8A4F31]"
+                  }
+                >
+                  {opinionSource === "llm"
+                    ? "深度意见"
+                    : opinionSource === "mixed"
+                      ? "部分降级·含启发式"
+                      : "强制降级·非正式意见"}
+                </span>
+              ) : null}
+            </div>
+            {expertNote ? (
+              <p className="mt-2 text-[12px] leading-5 text-[#6f747b]">
+                {expertNote}
+              </p>
+            ) : null}
+            {session.evidencePacket?.gapActions &&
+            session.evidencePacket.gapActions.length > 0 ? (
+              <div className="mt-2 space-y-1.5">
+                <p className="text-[12px] leading-5 text-[#8A4F31]">
+                  开案提醒：口述已挂载；下列为仍缺的客观数据，点按钮即可补。
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {session.evidencePacket.gapActions.slice(0, 3).map((gap) => (
+                    <button
+                      key={gap.id}
+                      type="button"
+                      onClick={() => {
+                        setSupplementGap(gap);
+                        setSupplementDraft("");
+                      }}
+                      className="inline-flex min-h-10 items-center gap-1 border border-[rgba(138,79,49,0.28)] bg-[rgba(138,79,49,0.06)] px-3 text-[12px] font-medium text-[#8A4F31] touch-manipulation"
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                      补充{gap.label}
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setStep("setup");
+                      setSetupPath("dialogue");
+                      setSupplementGap(null);
+                    }}
+                    className="inline-flex min-h-10 items-center border border-[rgba(24,24,23,0.1)] bg-white px-3 text-[12px] font-medium text-[#3c4043] touch-manipulation"
+                  >
+                    回采集再补一轮
+                  </button>
+                </div>
+              </div>
+            ) : session.evidencePacket?.gaps &&
+              session.evidencePacket.gaps.length > 0 ? (
+              <p className="mt-1.5 text-[12px] leading-5 text-[#8A4F31]">
+                开案提醒：{session.evidencePacket.gaps.slice(0, 2).join("；")}
+              </p>
+            ) : null}
+          </>
         ) : null}
       </header>
 
@@ -1625,106 +1698,112 @@ export function DecisionRoom({ projectId }: Props) {
 
       {session && (step === "board" || step === "closed") && session.board ? (
         <section className="space-y-4 border border-[rgba(24,24,23,0.08)] bg-white p-6">
-          <p className="text-[12px] tracking-[0.08em] text-[#66735E]">
-            第 3 阶段 · 决策结构
-          </p>
           <h2 className="font-display text-[22px] font-semibold text-[#202124]">
             {session.board.title}
           </h2>
-          <p className="text-[15px] font-semibold text-[#202124]">
+          <p className="text-[15px] font-semibold leading-7 text-[#202124]">
             建议行动：{session.board.recommendedAction}
           </p>
           <p className="text-[13px] leading-6 text-[#6f747b]">
             最大争议：{session.board.biggestDispute}
           </p>
 
-          <div className="grid gap-3 md:grid-cols-2">
-            <div className="border border-[rgba(24,24,23,0.06)] bg-[#FBFAF7] p-4">
-              <p className="text-[12px] text-[#6f747b]">共识 / 支持要点</p>
-              <ul className="mt-2 space-y-1 text-[13px] leading-6 text-[#202124]">
-                {session.board.supportBullets.map((b) => (
-                  <li key={b}>· {b}</li>
-                ))}
-                {session.board.consensus.map((b) => (
-                  <li key={b}>· {b}</li>
-                ))}
-              </ul>
-            </div>
-            <div className="border border-[rgba(24,24,23,0.06)] bg-[#FBFAF7] p-4">
-              <p className="text-[12px] text-[#6f747b]">少数意见 / 条件 / 风险</p>
-              <ul className="mt-2 space-y-1 text-[13px] leading-6 text-[#202124]">
-                {session.board.minorityReport.map((b) => (
-                  <li key={b}>· {b}</li>
-                ))}
-                {session.board.conditions.map((b) => (
-                  <li key={`c-${b}`}>· 条件：{b}</li>
-                ))}
-                {session.board.risks.map((b) => (
-                  <li key={`r-${b}`}>· 风险：{b}</li>
-                ))}
-              </ul>
-            </div>
-          </div>
-
-          {similarQuery.data && similarQuery.data.length > 0 ? (
-            <div className="border border-[rgba(24,24,23,0.06)] bg-[#FBFAF7] px-4 py-3">
-              <p className="text-[11px] tracking-[0.1em] text-[#6f747b]">
-                相似先例 · {similarQuery.data.length}
-              </p>
-              <ul className="mt-2 space-y-1.5">
-                {similarQuery.data.slice(0, 3).map((d, i) => (
-                  <li
-                    key={`${d.topic}-${i}`}
-                    className="text-[13px] leading-6 text-[#3c4043]"
-                  >
-                    · {d.topic}
-                    {d.decision ? ` → ${d.decision}` : ""}
-                    {d.result ? (
-                      <span className="text-[#6f747b]"> · {d.result}</span>
-                    ) : null}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
-
-          {session.roster.length > 0 ? (
-            <div className="border border-[rgba(24,24,23,0.06)] bg-[#FBFAF7] px-4 py-3">
-              <p className="text-[11px] tracking-[0.1em] text-[#6f747b]">
-                席位战绩
-              </p>
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {session.roster.map((seat) => (
-                  <button
-                    key={seat}
-                    type="button"
-                    onClick={() => setHistorySeat(seat)}
-                    className={`inline-flex min-h-11 items-center justify-center px-3.5 text-[13px] touch-manipulation ${
-                      historySeat === seat
-                        ? "bg-[#181817] text-white"
-                        : "border border-[rgba(24,24,23,0.1)] bg-white text-[#202124]"
-                    }`}
-                  >
-                    {seat}
-                  </button>
-                ))}
+          <details className="rounded-[14px] border border-[rgba(24,24,23,0.08)] bg-[#FBFAF7] px-4 py-3">
+            <summary className="cursor-pointer text-[13px] font-medium text-[#202124]">
+              共识、风险与先例
+            </summary>
+            <div className="mt-3 space-y-3">
+              <div className="grid gap-3 md:grid-cols-2">
+                <div className="border border-[rgba(24,24,23,0.06)] bg-white p-4">
+                  <p className="text-[12px] text-[#6f747b]">共识 / 支持要点</p>
+                  <ul className="mt-2 space-y-1 text-[13px] leading-6 text-[#202124]">
+                    {session.board.supportBullets.map((b) => (
+                      <li key={b}>· {b}</li>
+                    ))}
+                    {session.board.consensus.map((b) => (
+                      <li key={b}>· {b}</li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="border border-[rgba(24,24,23,0.06)] bg-white p-4">
+                  <p className="text-[12px] text-[#6f747b]">
+                    少数意见 / 条件 / 风险
+                  </p>
+                  <ul className="mt-2 space-y-1 text-[13px] leading-6 text-[#202124]">
+                    {session.board.minorityReport.map((b) => (
+                      <li key={b}>· {b}</li>
+                    ))}
+                    {session.board.conditions.map((b) => (
+                      <li key={`c-${b}`}>· 条件：{b}</li>
+                    ))}
+                    {session.board.risks.map((b) => (
+                      <li key={`r-${b}`}>· 风险：{b}</li>
+                    ))}
+                  </ul>
+                </div>
               </div>
-              {memberHistory.data ? (
-                <p className="mt-2 text-[13px] leading-6 text-[#3c4043]">
-                  参与 {memberHistory.data.totalDecisions} 次
-                  {" · "}
-                  支持 {memberHistory.data.supportRate}%
-                  {" · "}
-                  反对 {memberHistory.data.opposeRate}%
-                  {memberHistory.data.recentJudgments[0]
-                    ? ` · 近判：${memberHistory.data.recentJudgments[0]}`
-                    : " · 尚无历史判断"}
-                </p>
-              ) : memberHistory.isFetching ? (
-                <p className="mt-2 text-[12px] text-[#6f747b]">加载战绩…</p>
+
+              {similarQuery.data && similarQuery.data.length > 0 ? (
+                <div className="border border-[rgba(24,24,23,0.06)] bg-white px-4 py-3">
+                  <p className="text-[11px] tracking-[0.1em] text-[#6f747b]">
+                    相似先例 · {similarQuery.data.length}
+                  </p>
+                  <ul className="mt-2 space-y-1.5">
+                    {similarQuery.data.slice(0, 3).map((d, i) => (
+                      <li
+                        key={`${d.topic}-${i}`}
+                        className="text-[13px] leading-6 text-[#3c4043]"
+                      >
+                        · {d.topic}
+                        {d.decision ? ` → ${d.decision}` : ""}
+                        {d.result ? (
+                          <span className="text-[#6f747b]"> · {d.result}</span>
+                        ) : null}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+
+              {session.roster.length > 0 ? (
+                <div className="border border-[rgba(24,24,23,0.06)] bg-white px-4 py-3">
+                  <p className="text-[11px] tracking-[0.1em] text-[#6f747b]">
+                    席位战绩
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {session.roster.map((seat) => (
+                      <button
+                        key={seat}
+                        type="button"
+                        onClick={() => setHistorySeat(seat)}
+                        className={`inline-flex min-h-11 items-center justify-center px-3.5 text-[13px] touch-manipulation ${
+                          historySeat === seat
+                            ? "bg-[#181817] text-white"
+                            : "border border-[rgba(24,24,23,0.1)] bg-[#FBFAF7] text-[#202124]"
+                        }`}
+                      >
+                        {seat}
+                      </button>
+                    ))}
+                  </div>
+                  {memberHistory.data ? (
+                    <p className="mt-2 text-[13px] leading-6 text-[#3c4043]">
+                      参与 {memberHistory.data.totalDecisions} 次
+                      {" · "}
+                      支持 {memberHistory.data.supportRate}%
+                      {" · "}
+                      反对 {memberHistory.data.opposeRate}%
+                      {memberHistory.data.recentJudgments[0]
+                        ? ` · 近判：${memberHistory.data.recentJudgments[0]}`
+                        : " · 尚无历史判断"}
+                    </p>
+                  ) : memberHistory.isFetching ? (
+                    <p className="mt-2 text-[12px] text-[#6f747b]">加载战绩…</p>
+                  ) : null}
+                </div>
               ) : null}
             </div>
-          ) : null}
+          </details>
 
           {step === "board" ? (
             <>
@@ -1792,7 +1871,7 @@ export function DecisionRoom({ projectId }: Props) {
                   </p>
                   {executionStarted ? (
                     <p className="text-[#465240]">
-                      已自动进入执行，并挂上第 7 天复盘提醒。下次还从「今日」进。
+                      已自动进入执行，并挂上第 7 天复盘提醒。下次从经营动态或对话进。
                     </p>
                   ) : (
                     <p className="text-[#8A4F31]">

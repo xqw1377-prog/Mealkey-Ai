@@ -281,11 +281,11 @@ export function ExecutionRuntimePanel({
         <p className="mt-4 text-[12px] leading-5 text-[#6f747b]">
           勾选完成进度请回经营动态；这里负责计划与偏航。
           <Link
-            href="/dashboard"
+            href="/dashboard?radar=1"
             prefetch={false}
             className="ml-1.5 font-medium text-[#141413] underline-offset-2 hover:underline"
           >
-            去今日
+            去经营动态
           </Link>
         </p>
       ) : null}

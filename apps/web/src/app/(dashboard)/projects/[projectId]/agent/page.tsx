@@ -345,7 +345,7 @@ function AgentPageInner({ projectId }: { projectId: string }) {
     if (radar?.summaryLine) {
       items.push({
         id: "radar",
-        title: "今日经营动态",
+        title: "经营动态",
         subtitle: clip(radar.summaryLine, 36),
         kind: "radar",
         categorySlug: "store-operations",

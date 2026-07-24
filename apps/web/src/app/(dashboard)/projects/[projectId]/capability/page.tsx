@@ -48,7 +48,7 @@ const CAPABILITY_META: CapabilityMeta[] = [
     id: "decision",
     label: "关键决策",
     entries: [
-      { label: "今日经营", href: () => "/dashboard?radar=1" },
+      { label: "经营动态", href: () => "/dashboard?radar=1" },
       { label: "决策会议", href: (id) => `/projects/${id}/decision-room` },
       { label: "扩店决策", href: (id) => `/projects/${id}/decision-case` },
       { label: "股权结构", href: (id) => `/projects/${id}/equity` },

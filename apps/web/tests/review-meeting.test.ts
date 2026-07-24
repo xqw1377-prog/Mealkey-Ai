@@ -20,7 +20,7 @@ describe("review-meeting deep links", () => {
     expect(topic).toContain("是否仍成立");
   });
 
-  it("encodes advisor deep link with intent and decisionId", () => {
+  it("encodes decision-room ready deep link with topic", () => {
     const href = buildReviewMeetingHref({
       projectId: "proj_1",
       decisionId: "dec_9",
@@ -29,9 +29,9 @@ describe("review-meeting deep links", () => {
       previousOneLiner: "A",
       newOneLiner: "B",
     });
-    expect(href.startsWith("/projects/proj_1/advisor?")).toBe(true);
-    expect(href).toContain("intent=positioning_review");
-    expect(href).toContain("decisionId=dec_9");
+    expect(href.startsWith("/projects/proj_1/decision-room?")).toBe(true);
+    expect(href).toContain("intake=ready");
     expect(href).toContain("topic=");
+    expect(href).not.toContain("/advisor");
   });
 });

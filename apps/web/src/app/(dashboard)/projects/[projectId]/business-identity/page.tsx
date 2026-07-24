@@ -1,10 +1,11 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { trpc } from "@/lib/trpc";
+import { MKPageHeader } from "@/components/operating/MKPageHeader";
+import { OpsSecondaryLinks } from "@/components/operating/OpsSecondaryLinks";
 import { PageContent } from "@/components/operating/PageContent";
 import { PageErrorBoundary } from "@/components/operating/PageErrorBoundary";
 import {
@@ -125,23 +126,24 @@ function BusinessIdentityForm({ projectId }: { projectId: string }) {
 
   return (
     <PageContent width="narrow" inset="shell" className="space-y-6">
-      <Link
-        href="/dashboard"
-        className="inline-flex min-h-11 items-center gap-1 border border-[rgba(24,24,23,0.08)] bg-white px-3 text-[13px] font-medium text-[#66735E] no-underline touch-manipulation"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        回今日
-      </Link>
-
-      <header className="space-y-2">
-        <p className="text-[11px] tracking-[0.14em] text-[#66735E]">经营身份</p>
-        <h1 className="font-display text-[26px] font-semibold tracking-[-0.03em] text-[#202124]">
-          你希望我帮你经营哪一家生意？
-        </h1>
-        <p className="text-[14px] leading-6 text-[#6f747b]">
-          品牌与地理是必填——否则无法把外部信息变成你的决策证据。
-        </p>
-      </header>
+      <MKPageHeader
+        eyebrow="经营身份"
+        title="你希望我帮你经营哪一家生意？"
+        description="品牌与地理是必填——否则无法把外部信息变成你的决策证据。"
+        meta={
+          <OpsSecondaryLinks
+            projectId={projectId}
+            links={[
+              { href: "/dashboard?radar=1", label: "回今日" },
+              { href: `/projects/${projectId}/agent`, label: "回对话" },
+              {
+                href: `/projects/${projectId}/restaurant-intelligence`,
+                label: "经营画像",
+              },
+            ]}
+          />
+        }
+      />
 
       {isLoading ? (
         <p className="text-[14px] text-[#6f747b]">加载中…</p>

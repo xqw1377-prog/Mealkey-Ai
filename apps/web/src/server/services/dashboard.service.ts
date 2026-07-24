@@ -591,7 +591,7 @@ export function buildDashboardHome(bundle: ProjectInsightBundle) {
           ),
           deliberationRound: activeMeetingParsed.data.deliberationRound,
           updatedAt: activeMeetingParsed.data.updatedAt,
-          href: `/projects/${bundle.project.id}/advisor`,
+          href: `/projects/${bundle.project.id}/decision-room?topic=${encodeURIComponent(activeMeetingParsed.data.topic)}&intake=ready`,
         }
       : null;
 

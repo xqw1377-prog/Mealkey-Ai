@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Pencil, X } from "lucide-react";
+import { Pencil, X } from "lucide-react";
 import { trpc } from "@/lib/trpc";
+import { MKPageHeader } from "@/components/operating/MKPageHeader";
+import { OpsSecondaryLinks } from "@/components/operating/OpsSecondaryLinks";
 import { PageContent } from "@/components/operating/PageContent";
 import { PageErrorBoundary } from "@/components/operating/PageErrorBoundary";
 import { PageLoadingState } from "@/components/operating/PageState";
@@ -203,26 +204,27 @@ function RestaurantIntelligenceFlow({ projectId }: { projectId: string }) {
   return (
     <PageContent>
       <div className="mx-auto w-full max-w-xl space-y-6 px-4 pb-16 pt-6 md:px-6">
-        <header className="space-y-3">
-          <Link
-            href={`/projects/${projectId}/agent`}
-            prefetch={false}
-            className="mb-3 inline-flex min-h-10 items-center gap-1.5 text-[13px] font-medium text-[#66735E] no-underline lg:hidden"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            回对话
-          </Link>
-          <MKBrand subtitle={null} />
-          <p className="text-[11px] font-medium tracking-[0.14em] text-[#66735E]">
-            餐启 · 经营认知档案
-          </p>
-          <h1 className="font-display text-[30px] font-semibold leading-[1.1] tracking-[-0.045em] text-[#202124] md:text-[36px]">
-            {snapshot.basic.brandName}经营画像 {snapshot.versionLabel}
-          </h1>
-          <p className="text-[15px] leading-7 text-[#3a3d41]">
-            {ownerLabel}，这是我目前对你这家生意的理解。请确认，这是不是你正在经营的世界。
-          </p>
-        </header>
+        <MKPageHeader
+          eyebrow="餐启 · 经营认知档案"
+          title={`${snapshot.basic.brandName}经营画像 ${snapshot.versionLabel}`}
+          description={`${ownerLabel}，这是我目前对你这家生意的理解。请确认，这是不是你正在经营的世界。`}
+          meta={
+            <div className="space-y-3">
+              <MKBrand subtitle={null} />
+              <OpsSecondaryLinks
+                projectId={projectId}
+                links={[
+                  { href: `/projects/${projectId}/agent`, label: "回对话" },
+                  { href: "/dashboard?radar=1", label: "经营动态" },
+                  {
+                    href: `/projects/${projectId}/business-identity`,
+                    label: "经营身份",
+                  },
+                ]}
+              />
+            </div>
+          }
+        />
 
         <TrustLegend
           reviewReady={snapshot.collection.reviewIntelReady}

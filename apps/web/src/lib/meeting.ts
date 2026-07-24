@@ -2,6 +2,8 @@
  * Founder OS Meeting System — 前端运行时模型（对齐 docs/FOUNDER_OS_MEETING_SYSTEM_V1.md）
  */
 
+import { decisionEntryPath } from "./decision-entry";
+
 export type MeetingLifecycle =
   | "INIT"
   | "PREPARE"
@@ -220,32 +222,23 @@ export function toDecisionCard(topic: string, draft: ConsensusDraft): DecisionCa
   };
 }
 
+/**
+ * 会议深链 → 决策室（拍板只在决策室；顾问 SSE 不再作默认出口）
+ * department / confirmSpend 保留参数位以兼容旧调用，不再写入 URL。
+ */
 export function buildMeetingHref(
   projectId: string,
   topic?: string | null,
-  department?: MeetingDepartment,
-  options?: {
+  _department?: MeetingDepartment,
+  _options?: {
     autoStart?: boolean;
     autoSend?: boolean;
-    /** 先进入消耗确认，再开会 */
+    /** @deprecated 决策室自管开案；保留兼容 */
     confirmSpend?: boolean;
     spendKind?: string;
   },
 ): string {
-  const params = new URLSearchParams();
-  if (topic) params.set("topic", topic);
-  if (department && department !== "general") params.set("dept", department);
-  if (options?.confirmSpend) {
-    params.set("confirm", "1");
-    if (options.spendKind) params.set("spend", options.spendKind);
-  } else if (options?.autoStart) {
-    // 默认走消耗确认，避免直接 autoStart 跳过「购买一次专业判断」心智
-    params.set("confirm", "1");
-    if (options.spendKind) params.set("spend", options.spendKind);
-  }
-  if (options?.autoSend) params.set("autoSend", "1");
-  const q = params.toString();
-  return q ? `/projects/${projectId}/advisor?${q}` : `/projects/${projectId}/advisor`;
+  return decisionEntryPath(projectId, topic);
 }
 
 /** @deprecated 请优先用 runDeliberationRound；保留兼容 */

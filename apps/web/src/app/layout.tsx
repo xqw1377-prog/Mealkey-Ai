@@ -28,6 +28,49 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const devOnlyExternalScriptGuard =
+    process.env.NODE_ENV !== "production"
+      ? `
+        (function () {
+          function isExtensionSource(value) {
+            return typeof value === "string" && value.indexOf("chrome-extension://") === 0;
+          }
+
+          window.addEventListener(
+            "error",
+            function (event) {
+              if (isExtensionSource(event.filename)) {
+                event.preventDefault();
+                event.stopImmediatePropagation();
+              }
+            },
+            true
+          );
+
+          window.addEventListener(
+            "unhandledrejection",
+            function (event) {
+              var reason = event.reason;
+              var stack =
+                reason && typeof reason === "object" && typeof reason.stack === "string"
+                  ? reason.stack
+                  : "";
+              var message =
+                reason && typeof reason === "object" && typeof reason.message === "string"
+                  ? reason.message
+                  : String(reason || "");
+
+              if (isExtensionSource(stack) || isExtensionSource(message)) {
+                event.preventDefault();
+                event.stopImmediatePropagation();
+              }
+            },
+            true
+          );
+        })();
+      `
+      : "";
+
   return (
     <html lang="zh-CN">
       <head>
@@ -39,6 +82,13 @@ export default function RootLayout({
             __html: `(function(){try{if("serviceWorker" in navigator){navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister();});});}if("caches" in window){caches.keys().then(function(ks){ks.forEach(function(k){caches.delete(k);});});}}catch(e){}})();`,
           }}
         />
+        {devOnlyExternalScriptGuard ? (
+          <script
+            dangerouslySetInnerHTML={{
+              __html: devOnlyExternalScriptGuard,
+            }}
+          />
+        ) : null}
       </head>
       <body className="font-sans-cn">
         <Providers>{children}</Providers>

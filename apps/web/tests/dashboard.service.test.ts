@@ -18,7 +18,7 @@ describe("dashboard.service builders", () => {
     expect(home.projectHealth).toBeGreaterThan(0);
     expect(home.abilityMap).toHaveLength(5);
     expect(home.decisionTimeline.length).toBeGreaterThan(0);
-    expect(home.secondaryCta.href).toContain("/advisor");
+    expect(home.secondaryCta.href).toContain("/decision-room");
   });
 
   it("buildDashboardHome 无决策时进入 forming 模式", () => {
@@ -33,7 +33,8 @@ describe("dashboard.service builders", () => {
     expect(overview.stageTrack.length).toBeGreaterThan(0);
     expect(overview.riskMap.length).toBeGreaterThan(0);
     expect(overview.worldAssets.decisions).toBe(1);
-    expect(overview.nextPush.meetingHref).toContain("/advisor");
+    expect(overview.nextPush.meetingHref).toContain("/decision-room");
+    expect(overview.nextPush.meetingHref).not.toContain("/advisor");
     expect(overview.nextPush.actions.length).toBeGreaterThan(0);
   });
 
@@ -87,7 +88,8 @@ describe("dashboard.service builders", () => {
     );
     expect(portrait.roleLabel).toBe("餐饮创业者");
     expect(portrait.abilityMap[0]?.strength).toBeTruthy();
-    expect(portrait.growthCoach.actionHref).toContain("/advisor");
+    expect(portrait.growthCoach.actionHref).toContain("/decision-room");
+    expect(portrait.growthCoach.actionHref).not.toContain("/advisor");
     expect(portrait.decisionEvolution.past).toBeTruthy();
     expect(portrait.brainState).toBeTruthy();
   });

@@ -8,6 +8,7 @@ import { ArrowRight, RefreshCw } from "lucide-react";
 import { greetingByHour } from "@/lib/time-greeting";
 import type { DailyScanV1 } from "@/server/founder-layer/contracts/decision-center";
 import type { RadarChangeItemV1 } from "@/server/founder-layer/contracts/business-radar";
+import { ThreeEasyHint } from "@/components/operating/ThreeEasyGuide";
 import { decisionReadyPath } from "@/lib/decision-entry";
 import { saveDecisionVoiceBrief } from "@/lib/decision-voice-brief";
 import { trpc } from "@/lib/trpc";
@@ -256,6 +257,7 @@ export function DecisionCenterMorning({
               44,
             )}
           </p>
+          <ThreeEasyHint projectId={projectId} className="pt-1" />
           <Link
             href={`/projects/${projectId}/agent`}
             prefetch={false}

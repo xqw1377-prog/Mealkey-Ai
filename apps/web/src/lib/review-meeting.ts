@@ -1,6 +1,8 @@
 /**
- * Build deep-links into Meeting for positioning-related re-review.
+ * Build deep-links into Decision Room for positioning-related re-review.
  */
+
+import { decisionReadyPath } from "./decision-entry";
 
 export type ReviewMeetingParams = {
   projectId: string;
@@ -46,10 +48,6 @@ export function buildPositioningReviewTopic(args: {
 
 export function buildReviewMeetingHref(params: ReviewMeetingParams): string {
   const topic = buildPositioningReviewTopic(params);
-  const qs = new URLSearchParams();
-  qs.set("intent", "positioning_review");
-  qs.set("topic", topic);
-  if (params.decisionId) qs.set("decisionId", params.decisionId);
-  if (params.autoSend) qs.set("autoSend", "1");
-  return `/projects/${params.projectId}/advisor?${qs.toString()}`;
+  // 拍板只在决策室；不再走顾问 SSE（decisionId / autoSend 保留在入参供调用方，不进 URL）
+  return decisionReadyPath(params.projectId, topic);
 }

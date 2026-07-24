@@ -6,6 +6,7 @@ import { DecisionCenterMorning } from "@/components/operating/DecisionCenterMorn
 import { MKPageHeader } from "@/components/operating/MKPageHeader";
 import { OpsSecondaryLinks } from "@/components/operating/OpsSecondaryLinks";
 import { PageContent } from "@/components/operating/PageContent";
+import { ThreeEasyHint } from "@/components/operating/ThreeEasyGuide";
 import { greetingByHour } from "@/lib/time-greeting";
 import { trpc } from "@/lib/trpc";
 import type { DailyScanV1 } from "@/server/founder-layer/contracts/decision-center";
@@ -238,20 +239,23 @@ export function DashboardPage({
         title={greeting}
         description={`${home.todayLabel} · ${currentProject.name} · 一眼看清今天最该做的事`}
         meta={
-          <OpsSecondaryLinks
-            projectId={currentProject.id}
-            links={[
-              { href: `/projects/${currentProject.id}/agent`, label: "回对话" },
-              {
-                href: `/projects/${currentProject.id}/decision-room`,
-                label: "决策室",
-              },
-              {
-                href: `/projects/${currentProject.id}/decisions`,
-                label: "跟进",
-              },
-            ]}
-          />
+          <div className="space-y-2">
+            <ThreeEasyHint projectId={currentProject.id} />
+            <OpsSecondaryLinks
+              projectId={currentProject.id}
+              links={[
+                { href: `/projects/${currentProject.id}/agent`, label: "回对话" },
+                {
+                  href: `/projects/${currentProject.id}/decision-room`,
+                  label: "决策室",
+                },
+                {
+                  href: `/projects/${currentProject.id}/decisions`,
+                  label: "跟进",
+                },
+              ]}
+            />
+          </div>
         }
       />
 

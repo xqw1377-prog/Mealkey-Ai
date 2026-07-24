@@ -12,7 +12,7 @@ export const AGENT_CATALOG: Array<{
   name: string;
   description: string;
 }> = [
-  { code: "chief", name: "经营会议", description: "母体会议入口，通用经营判断" },
+  { code: "chief", name: "经营咨询", description: "母体咨询入口，通用经营判断" },
   { code: "m-mkt", name: "市场机会", description: "市场进入判断，专项咨询能力" },
   { code: "m-pnt", name: "品牌定位", description: "品牌战略咨询，专项工作流" },
   { code: "m-ed", name: "股权诊断", description: "股权与治理判断，专项工作流" },

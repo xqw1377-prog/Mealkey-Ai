@@ -155,7 +155,7 @@ export function deriveDecisionBriefFromSpeech(input: {
   const topic =
     (input.topic || "").trim() ||
     spoken.slice(0, 72) ||
-    "今日工作决策";
+    "工作决策";
   return {
     topic,
     whyNow:

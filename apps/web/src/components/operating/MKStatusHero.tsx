@@ -37,7 +37,7 @@ export function MKStatusHero({
   secondaryCtaHref,
   secondaryCtaLabel,
 }: MKStatusHeroProps) {
-  const modeLabel = mode === "forming" ? "判断生成中" : "今日判断已同步";
+  const modeLabel = mode === "forming" ? "判断生成中" : "判断已同步";
   const heroTitle = mode === "forming" ? "AI 正在建立你的经营判断" : "AI 已形成今天的经营判断";
   const heroDescription =
     mode === "forming"

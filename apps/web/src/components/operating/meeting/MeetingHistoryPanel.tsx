@@ -19,7 +19,7 @@ type Props = {
 };
 
 /**
- * 会议历史列表面板 — 自持 preview 状态。
+ * 顾问会商历史列表面板 — 自持 preview 状态。
  */
 export function MeetingHistoryPanel({ projectId, items, onClose }: Props) {
   const [preview, setPreview] = useState<MeetingHistoryItem | null>(null);
@@ -28,8 +28,8 @@ export function MeetingHistoryPanel({ projectId, items, onClose }: Props) {
     <section className="rounded-[18px] border border-[rgba(24,24,23,0.08)] bg-white p-4 shadow-[0_14px_28px_rgba(24,24,23,0.04)]">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-[12px] tracking-[0.08em] text-[#66735E]">会议历史</p>
-          <h2 className="mt-1 text-[18px] font-semibold text-[#202124]">近期 Founder 会议</h2>
+          <p className="text-[12px] tracking-[0.08em] text-[#66735E]">会商历史</p>
+          <h2 className="mt-1 text-[18px] font-semibold text-[#202124]">近期顾问会商</h2>
         </div>
         <button type="button" onClick={onClose} className="text-[13px] text-[#6f747b]">
           收起
@@ -37,7 +37,7 @@ export function MeetingHistoryPanel({ projectId, items, onClose }: Props) {
       </div>
       {items.length === 0 ? (
         <p className="mt-3 text-[14px] leading-6 text-[#6f747b]">
-          暂无已落库的会议摘要。完成一轮独立判断后会出现在这里。
+          暂无已落库的会商摘要。完成一轮独立判断后会出现在这里。
         </p>
       ) : (
         <ul className="mt-3 space-y-2">

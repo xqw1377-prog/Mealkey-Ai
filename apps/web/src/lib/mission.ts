@@ -15,11 +15,11 @@ export type MissionUnderstanding = {
 };
 
 const DEPARTMENT_TITLE: Record<MeetingDepartment, string> = {
-  general: "战略评审会议",
-  market: "市场机会评估会",
-  brand: "品牌战略会议",
-  business: "商业战略会议",
-  org: "组织设计会议",
+  general: "战略评审会商",
+  market: "市场机会评估",
+  brand: "品牌战略会商",
+  business: "商业战略会商",
+  org: "组织设计会商",
 };
 
 export function understandMissionGoal(rawGoal: string): MissionUnderstanding {

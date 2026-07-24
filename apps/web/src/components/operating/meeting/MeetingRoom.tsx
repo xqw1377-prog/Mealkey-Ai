@@ -881,7 +881,7 @@ export function MeetingRoom({
               ) : null}
               <p className="mt-1">验证：{decisionContract.memo.validation}</p>
               <p className="mt-1">停止线：{decisionContract.memo.stopLine}</p>
-              <p className="mt-1 text-white/70">退出：{decisionContract.memo.killCriteria}</p>
+              <p className="mt-1 text-white/70">止损：{decisionContract.memo.killCriteria}</p>
             </div>
           ) : null}
 

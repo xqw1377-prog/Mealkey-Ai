@@ -683,7 +683,7 @@ function capabilityLabel(capability: string) {
     case "equity_design":
       return "股权设计";
     case "founder_council":
-      return "四席会议";
+      return "四席会商";
     default:
       return capability.replace(/_/g, " ");
   }

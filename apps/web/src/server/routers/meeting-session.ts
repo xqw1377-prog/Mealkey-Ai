@@ -133,8 +133,8 @@ export const meetingSessionRouter = router({
       });
 
       return rows.map((row) => {
-        let summary = "会议摘要";
-        let topic = "经营会议";
+        let summary = "会商摘要";
+        let topic = "经营咨询";
         let recommendation: string | undefined;
         try {
           const parsed = JSON.parse(row.content) as {

@@ -746,7 +746,7 @@ async function summarizeAssetEvidence(input: {
           {
             role: "system",
             content:
-              "你是餐饮经营资料摘要助手。请基于给定文字证据，输出 JSON：{\"summary\": string}。summary 必须写成一句适合经营会议直接引用的中文判断摘要，禁止空话。",
+              "你是餐饮经营资料摘要助手。请基于给定文字证据，输出 JSON：{\"summary\": string}。summary 必须写成一句适合决策室直接引用的中文判断摘要，禁止空话。",
           },
           {
             role: "user",

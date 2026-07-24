@@ -69,7 +69,7 @@ export const RECHARGE_PACKS: RechargePack[] = [
 export const SPEND_OFFERS: Record<SpendKind, SpendOffer> = {
   brand: {
     kind: "brand",
-    title: "品牌会议",
+    title: "品牌咨询",
     committee: "品牌顾问",
     cost: 800,
     includes: ["用户是谁", "竞争怎么打", "定位建议"],
@@ -77,7 +77,7 @@ export const SPEND_OFFERS: Record<SpendKind, SpendOffer> = {
   },
   market: {
     kind: "market",
-    title: "市场会议",
+    title: "市场咨询",
     committee: "市场顾问",
     cost: 800,
     includes: ["值不值得进", "机会窗口", "主要风险"],
@@ -85,7 +85,7 @@ export const SPEND_OFFERS: Record<SpendKind, SpendOffer> = {
   },
   business: {
     kind: "business",
-    title: "商业会议",
+    title: "商业咨询",
     committee: "商业顾问",
     cost: 1200,
     includes: ["怎么赚钱", "单位经济", "先验证什么"],
@@ -93,7 +93,7 @@ export const SPEND_OFFERS: Record<SpendKind, SpendOffer> = {
   },
   capital: {
     kind: "capital",
-    title: "股权会议",
+    title: "组织咨询",
     committee: "组织顾问",
     cost: 1200,
     includes: ["谁说了算", "治理风险", "合伙人建议"],
@@ -101,7 +101,7 @@ export const SPEND_OFFERS: Record<SpendKind, SpendOffer> = {
   },
   council: {
     kind: "council",
-    title: "四席会议",
+    title: "四席会商",
     committee: "品牌 · 市场 · 商业 · 组织",
     cost: 5000,
     includes: ["四席独立判断", "冲突与取舍", "可验证下一步"],
@@ -109,7 +109,7 @@ export const SPEND_OFFERS: Record<SpendKind, SpendOffer> = {
   },
   growth: {
     kind: "growth",
-    title: "复会校准",
+    title: "复盘校准",
     committee: "经营顾问",
     cost: 3000,
     includes: ["瓶颈在哪", "验证计划", "下一步动作"],
@@ -117,7 +117,7 @@ export const SPEND_OFFERS: Record<SpendKind, SpendOffer> = {
   },
   general: {
     kind: "general",
-    title: "经营会议",
+    title: "经营咨询",
     committee: "经营顾问",
     cost: 800,
     includes: ["问题澄清", "关键判断", "建议动作"],
@@ -164,10 +164,10 @@ export const COUNCIL_PROBLEMS: Array<{
 ];
 
 export const WALLET_USAGE_LINES = [
-  "市场会议",
-  "品牌会议",
-  "商业会议",
-  "四席会议",
+  "市场咨询",
+  "品牌咨询",
+  "商业咨询",
+  "四席会商",
 ] as const;
 
 export type BillingSnapshotLite = {
@@ -284,7 +284,7 @@ export type ValueArchiveItem = {
 
 const VALUE_BY_AGENT: Record<string, { title: string; gained: string[]; cost: number }> = {
   chief: {
-    title: "四席会议",
+    title: "四席会商",
     gained: ["经营判断", "风险清单", "验证计划"],
     cost: 5000,
   },

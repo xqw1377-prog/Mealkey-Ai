@@ -22,7 +22,7 @@ type Props = {
 };
 
 /**
- * 会议草稿冲突 / 恢复横幅
+ * 会商草稿冲突 / 恢复横幅
  */
 export function MeetingDraftBanners({
   draftConflict,
@@ -40,7 +40,7 @@ export function MeetingDraftBanners({
     <>
       {draftConflict ? (
         <section className="border border-[rgba(180,124,92,0.28)] bg-[rgba(180,124,92,0.08)] p-4">
-          <p className="text-[12px] tracking-[0.08em] text-[#B47C5C]">未开完的会</p>
+          <p className="text-[12px] tracking-[0.08em] text-[#B47C5C]">未完成的会商</p>
           <p className="mt-2 text-[15px] leading-7 text-[#202124]">
             上次：「{draftConflict.draft.topic}」（
             {lifecycleLabel(draftConflict.draft.lifecycle)}）
@@ -71,7 +71,7 @@ export function MeetingDraftBanners({
 
       {showResumeBanner && !draftConflict ? (
         <section className="border border-[rgba(102,115,94,0.28)] bg-[#EEF1EA] p-4">
-          <p className="text-[12px] tracking-[0.08em] text-[#66735E]">未开完</p>
+          <p className="text-[12px] tracking-[0.08em] text-[#66735E]">未完成的会商</p>
           <p className="mt-2 text-[15px] leading-7 text-[#202124]">
             {resumeTopic} · {lifecycleLabel(resumeLifecycle)}
             {resumeRound > 0 ? ` · 第 ${resumeRound} 轮` : ""}

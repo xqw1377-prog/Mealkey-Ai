@@ -117,18 +117,18 @@ export const GENERAL_EXPERTS: ExpertSeat[] = [
 ];
 
 export const DEPARTMENT_MEETING_TITLE: Record<MeetingDepartment, string> = {
-  general: "商业战略会议",
-  market: "市场机会评估会",
-  brand: "品牌定位委员会",
-  business: "商业模式评审会",
-  org: "组织与股权设计会",
+  general: "商业战略会商",
+  market: "市场机会评估",
+  brand: "品牌定位会商",
+  business: "商业模式评审",
+  org: "组织与股权会商",
 };
 
 export function lifecycleLabel(lifecycle: MeetingLifecycle): string {
   const map: Record<MeetingLifecycle, string> = {
     INIT: "初始化",
     PREPARE: "会前准备",
-    OPEN: "会议开场",
+    OPEN: "会商开场",
     DISCUSS: "独立判断",
     DEBATE: "互相挑战",
     SYNTHESIS: "形成共识",

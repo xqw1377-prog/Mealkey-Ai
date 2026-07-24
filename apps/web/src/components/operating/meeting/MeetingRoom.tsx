@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState, type ReactNode } from "react";
-import { ArrowRight, Check, MessageSquare, Pencil, Plus } from "lucide-react";
+import { Check, MessageSquare, Pencil, Plus } from "lucide-react";
 import type {
   ConsensusDraft,
   DecisionCard,
@@ -14,6 +14,7 @@ import type {
 import { lifecycleLabel } from "@/lib/meeting";
 import type { DecisionOption, DeliberationRound } from "@/lib/meeting-deliberation";
 import type { GrowthPlan } from "@/lib/onboarding-interview";
+import { DecisionClosedActions } from "@/components/operating/DecisionLoopRail";
 
 type ValidationTaskPreview = {
   id: string;
@@ -983,30 +984,11 @@ export function MeetingRoom({
                 </div>
               ) : null}
               {acceptedDecisionId ? (
-                <div className="mt-4 flex flex-wrap gap-2">
-                  <Link
-                    href={`/projects/${projectId}/agent`}
-                    prefetch={false}
-                    className="inline-flex min-h-11 items-center gap-2 rounded-full bg-white px-4 text-[13px] font-medium text-[#202124] no-underline touch-manipulation"
-                  >
-                    回对话
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
-                  <Link
-                    href={`/projects/${projectId}/decisions`}
-                    prefetch={false}
-                    className="inline-flex min-h-11 items-center gap-2 rounded-full border border-white/30 px-4 text-[13px] font-medium text-white no-underline touch-manipulation"
-                  >
-                    去跟进
-                  </Link>
-                  <Link
-                    href="/dashboard?radar=1"
-                    prefetch={false}
-                    className="inline-flex min-h-11 items-center gap-2 rounded-full border border-white/30 px-4 text-[13px] font-medium text-white no-underline touch-manipulation"
-                  >
-                    经营动态
-                  </Link>
-                </div>
+                <DecisionClosedActions
+                  projectId={projectId}
+                  archiveOk
+                  variant="onDark"
+                />
               ) : null}
             </div>
           ) : (

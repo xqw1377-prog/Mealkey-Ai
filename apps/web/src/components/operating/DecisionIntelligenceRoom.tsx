@@ -11,6 +11,7 @@ import { DecisionReadinessPanel } from "@/components/operating/DecisionReadiness
 import { ChallengeLayerPanel } from "@/components/operating/ChallengeLayerPanel";
 import {
   DecisionClosedActions,
+  DecisionExitLinks,
   DecisionLoopRail,
 } from "@/components/operating/DecisionLoopRail";
 import { readinessFromContext } from "@/server/founder-layer/capability/decision-intelligence/readiness";
@@ -603,22 +604,7 @@ export function DecisionIntelligenceRoom({ projectId }: { projectId: string }) {
               确认并开始执行
               <ArrowRight className="h-4 w-4" />
             </button>
-            <div className="flex flex-wrap gap-2">
-              <Link
-                href={`/projects/${projectId}/agent`}
-                prefetch={false}
-                className={secondaryBtnClass}
-              >
-                回对话
-              </Link>
-              <Link
-                href={`/projects/${projectId}/decisions`}
-                prefetch={false}
-                className={secondaryBtnClass}
-              >
-                去跟进
-              </Link>
-            </div>
+            <DecisionExitLinks projectId={projectId} />
           </div>
         ) : null}
 

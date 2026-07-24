@@ -13,7 +13,7 @@ type ScenarioStart = {
 
 /**
  * 对话空态 L1（三易 · 易学）
- * 一问候 + 一问 + 一主 CTA；场景网格收进「更多能力」
+ * 一问候 + 一问 + 一主 CTA；捷径三链；场景网格收进「更多」
  */
 export function AgentEmptyThreeEasy({
   greeting,
@@ -54,10 +54,7 @@ export function AgentEmptyThreeEasy({
 
   return (
     <div className="mx-auto flex min-h-[58dvh] max-w-3xl flex-col items-center justify-center px-5 text-center lg:min-h-[62dvh]">
-      <p className="text-[11px] font-medium tracking-[0.16em] text-[#66735E]">
-        易学 · 有事直接说
-      </p>
-      <h1 className="mt-4 font-display text-[30px] font-semibold leading-[1.15] tracking-[-0.045em] text-[#181817] lg:mt-5 lg:text-[36px]">
+      <h1 className="font-display text-[30px] font-semibold leading-[1.15] tracking-[-0.045em] text-[#181817] lg:text-[36px]">
         {greeting}
         {ownerName ? `，${ownerName}` : ""}
       </h1>
@@ -70,7 +67,7 @@ export function AgentEmptyThreeEasy({
         </p>
       ) : (
         <p className="mt-3 max-w-[22em] text-[13px] leading-6 text-[#5c6168]">
-          按住底部麦克风开口即可，不用填表。
+          按住底部麦克风开口即可
         </p>
       )}
 
@@ -85,35 +82,29 @@ export function AgentEmptyThreeEasy({
       </button>
 
       <nav
-        aria-label="三易捷径"
-        className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-[13px]"
+        aria-label="捷径"
+        className="mt-4 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[13px] font-medium text-[#66735E]"
       >
         <Link
           href={`/projects/${projectId}/decision-room?intake=voice`}
           prefetch={false}
-          className="font-medium text-[#66735E] no-underline underline-offset-2 hover:underline"
+          className="no-underline underline-offset-2 hover:underline"
         >
-          <span className="text-[#9a968e]">易做</span>
-          <span className="mx-1 text-[#c5c2ba]">·</span>
           去拍板
         </Link>
         <Link
           href={`/projects/${projectId}/decisions`}
           prefetch={false}
-          className="font-medium text-[#66735E] no-underline underline-offset-2 hover:underline"
+          className="no-underline underline-offset-2 hover:underline"
         >
-          <span className="text-[#9a968e]">易管</span>
-          <span className="mx-1 text-[#c5c2ba]">·</span>
           去跟进
         </Link>
         <Link
           href="/dashboard?radar=1"
           prefetch={false}
-          className="font-medium text-[#66735E] no-underline underline-offset-2 hover:underline"
+          className="no-underline underline-offset-2 hover:underline"
         >
-          <span className="text-[#9a968e]">经营动态</span>
-          <span className="mx-1 text-[#c5c2ba]">·</span>
-          去看看
+          经营动态
         </Link>
       </nav>
 
@@ -122,10 +113,9 @@ export function AgentEmptyThreeEasy({
           type="button"
           disabled={busy}
           onClick={onObserve}
-          className="mt-6 max-w-[min(100%,20rem)] rounded-[16px] border border-[rgba(24,24,23,0.12)] bg-white px-4 py-2.5 text-left text-[13px] leading-5 text-[#3a3a38] disabled:opacity-50"
+          className="mt-5 max-w-[min(100%,20rem)] text-left text-[13px] leading-5 text-[#5c6168] underline-offset-2 hover:underline disabled:opacity-50"
         >
-          <span className="text-[#8a8680]">经营动态 · </span>
-          {aiSuggestion}
+          动态提醒 · {aiSuggestion}
         </button>
       ) : null}
 
@@ -133,9 +123,9 @@ export function AgentEmptyThreeEasy({
         <button
           type="button"
           onClick={() => setShowMore((v) => !v)}
-          className="text-[13px] font-medium text-[#66735E] underline-offset-2 hover:underline"
+          className="text-[13px] font-medium text-[#8a8680] underline-offset-2 hover:underline"
         >
-          {showMore ? "收起更多能力" : "更多能力"}
+          {showMore ? "收起" : "更多"}
         </button>
         {showMore ? (
           <div className="mt-3 space-y-3">

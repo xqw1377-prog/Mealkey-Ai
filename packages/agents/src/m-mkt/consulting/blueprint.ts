@@ -52,7 +52,7 @@ export const mmktBlueprint: AgentConsultingBlueprint = {
     [SixStepId.INTAKE]: { no: "01", title: "说清楚", feel: "你想判断什么" },
     [SixStepId.RESEARCH]: { no: "02", title: "调研", feel: "先看市场事实" },
     [SixStepId.ADVISORS]: { no: "03", title: "三顾问", feel: "各自出方案" },
-    [SixStepId.WAR_ROOM]: { no: "04", title: "开会", feel: "互相质询后拍板" },
+    [SixStepId.WAR_ROOM]: { no: "04", title: "会商", feel: "互相质询后拍板" },
     [SixStepId.STRATEGY_LOCK]: { no: "05", title: "确认", feel: "方案定了" },
     [SixStepId.EXECUTION_PATH]: { no: "06", title: "怎么干", feel: "试点路径" },
   },
@@ -107,15 +107,15 @@ export const mmktBlueprint: AgentConsultingBlueprint = {
   buildWarRoom(advisors) {
     return openGenericWarRoom(advisors, {
       hostIntro:
-        "市场战略委员会开会。三位顾问分别亮「能不能进 / 怎么切 / 验证节奏」进入方案；质询、反驳、改策后由老板拍板。",
-      agendaTitle: "进入方式拍板会 · 有议程、有质询、有反驳、有决议",
+        "市场战略委员会开议。三位顾问分别亮「能不能进 / 怎么切 / 验证节奏」进入方案；质询、反驳、改策后由老板拍板。",
+      agendaTitle: "进入方式会商 · 有议程、有质询、有反驳、有决议",
       decision: {
         title: "进入方式决策卡",
         subtitle: "三案互斥：值不值得进 · 门店打不打得动 · 多久验证杀出",
         question: "本轮市场进入，主轴认哪一条？",
         blendHint:
           "折中例：主轴用战略专家的场景切口；经营专家只定菜单与班次护栏；投资专家只管杀出线。",
-        rule: "没有进入主轴与杀出线，不能散会。",
+        rule: "没有进入主轴与杀出线，不能结束会商。",
       },
       seats: ADVISORS.map((a) => ({
         id: a.id,

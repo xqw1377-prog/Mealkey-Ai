@@ -553,25 +553,25 @@ export function resolveSixStepNext(
     };
   }
 
-  // 案卷已出、会议室未开：先停在顾问步，再开会
+  // 案卷已出、会商未开：先停在顾问步，再会商
   if (!a.warRoom) {
     return {
       step: SixStepId.ADVISORS,
       label: labels[SixStepId.ADVISORS],
-      title: "先读互斥案卷，再进会议室",
+      title: "先读互斥案卷，再进会商",
       detail: a.advisors.conflictSummary,
       actionId: "warroom.open",
-      ctaLabel: "读完了，开会",
+      ctaLabel: "读完了，开始会商",
     };
   }
   if (a.warRoom.status === "open") {
     return {
       step: SixStepId.WAR_ROOM,
       label: labels[SixStepId.WAR_ROOM],
-      title: "进入战略会议室",
+      title: "进入战略会商",
       detail: "听完挑战后由你拍板。",
       actionId: "warroom.open",
-      ctaLabel: "开会",
+      ctaLabel: "开始会商",
     };
   }
   if (a.warRoom.status !== "agreed") {
@@ -590,7 +590,7 @@ export function resolveSixStepNext(
       step: SixStepId.STRATEGY_LOCK,
       label: labels[SixStepId.STRATEGY_LOCK],
       title: `确认${blueprint.reportTitle}`,
-      detail: a.warRoom.consensusOneLiner || "把会议共识写成可签字报告。",
+      detail: a.warRoom.consensusOneLiner || "把会商共识写成可签字报告。",
       actionId: "strategy.confirmReport",
       ctaLabel: "确认报告并生成执行路径",
     };

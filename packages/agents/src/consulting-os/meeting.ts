@@ -14,7 +14,7 @@ import {
 } from "./types";
 
 const AGENDA_LABEL: Record<WarRoomAgendaPhase, string> = {
-  call_to_order: "宣布开会",
+  call_to_order: "宣布开议",
   pitch: "各述本案",
   crossfire: "交叉质询",
   rebuttal: "当场反驳",
@@ -103,7 +103,7 @@ function buildDecisionCard(
       "折中可以，但必须写清谁主轴、谁只做护栏——不能把互斥案合成一团。",
     rule:
       meta.rule ||
-      "没有拍板不能散会。选主轴即接受对应牺牲与本周证明。",
+      "没有拍板不能结束会商。选主轴即接受对应牺牲与本周证明。",
   };
 }
 

@@ -31,7 +31,7 @@ function now() {
 }
 
 const AGENDA_LABEL: Record<WarRoomAgendaPhase, string> = {
-  call_to_order: "议程 1 · 宣布开会",
+  call_to_order: "议程 1 · 宣布开议",
   pitch: "议程 2 · 各述本案",
   crossfire: "议程 3 · 交叉质询",
   rebuttal: "议程 3b · 当场反驳",
@@ -384,7 +384,7 @@ export function buildFounderDecisionCard(
   const blendHint =
     "折中规则：必须写清谁主轴、谁只做约束；禁止多案平均用力。";
   const rule =
-    "没有拍板不能散会。拍板后菜单/话术/传播不得另起第二套主卖点。";
+    "没有拍板不能结束会商。拍板后菜单/话术/传播不得另起第二套主卖点。";
 
   const mdLines = [
     `# ${title}`,
@@ -472,7 +472,7 @@ export function openWarRoomDebate(set: AdvisorStrategySet): OpenWarRoomResult {
     turn(
       "host",
       "host",
-      "品牌战略委员会现在开会。今天只决一件事：主定位押哪条。出席：心智官、空位官、冲突官、符号官、细分官、增长官、文化官。规则：各人 60 秒亮策；交叉质询后必须当场反驳并修正策略表；禁止讲正确的废话；没有老板拍板，不能散会。",
+      "品牌战略委员会现在开议。今天只决一件事：主定位押哪条。出席：心智官、空位官、冲突官、符号官、细分官、增长官、文化官。规则：各人 60 秒亮策；交叉质询后必须当场反驳并修正策略表；禁止讲正确的废话；没有老板拍板，不能结束会商。",
       "call_to_order",
     ),
     ...pitchTurns,
@@ -969,7 +969,7 @@ export function applyUserVoteToWarRoom(
           room.debateRoundCompleted
             ? "8. 注：主轴已含会议辩论修正，非开场旧稿。"
             : "",
-          "下一步：生成《定位策略报告》供签字确认。散会条件：报告确认后。",
+          "下一步：生成《定位策略报告》供签字确认。结束会商条件：报告确认后。",
         ]
           .filter(Boolean)
           .join("\n"),

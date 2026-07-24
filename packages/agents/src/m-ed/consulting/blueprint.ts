@@ -60,7 +60,7 @@ export const medBlueprint: AgentConsultingBlueprint = {
     [SixStepId.INTAKE]: { no: "01", title: "说清楚", feel: "结构卡在哪" },
     [SixStepId.RESEARCH]: { no: "02", title: "体检", feel: "先看股权现状" },
     [SixStepId.ADVISORS]: { no: "03", title: "四顾问", feel: "各自出方案" },
-    [SixStepId.WAR_ROOM]: { no: "04", title: "开会", feel: "控制权拍板" },
+    [SixStepId.WAR_ROOM]: { no: "04", title: "会商", feel: "控制权拍板" },
     [SixStepId.STRATEGY_LOCK]: { no: "05", title: "确认", feel: "方案定了" },
     [SixStepId.EXECUTION_PATH]: { no: "06", title: "怎么落", feel: "协议与节奏" },
   },
@@ -115,7 +115,7 @@ export const medBlueprint: AgentConsultingBlueprint = {
   buildWarRoom(advisors) {
     return openGenericWarRoom(advisors, {
       hostIntro:
-        "股权治理委员会开会。四方亮方案：先锁控制权 / 先补协议 / 先设激励 / 融资缓冲——质询、反驳、改策后由老板拍板。",
+        "股权治理委员会开议。四方亮方案：先锁控制权 / 先补协议 / 先设激励 / 融资缓冲——质询、反驳、改策后由老板拍板。"
       agendaTitle: "控制权与治理拍板会 · 有议程、有质询、有反驳、有决议",
       decision: {
         title: "治理拍板决策卡",
@@ -123,7 +123,7 @@ export const medBlueprint: AgentConsultingBlueprint = {
         question: "本轮股权治理，哪一条必须先锁死？",
         blendHint:
           "折中例：主轴锁创始人控制权底线；风险顾问的协议清单必须同步；激励池比例后置但不取消。",
-        rule: "没有控制权底线与必须落签文件清单，不能散会。",
+        rule: "没有控制权底线与必须落签文件清单，不能结束会商。",
       },
       seats: ADVISORS.map((a) => ({
         id: a.id,

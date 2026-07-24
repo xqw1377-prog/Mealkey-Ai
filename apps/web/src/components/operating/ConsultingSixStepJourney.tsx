@@ -189,6 +189,10 @@ export function ConsultingSixStepJourney({
         await guarded(() => openRoom.mutateAsync({ projectId }));
         return;
       case "warroom.vote":
+        document.getElementById("step-warroom-vote")?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
         return;
       case "strategy.confirmReport":
         await guarded(() => confirmStrategy.mutateAsync({ projectId }));
@@ -335,7 +339,7 @@ export function ConsultingSixStepJourney({
               {next.detail}
             </p>
           </div>
-          {next.actionId !== "warroom.vote" && next.actionId !== "done" ? (
+          {next.actionId !== "done" ? (
             <button
               type="button"
               disabled={busy}
@@ -358,7 +362,9 @@ export function ConsultingSixStepJourney({
               ) : (
                 <>
                   <ArrowRight className="h-4 w-4" />
-                  {next.ctaLabel}
+                  {next.actionId === "warroom.vote"
+                    ? "滚到拍板区"
+                    : next.ctaLabel}
                 </>
               )}
             </button>
@@ -1323,7 +1329,7 @@ function ResearchPanel({
           </div>
           {filledCount > 0 ? (
             <p className="mt-2 text-[12px] text-[#5f6b4e]">
-              已回填 {filledCount} 家 · 竞对三联已升级 · 下游顾问/会议已作废，请重跑
+              已回填 {filledCount} 家 · 竞对三联已升级 · 下游顾问/会商已作废，请重跑
             </p>
           ) : null}
           <ul className="mt-3 space-y-4">
@@ -1947,7 +1953,10 @@ function WarRoomPanel({
       </div>
 
       {awaiting ? (
-        <div className="space-y-4 border-t border-[rgba(20,20,19,0.08)] bg-white px-5 py-6 md:px-7">
+        <div
+          id="step-warroom-vote"
+          className="space-y-4 border-t border-[rgba(20,20,19,0.08)] bg-white px-5 py-6 md:px-7"
+        >
           {room.decisionCard ? (
             <div className="mpnt-decision-card border border-[rgba(20,20,19,0.12)] bg-[var(--mpnt-field)]">
               <div className="border-b border-[rgba(20,20,19,0.08)] px-4 py-3 md:px-5">
@@ -2007,7 +2016,7 @@ function WarRoomPanel({
               主轴选哪条？
             </p>
             <p className="mt-1 text-[13px] text-[#6f747b]">
-              先读决策卡。三案互斥。选主轴，或折中并写清谁主谁辅。没有拍板不能散会。
+              先读决策卡。三案互斥。选主轴，或折中并写清谁主谁辅。没有拍板不能结束会商。
             </p>
           </div>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">

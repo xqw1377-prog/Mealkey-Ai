@@ -42,7 +42,7 @@ export const MPNT_JOURNEY_LABEL: Record<
   },
   [MpntJourneyStep.WAR_ROOM]: {
     no: "04",
-    title: "开会",
+    title: "会商",
     feel: "质询后拍板",
   },
   [MpntJourneyStep.STRATEGY_LOCK]: {

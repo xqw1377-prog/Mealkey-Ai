@@ -60,7 +60,7 @@ export const mbizBlueprint: AgentConsultingBlueprint = {
     [SixStepId.INTAKE]: { no: "01", title: "说清楚", feel: "生意卡在哪" },
     [SixStepId.RESEARCH]: { no: "02", title: "体检", feel: "先看赚钱逻辑" },
     [SixStepId.ADVISORS]: { no: "03", title: "四顾问", feel: "各自出方案" },
-    [SixStepId.WAR_ROOM]: { no: "04", title: "开会", feel: "取舍后拍板" },
+    [SixStepId.WAR_ROOM]: { no: "04", title: "会商", feel: "取舍后拍板" },
     [SixStepId.STRATEGY_LOCK]: { no: "05", title: "确认", feel: "方案定了" },
     [SixStepId.EXECUTION_PATH]: { no: "06", title: "怎么验", feel: "90 天验证" },
   },
@@ -115,7 +115,7 @@ export const mbizBlueprint: AgentConsultingBlueprint = {
   buildWarRoom(advisors) {
     return openGenericWarRoom(advisors, {
       hostIntro:
-        "商业顾问委员会开会。四官亮主航道方案：利润 / 增长 / 品牌优先与落地护栏；质询、反驳、改策后由老板定 90 天主轴。",
+        "商业顾问委员会开议。四官亮主航道方案：利润 / 增长 / 品牌优先与落地护栏；质询、反驳、改策后由老板定 90 天主轴。"
       agendaTitle: "路径取舍拍板会 · 有议程、有质询、有反驳、有决议",
       decision: {
         title: "主航道决策卡",
@@ -123,7 +123,7 @@ export const mbizBlueprint: AgentConsultingBlueprint = {
         question: "未来 90 天，商业模式主航道认哪一席？",
         blendHint:
           "折中例：主轴认战略官的优先级；财务官设杀出线；产品/运营只做证明与流程护栏。",
-        rule: "没有唯一北极星不能散会。三线并行等于没决策。",
+        rule: "没有唯一北极星不能结束会商。三线并行等于没决策。",
       },
       seats: ADVISORS.map((a) => ({
         id: a.id,

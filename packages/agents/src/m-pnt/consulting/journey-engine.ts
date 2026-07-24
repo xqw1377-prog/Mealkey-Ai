@@ -96,10 +96,10 @@ export function resolveMpntJourneyNextStep(
     return {
       step: MpntJourneyStep.MARKET_RESEARCH,
       label: MPNT_JOURNEY_LABEL[MpntJourneyStep.MARKET_RESEARCH],
-      title: "确认调研，召开战略委员会",
+      title: "确认调研，召集会商",
       detail: journey.marketResearch.headline,
       actionId: "research.confirm",
-      ctaLabel: "确认并请三位顾问开会",
+      ctaLabel: "确认并请三位顾问会商",
     };
   }
 
@@ -120,10 +120,10 @@ export function resolveMpntJourneyNextStep(
     return {
       step: MpntJourneyStep.WAR_ROOM,
       label: MPNT_JOURNEY_LABEL[MpntJourneyStep.WAR_ROOM],
-      title: "进入四方会议室",
-      detail: "三顾问已出策。开会挑战后，由你拍板。",
+      title: "进入四方会商",
+      detail: "三顾问已出策。会商质询后，由你拍板。",
       actionId: "warroom.open",
-      ctaLabel: "开会",
+      ctaLabel: "开始会商",
     };
   }
   if (journey.warRoom.status !== "agreed") {
@@ -144,7 +144,7 @@ export function resolveMpntJourneyNextStep(
       step: MpntJourneyStep.STRATEGY_LOCK,
       label: MPNT_JOURNEY_LABEL[MpntJourneyStep.STRATEGY_LOCK],
       title: "确认定位策略报告",
-      detail: journey.warRoom.consensusOneLiner || "把会议共识写成可签字报告，并生成 90 天路径。",
+      detail: journey.warRoom.consensusOneLiner || "把会商共识写成可签字报告，并生成 90 天路径。",
       actionId: "strategy.confirmReport",
       ctaLabel: "确认报告并生成执行路径",
     };
@@ -187,7 +187,7 @@ export function resolveMpntJourneyNextStep(
     step: MpntJourneyStep.EXECUTION_PATH,
     label: MPNT_JOURNEY_LABEL[MpntJourneyStep.EXECUTION_PATH],
     title: "本轮定位咨询完成",
-    detail: "策略已确认，执行路径已就绪。可随时回看会议与报告。",
+    detail: "策略已确认，执行路径已就绪。可随时回看会商与报告。",
     actionId: "done",
     ctaLabel: "完成",
   };

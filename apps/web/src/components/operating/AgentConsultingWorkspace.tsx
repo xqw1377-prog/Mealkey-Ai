@@ -33,6 +33,7 @@ import {
   type ParseUtteranceResult,
 } from "@/lib/intake-dialogue-turns";
 import { PRODUCT_BRAND_TITLE } from "@/lib/product-brand";
+import { buildMeetingHref } from "@/lib/meeting";
 import { trpc } from "@/lib/trpc";
 import {
   SIX_STEP_ORDER,
@@ -44,6 +45,12 @@ import {
   type JourneyNextStep,
   type ResearchPack,
 } from "@mealkey/agents/consulting-os";
+
+const SPEND_KIND_BY_AGENT: Record<ConsultingAgentKind, string> = {
+  "m-mkt": "m-mkt",
+  "m-biz": "m-biz",
+  "m-ed": "m-ed",
+};
 
 function stepRank(step: SixStepId) {
   return SIX_STEP_ORDER.indexOf(step);
@@ -363,6 +370,18 @@ export function AgentConsultingWorkspace({
     }
   }
 
+  if (!projectId) {
+    return (
+      <PageErrorState
+        eyebrow={consultingLabel}
+        title="找不到企业"
+        description="请从对话或经营动态重新进入。"
+        primaryAction={{ href: "/dashboard?radar=1", label: "经营动态" }}
+        secondaryAction={{ href: "/projects", label: "企业列表" }}
+      />
+    );
+  }
+
   if ((isLoading || isFetching) && !data) {
     if (loadTimedOut) {
       return (
@@ -376,8 +395,8 @@ export function AgentConsultingWorkspace({
               label: "回对话",
             }}
             secondaryAction={{
-              href: `/projects/${projectId}/capability`,
-              label: "回能力",
+              href: "/dashboard?radar=1",
+              label: "经营动态",
             }}
           />
           <div className="px-4 md:px-6">
@@ -405,9 +424,14 @@ export function AgentConsultingWorkspace({
           label: "回对话",
         }}
         secondaryAction={{
-          href: `/projects/${projectId}/capability`,
-          label: "回能力",
+          href: "/dashboard?radar=1",
+          label: "经营动态",
         }}
+        slowHint={
+          isFetching
+            ? "若超过十余秒仍停在「整理」，可先回对话。"
+            : null
+        }
       />
     );
   }
@@ -417,14 +441,14 @@ export function AgentConsultingWorkspace({
       <PageErrorState
         eyebrow={consultingLabel}
         title="暂时打不开"
-        description={error?.message || "回对话或能力页再进一次。"}
+        description={error?.message || "回对话或经营动态再进一次。"}
         primaryAction={{
           href: `/projects/${projectId}/agent`,
           label: "回对话",
         }}
         secondaryAction={{
-          href: `/projects/${projectId}/capability`,
-          label: "回能力",
+          href: "/dashboard?radar=1",
+          label: "经营动态",
         }}
       />
     );
@@ -432,6 +456,12 @@ export function AgentConsultingWorkspace({
 
   const focus = nextStep.step;
   const done = nextStep.actionId === "done";
+  const decisionHref = buildMeetingHref(
+    projectId,
+    `${blueprint.productName}拍板`,
+    agentId === "m-mkt" ? "market" : agentId === "m-biz" ? "business" : "org",
+    { confirmSpend: true, spendKind: SPEND_KIND_BY_AGENT[agentId] },
+  );
   const assets = consulting.assets;
   const advisorsMeta = Object.fromEntries(
     blueprint.advisors.map((a) => [a.id, a]),
@@ -467,7 +497,9 @@ export function AgentConsultingWorkspace({
           </h2>
           {done || nextStep.label.feel ? (
             <p className="mt-2 text-[15px] leading-7 text-[#6f747b]">
-              {done ? "报告已定。" : nextStep.label.feel}
+              {done
+                ? "报告不是终点：去拍板 → 去跟进 → 经营动态。"
+                : nextStep.label.feel}
             </p>
           ) : null}
           <div className="mt-5 h-1 overflow-hidden rounded-full bg-[rgba(20,20,19,0.08)]">
@@ -524,7 +556,7 @@ export function AgentConsultingWorkspace({
                 done ? "text-[#5f6b4e]" : "text-white/55"
               }`}
             >
-              {done ? "已交付" : "现在 · 只做这一步"}
+              {done ? "已完成" : "现在 · 只做这一步"}
             </p>
             <p
               className={`mt-0.5 text-[15px] font-semibold leading-5 md:mt-1 md:text-[16px] ${
@@ -538,7 +570,7 @@ export function AgentConsultingWorkspace({
                 done ? "text-[#5f6b4e]" : "text-white/65"
               }`}
             >
-              {nextStep.detail}
+              {done ? "可去拍板，或回对话继续经营。" : nextStep.detail}
             </p>
           </div>
           {nextStep.actionId !== "done" ? (
@@ -573,7 +605,32 @@ export function AgentConsultingWorkspace({
                 </>
               )}
             </button>
-          ) : null}
+          ) : (
+            <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap">
+              <Link
+                href={decisionHref}
+                prefetch={false}
+                className="inline-flex min-h-11 items-center justify-center gap-2 bg-[#181817] px-5 text-[14px] font-semibold text-white no-underline"
+              >
+                去拍板
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+              <Link
+                href={`/projects/${projectId}/decisions`}
+                prefetch={false}
+                className="inline-flex min-h-11 items-center justify-center border border-[rgba(20,20,19,0.14)] bg-white px-4 text-[13px] font-medium text-[#141413] no-underline"
+              >
+                去跟进
+              </Link>
+              <Link
+                href="/dashboard?radar=1"
+                prefetch={false}
+                className="inline-flex min-h-11 items-center justify-center border border-[rgba(20,20,19,0.14)] bg-white px-4 text-[13px] font-medium text-[#141413] no-underline"
+              >
+                经营动态
+              </Link>
+            </div>
+          )}
         </div>
         ) : null}
 
@@ -1538,7 +1595,7 @@ function WarRoomBlock({
               先读决策卡。案卷互斥。选主轴，或折中并写清谁主谁辅。
               <span className="font-medium text-[#a56b4d]">
                 {" "}
-                没有拍板不能散会。
+                没有拍板不能结束会商。
               </span>
             </p>
           </div>

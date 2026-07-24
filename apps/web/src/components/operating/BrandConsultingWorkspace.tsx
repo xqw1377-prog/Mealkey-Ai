@@ -236,8 +236,8 @@ export function BrandConsultingWorkspace({ projectId }: { projectId: string }) {
               label: "回对话",
             }}
             secondaryAction={{
-              href: `/projects/${projectId}/capability`,
-              label: "回能力",
+              href: "/dashboard?radar=1",
+              label: "经营动态",
             }}
           />
           <div className="px-4 md:px-6">
@@ -265,8 +265,8 @@ export function BrandConsultingWorkspace({ projectId }: { projectId: string }) {
           label: "回对话",
         }}
         secondaryAction={{
-          href: `/projects/${projectId}/capability`,
-          label: "回能力",
+          href: "/dashboard?radar=1",
+          label: "经营动态",
         }}
         slowHint={
           isFetching
@@ -282,14 +282,14 @@ export function BrandConsultingWorkspace({ projectId }: { projectId: string }) {
       <PageErrorState
         eyebrow="定位"
         title="暂时打不开"
-        description={error?.message || "先回对话或能力页再试。"}
+        description={error?.message || "先回对话或经营动态再试。"}
         primaryAction={{
           href: `/projects/${projectId}/agent`,
           label: "回对话",
         }}
         secondaryAction={{
-          href: `/projects/${projectId}/capability`,
-          label: "回能力",
+          href: "/dashboard?radar=1",
+          label: "经营动态",
         }}
       />
     );
@@ -317,9 +317,6 @@ export function BrandConsultingWorkspace({ projectId }: { projectId: string }) {
           </div>
           <BrandSwitcher projectId={projectId} variant="full" />
         </div>
-        {journeyDone ? (
-          <p className="text-[14px] leading-6 text-[#5c6168]">本轮已完成。</p>
-        ) : null}
       </header>
 
       <ConsultingSixStepJourney
@@ -499,7 +496,7 @@ export function BrandConsultingWorkspace({ projectId }: { projectId: string }) {
               接下来三步
             </h2>
             <p className="mt-2 max-w-2xl text-[14px] leading-6 text-[#6f747b]">
-              报告不是终点：决策室拍板 → 留下决策 → 回头验证。
+              报告不是终点：去拍板 → 去跟进 → 经营动态。
             </p>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
@@ -508,7 +505,7 @@ export function BrandConsultingWorkspace({ projectId }: { projectId: string }) {
               prefetch={false}
               className="inline-flex min-h-12 items-center justify-center gap-2 bg-[#181817] px-5 text-[14px] font-semibold text-white no-underline"
             >
-              带进会商
+              去拍板
               <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
@@ -516,14 +513,14 @@ export function BrandConsultingWorkspace({ projectId }: { projectId: string }) {
               prefetch={false}
               className="inline-flex min-h-12 items-center justify-center gap-2 border border-[rgba(20,20,19,0.14)] bg-white px-5 text-[14px] font-medium text-[#141413] no-underline"
             >
-              看决策
+              去跟进
             </Link>
             <Link
-              href={`/projects/${projectId}/decisions#validation`}
+              href="/dashboard?radar=1"
               prefetch={false}
               className="inline-flex min-h-12 items-center justify-center gap-2 border border-[rgba(20,20,19,0.14)] bg-white px-5 text-[14px] font-medium text-[#141413] no-underline"
             >
-              去验证任务
+              经营动态
             </Link>
           </div>
         </section>
@@ -548,7 +545,7 @@ export function BrandConsultingWorkspace({ projectId }: { projectId: string }) {
       <ConfirmDialog
         open={resetOpen}
         title="重置整个品牌战略咨询项目？"
-        description="调研、会议与执行路径将清空，确定后需重新开始本轮。"
+        description="调研、会商与执行路径将清空，确定后需重新开始本轮。"
         confirmLabel="确认重置"
         danger
         busy={reset.isPending}

@@ -26,22 +26,22 @@ const TABS = [
     id: "memory",
     no: "01",
     label: "记忆",
-    feel: "进决策室前先翻翻记得住的",
-    now: "带着记忆进决策室",
+    feel: "去拍板前先翻翻记得住的",
+    now: "带着记忆去拍板",
   },
   {
     id: "risk",
     no: "02",
     label: "风险",
     feel: "先处理会出事的",
-    now: "高风险先进决策室",
+    now: "高风险先去拍板",
   },
   {
     id: "opportunity",
     no: "03",
     label: "机会",
     feel: "值得研究的候选",
-    now: "进决策室判断值不值得做",
+    now: "去拍板判断值不值得做",
   },
   {
     id: "growth",
@@ -62,7 +62,7 @@ const TABS = [
     no: "06",
     label: "执行",
     feel: "今日动作与偏航",
-    now: "勾进度，偏了再复会",
+    now: "勾进度，偏了再去拍板",
   },
 ] as const;
 
@@ -179,7 +179,7 @@ export default function RuntimeHubPage() {
         firstRisk.suggestedTopic || `风险复核：${firstRisk.title}`;
       return {
         eyebrow: "现在",
-        title: "带着风险复会",
+        title: "带着风险去拍板",
         href: buildMeetingHref(
           projectId,
           topic,
@@ -202,7 +202,7 @@ export default function RuntimeHubPage() {
         const topic = firstOpp.suggestedTopic || firstOpp.title;
         return {
           eyebrow: "现在",
-          title: "进决策室研究这个机会",
+          title: "去拍板研究这个机会",
           href: buildMeetingHref(
             projectId,
             topic,
@@ -216,7 +216,7 @@ export default function RuntimeHubPage() {
     if (tab === "growth" && growthTopic) {
       return {
         eyebrow: "现在",
-        title: "带着短板进决策室",
+        title: "带着短板去拍板",
         href: buildMeetingHref(
           projectId,
           growthTopic,
@@ -229,7 +229,7 @@ export default function RuntimeHubPage() {
     if (tab === "memory") {
       return {
         eyebrow: "现在",
-        title: "带着记忆进决策室",
+        title: "带着记忆去拍板",
         href: buildMeetingHref(
           projectId,
           memoryTopic || home?.currentProblemTitle || "经营议题校准",
@@ -302,7 +302,7 @@ export default function RuntimeHubPage() {
       <MKPageHeader
         eyebrow="管理"
         title={name}
-        description="管风险、机会和执行。要拍板去决策室。"
+        description="管风险、机会和执行。要拍板就去拍板。"
         meta={
           <>
             <BrandSwitcher projectId={projectId} variant="full" />
@@ -312,11 +312,11 @@ export default function RuntimeHubPage() {
                 { href: `/projects/${projectId}/agent`, label: "回对话" },
                 {
                   href: `/projects/${projectId}/decision-room`,
-                  label: "决策室",
+                  label: "去拍板",
                 },
                 {
-                  href: `/projects/${projectId}/capability`,
-                  label: "能力一览",
+                  href: `/projects/${projectId}/decisions`,
+                  label: "去跟进",
                 },
                 { href: "/dashboard?radar=1", label: "经营动态" },
               ]}
@@ -458,10 +458,10 @@ export default function RuntimeHubPage() {
                   还没有可追加的决策
                 </p>
                 <p className="text-[13px] leading-6 text-[#6f747b]">
-                  先进入决策会议室拍板，记录会出现在这里。
+                  先去拍板，记录会出现在这里。
                 </p>
                 <Link
-                  href={`/projects/${projectId}/decision-case`}
+                  href={`/projects/${projectId}/decision-room`}
                   prefetch={false}
                   className="inline-flex min-h-11 items-center justify-center rounded-[14px] bg-[#181817] px-5 text-[13px] font-semibold text-white no-underline touch-manipulation"
                 >

@@ -69,10 +69,10 @@ export function MemoryRuntimePanel({
           {atelier ? (
             <h3 className={ui.title}>会前先验</h3>
           ) : (
-            <p className={ui.blurb}>进决策室前先看历史教训与禁区，不改战略</p>
+            <p className={ui.blurb}>去拍板前先看历史教训与禁区，不改战略</p>
           )}
           {atelier ? (
-            <p className={ui.blurb}>进决策室前先看历史教训与禁区，不改战略</p>
+            <p className={ui.blurb}>去拍板前先看历史教训与禁区，不改战略</p>
           ) : null}
         </div>
         {isFetching ? <p className={ui.meta}>刷新中…</p> : null}

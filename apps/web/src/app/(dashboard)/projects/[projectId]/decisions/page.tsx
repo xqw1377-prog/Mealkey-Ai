@@ -204,7 +204,7 @@ function ConfidenceBadge({ confidence }: { confidence: number }) {
 function TypeBadge({ type }: { type: string }) {
   const labels: Record<string, string> = {
     general: "综合",
-    meeting: "咨询会议",
+    meeting: "咨询会商",
     positioning: "定位",
     investment: "投资",
     location: "选址",
@@ -540,7 +540,7 @@ function DecisionsArchivePageInner() {
                 { href: `/projects/${projectId}/agent`, label: "回对话" },
                 {
                   href: `/projects/${projectId}/decision-room`,
-                  label: "决策室",
+                  label: "去拍板",
                 },
                 { href: "/dashboard?radar=1", label: "经营动态" },
               ]}

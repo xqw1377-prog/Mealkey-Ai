@@ -117,7 +117,7 @@ export default function ProjectDetailPage() {
               { href: `/projects/${project.id}/agent`, label: "回对话" },
               {
                 href: `/projects/${project.id}/decision-room`,
-                label: "决策室",
+                label: "去拍板",
               },
               {
                 href: `/projects/${project.id}/capability`,
@@ -168,7 +168,7 @@ export default function ProjectDetailPage() {
             prefetch={false}
             className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[16px] bg-[#181817] px-5 text-[15px] font-semibold text-white no-underline touch-manipulation active:scale-[0.98]"
           >
-            进决策室
+            去拍板
             <Sparkles className="h-4 w-4" />
           </Link>
           <Link

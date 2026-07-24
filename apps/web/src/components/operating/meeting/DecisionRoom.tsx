@@ -1149,7 +1149,7 @@ export function DecisionRoom({ projectId }: Props) {
                 {(
                   [
                     ["major", "重大决策（七席）"],
-                    ["special", "专项会（自选席）"],
+                    ["special", "专项（自选席）"],
                   ] as const
                 ).map(([id, label]) => (
                   <button

@@ -57,7 +57,7 @@ export function MeetingHub({ projectId, onChooseConsulting }: Props) {
             决策室
           </span>
           <span className="mt-2 text-[13px] leading-6 text-white/70">
-            重大事项或专项会，直接拍板。
+            重大事项，直接拍板。
           </span>
           <span className="mt-4 inline-flex items-center gap-1 text-[13px] font-semibold">
             去拍板

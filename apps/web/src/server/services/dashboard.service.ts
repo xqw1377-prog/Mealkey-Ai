@@ -543,8 +543,8 @@ export function buildDashboardHome(bundle: ProjectInsightBundle) {
     latest?.strategy ||
     latest?.action ||
     (isInitialBrief
-      ? "第一次进决策室，先锁定关键变量，再形成第一条经营判断。"
-      : "进决策室，补充事实并完成一次完整判断链。");
+      ? "第一次去拍板，先锁定关键变量，再形成第一条经营判断。"
+      : "去拍板，补充事实并完成一次完整判断链。");
 
   const growthPlanRaw = profile.growthPlan as
     | {
@@ -644,7 +644,7 @@ export function buildDashboardHome(bundle: ProjectInsightBundle) {
           topic: String(suggestedNextMeetingRaw.topic).trim(),
           reason: suggestedNextMeetingRaw.reason
             ? String(suggestedNextMeetingRaw.reason).trim()
-            : "上次验证偏离，建议复会校准",
+            : "上次验证偏离，建议再去拍板校准",
         }
       : null;
   const activeValidationTaskRaw = validationTasksRaw.find((task) => {
@@ -751,7 +751,7 @@ export function buildDashboardHome(bundle: ProjectInsightBundle) {
           reason:
             activeValidationTask.triggerReasons[0] ||
             activeValidationTask.aiJudgement ||
-            "验证偏航，建议复会校准路径",
+            "验证偏航，建议再去拍板校准路径",
           href: buildMeetingHref(
             bundle.project.id,
             `复盘：${activeValidationTask.hypothesisStatement || activeValidationTask.title}`,
@@ -1176,7 +1176,7 @@ export function buildDashboardHome(bundle: ProjectInsightBundle) {
     actionDuration: "15-25 分钟",
     secondaryCta: {
       href: `/projects/${bundle.project.id}/decision-room`,
-      label: "进决策室",
+      label: "去拍板",
     },
     growthPlan,
     lastMeetingDecision: latest
@@ -1270,7 +1270,7 @@ export function buildProjectOverview(bundle: ProjectInsightBundle) {
       value: riskValue,
       level,
       reason: item.reason,
-      meetingTopic: topicMap[item.label] ?? "进决策室继续校准这个风险",
+      meetingTopic: topicMap[item.label] ?? "去拍板继续校准这个风险",
     };
   });
 
@@ -1373,7 +1373,7 @@ export function buildProjectOverview(bundle: ProjectInsightBundle) {
       if (isInitialWorld && !hasPos) {
         return {
           title: "先完成品牌定位",
-          description: `把「${currentChallenge}」收成一句心智位置，再进决策室。`,
+          description: `把「${currentChallenge}」收成一句心智位置，再去拍板。`,
           href: `/projects/${bundle.project.id}/positioning`,
           meetingHref: buildFounderMeetingLink(
             bundle.project.id,
@@ -1398,7 +1398,7 @@ export function buildProjectOverview(bundle: ProjectInsightBundle) {
         ? `先把“${currentChallenge}”压成第一条经营判断。`
         : tasks[0].title;
       return {
-        title: isInitialWorld ? "第一次进决策室" : tasks[0].title,
+        title: isInitialWorld ? "第一次去拍板" : tasks[0].title,
         description: isInitialWorld
           ? `先把“${currentChallenge}”压成第一条经营判断。`
           : tasks[0].description,
@@ -1804,7 +1804,7 @@ export function buildOwnerPortrait(
       ? [
           { label: "重定义问题", action: `把「${currentChallenge}」压成一个能验证的问题` },
           { label: "锁定变量", action: `围绕「${yearlyGoal}」锁定最不能判错的关键变量` },
-          { label: "形成首判", action: "第一次进决策室，收束出第一条判断和下一步" },
+          { label: "形成首判", action: "第一次去拍板，收束出第一条判断和下一步" },
         ]
       : [
           { label: "形成判断", action: "每周至少开一次会，留下判断" },
@@ -1841,7 +1841,7 @@ export function buildOwnerPortrait(
         : isInitialPortrait
           ? `已知你在做 ${bundle?.project.category || "餐饮业务"}，眼下挑战是“${currentChallenge}”，目标是“${yearlyGoal}”。`
           : `已根据你的企业与判断，开始摸清能力短板。`,
-    nextAction: bundle?.decisions[0]?.action ?? (isInitialPortrait ? "第一次进决策室，留下第一条判断。" : "继续进决策室，留下新的判断。"),
+    nextAction: bundle?.decisions[0]?.action ?? (isInitialPortrait ? "第一次去拍板，留下第一条判断。" : "继续去拍板，留下新的判断。"),
     currentJudgement:
       bundle?.decisions[0]?.judgement ??
       bundle?.latestReport?.summary ??

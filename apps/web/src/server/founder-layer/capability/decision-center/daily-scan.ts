@@ -404,7 +404,7 @@ export function toDailyScanV1(
       situationLine: clip(
         home.dailyDiagnosis ||
           home.dailyObservation ||
-          "餐厅认知与证据仍在积累——先进决策室拍一板，系统会越来越懂你",
+          "餐厅认知与证据仍在积累——先去拍板，系统会越来越懂你",
         72,
       ),
       impactStars: 3,

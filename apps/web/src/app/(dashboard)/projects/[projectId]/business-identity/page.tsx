@@ -138,7 +138,7 @@ function BusinessIdentityForm({ projectId }: { projectId: string }) {
               { href: `/projects/${projectId}/agent`, label: "回对话" },
               {
                 href: `/projects/${projectId}/decision-room`,
-                label: "决策室",
+                label: "去拍板",
               },
               {
                 href: `/projects/${projectId}/restaurant-intelligence`,

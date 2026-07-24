@@ -2109,7 +2109,7 @@ export async function confirmStrategyReportStep(userId: string, projectId: strin
   let { consulting, interview } = await getOrCreateBrandConsultingProject(userId, projectId);
   const war = consulting.assets.journey?.warRoom;
   if (!war || war.status !== "agreed") {
-    throw new Error("请先完成四方会议并拍板");
+    throw new Error("请先完成四方会商并拍板");
   }
   const advisors = consulting.assets.journey?.advisorStrategies;
   const primary = resolvePrimaryStrategy(advisors, war);

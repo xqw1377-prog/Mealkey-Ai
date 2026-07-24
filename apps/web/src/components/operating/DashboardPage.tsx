@@ -337,7 +337,7 @@ export function DashboardPage({
             系统扫描还在准备，你仍可先去拍板
           </h2>
           <p className="text-[15px] leading-7 text-[#6f747b]">
-            用语音说清一件事，就能进决策室完成判断。
+            用语音说清一件事，就能去拍板完成判断。
           </p>
           <Link
             href={`/projects/${projectId}/decision-room?intake=voice`}

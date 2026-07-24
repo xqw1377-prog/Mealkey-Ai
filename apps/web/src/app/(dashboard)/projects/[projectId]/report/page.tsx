@@ -47,10 +47,10 @@ export default function ReportPage({
         <PageErrorState
           eyebrow="报告"
           title="暂时打不开"
-          description="数据还在同步。先进决策室。"
+          description="数据还在同步。可先去拍板。"
           primaryAction={{
             href: `/projects/${params.projectId}/decision-room`,
-            label: "进决策室",
+            label: "去拍板",
           }}
           secondaryAction={{ href: "/projects", label: "我的企业" }}
         />
@@ -97,7 +97,7 @@ export default function ReportPage({
                 { href: `/projects/${project.id}/agent`, label: "回对话" },
                 {
                   href: `/projects/${project.id}/decision-room`,
-                  label: "决策室",
+                  label: "去拍板",
                 },
               ]}
             />
@@ -107,7 +107,7 @@ export default function ReportPage({
         <section className="border-y border-[rgba(24,24,23,0.08)] py-5">
           <p className="text-[13px] leading-5 tracking-[0.01em] text-[#66735E]">还没有报告</p>
           <p className="mt-2 text-[22px] leading-[1.3] tracking-[-0.03em] text-[#202124]">
-            先开一场会，留下第一次判断
+            先去拍板，留下第一次判断
           </p>
           <p className="mt-3 text-[14px] leading-[1.7] text-[#6f747b]">
             拍板后，报告会出现在这里。
@@ -118,7 +118,7 @@ export default function ReportPage({
               href={`/projects/${project.id}/decision-room`}
               className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-[14px] bg-[#181817] px-4 text-[15px] font-semibold text-white no-underline transition hover:-translate-y-0.5 active:scale-[0.98]"
             >
-              <span>进决策室</span>
+              <span>去拍板</span>
               <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
@@ -152,8 +152,9 @@ export default function ReportPage({
               { href: `/projects/${project.id}/agent`, label: "回对话" },
               {
                 href: `/projects/${project.id}/decision-room`,
-                label: "决策室",
+                label: "去拍板",
               },
+              { href: "/dashboard?radar=1", label: "经营动态" },
             ]}
           />
         }
@@ -253,13 +254,13 @@ export default function ReportPage({
             className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-[14px] border border-[rgba(24,24,23,0.08)] bg-[#F5F3EE] px-4 text-[15px] font-semibold text-[#202124] no-underline transition hover:-translate-y-0.5 active:scale-[0.98]"
           >
             <History className="h-4 w-4" />
-            <span>决策历史</span>
+            <span>去跟进</span>
           </Link>
           <Link
             href={`/projects/${project.id}/decision-room`}
             className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-[14px] bg-[#181817] px-4 text-[15px] font-semibold text-white no-underline transition hover:-translate-y-0.5 active:scale-[0.98]"
           >
-            <span>进决策室</span>
+            <span>去拍板</span>
             <ArrowRight className="h-4 w-4" />
           </Link>
         </div>

@@ -118,7 +118,7 @@ export function signalsFromRipDiff(input: {
       type: "CHANGE",
       title: clip(`经营画像变化：${watch}`, 48),
       description: clip(
-        `${place}：${diff.summaryLine}。需判断是否升格进决策室，而非直接下结论。`,
+        `${place}：${diff.summaryLine}。需判断是否升格去拍板，而非直接下结论。`,
         160,
       ),
       importance: diff.newWatchouts.length ? 0.78 : 0.62,

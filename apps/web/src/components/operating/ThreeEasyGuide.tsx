@@ -6,8 +6,8 @@ import { ArrowRight } from "lucide-react";
 /**
  * 三易（冻结 MOBILE_THREE_EASY_IA_V1）
  * 易学 · 不用说明书 · 对话开口
- * 易做 · 拇指能点完 · 决策室拍板
- * 易管 · 决完能跟住 · 行动 / 经营动态
+ * 易做 · 拇指能点完 · 去拍板
+ * 易管 · 决完能跟住 · 去跟进 / 经营动态
  */
 
 export type ThreeEasyLane = {
@@ -30,7 +30,7 @@ export function buildThreeEasyLanes(projectId: string): ThreeEasyLane[] {
     {
       id: "do",
       label: "易做",
-      feel: "一件事说清，进决策室拍板",
+      feel: "一件事说清，去拍板",
       href: `/projects/${projectId}/decision-room?intake=voice`,
       cta: "去拍板",
     },

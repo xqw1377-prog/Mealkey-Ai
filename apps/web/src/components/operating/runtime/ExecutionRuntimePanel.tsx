@@ -76,7 +76,7 @@ export function ExecutionRuntimePanel({
   const runDeviation = trpc.executionRuntime.runDeviationCheck.useMutation({
     onSuccess: (res) => {
       setFeedback(
-        res.deviation ? "检测到偏航，已写入建议复会" : "未发现中高偏航",
+        res.deviation ? "检测到偏航，已写入建议去拍板" : "未发现中高偏航",
       );
       void utils.executionRuntime.listDeviations.invalidate({ projectId });
       void utils.dashboard.getHome.invalidate();
@@ -113,7 +113,7 @@ export function ExecutionRuntimePanel({
         <>
           <p className={ui.eyebrow}>执行</p>
           <p className={ui.blurb}>
-            拆成可勾选动作；偏航只建议复会，不终局改战略
+            拆成可勾选动作；偏航只建议去拍板，不终局改战略
           </p>
         </>
       ) : null}
@@ -199,7 +199,7 @@ export function ExecutionRuntimePanel({
                   prefetch={false}
                   className="mt-3 inline-flex items-center gap-1 text-[12px] font-semibold text-[#141413] no-underline"
                 >
-                  带着偏航复会 <ArrowRight className="h-3.5 w-3.5" />
+                  带着偏航去拍板 <ArrowRight className="h-3.5 w-3.5" />
                 </Link>
               ) : null}
             </div>

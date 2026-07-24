@@ -65,7 +65,7 @@ export function OpportunityRuntimePanel({
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <div>
             <p className={ui.eyebrow}>机会</p>
-            <p className={ui.blurb}>候选列表；值不值得做进决策室判断</p>
+            <p className={ui.blurb}>候选列表；值不值得做去拍板判断</p>
           </div>
           <p className={ui.meta}>开放 {opportunities.length}</p>
         </div>

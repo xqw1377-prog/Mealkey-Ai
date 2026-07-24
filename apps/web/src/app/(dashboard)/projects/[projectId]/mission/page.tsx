@@ -41,7 +41,7 @@ function MissionContent({ projectId }: { projectId: string }) {
       <MKPageHeader
         eyebrow="新议题"
         title="一句话说目标"
-        description="说完进决策室，不用填表。"
+        description="说完去拍板，不用填表。"
         meta={
           <OpsSecondaryLinks
             projectId={projectId}
@@ -49,7 +49,7 @@ function MissionContent({ projectId }: { projectId: string }) {
               { href: `/projects/${projectId}/agent`, label: "回对话" },
               {
                 href: `/projects/${projectId}/decision-room`,
-                label: "决策室",
+                label: "去拍板",
               },
             ]}
           />
@@ -116,7 +116,7 @@ function MissionContent({ projectId }: { projectId: string }) {
               prefetch={false}
               className={mkPageHeaderPrimaryCtaClass}
             >
-              进决策室
+              去拍板
               <ArrowRight className="h-4 w-4" />
             </Link>
             <button

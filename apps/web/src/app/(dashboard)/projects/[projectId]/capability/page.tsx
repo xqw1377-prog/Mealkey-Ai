@@ -49,7 +49,7 @@ const CAPABILITY_META: CapabilityMeta[] = [
     label: "关键决策",
     entries: [
       { label: "经营动态", href: () => "/dashboard?radar=1" },
-      { label: "决策会议", href: (id) => `/projects/${id}/decision-room` },
+      { label: "去拍板", href: (id) => `/projects/${id}/decision-room` },
       { label: "扩店决策", href: (id) => `/projects/${id}/decision-case` },
       { label: "股权结构", href: (id) => `/projects/${id}/equity` },
       {
@@ -62,7 +62,7 @@ const CAPABILITY_META: CapabilityMeta[] = [
         href: (id) =>
           decisionTopicHref(id, "请做情景模拟：乐观 / 基准 / 悲观下该怎么选"),
       },
-      { label: "决策证据", href: (id) => `/projects/${id}/decisions` },
+      { label: "去跟进", href: (id) => `/projects/${id}/decisions` },
     ],
   },
   {
@@ -84,7 +84,7 @@ const CAPABILITY_META: CapabilityMeta[] = [
             "请帮我把当前战略选择整理成可对外沟通的一页表达",
           ),
       },
-      { label: "结果验证", href: (id) => `/projects/${id}/mission` },
+      { label: "结果验证", href: (id) => `/projects/${id}/decisions` },
     ],
   },
   {
@@ -136,7 +136,22 @@ export default function CapabilityHubPage() {
 
   if (isLoading) {
     return (
-      <PageLoadingState eyebrow="能力" title="正在打开…" />
+      <PageLoadingState
+        eyebrow="能力"
+        title="正在打开…"
+        description="整理能力目录与短板。"
+        primaryAction={
+          projectId
+            ? { href: `/projects/${projectId}/agent`, label: "回对话" }
+            : { href: "/dashboard?radar=1", label: "经营动态" }
+        }
+        secondaryAction={
+          projectId
+            ? { href: "/dashboard?radar=1", label: "经营动态" }
+            : undefined
+        }
+        slowHint="超过十余秒仍未就绪，可先回对话。"
+      />
     );
   }
 
@@ -145,8 +160,13 @@ export default function CapabilityHubPage() {
       <PageErrorState
         eyebrow="能力"
         title="暂时打不开"
-        description={error.message}
-        primaryAction={{ href: "/dashboard?radar=1", label: "经营动态" }}
+        description={error.message || "先回对话或经营动态再试。"}
+        primaryAction={
+          projectId
+            ? { href: `/projects/${projectId}/agent`, label: "回对话" }
+            : { href: "/dashboard?radar=1", label: "经营动态" }
+        }
+        secondaryAction={{ href: "/dashboard?radar=1", label: "经营动态" }}
       />
     );
   }
@@ -193,11 +213,15 @@ export default function CapabilityHubPage() {
                       },
                       {
                         href: `/projects/${projectId}/decision-room`,
-                        label: "决策室",
+                        label: "去拍板",
                       },
                       {
                         href: `/projects/${projectId}/decisions`,
-                        label: "跟进",
+                        label: "去跟进",
+                      },
+                      {
+                        href: "/dashboard?radar=1",
+                        label: "经营动态",
                       },
                     ]
                   : undefined
@@ -253,7 +277,7 @@ export default function CapabilityHubPage() {
             prefetch={false}
             className="inline-flex shrink-0 items-center gap-1 text-[13px] font-semibold text-[#181817] no-underline"
           >
-            进决策室
+            去拍板
             <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </section>

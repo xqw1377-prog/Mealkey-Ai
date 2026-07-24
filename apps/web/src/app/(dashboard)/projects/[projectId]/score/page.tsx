@@ -71,7 +71,7 @@ export default function ScorePage({
           primaryAction={{ href: "/dashboard?radar=1", label: "经营动态" }}
           secondaryAction={{
             href: `/projects/${params.projectId}/decision-room`,
-            label: "进决策室",
+            label: "去拍板",
           }}
         />
       </div>
@@ -108,7 +108,7 @@ export default function ScorePage({
               { href: `/projects/${project.id}/agent`, label: "回对话" },
               {
                 href: `/projects/${project.id}/decision-room`,
-                label: "决策室",
+                label: "去拍板",
               },
             ]}
           />

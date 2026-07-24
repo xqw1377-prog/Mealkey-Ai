@@ -35,7 +35,7 @@ export default function ProjectKnowledgePage({
           primaryAction={{ href: `/projects/${params.projectId}`, label: "回企业" }}
           secondaryAction={{
             href: `/projects/${params.projectId}/decision-room`,
-            label: "进决策室",
+            label: "去拍板",
           }}
         />
       </div>
@@ -64,7 +64,7 @@ export default function ProjectKnowledgePage({
       <MKPageHeader
         eyebrow="知识库"
         title={project.name}
-        description="记得住的规则与经验，决策室会用到。"
+        description="记得住的规则与经验，拍板时会用到。"
         badge={
           <div className="inline-flex min-h-7 items-center rounded-[12px] border border-[rgba(24,24,23,0.08)] bg-white px-3 text-[13px] leading-5 tracking-[0.01em] text-[#6f747b]">
             经验
@@ -77,8 +77,9 @@ export default function ProjectKnowledgePage({
               { href: `/projects/${project.id}/agent`, label: "回对话" },
               {
                 href: `/projects/${project.id}/decision-room`,
-                label: "决策室",
+                label: "去拍板",
               },
+              { href: "/dashboard?radar=1", label: "经营动态" },
             ]}
           />
         }
@@ -179,12 +180,12 @@ export default function ProjectKnowledgePage({
         <PageEmptyState
           eyebrow="知识库"
           title="还没有可引用的经验"
-          description="先进决策室或留下决策，经验会慢慢沉淀。"
+          description="先去拍板或留下决策，经验会慢慢沉淀。"
           primaryAction={{
             href: `/projects/${project.id}/decision-room`,
-            label: "进决策室",
+            label: "去拍板",
           }}
-          secondaryAction={{ href: `/projects/${project.id}`, label: "回企业" }}
+          secondaryAction={{ href: "/dashboard?radar=1", label: "经营动态" }}
           inset="shell"
         />
       )}

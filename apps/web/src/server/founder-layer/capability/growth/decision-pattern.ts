@@ -118,7 +118,7 @@ export function buildGrowthPath(input: {
 
   if (input.lastOutcome === "invalidated") {
     path.unshift({
-      title: "带着证伪结果复会，重写可证伪假设",
+      title: "带着证伪结果去拍板，重写可证伪假设",
       stageHint,
       why: "失败若不进记忆，会重复交学费。",
     });

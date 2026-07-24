@@ -1695,7 +1695,7 @@ function AdvisorPageContent({
           }}
           secondaryAction={{
             href: `/projects/${params.projectId}/decision-room`,
-            label: "决策室",
+            label: "去拍板",
           }}
         />
       </div>
@@ -2358,7 +2358,7 @@ function AdvisorPageContent({
                   onClick={() => setMeetingLane("hub")}
                   className="inline-flex min-h-11 items-center px-1 text-[13px] text-[#6f747b] touch-manipulation"
                 >
-                  ← 返回会议大厅
+                  ← 返回选题
                 </button>
                 <CouncilProblemPicker
                   projectId={params.projectId}

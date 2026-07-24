@@ -94,7 +94,7 @@ export function buildDecisionExecutionView(input: {
       snm?.topic && String(snm.topic).trim()
         ? {
             topic: String(snm.topic).trim(),
-            reason: String(snm.reason || "建议复会校准"),
+            reason: String(snm.reason || "建议再去拍板校准"),
           }
         : null,
   };

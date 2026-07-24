@@ -70,7 +70,7 @@ export function RiskRuntimePanel({ projectId, atelier }: Props) {
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <div>
             <p className={ui.eyebrow}>风险</p>
-            <p className={ui.blurb}>确认或关掉；严重的先复会</p>
+            <p className={ui.blurb}>确认或关掉；严重的先去拍板</p>
           </div>
           <p className={ui.meta}>
             开放 {alerts.length}
@@ -159,7 +159,7 @@ export function RiskRuntimePanel({ projectId, atelier }: Props) {
                     prefetch={false}
                     className={`${ui.primaryBtn} no-underline`}
                   >
-                    带着风险复会 <ArrowRight className="h-3.5 w-3.5" />
+                    带着风险去拍板 <ArrowRight className="h-3.5 w-3.5" />
                   </Link>
                   {alert.status === "open" ? (
                     <button

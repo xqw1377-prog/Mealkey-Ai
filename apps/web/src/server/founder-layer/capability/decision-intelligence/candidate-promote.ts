@@ -206,10 +206,10 @@ export function buildCandidateFromSignal(
     promoteScore,
     readiness,
     recommendedAction: expansion
-      ? "进入第二家店决策会议室，先补齐关键事实再裁决"
+      ? "进入第二家店拍板，先补齐关键事实再裁决"
       : readiness.state === "ready"
-        ? "进入决策会议室完成判断"
-        : "先补关键项，再决定是否进决策室",
+        ? "去拍板完成判断"
+        : "先补关键项，再决定是否去拍板",
     status: shouldPromoteCandidate({
       promoteScore,
       status: "open",

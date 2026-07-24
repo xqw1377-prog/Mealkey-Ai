@@ -50,7 +50,7 @@ export default function ProjectKnowledgePage({
           title="进不了知识库"
           description="回列表再选企业。"
           primaryAction={{ href: "/projects", label: "我的企业" }}
-          secondaryAction={{ href: "/dashboard", label: "回今日" }}
+          secondaryAction={{ href: "/dashboard?radar=1", label: "经营动态" }}
         />
       </div>
     );
@@ -64,7 +64,7 @@ export default function ProjectKnowledgePage({
       <MKPageHeader
         eyebrow="知识库"
         title={project.name}
-        description="记得住的规则与经验，开会会用到。"
+        description="记得住的规则与经验，决策室会用到。"
         badge={
           <div className="inline-flex min-h-7 items-center rounded-[12px] border border-[rgba(24,24,23,0.08)] bg-white px-3 text-[13px] leading-5 tracking-[0.01em] text-[#6f747b]">
             经验
@@ -179,7 +179,7 @@ export default function ProjectKnowledgePage({
         <PageEmptyState
           eyebrow="知识库"
           title="还没有可引用的经验"
-          description="先开会或留下决策，经验会慢慢沉淀。"
+          description="先进决策室或留下决策，经验会慢慢沉淀。"
           primaryAction={{
             href: `/projects/${project.id}/decision-room`,
             label: "进决策室",

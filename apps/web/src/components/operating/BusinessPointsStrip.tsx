@@ -25,7 +25,7 @@ export function BusinessPointsStrip({ wallet, compact }: Props) {
           </p>
           {wallet.monthAnalyses > 0 ? (
             <p className="truncate text-[12px] text-[#6f747b]">
-              本月开会 {wallet.monthAnalyses} 次
+              本月决策 {wallet.monthAnalyses} 次
             </p>
           ) : null}
         </div>
@@ -60,7 +60,7 @@ export function BusinessPointsStrip({ wallet, compact }: Props) {
 
       {wallet.monthAnalyses > 0 ? (
         <p className="text-[15px] leading-7 text-[#202124]">
-          本月开会 <span className="font-semibold">{wallet.monthAnalyses}</span> 次
+          本月决策 <span className="font-semibold">{wallet.monthAnalyses}</span> 次
           {wallet.hoursSaved > 0 ? (
             <>
               <span className="mx-2 text-[#c5c2ba]">·</span>

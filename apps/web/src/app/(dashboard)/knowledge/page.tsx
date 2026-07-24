@@ -2,6 +2,12 @@
 
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import {
+  MKPageHeader,
+  mkPageHeaderPrimaryCtaClass,
+  mkPageHeaderSecondaryCtaClass,
+} from "@/components/operating/MKPageHeader";
+import { OpsSecondaryLinks } from "@/components/operating/OpsSecondaryLinks";
 import { PageContent } from "@/components/operating/PageContent";
 import { PageErrorState, PageLoadingState } from "@/components/operating/PageState";
 import { useProjectStore } from "@/stores/projectStore";
@@ -30,7 +36,7 @@ export default function KnowledgePage() {
           eyebrow="成长"
           title="暂时打不开"
           description="数据还在同步。"
-          primaryAction={{ href: "/dashboard", label: "回今日" }}
+          primaryAction={{ href: "/dashboard?radar=1", label: "经营动态" }}
           secondaryAction={{ href: "/projects", label: "我的企业" }}
         />
       </PageContent>
@@ -44,15 +50,23 @@ export default function KnowledgePage() {
 
   return (
     <PageContent width="narrow" inset="shell" className="space-y-8">
-      <header className="space-y-2">
-        <p className="text-[11px] tracking-[0.14em] text-[#66735E]">成长</p>
-        <h1 className="font-display text-[28px] font-semibold tracking-[-0.04em] text-[#202124] md:text-[32px]">
-          今日可读
-        </h1>
-        <p className="text-[14px] leading-6 text-[#6f747b]">
-          带回企业里用的判断。
-        </p>
-      </header>
+      <MKPageHeader
+        eyebrow="成长"
+        title="今日可读"
+        description="带回企业里用的判断。"
+        meta={
+          <OpsSecondaryLinks
+            projectId={projectId}
+            links={[
+              ...(projectId
+                ? [{ href: `/projects/${projectId}/agent`, label: "回对话" }]
+                : []),
+              { href: "/dashboard?radar=1", label: "经营动态" },
+              { href: projectKnowledgeHref, label: "企业知识库" },
+            ]}
+          />
+        }
+      />
 
       {insight ? (
         <>
@@ -99,16 +113,16 @@ export default function KnowledgePage() {
           <div className="flex flex-col gap-2.5 border-t border-[rgba(24,24,23,0.08)] pt-6 sm:flex-row">
             <Link
               href={projectKnowledgeHref}
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[16px] bg-[#181817] px-5 text-[15px] font-semibold text-white no-underline touch-manipulation active:scale-[0.98]"
+              className={mkPageHeaderPrimaryCtaClass}
             >
               打开企业知识库
               <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
-              href="/dashboard"
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[16px] border border-[rgba(24,24,23,0.12)] bg-white px-5 text-[15px] font-semibold text-[#181817] no-underline touch-manipulation"
+              href="/dashboard?radar=1"
+              className={mkPageHeaderSecondaryCtaClass}
             >
-              回今日
+              经营动态
             </Link>
           </div>
         </>
@@ -118,19 +132,19 @@ export default function KnowledgePage() {
             暂无洞察
           </p>
           <p className="text-[14px] leading-6 text-[#6f747b]">
-            先回今日，或进企业知识库。
+            先回经营动态，或进企业知识库。
           </p>
           <div className="flex flex-col gap-2.5 sm:flex-row">
             <Link
-              href="/dashboard"
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[16px] bg-[#181817] px-5 text-[15px] font-semibold text-white no-underline touch-manipulation"
+              href="/dashboard?radar=1"
+              className={mkPageHeaderPrimaryCtaClass}
             >
-              回今日
+              经营动态
               <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
               href={projectKnowledgeHref}
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[16px] border border-[rgba(24,24,23,0.12)] bg-white px-5 text-[15px] font-semibold text-[#181817] no-underline touch-manipulation"
+              className={mkPageHeaderSecondaryCtaClass}
             >
               企业知识
             </Link>

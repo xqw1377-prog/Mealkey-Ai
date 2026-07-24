@@ -134,8 +134,12 @@ function BusinessIdentityForm({ projectId }: { projectId: string }) {
           <OpsSecondaryLinks
             projectId={projectId}
             links={[
-              { href: "/dashboard?radar=1", label: "回今日" },
+              { href: "/dashboard?radar=1", label: "经营动态" },
               { href: `/projects/${projectId}/agent`, label: "回对话" },
+              {
+                href: `/projects/${projectId}/decision-room`,
+                label: "决策室",
+              },
               {
                 href: `/projects/${projectId}/restaurant-intelligence`,
                 label: "经营画像",

@@ -26,22 +26,22 @@ const TABS = [
     id: "memory",
     no: "01",
     label: "记忆",
-    feel: "开会前先翻翻记得住的",
-    now: "带着记忆去开会",
+    feel: "进决策室前先翻翻记得住的",
+    now: "带着记忆进决策室",
   },
   {
     id: "risk",
     no: "02",
     label: "风险",
     feel: "先处理会出事的",
-    now: "高风险先复会",
+    now: "高风险先进决策室",
   },
   {
     id: "opportunity",
     no: "03",
     label: "机会",
     feel: "值得研究的候选",
-    now: "开会判断值不值得做",
+    now: "进决策室判断值不值得做",
   },
   {
     id: "growth",
@@ -202,7 +202,7 @@ export default function RuntimeHubPage() {
         const topic = firstOpp.suggestedTopic || firstOpp.title;
         return {
           eyebrow: "现在",
-          title: "开会研究这个机会",
+          title: "进决策室研究这个机会",
           href: buildMeetingHref(
             projectId,
             topic,
@@ -216,7 +216,7 @@ export default function RuntimeHubPage() {
     if (tab === "growth" && growthTopic) {
       return {
         eyebrow: "现在",
-        title: "带着短板开会",
+        title: "带着短板进决策室",
         href: buildMeetingHref(
           projectId,
           growthTopic,
@@ -229,7 +229,7 @@ export default function RuntimeHubPage() {
     if (tab === "memory") {
       return {
         eyebrow: "现在",
-        title: "带着记忆开会",
+        title: "带着记忆进决策室",
         href: buildMeetingHref(
           projectId,
           memoryTopic || home?.currentProblemTitle || "经营议题校准",

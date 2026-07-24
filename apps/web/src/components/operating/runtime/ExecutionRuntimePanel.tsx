@@ -279,7 +279,7 @@ export function ExecutionRuntimePanel({
 
       {!embedded && execution ? (
         <p className="mt-4 text-[12px] leading-5 text-[#6f747b]">
-          勾选完成进度请回今日简报；这里负责计划与偏航。
+          勾选完成进度请回经营动态；这里负责计划与偏航。
           <Link
             href="/dashboard"
             prefetch={false}

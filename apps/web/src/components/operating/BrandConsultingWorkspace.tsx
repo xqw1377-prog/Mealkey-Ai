@@ -417,7 +417,7 @@ export function BrandConsultingWorkspace({ projectId }: { projectId: string }) {
               接下来三步
             </h2>
             <p className="mt-2 max-w-2xl text-[14px] leading-6 text-[#6f747b]">
-              报告不是终点：开会拍板 → 留下决策 → 回头验证。
+              报告不是终点：决策室拍板 → 留下决策 → 回头验证。
             </p>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">

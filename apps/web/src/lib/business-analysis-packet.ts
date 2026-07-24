@@ -80,6 +80,7 @@ export function clearBusinessAnalysisPacket() {
   }
 }
 
-export function businessAnalysisPath(projectId: string) {
-  return `/projects/${projectId}/business-analysis`;
+/** 变化解读已收口今日页；保留函数签名以兼容旧调用 */
+export function businessAnalysisPath(_projectId: string) {
+  return "/dashboard?radar=1";
 }

@@ -68,7 +68,7 @@ export default function ScorePage({
           eyebrow="记分卡"
           title="暂时打不开"
           description="数据还在同步。"
-          primaryAction={{ href: "/dashboard", label: "回今日" }}
+          primaryAction={{ href: "/dashboard?radar=1", label: "经营动态" }}
           secondaryAction={{
             href: `/projects/${params.projectId}/decision-room`,
             label: "进决策室",
@@ -84,8 +84,8 @@ export default function ScorePage({
         <PageEmptyState
           eyebrow="记分卡"
           title="还没有分数"
-          description="先开几次会、做验证，分数才可信。"
-          primaryAction={{ href: "/dashboard", label: "回今日" }}
+          description="先进几次决策室、做验证，分数才可信。"
+          primaryAction={{ href: "/dashboard?radar=1", label: "经营动态" }}
           secondaryAction={{ href: `/projects/${params.projectId}`, label: "企业" }}
         />
       </div>
@@ -155,10 +155,10 @@ export default function ScorePage({
             <ArrowRight className="h-4 w-4" />
           </Link>
           <Link
-            href="/dashboard"
+            href="/dashboard?radar=1"
             className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-[14px] border border-[rgba(24,24,23,0.08)] bg-[#F5F3EE] px-4 text-[15px] font-semibold text-[#202124] no-underline transition hover:-translate-y-0.5 active:scale-[0.98]"
           >
-            回今日
+            经营动态
             <ArrowRight className="h-4 w-4" />
           </Link>
         </div>

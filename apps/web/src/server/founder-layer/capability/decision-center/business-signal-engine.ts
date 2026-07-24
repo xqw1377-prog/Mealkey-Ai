@@ -105,10 +105,11 @@ export function protocolToUiSignal(
     s.decisionTopic ||
     s.title ||
     "根据今日经营变化，下一步最该拍什么板？";
-  // 雷达/信号默认进经营分析，禁止直跳决策室
-  const href = s.href?.includes("/business-analysis")
-    ? s.href
-    : businessAnalysisPath(projectId);
+  // 雷达/信号默认进今日经营动态（变化解读主位），禁止直跳决策室
+  const href =
+    s.href && !s.href.includes("/business-analysis")
+      ? s.href
+      : businessAnalysisPath(projectId);
 
   return {
     id: s.id,
@@ -229,7 +230,7 @@ function focusToUiSignal(
     evidenceChain: chain,
     importanceStars: starsFromRank(rankScore),
     href:
-      focus.href?.includes("/business-analysis")
+      focus.href && !focus.href.includes("/business-analysis")
         ? focus.href
         : businessAnalysisPath(projectId),
     ctaLabel: ctaLabel(severity),
@@ -374,7 +375,7 @@ export function runBusinessSignalEngine(input: {
       meaning: cause,
       judgment: cause,
       impact: "与当前经营阶段相关，值得核对",
-      suggestion: "打开经营分析核对事实，再决定是否升格",
+      suggestion: "打开经营动态核对事实，再决定是否升格",
       severity: "watch",
       scores,
       evidenceChain: chain,

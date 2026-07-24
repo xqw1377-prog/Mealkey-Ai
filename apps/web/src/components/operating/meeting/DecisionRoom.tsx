@@ -912,7 +912,7 @@ export function DecisionRoom({ projectId }: Props) {
         session.evidencePacket.gapActions.length > 0 ? (
           <div className="mt-2 space-y-1.5">
             <p className="text-[12px] leading-5 text-[#8A4F31]">
-              开会提醒：口述已挂载；下列为仍缺的客观数据，点按钮即可补。
+              开案提醒：口述已挂载；下列为仍缺的客观数据，点按钮即可补。
             </p>
             <div className="flex flex-wrap gap-2">
               {session.evidencePacket.gapActions.slice(0, 3).map((gap) => (
@@ -948,7 +948,7 @@ export function DecisionRoom({ projectId }: Props) {
         ) : session?.evidencePacket?.gaps &&
           session.evidencePacket.gaps.length > 0 ? (
           <p className="mt-1.5 text-[12px] leading-5 text-[#8A4F31]">
-            开会提醒：{session.evidencePacket.gaps.slice(0, 2).join("；")}
+            开案提醒：{session.evidencePacket.gaps.slice(0, 2).join("；")}
           </p>
         ) : null}
       </header>
@@ -1147,7 +1147,7 @@ export function DecisionRoom({ projectId }: Props) {
                     className="mt-1"
                   />
                   <span>
-                    仅开发演示：没有完整咨询报告时仍用草案开会（生产禁用；需
+                    仅开发演示：没有完整咨询报告时仍用草案开案（生产禁用；需
                     ALLOW_COUNCIL_STUB=1）
                   </span>
                 </label>
@@ -1160,7 +1160,7 @@ export function DecisionRoom({ projectId }: Props) {
                   className="mt-1"
                 />
                 <span>
-                  带着证据缺口开会（缺口 ≥2 或证据过少时必须勾选，否则先补一手事实）
+                  带着证据缺口开案（缺口 ≥2 或证据过少时必须勾选，否则先补一手事实）
                 </span>
               </label>
 

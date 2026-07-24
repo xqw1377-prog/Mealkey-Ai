@@ -30,7 +30,7 @@ export function SpendConfirmPanel({
   error,
   onConfirm,
   onCancel,
-  confirmLabel = "开始开会",
+  confirmLabel = "进入决策室",
 }: Props) {
   const titleId = useId();
   const descId = useId();
@@ -154,7 +154,7 @@ export function SpendConfirmPanel({
                 onClick={onConfirm}
                 className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 bg-[#181817] px-5 text-[15px] font-semibold text-white touch-manipulation active:scale-[0.98] disabled:opacity-50"
               >
-                {loading ? "开始中…" : confirmLabel}
+                {loading ? "进入中…" : confirmLabel}
                 <ArrowRight className="h-4 w-4" />
               </button>
             )}

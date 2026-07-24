@@ -85,7 +85,7 @@ function MissionContent({ projectId }: { projectId: string }) {
           </div>
 
           <div>
-            <p className="text-[11px] tracking-[0.12em] text-[#6f747b]">开会先谈</p>
+            <p className="text-[11px] tracking-[0.12em] text-[#6f747b]">决策室先谈</p>
             <ol className="mt-3 space-y-2">
               {understanding.questions.map((q, i) => (
                 <li key={q} className="text-[15px] leading-7 text-[#202124]">

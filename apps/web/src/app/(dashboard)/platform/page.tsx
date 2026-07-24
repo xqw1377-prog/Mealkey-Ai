@@ -289,10 +289,10 @@ export default async function PlatformPage({
                   <ArrowRight className="h-4 w-4" />
                 </Link>
                 <Link
-                  href="/dashboard"
+                  href="/dashboard?radar=1"
                   className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[14px] bg-[#181817] px-4 text-[15px] font-semibold text-white no-underline transition active:scale-[0.98]"
                 >
-                  <span>回到今日</span>
+                  <span>经营动态</span>
                   <ArrowRight className="h-4 w-4" />
                 </Link>
                 <Link

@@ -162,7 +162,7 @@ export function GrowthRuntimePanel({
                     prefetch={false}
                     className="mt-2 inline-flex items-center gap-1 text-[12px] font-semibold text-[#141413] no-underline"
                   >
-                    成长议题开会 <ArrowRight className="h-3.5 w-3.5" />
+                    成长议题进决策室 <ArrowRight className="h-3.5 w-3.5" />
                   </Link>
                 ) : null}
               </li>

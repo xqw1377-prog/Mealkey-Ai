@@ -83,7 +83,7 @@ export default function AssetCenterPage() {
         <PageErrorState
           eyebrow="资料中心"
           title="暂时打不开"
-          description="资料还在同步。先回画像或去开会。"
+          description="资料还在同步。先回画像或去决策室。"
           primaryAction={{ href: "/profile", label: "回画像" }}
           secondaryAction={{ href: "/projects", label: "我的企业" }}
         />
@@ -318,7 +318,7 @@ export default function AssetCenterPage() {
           <div className="mt-4 rounded-[18px] border border-dashed border-[rgba(24,24,23,0.12)] bg-[#FBFAF7] px-4 py-10 text-center">
             <p className="text-[16px] leading-7 text-[#202124]">当前分类下还没有资料</p>
             <p className="mt-2 text-[14px] leading-6 text-[#6f747b]">
-              开会时上传预算、图片、语音或文档，就会出现在这里。
+              决策室里上传预算、图片、语音或文档，就会出现在这里。
             </p>
           </div>
         ) : null}

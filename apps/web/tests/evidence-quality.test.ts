@@ -38,8 +38,8 @@ describe("evidence-quality", () => {
   });
 });
 
-describe("信号入口进经营分析", () => {
-  it("UI Signal href 指向 business-analysis 且含五层", () => {
+describe("信号入口进经营动态", () => {
+  it("UI Signal href 指向今日经营动态且含五层", () => {
     const s = worldChangeToBusinessSignal(
       {
         id: "wc1",
@@ -50,7 +50,8 @@ describe("信号入口进经营分析", () => {
       },
       "proj_demo",
     );
-    expect(s.href).toContain("/business-analysis");
+    expect(s.href).toContain("/dashboard");
+    expect(s.href).not.toContain("/business-analysis");
     expect(s.pattern).toBeTruthy();
     expect(s.meaning || s.judgment).toBeTruthy();
     expect(s.observation).toBeTruthy();

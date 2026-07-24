@@ -298,11 +298,11 @@ export function PlatformAdminConsoleShell({
               运行观测
             </Link>
             <Link
-              href="/dashboard"
+              href="/dashboard?radar=1"
               className="flex items-center gap-2 rounded-[10px] px-2.5 py-2 text-[12px] text-[#5f6368] no-underline hover:bg-[rgba(24,24,23,0.05)] hover:text-[#181817]"
             >
               <ArrowLeft className="h-3.5 w-3.5" />
-              回今日
+              经营动态
             </Link>
           </div>
         </div>

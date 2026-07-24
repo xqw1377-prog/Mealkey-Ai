@@ -24,7 +24,7 @@ export const DEPARTMENT_BOARDS: Record<DepartmentBoardKey, DepartmentBoardConfig
     label: "品牌",
     title: "品牌定位",
     subtitle: "在顾客心里，你应该是谁。",
-    meetingCta: "开会谈品牌",
+    meetingCta: "决策室谈品牌",
     pathSegment: "positioning",
   },
   market: {
@@ -33,7 +33,7 @@ export const DEPARTMENT_BOARDS: Record<DepartmentBoardKey, DepartmentBoardConfig
     label: "市场",
     title: "市场机会",
     subtitle: "值不值得做，窗口在哪。",
-    meetingCta: "开会谈市场",
+    meetingCta: "决策室谈市场",
     pathSegment: "market",
   },
   business: {
@@ -42,7 +42,7 @@ export const DEPARTMENT_BOARDS: Record<DepartmentBoardKey, DepartmentBoardConfig
     label: "商业",
     title: "商业模式",
     subtitle: "怎么赚钱，先验证什么。",
-    meetingCta: "开会谈生意",
+    meetingCta: "决策室谈生意",
     pathSegment: "business",
   },
   org: {
@@ -51,7 +51,7 @@ export const DEPARTMENT_BOARDS: Record<DepartmentBoardKey, DepartmentBoardConfig
     label: "组织",
     title: "组织与股权",
     subtitle: "谁说了算，怎么激励。",
-    meetingCta: "开会谈组织",
+    meetingCta: "决策室谈组织",
     pathSegment: "equity",
   },
 };

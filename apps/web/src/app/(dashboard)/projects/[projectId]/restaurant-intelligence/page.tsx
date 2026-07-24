@@ -4,7 +4,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Pencil, X } from "lucide-react";
 import { trpc } from "@/lib/trpc";
-import { MKPageHeader } from "@/components/operating/MKPageHeader";
+import {
+  MKPageHeader,
+  mkPageHeaderPrimaryCtaClass,
+} from "@/components/operating/MKPageHeader";
 import { OpsSecondaryLinks } from "@/components/operating/OpsSecondaryLinks";
 import { PageContent } from "@/components/operating/PageContent";
 import { PageErrorBoundary } from "@/components/operating/PageErrorBoundary";
@@ -167,19 +170,29 @@ function RestaurantIntelligenceFlow({ projectId }: { projectId: string }) {
   if (error && !snapshot) {
     return (
       <PageContent>
-        <div className="mx-auto max-w-xl space-y-4 px-4 py-10">
-          <p className="text-[11px] tracking-[0.14em] text-[#66735E]">经营认知</p>
-          <h1 className="font-display text-[30px] font-semibold text-[#202124]">
-            画像暂时打不开
-          </h1>
-          <p className="text-[15px] text-[#3a3d41]">{error.message}</p>
-          <button
-            type="button"
-            className="btn-primary"
-            onClick={() => generate.mutate({ projectId, force: true })}
+        <div className="mx-auto max-w-xl space-y-6 px-4 py-10">
+          <MKPageHeader
+            eyebrow="经营认知"
+            title="画像暂时打不开"
+            description={error.message}
+            meta={
+              <OpsSecondaryLinks
+                projectId={projectId}
+                links={[
+                  { href: `/projects/${projectId}/agent`, label: "回对话" },
+                  { href: "/dashboard?radar=1", label: "经营动态" },
+                ]}
+              />
+            }
           >
-            重新生成
-          </button>
+            <button
+              type="button"
+              className={mkPageHeaderPrimaryCtaClass}
+              onClick={() => generate.mutate({ projectId, force: true })}
+            >
+              重新生成
+            </button>
+          </MKPageHeader>
         </div>
       </PageContent>
     );
@@ -189,6 +202,7 @@ function RestaurantIntelligenceFlow({ projectId }: { projectId: string }) {
     return (
       <PageContent>
         <RecognizingScreen
+          projectId={projectId}
           steps={collectionSteps}
           notes={snapshot?.collection.degradedNotes}
           generating={generate.isPending || !snapshot}
@@ -371,28 +385,39 @@ function TrustLegend({
 }
 
 function RecognizingScreen({
+  projectId,
   steps,
   notes,
   generating,
 }: {
+  projectId: string;
   steps: Array<{ label: string; done: boolean }>;
   notes?: string[];
   generating?: boolean;
 }) {
   return (
     <div className="mx-auto w-full max-w-xl space-y-6 px-4 pb-16 pt-8 md:px-6">
-      <MKBrand subtitle={null} />
-      <div className="space-y-2">
-        <p className="text-[11px] font-medium tracking-[0.14em] text-[#66735E]">
-          餐启 · MealKey
-        </p>
-        <h1 className="font-display text-[30px] font-semibold leading-[1.1] tracking-[-0.045em] text-[#202124] md:text-[36px]">
-          正在认识你的生意…
-        </h1>
-        <p className="text-[15px] leading-7 text-[#3a3d41]">
-          不是在收集资料，而是在建立你的经营认知档案。外部证据未就绪时会明示降级，不会打假勾。
-        </p>
-      </div>
+      <MKPageHeader
+        eyebrow="餐启 · MealKey"
+        title="正在认识你的生意…"
+        description="不是在收集资料，而是在建立你的经营认知档案。外部证据未就绪时会明示降级，不会打假勾。"
+        meta={
+          <div className="space-y-3">
+            <MKBrand subtitle={null} />
+            <OpsSecondaryLinks
+              projectId={projectId}
+              links={[
+                { href: `/projects/${projectId}/agent`, label: "回对话" },
+                { href: "/dashboard?radar=1", label: "经营动态" },
+                {
+                  href: `/projects/${projectId}/business-identity`,
+                  label: "经营身份",
+                },
+              ]}
+            />
+          </div>
+        }
+      />
 
       <ul className="space-y-3 border-y border-[rgba(24,24,23,0.08)] py-5">
         {steps.map((step) => (

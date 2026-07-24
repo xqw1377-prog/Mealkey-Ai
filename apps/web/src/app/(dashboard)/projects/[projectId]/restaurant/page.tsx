@@ -67,8 +67,8 @@ export default function MyRestaurantPage() {
       <PageErrorState
         eyebrow="我的餐厅"
         title="暂时读不到"
-        description={overview.error?.message || "稍后重试，或先回今日。"}
-        primaryAction={{ href: "/dashboard", label: "回今日" }}
+        description={overview.error?.message || "稍后重试，或先回经营动态。"}
+        primaryAction={{ href: "/dashboard?radar=1", label: "经营动态" }}
         secondaryAction={{
           href: `/projects/${projectId}/decision-case`,
           label: "发起决策",

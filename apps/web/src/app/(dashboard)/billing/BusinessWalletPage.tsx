@@ -225,7 +225,7 @@ export default function BusinessWalletPage() {
       <MKPageHeader
         eyebrow="经营点"
         title="充值与余额"
-        description="开会会扣点。不够就充，用不完一直留着。"
+        description="进决策室会扣点。不够就充，用不完一直留着。"
         badge={
           <div className="inline-flex min-h-7 items-center rounded-[12px] border border-[rgba(24,24,23,0.08)] bg-[#FBFAF7] px-3 text-[13px] text-[#6f747b]">
             {mode === "sandbox" ? "演示" : "正式"}

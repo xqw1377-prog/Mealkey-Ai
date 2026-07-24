@@ -146,7 +146,7 @@ export default function CapabilityHubPage() {
         eyebrow="能力"
         title="暂时打不开"
         description={error.message}
-        primaryAction={{ href: "/dashboard", label: "回今日" }}
+        primaryAction={{ href: "/dashboard?radar=1", label: "经营动态" }}
       />
     );
   }
@@ -253,7 +253,7 @@ export default function CapabilityHubPage() {
             prefetch={false}
             className="inline-flex shrink-0 items-center gap-1 text-[13px] font-semibold text-[#181817] no-underline"
           >
-            开会
+            进决策室
             <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </section>

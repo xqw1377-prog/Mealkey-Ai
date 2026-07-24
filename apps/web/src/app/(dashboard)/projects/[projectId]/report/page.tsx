@@ -47,7 +47,7 @@ export default function ReportPage({
         <PageErrorState
           eyebrow="报告"
           title="暂时打不开"
-          description="数据还在同步。先去开会。"
+          description="数据还在同步。先进决策室。"
           primaryAction={{
             href: `/projects/${params.projectId}/decision-room`,
             label: "进决策室",
@@ -66,7 +66,7 @@ export default function ReportPage({
           title="进不了报告"
           description="回列表再选企业。"
           primaryAction={{ href: "/projects", label: "我的企业" }}
-          secondaryAction={{ href: "/dashboard", label: "回今日" }}
+          secondaryAction={{ href: "/dashboard?radar=1", label: "经营动态" }}
         />
       </div>
     );

@@ -13,12 +13,12 @@ import { buildMeetingHref } from "@/lib/meeting";
 
 type Props = {
   projectId: string;
-  /** 不直接开会时，把选择回传给父级做消耗确认 */
+  /** 不直接开案时，把选择回传给父级做消耗确认 */
   onSelect?: (payload: { topic: string; spendKind: SpendKind; label: string }) => void;
 };
 
 /**
- * 咨询会议选题入口 — 最高价值入口不是 Agent 列表。
+ * 决策室选题入口 — 最高价值入口不是 Agent 列表。
  */
 export function CouncilProblemPicker({ projectId, onSelect }: Props) {
   const [selected, setSelected] = useState(COUNCIL_PROBLEMS[0]?.id ?? "new_store");
@@ -32,7 +32,7 @@ export function CouncilProblemPicker({ projectId, onSelect }: Props) {
   return (
     <section className="space-y-5 border border-[rgba(24,24,23,0.08)] bg-white p-5 md:space-y-6 md:p-8">
       <header>
-        <p className="text-[12px] tracking-[0.1em] text-[#66735E]">咨询会议</p>
+        <p className="text-[12px] tracking-[0.1em] text-[#66735E]">决策室</p>
         <h2 className="mt-2 font-display text-[22px] font-semibold tracking-[-0.03em] text-[#202124] md:text-[24px]">
           今天要解决什么？
         </h2>
@@ -85,16 +85,16 @@ export function CouncilProblemPicker({ projectId, onSelect }: Props) {
           }
           className="inline-flex min-h-12 w-full items-center justify-center gap-2 bg-[#181817] px-5 text-[15px] font-semibold text-white touch-manipulation active:scale-[0.98]"
         >
-          开始开会
+          进入决策室
           <ArrowRight className="h-4 w-4" />
         </button>
       ) : (
         <Link
-          href={`${href}&confirm=1&spend=${problem.spendKind}`}
+          href={href}
           prefetch={false}
           className="inline-flex min-h-12 w-full items-center justify-center gap-2 bg-[#181817] px-5 text-[15px] font-semibold text-white no-underline touch-manipulation active:scale-[0.98]"
         >
-          开始开会
+          进入决策室
           <ArrowRight className="h-4 w-4" />
         </Link>
       )}

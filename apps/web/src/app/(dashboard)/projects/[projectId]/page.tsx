@@ -41,8 +41,8 @@ export default function ProjectDetailPage() {
         <PageErrorState
           eyebrow="企业"
           title="暂时打不开"
-          description="先回今日，或稍后重试。"
-          primaryAction={{ href: "/dashboard", label: "回今日" }}
+          description="先回经营动态，或稍后重试。"
+          primaryAction={{ href: "/dashboard?radar=1", label: "经营动态" }}
           secondaryAction={{
             href: projectId
               ? `/projects/${projectId}/decision-case`
@@ -62,7 +62,7 @@ export default function ProjectDetailPage() {
           title="进不了这家企业"
           description="回列表再选一次。"
           primaryAction={{ href: "/projects", label: "我的企业" }}
-          secondaryAction={{ href: "/dashboard", label: "回今日" }}
+          secondaryAction={{ href: "/dashboard?radar=1", label: "经营动态" }}
         />
       </PageContent>
     );
@@ -168,7 +168,7 @@ export default function ProjectDetailPage() {
             prefetch={false}
             className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[16px] bg-[#181817] px-5 text-[15px] font-semibold text-white no-underline touch-manipulation active:scale-[0.98]"
           >
-            开会
+            进决策室
             <Sparkles className="h-4 w-4" />
           </Link>
           <Link
@@ -182,11 +182,11 @@ export default function ProjectDetailPage() {
         </div>
         <div className="flex flex-wrap gap-x-4 gap-y-2 pt-1">
           <Link
-            href="/dashboard"
+            href="/dashboard?radar=1"
             prefetch={false}
             className="inline-flex min-h-10 items-center text-[13px] font-medium text-[#66735E] no-underline underline-offset-4 hover:underline"
           >
-            回今日
+            经营动态
           </Link>
           <Link
             href={`/projects/${project.id}/mission`}

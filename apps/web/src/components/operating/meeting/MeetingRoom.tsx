@@ -278,11 +278,11 @@ export function MeetingRoom({
       <header className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <Link
-            href="/dashboard"
+            href="/dashboard?radar=1"
             prefetch={false}
             className="inline-flex min-h-11 items-center gap-1 border border-[rgba(24,24,23,0.08)] bg-white px-3 text-[13px] font-medium text-[#66735E] no-underline touch-manipulation"
           >
-            回今日
+            经营动态
           </Link>
           <span className="rounded-full border border-[rgba(24,24,23,0.08)] bg-white px-3 py-1 text-[12px] text-[#6f747b]">
             {lifecycleLabel(lifecycle)} · {roundLabel(deliberationRound)}
@@ -984,11 +984,11 @@ export function MeetingRoom({
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                   <Link
-                    href="/dashboard"
+                    href="/dashboard?radar=1"
                     prefetch={false}
                     className="inline-flex min-h-11 items-center gap-2 rounded-full border border-white/30 px-4 text-[13px] font-medium text-white no-underline touch-manipulation"
                   >
-                    回今日
+                    经营动态
                   </Link>
                 </div>
               ) : null}

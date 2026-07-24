@@ -59,8 +59,8 @@ export default function ProfilePage() {
         <PageErrorState
           eyebrow="我的"
           title="暂时打不开"
-          description="先回今日，稍后再看。"
-          primaryAction={{ href: "/dashboard", label: "回今日" }}
+          description="先回经营动态，稍后再看。"
+          primaryAction={{ href: "/dashboard?radar=1", label: "经营动态" }}
           secondaryAction={{ href: "/projects", label: "企业" }}
         />
       </div>

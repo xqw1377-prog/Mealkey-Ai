@@ -129,7 +129,7 @@ export class GrowthAgent implements CapabilityAgent {
       if (weakest?.id === "cognition") {
         learningNext.push("补一场市场或品牌专项认知，把企业事实写进记忆。");
       } else if (weakest?.id === "decision") {
-        learningNext.push("带着争议议题开会：要求证据门禁通过后再确认方案。");
+        learningNext.push("带着争议议题进决策室：要求证据门禁通过后再确认方案。");
       } else if (weakest?.id === "execution") {
         learningNext.push("把最近一条决策拆成 3 个动作，并启动验证任务回写。");
       } else {

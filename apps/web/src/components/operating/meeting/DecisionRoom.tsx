@@ -220,7 +220,7 @@ export function DecisionRoom({ projectId }: Props) {
     if (intakeMode === "ready" && topicFromQuery) {
       const hydrated = buildDecisionBriefFromFocus({
         title: topicFromQuery,
-        whyToday: whyFromQuery || "今日经营变化，需要拍板下一步",
+        whyToday: whyFromQuery || "经营动态有变化，需要拍板下一步",
       });
       setReadyBrief(hydrated);
       setCustomTopic(hydrated.topic);

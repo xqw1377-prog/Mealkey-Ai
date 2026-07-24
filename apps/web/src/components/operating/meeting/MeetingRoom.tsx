@@ -298,7 +298,7 @@ export function MeetingRoom({
           </span>
         </div>
         <div>
-          <p className="text-[12px] tracking-[0.08em] text-[#66735E]">会议 · {title}</p>
+          <p className="text-[12px] tracking-[0.08em] text-[#66735E]">会商 · {title}</p>
           <h1 className="mt-1 font-display text-[26px] font-semibold leading-[1.15] tracking-[-0.04em] text-[#202124] md:text-[36px]">
             {topic}
           </h1>

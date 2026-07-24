@@ -426,7 +426,7 @@ export function BrandConsultingWorkspace({ projectId }: { projectId: string }) {
               prefetch={false}
               className="inline-flex min-h-12 items-center justify-center gap-2 bg-[#181817] px-5 text-[14px] font-semibold text-white no-underline"
             >
-              带进会议
+              带进会商
               <ArrowRight className="h-4 w-4" />
             </Link>
             <Link

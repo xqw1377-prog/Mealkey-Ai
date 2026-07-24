@@ -123,7 +123,7 @@ export function worldChangesFromSeatConsulting(input: {
     ) {
       const gap = (strength.gaps || []).slice(0, 2).join("、") || "证据仍薄";
       const topic = clip(
-        `是否先补齐${seat.label}关键证据（${gap}）再开会？`,
+        `是否先补齐${seat.label}关键证据（${gap}）再会商？`,
         64,
       );
       out.push({

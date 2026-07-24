@@ -1238,7 +1238,7 @@ function AdvisorPageContent({
       searchParams?.get("intent") === "positioning_review"
         ? "已载入定位变更复审议题"
         : dept
-          ? "已从部门看板进入会议，请确认议题后开始独立判断"
+          ? "已从部门看板进入顾问咨询，请确认议题后开始独立判断"
           : "已从入口载入议题",
     );
     setAgentReferences(["部门上下文", "项目记忆", "历史判断"]);
@@ -2285,7 +2285,7 @@ function AdvisorPageContent({
           <span>回对话</span>
         </Link>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[15px] font-medium text-[#202124]">顾问会议</p>
+          <p className="truncate text-[15px] font-medium text-[#202124]">顾问咨询</p>
           <p className="truncate text-[11px] tracking-[0.08em] text-[#6f747b]">
             拍板请用决策室
           </p>

@@ -71,7 +71,7 @@ const ADVISOR_TOP_BORDER = [
 ];
 
 const MEETING_AGENDA = [
-  { id: "call_to_order", label: "宣布开会" },
+  { id: "call_to_order", label: "宣布开议" },
   { id: "pitch", label: "各述本案" },
   { id: "crossfire", label: "交叉质询" },
   { id: "rebuttal", label: "当场反驳" },
@@ -496,7 +496,7 @@ export function AgentConsultingWorkspace({
                     : nextStep.actionId === "research.confirm"
                       ? "生成顾问案卷…"
                       : nextStep.actionId === "warroom.open"
-                        ? "开会中…"
+                        ? "会商中…"
                         : nextStep.actionId === "strategy.confirmReport"
                           ? "生成报告中…"
                           : nextStep.actionId === "execution.generate" ||
@@ -1250,7 +1250,7 @@ function WarRoomBlock({
   const phaseBlocks = useMemo(() => {
     const blocks: Array<{ phase: string; turns: typeof room.turns }> = [];
     for (const t of room.turns) {
-      const phase = t.agendaLabel || t.agendaPhase || "会议进行中";
+      const phase = t.agendaLabel || t.agendaPhase || "会商进行中";
       const last = blocks[blocks.length - 1];
       if (last && last.phase === phase) last.turns.push(t);
       else blocks.push({ phase, turns: [t] });
@@ -1291,7 +1291,7 @@ function WarRoomBlock({
     >
       <div className="bg-[#141413] px-5 py-6 text-white md:px-7">
         <p className="text-[11px] tracking-[0.14em] text-white/50">
-          04 · 开会
+          04 · 会商
         </p>
         <h3 className="mt-1 font-serif-cn text-[22px] font-semibold">
           {title}
@@ -1341,7 +1341,7 @@ function WarRoomBlock({
           <div className="relative w-full max-w-md">
             <div className="mx-auto h-16 w-[85%] rounded-[100%] border border-white/25 bg-white/5" />
             <p className="absolute inset-0 flex items-center justify-center text-[11px] tracking-[0.16em] text-white/45">
-              会议桌
+              会商桌
             </p>
           </div>
           <div className="flex flex-col items-center gap-2">
@@ -1539,7 +1539,7 @@ function WarRoomBlock({
       {room.status === "agreed" && room.consensusOneLiner ? (
         <div className="mpnt-decision-card border-t border-[rgba(95,107,78,0.3)] bg-[rgba(95,107,78,0.08)] px-5 py-5 md:px-7">
           <p className="text-[11px] tracking-[0.1em] text-[#5f6b4e]">
-            会议决议 · 一页纸
+            会商决议 · 一页纸
           </p>
           <p className="mt-1 font-serif-cn text-[18px] font-semibold text-[#141413]">
             {room.consensusOneLiner}
@@ -1817,7 +1817,7 @@ function ReportBlock({
                   className="inline-flex min-h-11 items-center justify-center gap-1.5 border border-[rgba(20,20,19,0.15)] bg-white/70 px-4 text-[13px] text-[#141413] touch-manipulation hover:border-[#141413]"
                 >
                   <Download className="h-3.5 w-3.5" />
-                  导出会议稿
+                  导出会商稿
                 </button>
               </>
             ) : null}
@@ -1837,7 +1837,7 @@ function ReportBlock({
               {decision?.recommendation || oneLiner}
             </p>
             <p className="mt-2 text-[12px] tracking-[0.08em] text-[#6f747b]">
-              会议结论
+              会商结论
             </p>
           </blockquote>
         ) : null}

@@ -209,7 +209,7 @@ export function buildCandidateFromSignal(
       ? "进入第二家店决策会议室，先补齐关键事实再裁决"
       : readiness.state === "ready"
         ? "进入决策会议室完成判断"
-        : "先补关键项，再决定是否开会",
+        : "先补关键项，再决定是否进决策室",
     status: shouldPromoteCandidate({
       promoteScore,
       status: "open",

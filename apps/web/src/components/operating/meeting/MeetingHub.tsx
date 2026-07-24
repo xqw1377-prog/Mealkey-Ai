@@ -9,18 +9,18 @@ type Props = {
 };
 
 /**
- * 会议大厅：咨询（研究）× 决策室（拍板）
+ * 选题大厅：专业咨询（研究）× 决策室（拍板）
  */
 export function MeetingHub({ projectId, onChooseConsulting }: Props) {
   return (
     <section className="space-y-5 border border-[rgba(24,24,23,0.08)] bg-white p-5 md:space-y-6 md:p-8">
       <header>
-        <p className="text-[12px] tracking-[0.1em] text-[#66735E]">会议</p>
+        <p className="text-[12px] tracking-[0.1em] text-[#66735E]">选题</p>
         <h2 className="mt-2 font-display text-[24px] font-semibold tracking-[-0.03em] text-[#202124] md:text-[26px]">
           先研究，还是直接拍板？
         </h2>
         <p className="mt-2 max-w-xl text-[14px] leading-6 text-[#6f747b]">
-          选一条路走完，不要混着开。
+          选一条路走完；拍板只在决策室。
         </p>
       </header>
 
@@ -34,7 +34,7 @@ export function MeetingHub({ projectId, onChooseConsulting }: Props) {
             <Users className="h-4 w-4" />
           </span>
           <span className="mt-4 font-display text-[20px] font-semibold tracking-[-0.02em] text-[#202124]">
-            咨询会议
+            专业咨询
           </span>
           <span className="mt-2 text-[13px] leading-6 text-[#6f747b]">
             品牌 / 市场 / 商业 / 组织 — 把问题谈透。

@@ -1270,7 +1270,7 @@ export function buildProjectOverview(bundle: ProjectInsightBundle) {
       value: riskValue,
       level,
       reason: item.reason,
-      meetingTopic: topicMap[item.label] ?? "进入会议继续校准这个风险",
+      meetingTopic: topicMap[item.label] ?? "进决策室继续校准这个风险",
     };
   });
 

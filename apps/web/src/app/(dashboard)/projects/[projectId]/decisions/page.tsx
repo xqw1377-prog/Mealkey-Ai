@@ -672,7 +672,7 @@ function DecisionsArchivePageInner() {
             description="拍板后会出现在这里。"
             primaryAction={{
               href: `/projects/${projectId}/decision-room`,
-              label: "去决策",
+              label: "去拍板",
             }}
           />
         </section>

@@ -281,7 +281,7 @@ export async function openExpansionCase(
     diagnosis: "待组装 Context 与 Unknowns",
     judgement: "分析中",
     strategy: "待生成方案",
-    action: "进入决策室完成裁决",
+    action: "去拍板完成裁决",
     confidence: 0.4,
   });
 

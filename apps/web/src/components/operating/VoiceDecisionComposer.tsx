@@ -37,7 +37,7 @@ export function VoiceDecisionComposer({
   onSubmit,
   submitLabel = "进入决策",
   placeholder = "按住右边说，松手成字；不对可改",
-  cloudTitle = "决策室·口述议题",
+  cloudTitle = "拍板·口述议题",
   fieldId = "decision-topic",
   rows = 3,
   disabled,

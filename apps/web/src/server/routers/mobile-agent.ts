@@ -618,9 +618,9 @@ export const mobileAgentRouter = router({
       const signal: BehaviorSignal = {
         kind: "decision_choice",
         topic: hit.title,
-        optionsShown: ["去决策室确认", "稍后"],
+        optionsShown: ["去拍板确认", "稍后"],
         choice:
-          input.action === "dismiss" ? "稍后处理" : "进入决策室确认",
+          input.action === "dismiss" ? "稍后处理" : "去拍板确认",
         vsRecommended:
           input.action === "dismiss" ? "modified" : "aligned",
         at: new Date().toISOString(),

@@ -1277,7 +1277,7 @@ export function buildProjectOverview(bundle: ProjectInsightBundle) {
   const tasks = [
     {
       id: "task-meeting",
-      title: "进入决策室完成一轮判断",
+      title: "去拍板完成一轮判断",
       description: latest?.action || "补充事实、形成判断、收束动作",
       completed: bundle.decisions.length > 0,
       priority: "high",
@@ -1347,7 +1347,7 @@ export function buildProjectOverview(bundle: ProjectInsightBundle) {
       "定位与选择理由尚未完全收束",
     initialChallenge: isInitialWorld ? currentChallenge : null,
     initialYearlyGoal: isInitialWorld ? yearlyGoal : null,
-    initialMeetingReason: isInitialWorld ? `下一步需要进入决策室，先围绕“${yearlyGoal}”锁定一个不能判断错的关键变量。` : null,
+    initialMeetingReason: isInitialWorld ? `下一步需要去拍板，先围绕“${yearlyGoal}”锁定一个不能判断错的关键变量。` : null,
     ...focus,
     stageTrack: buildStageTrack(idx),
     keyVariables,
@@ -1377,7 +1377,7 @@ export function buildProjectOverview(bundle: ProjectInsightBundle) {
           href: `/projects/${bundle.project.id}/positioning`,
           meetingHref: buildFounderMeetingLink(
             bundle.project.id,
-            `围绕“${currentChallenge}”先完成品牌定位，再进入决策室。`,
+            `围绕“${currentChallenge}”先完成品牌定位，再去拍板。`,
           ),
           actions: ["品类判断", "客群收敛", "一句话定位"],
         };
@@ -1465,7 +1465,7 @@ export function buildReportSnapshot(bundle: ProjectInsightBundle) {
       positioning: bundle.project.target || "定位待明确",
       riskTitle: "信息不足",
       counterArgument: "缺少反方验证材料",
-      validationAction: "进入决策室形成第一次判断",
+      validationAction: "去拍板形成第一次判断",
       metrics: scorecard.metrics,
     };
   }
@@ -1702,7 +1702,7 @@ export function buildProjectKnowledge(
     source: primary ? `知识库 · ${primary.type}` : "项目决策",
     tags: primary?.tags?.length ? primary.tags : [bundle.project.category || "经营", "项目认知"],
     biggestRisk: latest?.diagnosis || "定位与执行闭环仍需验证",
-    nextAction: latest?.action || "进入决策室完成一轮判断",
+    nextAction: latest?.action || "去拍板完成一轮判断",
     evidence: bundle.memories[0]?.content?.slice(0, 120) || latest?.observation || "暂无更多证据",
     related: nodes.slice(0, 4).map((n) => ({
       id: n.id,

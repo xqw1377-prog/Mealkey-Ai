@@ -9,7 +9,7 @@ export default function DecisionRoomPage({
   params: { projectId: string };
 }) {
   return (
-    <PageErrorBoundary fallbackTitle="决策室暂时无法打开">
+    <PageErrorBoundary fallbackTitle="拍板页暂时无法打开">
       <DecisionRoom projectId={params.projectId} />
     </PageErrorBoundary>
   );

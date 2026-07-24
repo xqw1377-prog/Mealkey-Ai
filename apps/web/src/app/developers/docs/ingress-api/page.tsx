@@ -25,7 +25,7 @@ export default function IngressApiPage() {
         canDo={
           <p>
             把 Agent 的判断以<strong className="font-semibold text-[#202124]">合法 Ports</strong>
-            写回 OS：进入今日雷达、决策室候选或学习队列——不能直接替老板拍板。
+            写回 OS：进入今日雷达、拍板候选或学习队列——不能直接替老板拍板。
           </p>
         }
         contract={

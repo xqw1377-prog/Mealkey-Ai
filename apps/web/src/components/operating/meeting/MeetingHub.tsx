@@ -9,7 +9,7 @@ type Props = {
 };
 
 /**
- * 选题大厅：专业咨询（研究）× 决策室（拍板）
+ * 选题大厅：专业咨询（研究）× 去拍板
  */
 export function MeetingHub({ projectId, onChooseConsulting }: Props) {
   return (
@@ -20,7 +20,7 @@ export function MeetingHub({ projectId, onChooseConsulting }: Props) {
           先研究，还是直接拍板？
         </h2>
         <p className="mt-2 max-w-xl text-[14px] leading-6 text-[#6f747b]">
-          选一条路走完；拍板只在决策室。
+          选一条路走完；拍板只在这里。
         </p>
       </header>
 
@@ -54,7 +54,7 @@ export function MeetingHub({ projectId, onChooseConsulting }: Props) {
             <Gavel className="h-4 w-4" />
           </span>
           <span className="mt-4 font-display text-[20px] font-semibold tracking-[-0.02em]">
-            决策室
+            拍板
           </span>
           <span className="mt-2 text-[13px] leading-6 text-white/70">
             重大事项，直接拍板。

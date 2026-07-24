@@ -600,7 +600,7 @@ export function DecisionRoom({ projectId }: Props) {
           supportClaims: support,
           opposeClaims: oppose,
           expertOpinions: extras.expertOpinions,
-          meetingTitle: "决策室",
+          meetingTitle: "拍板",
           confidence,
           parentEvidenceIds: extras.parentEvidenceIds.length
             ? extras.parentEvidenceIds
@@ -755,7 +755,7 @@ export function DecisionRoom({ projectId }: Props) {
           <span>回对话</span>
         </Link>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[15px] font-medium text-[#202124]">决策室</p>
+          <p className="truncate text-[15px] font-medium text-[#202124]">拍板</p>
           <p className="truncate text-[11px] tracking-[0.08em] text-[#6f747b]">
             {step === "setup" ? "说清一件事再拍板" : "拍板后可回对话、去跟进"}
           </p>
@@ -807,10 +807,10 @@ export function DecisionRoom({ projectId }: Props) {
       <header className="space-y-2 border-b border-[rgba(24,24,23,0.08)] pb-5">
         <p className="text-[11px] font-medium tracking-[0.14em] text-[#66735E]">
           {step === "board" || step === "closed"
-            ? "决策室 · 拍板"
+            ? "拍板"
             : step === "round1" || step === "debate"
-              ? "决策室 · 质询"
-              : "决策室 · 语音开案"}
+              ? "质询"
+              : "语音开案"}
         </p>
         <h1 className="font-display text-[30px] font-semibold leading-[1.1] tracking-[-0.045em] text-[#202124] md:text-[36px]">
           {step === "setup"
@@ -1096,7 +1096,7 @@ export function DecisionRoom({ projectId }: Props) {
               onSubmit={() => void handleOpen()}
               submitLabel={busy ? "正在开案…" : "说完了，开始决策"}
               placeholder="按住右边说：我在纠结要不要…因为…"
-              cloudTitle="决策室·口述开案"
+              cloudTitle="拍板·口述开案"
               fieldId="decision-room-topic"
               rows={4}
               disabled={busy}
@@ -1363,7 +1363,7 @@ export function DecisionRoom({ projectId }: Props) {
                     value={supplementDraft}
                     onChange={setSupplementDraft}
                     placeholder={supplementGap.prompt}
-                    voiceTitle={`决策室补证·${supplementGap.label}`}
+                    voiceTitle={`拍板补证·${supplementGap.label}`}
                     multiline
                     rows={3}
                     showSubmit

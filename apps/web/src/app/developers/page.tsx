@@ -64,7 +64,7 @@ export default function DevelopersHomePage() {
                 { label: "Agent", sub: "餐厅经营体检系统" },
                 { label: "MealKey Operating System", sub: "Gateway · Protocol" },
                 { label: "Restaurant Brain", sub: "Context 租用" },
-                { label: "Business Decision", sub: "今日 · 决策室 · 执行" },
+                { label: "Business Decision", sub: "今日 · 拍板 · 执行" },
               ].map((row, i) => (
                 <div key={row.label} className="w-full">
                   {i > 0 ? (

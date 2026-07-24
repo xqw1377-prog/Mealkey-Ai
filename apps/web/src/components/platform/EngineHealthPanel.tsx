@@ -66,7 +66,7 @@ export function EngineHealthPanel() {
             专业引擎外呼连通性
           </p>
           <p className="mt-1 text-[12px] text-[#8a8f96]">
-            生产环境：外呼不通会阻止扣点开收费会议；咨询降级不会假标 engine。
+            生产环境：外呼不通会阻止扣点开收费拍板；咨询降级不会假标 engine。
             {checkedAt
               ? ` · 检查于 ${new Date(checkedAt).toLocaleTimeString("zh-CN")}`
               : ""}
@@ -89,8 +89,8 @@ export function EngineHealthPanel() {
           }`}
         >
           {allOk
-            ? "收费会议门禁：外呼齐全，可扣点开会"
-            : "收费会议门禁：有引擎 DOWN — 生产将拒扣点（开发可用 FOUNDER_ALLOW_DEGRADED_MEETING=1）"}
+            ? "收费拍板门禁：外呼齐全，可扣点开议"
+            : "收费拍板门禁：有引擎 DOWN — 生产将拒扣点（开发可用 FOUNDER_ALLOW_DEGRADED_MEETING=1）"}
         </p>
       ) : null}
       {error ? (

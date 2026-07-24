@@ -486,7 +486,7 @@ export function toDailyScanV1(
     };
   } else if (primaryCard) {
     primaryCta = {
-      label: "进入决策室",
+      label: "去拍板",
       href: isExpansionTopic(primaryCard.title)
         ? expansionCaseHref(projectId)
         : primaryCard.href.startsWith(`/projects/${projectId}/advisor`)
@@ -496,7 +496,7 @@ export function toDailyScanV1(
     };
   } else {
     primaryCta = {
-      label: "进入决策室",
+      label: "去拍板",
       href: `/projects/${projectId}/decision-room`,
       reason: "meeting",
     };
@@ -686,7 +686,7 @@ export function toDailyScanV1(
       primaryCta.reason === "meeting"
     ) {
       primaryCta = {
-        label: "进入决策室",
+        label: "去拍板",
         href,
         reason: "open_card",
       };
@@ -712,7 +712,7 @@ export function toDailyScanV1(
       missing: missing.slice(0, 4),
     };
     primaryCta = {
-      label: "进入决策室",
+      label: "去拍板",
       href,
       reason: "open_card",
     };

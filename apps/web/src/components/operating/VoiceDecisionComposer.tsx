@@ -36,7 +36,7 @@ export function VoiceDecisionComposer({
   onChange,
   onSubmit,
   submitLabel = "进入决策",
-  placeholder = "按住右边麦克风说，或在这里改字…",
+  placeholder = "按住右边说，松手成字；不对可改",
   cloudTitle = "今日决策·口述议题",
   fieldId = "today-decision-topic",
   rows = 3,
@@ -83,23 +83,15 @@ export function VoiceDecisionComposer({
         compact ? "px-2 py-2" : "px-3 py-3"
       }`}
     >
-      <p className="px-2 pt-0.5 text-[11px] leading-4 tracking-[0.04em] text-[#6f747b]">
-        按住绿色麦说话，松手成字
-      </p>
       <HoldToTalkBanner
         recording={recording}
         seconds={seconds}
         maxSeconds={MAX_SECONDS}
         interimText={recording ? value : undefined}
       />
-      {!recording && !speechError && !uploading ? (
-        <p className="mb-1 px-2 text-[12px] leading-5 text-[#6f747b]">
-          字不对可以改，也可以再说一段
-        </p>
-      ) : null}
       {uploading ? (
         <p className="mb-1 px-2 text-[12px] leading-5 text-[#66735E]">
-          正在把你的话听成字…
+          正在听成字…
         </p>
       ) : null}
       {speechError ? (
@@ -128,8 +120,7 @@ export function VoiceDecisionComposer({
         <HoldToTalkButton
           recording={recording}
           disabled={busy}
-          hasContent={hasContent && Boolean(onSubmit)}
-          onSend={onSubmit}
+          hasContent={false}
           onPressStart={() => {
             void startFieldRecording(fieldId, value, onChange);
           }}

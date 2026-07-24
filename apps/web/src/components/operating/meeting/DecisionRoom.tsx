@@ -38,26 +38,22 @@ const POSITION_LABEL: Record<string, string> = {
 };
 
 const DEBATE_PHASE_LINES = [
-  "正在召集七席…",
-  "各自独立阅读议程与证据…",
-  "战略 / 品牌席先表态…",
-  "财务 / 风控核对底线…",
-  "对齐冲突点…",
-  "马上进入质询矩阵…",
+  "独立审阅议程与证据…",
+  "对齐冲突与底线…",
+  "汇总质询矩阵…",
 ];
 
 function WorkProgressPanel({
   title,
   phaseLine,
   elapsedSec,
-  seats,
-  activeSeatIndex,
+  seatCount,
 }: {
   title: string;
   phaseLine: string;
   elapsedSec: number;
-  seats?: string[];
-  activeSeatIndex?: number;
+  /** 诚实席位数；不做假「表态中」轮转 */
+  seatCount?: number;
 }) {
   const pct = Math.min(92, Math.round((elapsedSec / 18) * 100));
   return (
@@ -72,7 +68,10 @@ function WorkProgressPanel({
             <LoaderCircle className="h-4 w-4 shrink-0 animate-spin" />
             {title}
           </p>
-          <p className="mt-1 text-[13px] leading-5 text-[#5f6368]">{phaseLine}</p>
+          <p className="mt-1 text-[13px] leading-5 text-[#5f6368]">
+            {phaseLine}
+            {seatCount && seatCount > 0 ? ` · ${seatCount} 席` : ""}
+          </p>
         </div>
         <p className="shrink-0 tabular-nums text-[12px] text-[#6f747b]">
           {elapsedSec}s
@@ -84,34 +83,11 @@ function WorkProgressPanel({
           style={{ width: `${pct}%` }}
         />
       </div>
-      {seats && seats.length > 0 ? (
-        <ul className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
-          {seats.map((seat, i) => {
-            const done =
-              activeSeatIndex != null ? i < activeSeatIndex : false;
-            const active =
-              activeSeatIndex != null ? i === activeSeatIndex : false;
-            return (
-              <li
-                key={seat}
-                className={`px-2 py-1.5 text-[11px] font-medium ${
-                  active
-                    ? "bg-[#181817] text-white"
-                    : done
-                      ? "bg-[rgba(102,115,94,0.2)] text-[#3d4638]"
-                      : "bg-white text-[#9aa0a6] ring-1 ring-[rgba(24,24,23,0.08)]"
-                }`}
-              >
-                {seat}
-                {active ? " · 表态中" : done ? " · 已齐" : " · 等待"}
-              </li>
-            );
-          })}
-        </ul>
+      {elapsedSec >= 12 ? (
+        <p className="text-[11px] leading-4 text-[#9aa0a6]">
+          还在汇总，稍候即可。
+        </p>
       ) : null}
-      <p className="text-[11px] leading-4 text-[#9aa0a6]">
-        系统在工作，不是卡住。大约十几秒，请不要重复点击。
-      </p>
     </div>
   );
 }
@@ -386,18 +362,10 @@ export function DecisionRoom({ projectId }: Props) {
   const debatePhaseLine = useMemo(() => {
     const i = Math.min(
       DEBATE_PHASE_LINES.length - 1,
-      Math.floor(workElapsedSec / 3),
+      Math.floor(workElapsedSec / 5),
     );
     return DEBATE_PHASE_LINES[i]!;
   }, [workElapsedSec]);
-
-  const debateActiveSeatIndex = useMemo(() => {
-    if (!session?.roster?.length) return 0;
-    return Math.min(
-      session.roster.length - 1,
-      Math.floor(workElapsedSec / 2.2),
-    );
-  }, [session?.roster, workElapsedSec]);
 
   useEffect(() => {
     if (!resumeRequested || resumedRef.current) return;
@@ -813,11 +781,11 @@ export function DecisionRoom({ projectId }: Props) {
           <p className="inline-flex items-center gap-2 text-[13px] font-medium text-[#202124]">
             <LoaderCircle className="h-4 w-4 animate-spin" />
             {debateMut.isPending
-              ? `质询进行中 · ${debatePhaseLine} · ${workElapsedSec}s`
+              ? `质询进行中 · ${workElapsedSec}s`
               : boardMut.isPending
-                ? `正在形成决策板 · ${workElapsedSec}s`
+                ? `形成决策板 · ${workElapsedSec}s`
                 : openMut.isPending
-                  ? `正在开案 · ${workElapsedSec}s`
+                  ? `开案中 · ${workElapsedSec}s`
                   : `处理中 · ${workElapsedSec}s`}
           </p>
         </div>
@@ -1427,11 +1395,10 @@ export function DecisionRoom({ projectId }: Props) {
 
           {debateMut.isPending ? (
             <WorkProgressPanel
-              title="七席质询进行中"
+              title="质询进行中"
               phaseLine={debatePhaseLine}
               elapsedSec={workElapsedSec}
-              seats={session.roster}
-              activeSeatIndex={debateActiveSeatIndex}
+              seatCount={session.roster.length}
             />
           ) : (
             <button
@@ -1612,35 +1579,25 @@ export function DecisionRoom({ projectId }: Props) {
 
           {boardMut.isPending ? (
             <WorkProgressPanel
-              title="正在形成决策板"
+              title="形成决策板"
               phaseLine={
-                workElapsedSec < 2
+                workElapsedSec < 4
                   ? "汇总支持 / 条件 / 反对…"
-                  : workElapsedSec < 5
-                    ? "整理少数意见与红线…"
-                    : "写入决策板，马上好…"
+                  : "整理少数意见与红线…"
               }
               elapsedSec={workElapsedSec}
             />
-          ) : null}
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => void handleBoard()}
-            className="inline-flex min-h-11 w-full items-center justify-center gap-2 bg-[#181817] px-5 text-[14px] font-semibold text-white touch-manipulation disabled:opacity-60 sm:w-auto"
-          >
-            {boardMut.isPending ? (
-              <>
-                <LoaderCircle className="h-4 w-4 animate-spin" />
-                决策板生成中 {workElapsedSec}s…
-              </>
-            ) : (
-              <>
-                形成决策板
-                <ArrowRight className="h-4 w-4" />
-              </>
-            )}
-          </button>
+          ) : (
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void handleBoard()}
+              className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[14px] bg-[#181817] px-5 text-[15px] font-semibold text-white touch-manipulation disabled:opacity-60 sm:w-auto"
+            >
+              形成决策板
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          )}
         </section>
       ) : null}
 

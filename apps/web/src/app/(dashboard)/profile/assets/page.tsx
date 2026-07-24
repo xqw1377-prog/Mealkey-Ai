@@ -83,9 +83,16 @@ export default function AssetCenterPage() {
         <PageErrorState
           eyebrow="资料中心"
           title="暂时打不开"
-          description="资料还在同步。先回画像或去决策室。"
+          description="资料还在同步。先回画像或去拍板。"
           primaryAction={{ href: "/profile", label: "回画像" }}
-          secondaryAction={{ href: "/projects", label: "我的企业" }}
+          secondaryAction={
+            projectId
+              ? {
+                  href: `/projects/${projectId}/decision-room`,
+                  label: "去拍板",
+                }
+              : { href: "/dashboard?radar=1", label: "经营动态" }
+          }
         />
       </div>
     );
@@ -109,9 +116,17 @@ export default function AssetCenterPage() {
               projectId
                 ? [
                     { href: `/projects/${projectId}/agent`, label: "回对话" },
+                    {
+                      href: `/projects/${projectId}/decision-room`,
+                      label: "去拍板",
+                    },
+                    { href: "/dashboard?radar=1", label: "经营动态" },
                     { href: "/profile", label: "我的" },
                   ]
-                : [{ href: "/profile", label: "我的" }]
+                : [
+                    { href: "/dashboard?radar=1", label: "经营动态" },
+                    { href: "/profile", label: "我的" },
+                  ]
             }
           />
         }
@@ -228,11 +243,15 @@ export default function AssetCenterPage() {
             <h2 className="mt-1 text-[19px] font-semibold leading-[1.25] tracking-[-0.02em] text-[#202124]">当前资料</h2>
           </div>
           <Link
-            href="/projects"
+            href={
+              projectId
+                ? `/projects/${projectId}/decision-room`
+                : "/dashboard?radar=1"
+            }
             prefetch={false}
             className="inline-flex items-center gap-2 rounded-full border border-[rgba(24,24,23,0.08)] bg-[#F5F3EE] px-3 py-2 text-[13px] font-medium text-[#202124]"
           >
-            继续去会议使用
+            去拍板使用
             <ArrowUpRight className="h-4 w-4" />
           </Link>
         </div>
@@ -277,7 +296,7 @@ export default function AssetCenterPage() {
                 </div>
 
                 <p className="mt-3 text-[14px] leading-[1.72] text-[#202124]">
-                  {asset.summary ?? "这份资料已归档，可被会议分析和长期画像调用。"}
+                  {asset.summary ?? "这份资料已归档，可被拍板分析与长期画像调用。"}
                 </p>
 
                 {asset.extractedText && !/[\x00-\x08\x0E-\x1F]/.test(asset.extractedText) ? (
@@ -318,7 +337,7 @@ export default function AssetCenterPage() {
           <div className="mt-4 rounded-[18px] border border-dashed border-[rgba(24,24,23,0.12)] bg-[#FBFAF7] px-4 py-10 text-center">
             <p className="text-[16px] leading-7 text-[#202124]">当前分类下还没有资料</p>
             <p className="mt-2 text-[14px] leading-6 text-[#6f747b]">
-              决策室里上传预算、图片、语音或文档，就会出现在这里。
+              去拍板时上传预算、图片、语音或文档，就会出现在这里。
             </p>
           </div>
         ) : null}

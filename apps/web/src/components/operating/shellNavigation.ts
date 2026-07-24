@@ -4,7 +4,7 @@ import type { NavSection } from "@/types/operating";
 
 /**
  * Mobile Agent Phase 1 一级导航（冻结：说/给/看为主，禁五 Tab 功能墙）
- * 对话（Agent）→ 决策室 → 我的
+ * 对话（Agent）→ 拍板 → 我的
  * 雷达/能力沉到 Agent 内链与「我的」，不占底栏。
  */
 export function createShellNavItems(defaultProjectId?: string | null): ShellNavItem[] {

@@ -120,16 +120,20 @@ export default function ProfilePage() {
                 projectId
                   ? [
                       {
+                        href: `/projects/${projectId}/agent`,
+                        label: "回对话",
+                      },
+                      {
+                        href: `/projects/${projectId}/decision-room`,
+                        label: "去拍板",
+                      },
+                      {
                         href: `/projects/${projectId}/decisions`,
-                        label: "行动跟进",
+                        label: "去跟进",
                       },
                       {
                         href: "/dashboard?radar=1",
                         label: "经营动态",
-                      },
-                      {
-                        href: `/projects/${projectId}/agent`,
-                        label: "回对话",
                       },
                     ]
                   : undefined
@@ -155,11 +159,18 @@ export default function ProfilePage() {
           </p>
           <div className="flex flex-col gap-2.5 sm:flex-row sm:flex-wrap">
             <Link
-              href={`/projects/${projectId}/decisions`}
+              href={`/projects/${projectId}/decision-room`}
               prefetch={false}
               className="inline-flex min-h-12 flex-1 items-center justify-center rounded-[16px] bg-[#181817] px-5 text-[14px] font-semibold text-white no-underline touch-manipulation active:scale-[0.98]"
             >
-              行动跟进
+              去拍板
+            </Link>
+            <Link
+              href={`/projects/${projectId}/decisions`}
+              prefetch={false}
+              className="inline-flex min-h-12 flex-1 items-center justify-center rounded-[16px] border border-[rgba(24,24,23,0.12)] bg-white px-5 text-[14px] font-semibold text-[#181817] no-underline touch-manipulation"
+            >
+              去跟进
             </Link>
             <Link
               href="/dashboard?radar=1"

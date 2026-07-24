@@ -84,7 +84,7 @@ export default function ScorePage({
         <PageEmptyState
           eyebrow="记分卡"
           title="还没有分数"
-          description="先进几次决策室、做验证，分数才可信。"
+          description="先去几次拍板、做验证，分数才可信。"
           primaryAction={{ href: "/dashboard?radar=1", label: "经营动态" }}
           secondaryAction={{ href: `/projects/${params.projectId}`, label: "企业" }}
         />

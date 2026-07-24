@@ -751,7 +751,7 @@ function DecisionsArchivePageInner() {
                       outcome?.decisionContract?.source === "decision_council" ||
                       outcome?.councilTrace ? (
                         <span className="inline-flex items-center border border-[rgba(102,115,94,0.22)] bg-[rgba(102,115,94,0.10)] px-2 py-0.5 text-[11px] font-medium text-[#66735E]">
-                          决策室
+                          拍板
                         </span>
                       ) : null}
                       {outcome?.helpful !== undefined ? (

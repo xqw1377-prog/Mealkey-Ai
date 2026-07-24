@@ -102,7 +102,7 @@ export default function ProjectSettingsPage() {
       <MKPageHeader
         eyebrow="企业设置"
         title="品牌设置"
-        description="改这里之后，会议、行动、能力都按当前品牌走。"
+        description="改这里之后，会商、行动、能力都按当前品牌走。"
         meta={
           <>
             <BrandSwitcher

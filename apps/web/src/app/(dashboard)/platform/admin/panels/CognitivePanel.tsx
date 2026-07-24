@@ -173,7 +173,7 @@ export function CognitivePanel({
                           href={`/projects/${selectedSession.projectId}/decision-room`}
                           className="inline-flex min-h-10 items-center rounded-[12px] border border-[rgba(24,24,23,0.08)] bg-white px-3 text-[13px] font-semibold text-[#202124]"
                         >
-                          打开项目决策室
+                          去拍板
                         </Link>
                       ) : null}
                     </div>

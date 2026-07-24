@@ -9,7 +9,7 @@ export type ValidationResult = "aligned" | "partial" | "off";
 const OPTIONS: Array<{ id: ValidationResult; label: string; hint: string; helpful: boolean }> = [
   { id: "aligned", label: "符合预期", hint: "按决策推进，结果基本对", helpful: true },
   { id: "partial", label: "部分成立", hint: "方向对，需要调整细节", helpful: true },
-  { id: "off", label: "偏离了", hint: "需要复盘或第二次会议", helpful: false },
+  { id: "off", label: "偏离了", hint: "需要复盘或再去拍板", helpful: false },
 ];
 
 type ValidationTaskView = {
@@ -61,7 +61,7 @@ export function ValidationFeedbackCard({
   validationPlan?: string;
   growthPlan?: { day30?: string; day60?: string; day90?: string } | null;
   validationTask?: ValidationTaskView | null;
-  /** 偏航时回到决策室再判断 */
+  /** 偏航时回到拍板再判断 */
   remmeetHref?: string | null;
   submitting?: boolean;
   done?: boolean;
@@ -109,7 +109,7 @@ export function ValidationFeedbackCard({
             prefetch={false}
             className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-1 bg-[#181817] px-4 text-[13px] font-semibold text-white no-underline touch-manipulation active:scale-[0.98] sm:w-auto"
           >
-            去决策室复盘 <ArrowRight className="h-3.5 w-3.5" />
+            去拍板复盘 <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         ) : null}
       </div>
@@ -160,7 +160,7 @@ export function ValidationFeedbackCard({
                   prefetch={false}
                   className="inline-flex min-h-11 w-full items-center justify-center gap-1 bg-[#181817] px-4 text-[13px] font-semibold text-white no-underline touch-manipulation active:scale-[0.98] sm:w-auto"
                 >
-                  去决策室复盘 <ArrowRight className="h-3.5 w-3.5" />
+                  去拍板复盘 <ArrowRight className="h-3.5 w-3.5" />
                 </Link>
               ) : null}
             </div>

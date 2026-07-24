@@ -176,7 +176,7 @@ export default function ProjectDetailPage() {
             prefetch={false}
             className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[16px] border border-[rgba(24,24,23,0.15)] bg-white px-5 text-[15px] font-semibold text-[#181817] no-underline touch-manipulation active:scale-[0.98]"
           >
-            第二家店决策室
+            第二家店拍板
             <ArrowRight className="h-4 w-4" />
           </Link>
         </div>

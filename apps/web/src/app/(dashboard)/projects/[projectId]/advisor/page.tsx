@@ -1708,7 +1708,7 @@ function AdvisorPageContent({
         <PageEmptyState
           eyebrow="顾问咨询"
           title="还进不了这场咨询"
-          description="先回对话，再从决策室或专业能力进入。"
+          description="先回对话，再去拍板，或从专业能力进入。"
           primaryAction={{
             href: `/projects/${params.projectId}/agent`,
             label: "回对话",

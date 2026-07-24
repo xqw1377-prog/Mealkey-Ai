@@ -540,7 +540,7 @@ function AgentPageInner({ projectId }: { projectId: string }) {
   /**
    * 首页只挂已实现专业 Agent 入口（与能力页同源）：
    * M-PNT 品牌定位 · M-MKT 市场机会 · M-BIZ 商业模式 · M-ED 股权 ·
-   * 门店体检（经营感知/画像）· 决策室拍板
+   * 门店体检（经营感知/画像）· 去拍板
    */
   const scenarioStarts = [
     {
@@ -793,7 +793,7 @@ function AgentPageInner({ projectId }: { projectId: string }) {
             prefetch={false}
             className="hidden h-11 items-center rounded-[12px] px-2.5 text-[13px] font-medium text-[#66735E] no-underline hover:bg-black/[0.04] sm:inline-flex"
           >
-            决策室
+            去拍板
           </Link>
           <button
             type="button"
@@ -1027,7 +1027,7 @@ function AgentPageInner({ projectId }: { projectId: string }) {
                       }}
                       className="rounded-full bg-[#181817] px-3 py-2 text-[12px] font-medium text-white disabled:opacity-50"
                     >
-                      去决策室
+                      去拍板
                     </button>
                     <button
                       type="button"
@@ -1400,7 +1400,7 @@ function AgentPageInner({ projectId }: { projectId: string }) {
                 prefetch={false}
                 className="flex min-h-11 items-center justify-center rounded-full bg-[#181817] text-[14px] font-medium text-white no-underline"
               >
-                去决策室确认
+                去拍板确认
               </Link>
             </div>
           </div>

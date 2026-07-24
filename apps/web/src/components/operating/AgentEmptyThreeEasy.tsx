@@ -86,28 +86,34 @@ export function AgentEmptyThreeEasy({
 
       <nav
         aria-label="三易捷径"
-        className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-2"
+        className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-[13px]"
       >
         <Link
           href={`/projects/${projectId}/decision-room?intake=voice`}
           prefetch={false}
-          className="text-[13px] font-medium text-[#66735E] no-underline underline-offset-2 hover:underline"
+          className="font-medium text-[#66735E] no-underline underline-offset-2 hover:underline"
         >
-          易做 · 去拍板
+          <span className="text-[#9a968e]">易做</span>
+          <span className="mx-1 text-[#c5c2ba]">·</span>
+          去拍板
         </Link>
         <Link
           href={`/projects/${projectId}/decisions`}
           prefetch={false}
-          className="text-[13px] font-medium text-[#66735E] no-underline underline-offset-2 hover:underline"
+          className="font-medium text-[#66735E] no-underline underline-offset-2 hover:underline"
         >
-          易管 · 去跟进
+          <span className="text-[#9a968e]">易管</span>
+          <span className="mx-1 text-[#c5c2ba]">·</span>
+          去跟进
         </Link>
         <Link
           href="/dashboard?radar=1"
           prefetch={false}
-          className="text-[13px] font-medium text-[#66735E] no-underline underline-offset-2 hover:underline"
+          className="font-medium text-[#66735E] no-underline underline-offset-2 hover:underline"
         >
-          经营动态
+          <span className="text-[#9a968e]">经营动态</span>
+          <span className="mx-1 text-[#c5c2ba]">·</span>
+          去看看
         </Link>
       </nav>
 

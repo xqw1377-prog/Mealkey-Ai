@@ -10,10 +10,7 @@ import {
   deriveDecisionBriefFromSpeech,
 } from "@/components/operating/VoiceDecisionComposer";
 import { VoiceDecisionDialogue } from "@/components/operating/VoiceDecisionDialogue";
-import {
-  DecisionClosedActions,
-  DecisionLoopRail,
-} from "@/components/operating/DecisionLoopRail";
+import { DecisionClosedActions } from "@/components/operating/DecisionLoopRail";
 import { VoiceInputRow } from "@/components/operating/VoiceInputRow";
 import {
   clearDecisionVoiceBrief,
@@ -833,32 +830,35 @@ export function DecisionRoom({ projectId }: Props) {
         <p className="text-[11px] font-medium tracking-[0.14em] text-[#66735E]">
           {step === "board" || step === "closed"
             ? "决策室 · 拍板"
-            : "决策室 · 语音开案"}
+            : step === "round1" || step === "debate"
+              ? "决策室 · 质询"
+              : "决策室 · 语音开案"}
         </p>
         <h1 className="font-display text-[30px] font-semibold leading-[1.1] tracking-[-0.045em] text-[#202124] md:text-[36px]">
           {step === "setup"
             ? "今天要拍什么板？"
-            : step === "board" || step === "closed"
-              ? "决策板 · 请拍板"
-              : "我问你说，采齐再拍"}
+            : step === "round1"
+              ? "常委独立陈述"
+              : step === "debate"
+                ? "质询碰撞"
+                : step === "board" || step === "closed"
+                  ? "决策板 · 请拍板"
+                  : "我问你说，采齐再拍"}
         </h1>
         <p className="max-w-2xl text-[15px] leading-7 text-[#6f747b]">
           {step === "setup"
             ? "说清一件事，采齐再进常委判断。"
-            : step === "board"
-              ? "先看建议与争议，再拍板。"
-              : step === "closed"
-                ? "裁决已形成，可回对话跟进。"
-                : "语音采集 → 常委判断 → 你来拍板 → 回对话跟进。"}
+            : step === "round1"
+              ? "先核对证据缺口，再进入质询碰撞。"
+              : step === "debate"
+                ? "看清立场与冲突，再形成决策板。"
+                : step === "board"
+                  ? "先看建议与争议，再拍板。"
+                  : step === "closed"
+                    ? "裁决已形成，可回对话跟进。"
+                    : "语音采集 → 常委判断 → 你来拍板 → 回对话跟进。"}
         </p>
-        {/* 闭环轨道：不进 setup / board / closed 首屏 */}
-        {step === "setup" ||
-        step === "board" ||
-        step === "closed" ? null : (
-          <div className="mt-4">
-            <DecisionLoopRail current="judge" projectId={projectId} compact />
-          </div>
-        )}
+        {/* 闭环轨道不进主路径首屏，避免与议题/CTA 抢位 */}
         {session &&
         (opinionSource === "heuristic" || opinionSource === "mixed") ? (
           <p className="mt-2 border border-[#C45C26]/25 bg-[#FFF6F0] px-3 py-2 text-[12px] leading-5 text-[#8A4F31]">
@@ -1320,98 +1320,51 @@ export function DecisionRoom({ projectId }: Props) {
 
       {session && step === "round1" ? (
         <section className="space-y-4 border border-[rgba(24,24,23,0.08)] bg-white p-6">
-          <p className="text-[12px] tracking-[0.08em] text-[#66735E]">
-            第 1 阶段 · 独立陈述
-          </p>
           <h2 className="font-display text-[22px] font-semibold text-[#202124]">
             {session.agenda.topic}
           </h2>
-          <p className="text-[13px] leading-6 text-[#6f747b]">
-            {session.cdoNote}
-          </p>
+          {session.cdoNote ? (
+            <p className="text-[13px] leading-6 text-[#6f747b]">
+              {session.cdoNote}
+            </p>
+          ) : null}
           <p className="text-[13px] text-[#6f747b]">
-            专业洞察：
+            洞察{" "}
             {session.insights?.length
               ? `${session.insights.length} 条`
               : "暂无"}
             {" · "}
-            引擎{" "}
-            {session.expertReports.map((r) => r.engineId).join("、") || "—"}
-            {expertNote ? ` · ${expertNote}` : ""}
+            席位 {session.roster.length}
+            {session.evidencePacket?.gapActions?.length
+              ? ` · 待补 ${session.evidencePacket.gapActions.length}`
+              : session.evidencePacket?.gaps?.length
+                ? ` · 缺口 ${session.evidencePacket.gaps.length}`
+                : session.evidencePacket?.items?.length
+                  ? ` · 证据 ${session.evidencePacket.items.length}`
+                  : " · 尚无证据包"}
           </p>
-          {session.evidencePacket?.items &&
-          session.evidencePacket.items.length > 0 ? (
-            <div className="space-y-2 border border-[rgba(24,24,23,0.06)] bg-[#FBFAF7] px-3 py-3">
-              <p className="text-[11px] tracking-[0.08em] text-[#66735E]">
-                本次证据包 · {session.evidencePacket.items.length} 条
-                {session.evidencePacket.gapActions?.length
-                  ? ` · 待补 ${session.evidencePacket.gapActions.length}`
-                  : session.evidencePacket.gaps?.length
-                    ? ` · 缺口 ${session.evidencePacket.gaps.length}`
-                    : ""}
+
+          {(session.evidencePacket?.gapActions?.length || 0) > 0 ? (
+            <div className="space-y-2 rounded-[14px] border border-[rgba(138,79,49,0.22)] bg-[#FFF6F0] px-3 py-3">
+              <p className="text-[12px] font-medium text-[#8A4F31]">
+                还缺客观数据（口述不算数）
               </p>
-              <ul className="space-y-1.5">
-                {session.evidencePacket.items.slice(0, 6).map((item) => (
-                  <li
-                    key={item.evidenceId}
-                    className="text-[13px] leading-5 text-[#3c4043]"
-                  >
-                    <span className="font-medium text-[#66735E]">
-                      {item.sourceAgent === "founder"
-                        ? "已补充"
-                        : item.sourceAgent === "mobile-agent"
-                          ? "口述"
-                          : item.evidenceId}
-                    </span>
-                    {item.strength ? (
-                      <span className="text-[#9aa0a6]"> · {item.strength}</span>
-                    ) : null}
-                    <span className="text-[#6f747b]"> — {item.claim}</span>
-                  </li>
-                ))}
-              </ul>
-              {(session.evidencePacket.gapActions?.length || 0) > 0 ? (
-                <div className="space-y-2 border-t border-[rgba(24,24,23,0.06)] pt-2">
-                  <p className="text-[12px] font-medium text-[#8A4F31]">
-                    还缺客观数据（口述不算数）· 点入口补充
-                  </p>
-                  <ul className="space-y-2">
-                    {session.evidencePacket.gapActions!.map((gap) => (
-                      <li key={gap.id} className="space-y-1.5">
-                        <p className="text-[12px] leading-5 text-[#5f6368]">
-                          {gap.detail}
-                        </p>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setSupplementGap(gap);
-                            setSupplementDraft("");
-                          }}
-                          className="inline-flex min-h-10 items-center gap-1 bg-[#181817] px-3 text-[12px] font-semibold text-white touch-manipulation"
-                        >
-                          <Plus className="h-3.5 w-3.5" />
-                          补充{gap.label}
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
+              <div className="flex flex-wrap gap-2">
+                {session.evidencePacket!.gapActions!.slice(0, 3).map((gap) => (
                   <button
+                    key={gap.id}
                     type="button"
                     onClick={() => {
-                      setStep("setup");
-                      setSetupPath("dialogue");
+                      setSupplementGap(gap);
+                      setSupplementDraft("");
                     }}
-                    className="text-[12px] font-medium text-[#66735E] underline-offset-4 touch-manipulation hover:underline"
+                    className="inline-flex min-h-10 items-center gap-1 bg-[#181817] px-3 text-[12px] font-semibold text-white touch-manipulation"
                   >
-                    或回采集阶段再补一轮语音 →
+                    <Plus className="h-3.5 w-3.5" />
+                    补充{gap.label}
                   </button>
-                </div>
-              ) : session.evidencePacket.gaps &&
-                session.evidencePacket.gaps.length > 0 ? (
-                <p className="text-[12px] leading-5 text-[#8A4F31]">
-                  {session.evidencePacket.gaps.slice(0, 2).join("；")}
-                </p>
-              ) : null}
+                ))}
+              </div>
               {supplementGap ? (
                 <div className="space-y-2 border border-[rgba(24,24,23,0.1)] bg-white px-3 py-3">
                   <p className="text-[12px] font-medium text-[#202124]">
@@ -1435,7 +1388,8 @@ export function DecisionRoom({ projectId }: Props) {
                       supplementMut.isPending ? "写入中…" : "写入证据包"
                     }
                     onSubmit={() => {
-                      if (!supplementDraft.trim() || supplementMut.isPending) return;
+                      if (!supplementDraft.trim() || supplementMut.isPending)
+                        return;
                       void applyGapSupplement(supplementGap, supplementDraft);
                     }}
                   />
@@ -1452,7 +1406,7 @@ export function DecisionRoom({ projectId }: Props) {
                 </div>
               ) : null}
             </div>
-          ) : (
+          ) : !session.evidencePacket?.items?.length ? (
             <div className="space-y-2">
               <p className="text-[12px] leading-5 text-[#8A4F31]">
                 尚无证据包：本轮意见将以降级置信度运行，补一手事实后再正式拍板更稳。
@@ -1469,57 +1423,8 @@ export function DecisionRoom({ projectId }: Props) {
                 回采集补充
               </button>
             </div>
-          )}
-          {session.insights && session.insights.length > 0 ? (
-            <ul className="space-y-2">
-              {session.insights.slice(0, 8).map((insight) => (
-                <li
-                  key={insight.id}
-                  className="border border-[rgba(24,24,23,0.06)] bg-[#FBFAF7] px-3 py-2 text-[13px] leading-6 text-[#3c4043]"
-                >
-                  <span className="font-semibold">
-                    {insight.sourceAgent}
-                  </span>
-                  <span className="text-[#6f747b]"> · {insight.domain}</span>
-                  <span className="text-[#6f747b]">
-                    {" "}
-                    · 置信 {(insight.confidence * 100).toFixed(0)}%
-                  </span>
-                  <br />
-                  {insight.finding}
-                  {insight.evidence?.[0] ? (
-                    <>
-                      <br />
-                      <span className="text-[12px] text-[#6f747b]">
-                        证据：{insight.evidence[0].claim}
-                      </span>
-                    </>
-                  ) : null}
-                </li>
-              ))}
-              {session.insights.length > 8 ? (
-                <li className="text-[12px] text-[#6f747b]">
-                  另有 {session.insights.length - 8} 条洞察已带入
-                </li>
-              ) : null}
-            </ul>
-          ) : session.expertReports.length > 0 ? (
-            <ul className="space-y-2">
-              {session.expertReports.map((r) => (
-                <li
-                  key={r.engineId}
-                  className="border border-[rgba(24,24,23,0.06)] bg-[#FBFAF7] px-3 py-2 text-[13px] leading-6 text-[#3c4043]"
-                >
-                  <span className="font-semibold">{r.engineId}</span>
-                  {r.stanceHint ? (
-                    <span className="text-[#6f747b]"> · {r.stanceHint}</span>
-                  ) : null}
-                  <br />
-                  {r.headline}
-                </li>
-              ))}
-            </ul>
           ) : null}
+
           {debateMut.isPending ? (
             <WorkProgressPanel
               title="七席质询进行中"
@@ -1529,49 +1434,88 @@ export function DecisionRoom({ projectId }: Props) {
               activeSeatIndex={debateActiveSeatIndex}
             />
           ) : (
-            <ul className="space-y-2">
-              {session.roster.map((role) => (
-                <li
-                  key={role}
-                  className="border border-[rgba(24,24,23,0.06)] bg-[#FBFAF7] px-3 py-2 text-[13px] text-[#202124]"
-                >
-                  <span className="font-semibold">{role}</span>
-                  <span className="text-[#6f747b]">
-                    {" "}
-                    · Round1 Prompt 已就绪（禁止互看）
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-          <div className="space-y-2">
             <button
               type="button"
               disabled={busy}
               onClick={() => void handleDebate()}
-              className="inline-flex min-h-11 w-full items-center justify-center gap-2 bg-[#181817] px-5 text-[14px] font-semibold text-white touch-manipulation disabled:opacity-60 sm:w-auto"
+              className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-[14px] bg-[#181817] px-5 text-[15px] font-semibold text-white touch-manipulation disabled:opacity-60 sm:w-auto"
             >
-              {debateMut.isPending ? (
-                <>
-                  <LoaderCircle className="h-4 w-4 animate-spin" />
-                  质询中 {workElapsedSec}s…
-                </>
-              ) : (
-                <>
-                  进入质询碰撞
-                  <ArrowRight className="h-4 w-4" />
-                </>
-              )}
+              进入质询碰撞
+              <ArrowRight className="h-4 w-4" />
             </button>
-          </div>
+          )}
+
+          <details className="rounded-[14px] border border-[rgba(24,24,23,0.08)] bg-[#FBFAF7] px-4 py-3">
+            <summary className="cursor-pointer text-[13px] font-medium text-[#202124]">
+              证据、洞察与席位
+            </summary>
+            <div className="mt-3 space-y-3">
+              {session.evidencePacket?.items &&
+              session.evidencePacket.items.length > 0 ? (
+                <ul className="space-y-1.5">
+                  {session.evidencePacket.items.slice(0, 6).map((item) => (
+                    <li
+                      key={item.evidenceId}
+                      className="text-[13px] leading-5 text-[#3c4043]"
+                    >
+                      <span className="font-medium text-[#66735E]">
+                        {item.sourceAgent === "founder"
+                          ? "已补充"
+                          : item.sourceAgent === "mobile-agent"
+                            ? "口述"
+                            : item.evidenceId}
+                      </span>
+                      <span className="text-[#6f747b]"> — {item.claim}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+              {session.insights && session.insights.length > 0 ? (
+                <ul className="space-y-2">
+                  {session.insights.slice(0, 6).map((insight) => (
+                    <li
+                      key={insight.id}
+                      className="border border-[rgba(24,24,23,0.06)] bg-white px-3 py-2 text-[13px] leading-6 text-[#3c4043]"
+                    >
+                      <span className="font-semibold">
+                        {insight.sourceAgent}
+                      </span>
+                      <span className="text-[#6f747b]">
+                        {" "}
+                        · {(insight.confidence * 100).toFixed(0)}%
+                      </span>
+                      <br />
+                      {insight.finding}
+                    </li>
+                  ))}
+                </ul>
+              ) : session.expertReports.length > 0 ? (
+                <ul className="space-y-2">
+                  {session.expertReports.map((r) => (
+                    <li
+                      key={r.engineId}
+                      className="border border-[rgba(24,24,23,0.06)] bg-white px-3 py-2 text-[13px] leading-6 text-[#3c4043]"
+                    >
+                      <span className="font-semibold">{r.engineId}</span>
+                      <br />
+                      {r.headline}
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+              <p className="text-[12px] text-[#6f747b]">
+                席位已就绪（禁止互看）：{session.roster.join(" · ")}
+              </p>
+            </div>
+          </details>
         </section>
       ) : null}
 
       {session && step === "debate" ? (
         <section className="space-y-4 border border-[rgba(24,24,23,0.08)] bg-white p-6">
-          <p className="text-[12px] tracking-[0.08em] text-[#66735E]">
-            第 2 阶段 · 观点矩阵与冲突
-          </p>
+          <h2 className="font-display text-[20px] font-semibold text-[#202124]">
+            {session.agenda.topic}
+          </h2>
           {session.stanceMatrix ? (
             <div className="grid grid-cols-1 gap-2 text-[13px] sm:grid-cols-3 sm:text-center">
               <div className="flex items-baseline justify-between gap-3 border border-[rgba(24,24,23,0.08)] bg-[#FBFAF7] p-3 sm:block">
@@ -1595,49 +1539,13 @@ export function DecisionRoom({ projectId }: Props) {
             </div>
           ) : null}
 
-          <div className="space-y-2">
-            {session.opinions.map((op) => (
-              <article
-                key={op.member}
-                className="border border-[rgba(24,24,23,0.06)] bg-[#FBFAF7] px-4 py-3"
-              >
-                <p className="text-[14px] font-semibold text-[#202124]">
-                  {op.member} · {POSITION_LABEL[op.position] || op.position}
-                  {op.veto ? " · 红线" : ""}
-                </p>
-                <p className="mt-1 text-[13px] leading-6 text-[#3c4043]">
-                  {op.judgment || op.summary}
-                </p>
-                {op.evidence_used && op.evidence_used.length > 0 ? (
-                  <p className="mt-1 text-[12px] text-[#66735E]">
-                    依据：{op.evidence_used.join("、")}
-                  </p>
-                ) : (
-                  <p className="mt-1 text-[12px] text-[#8A4F31]">
-                    未挂有效证据 ID（置信已降权）
-                  </p>
-                )}
-                {op.challenge_to_others && op.challenge_to_others.length > 0 ? (
-                  <p className="mt-1 text-[12px] leading-5 text-[#6f747b]">
-                    质询：{op.challenge_to_others[0]}
-                  </p>
-                ) : null}
-                {op.top_risk ? (
-                  <p className="mt-1 text-[12px] text-[#8a3b2a]">
-                    风险：{op.top_risk}
-                  </p>
-                ) : null}
-              </article>
-            ))}
-          </div>
-
           {session.conflicts.length > 0 ? (
             <div>
               <p className="text-[12px] tracking-[0.08em] text-[#6f747b]">
-                冲突图
+                主要冲突
               </p>
               <ul className="mt-2 space-y-2">
-                {session.conflicts.slice(0, 5).map((c, i) => (
+                {session.conflicts.slice(0, 3).map((c, i) => (
                   <li
                     key={`${c.agentA}-${c.agentB}-${i}`}
                     className="border border-[rgba(24,24,23,0.06)] px-3 py-2 text-[13px] leading-6 text-[#3c4043]"
@@ -1654,13 +1562,53 @@ export function DecisionRoom({ projectId }: Props) {
                     </span>
                     {" — "}
                     {c.topic}
-                    <br />
-                    <span className="text-[#6f747b]">{c.challenge}</span>
                   </li>
                 ))}
               </ul>
             </div>
           ) : null}
+
+          <details className="rounded-[14px] border border-[rgba(24,24,23,0.08)] bg-[#FBFAF7] px-4 py-3">
+            <summary className="cursor-pointer text-[13px] font-medium text-[#202124]">
+              各席意见明细 · {session.opinions.length}
+            </summary>
+            <div className="mt-3 space-y-2">
+              {session.opinions.map((op) => (
+                <article
+                  key={op.member}
+                  className="border border-[rgba(24,24,23,0.06)] bg-white px-4 py-3"
+                >
+                  <p className="text-[14px] font-semibold text-[#202124]">
+                    {op.member} · {POSITION_LABEL[op.position] || op.position}
+                    {op.veto ? " · 红线" : ""}
+                  </p>
+                  <p className="mt-1 text-[13px] leading-6 text-[#3c4043]">
+                    {op.judgment || op.summary}
+                  </p>
+                  {op.evidence_used && op.evidence_used.length > 0 ? (
+                    <p className="mt-1 text-[12px] text-[#66735E]">
+                      依据：{op.evidence_used.join("、")}
+                    </p>
+                  ) : (
+                    <p className="mt-1 text-[12px] text-[#8A4F31]">
+                      未挂有效证据 ID（置信已降权）
+                    </p>
+                  )}
+                  {op.challenge_to_others &&
+                  op.challenge_to_others.length > 0 ? (
+                    <p className="mt-1 text-[12px] leading-5 text-[#6f747b]">
+                      质询：{op.challenge_to_others[0]}
+                    </p>
+                  ) : null}
+                  {op.top_risk ? (
+                    <p className="mt-1 text-[12px] text-[#8a3b2a]">
+                      风险：{op.top_risk}
+                    </p>
+                  ) : null}
+                </article>
+              ))}
+            </div>
+          </details>
 
           {boardMut.isPending ? (
             <WorkProgressPanel

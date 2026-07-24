@@ -37,7 +37,7 @@ export function buildThreeEasyLanes(projectId: string): ThreeEasyLane[] {
     {
       id: "manage",
       label: "易管",
-      feel: "拍板后跟住执行与复盘",
+      feel: "拍板后跟住执行、复盘与经营动态",
       href: `/projects/${projectId}/decisions`,
       cta: "去跟进",
     },

@@ -74,10 +74,10 @@ export function HoldToTalkButton({
         aria-pressed={recording}
         className={`relative inline-flex min-h-11 min-w-11 touch-none select-none items-center justify-center rounded-full transition disabled:cursor-not-allowed disabled:opacity-50 ${
           recording
-            ? "animate-pulse bg-[#07C160] text-white shadow-[0_0_0_4px_rgba(7,193,96,0.22)]"
+            ? "bg-[#07C160] text-white"
             : hasContent
               ? "border border-[rgba(24,24,23,0.14)] bg-white text-[#181817] active:scale-95"
-              : "bg-[#181817] text-white shadow-[0_6px_16px_rgba(24,24,23,0.18)] active:scale-95"
+              : "bg-[#181817] text-white active:scale-95"
         }`}
         aria-label={
           recording
@@ -179,22 +179,18 @@ export function HoldToTalkBanner({
         </div>
       ) : null}
       {recording ? (
-        <div className="rounded-[14px] border border-[rgba(7,193,96,0.35)] bg-[rgba(7,193,96,0.1)] px-3 py-2.5">
-          <p className="text-[14px] font-semibold text-[#0a7a40]">
-            正在听你说…
-            <span className="ml-2 font-normal text-[#3d8f5f]">
-              {seconds}s / {maxSeconds}s
+        <div className="px-1 py-1">
+          <p className="text-[13px] font-medium text-[#3a3d41]">
+            正在听 · {seconds}s
+            <span className="ml-1 font-normal text-[#9aa0a6]">
+              / {maxSeconds}s
             </span>
           </p>
           {interimText ? (
-            <p className="mt-1 line-clamp-2 text-[13px] leading-5 text-[#2f6b48]">
+            <p className="mt-0.5 line-clamp-2 text-[12px] leading-5 text-[#6f747b]">
               {interimText}
             </p>
-          ) : (
-            <p className="mt-1 text-[12px] text-[#3d8f5f]">
-              按住则松手结束；点按或空格再点一次结束
-            </p>
-          )}
+          ) : null}
         </div>
       ) : null}
     </div>

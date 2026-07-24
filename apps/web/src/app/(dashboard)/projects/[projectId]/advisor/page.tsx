@@ -2278,15 +2278,16 @@ function AdvisorPageContent({
         <Link
           href={`/projects/${params.projectId}/agent`}
           prefetch={false}
-          className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-[12px] border border-[rgba(24,24,23,0.12)] bg-white text-[#6f747b] no-underline touch-manipulation"
-          aria-label="退出会议，回到对话"
+          className="inline-flex min-h-11 items-center gap-1.5 rounded-[12px] border border-[rgba(24,24,23,0.12)] bg-white px-2.5 text-[13px] font-medium text-[#66735E] no-underline touch-manipulation"
+          aria-label="回对话"
         >
           <ArrowLeft className="h-4 w-4" />
+          <span>回对话</span>
         </Link>
         <div className="min-w-0 flex-1">
           <p className="truncate text-[15px] font-medium text-[#202124]">顾问会议</p>
           <p className="truncate text-[11px] tracking-[0.08em] text-[#6f747b]">
-            拍板请用决策室 · 回对话继续
+            拍板请用决策室
           </p>
         </div>
         <Link
@@ -2295,13 +2296,6 @@ function AdvisorPageContent({
           className="inline-flex min-h-11 items-center rounded-[12px] px-3 text-[13px] font-medium text-[#66735E] no-underline touch-manipulation"
         >
           决策室
-        </Link>
-        <Link
-          href={`/projects/${params.projectId}/agent`}
-          prefetch={false}
-          className="inline-flex min-h-11 items-center rounded-[12px] px-3 text-[13px] font-medium text-[#6f747b] no-underline touch-manipulation"
-        >
-          退出
         </Link>
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3 md:px-6 md:py-6">

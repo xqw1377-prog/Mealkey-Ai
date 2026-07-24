@@ -747,10 +747,11 @@ export function DecisionRoom({ projectId }: Props) {
         <Link
           href={`/projects/${projectId}/agent`}
           prefetch={false}
-          className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-[12px] border border-[rgba(24,24,23,0.12)] bg-white text-[#6f747b] no-underline touch-manipulation"
-          aria-label="退出决策室，回到对话"
+          className="inline-flex min-h-11 items-center gap-1.5 rounded-[12px] border border-[rgba(24,24,23,0.12)] bg-white px-2.5 text-[13px] font-medium text-[#66735E] no-underline touch-manipulation"
+          aria-label="回对话"
         >
           <ArrowLeft className="h-4 w-4" />
+          <span>回对话</span>
         </Link>
         <div className="min-w-0 flex-1">
           <p className="truncate text-[15px] font-medium text-[#202124]">决策室</p>
@@ -766,15 +767,7 @@ export function DecisionRoom({ projectId }: Props) {
           >
             重新决策
           </button>
-        ) : (
-          <Link
-            href={`/projects/${projectId}/agent`}
-            prefetch={false}
-            className="inline-flex min-h-11 items-center rounded-[12px] px-3 text-[13px] font-medium text-[#66735E] no-underline touch-manipulation"
-          >
-            退出
-          </Link>
-        )}
+        ) : null}
       </div>
       {workPending ? (
         <div className="shrink-0 border-b border-[rgba(24,24,23,0.08)] bg-[#FBFAF7] px-4 py-2.5 md:px-6">

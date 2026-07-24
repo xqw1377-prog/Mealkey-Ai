@@ -782,6 +782,13 @@ function AgentPageInner({ projectId }: { projectId: string }) {
           </div>
 
           <Link
+            href="/dashboard?radar=1"
+            prefetch={false}
+            className="hidden h-11 items-center rounded-[12px] px-2.5 text-[13px] font-medium text-[#66735E] no-underline hover:bg-black/[0.04] sm:inline-flex"
+          >
+            经营动态
+          </Link>
+          <Link
             href={`/projects/${projectId}/decision-room`}
             prefetch={false}
             className="hidden h-11 items-center rounded-[12px] px-2.5 text-[13px] font-medium text-[#66735E] no-underline hover:bg-black/[0.04] sm:inline-flex"

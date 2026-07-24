@@ -30,15 +30,17 @@ function signalTypeLabel(
   return "变化";
 }
 
-/** 动态模块：数据卡 + 一句解读（主页面，非二级页） */
+/** 动态模块：数据卡 + 一句解读（经营动态主面，非二级页） */
 function DynamicModule({
   eyebrow,
   children,
   emptyText,
+  footer,
 }: {
   eyebrow: string;
   children?: ReactNode;
   emptyText?: string;
+  footer?: ReactNode;
 }) {
   return (
     <section className="space-y-3">
@@ -46,10 +48,11 @@ function DynamicModule({
       {children || (
         <div className="rounded-[14px] border border-dashed border-[rgba(24,24,23,0.12)] px-4 py-3.5">
           <p className="text-[13px] leading-5 text-[#8a8f96]">
-            {emptyText || "今日暂无新变化"}
+            {emptyText || "今天暂无新变化"}
           </p>
         </div>
       )}
+      {footer}
     </section>
   );
 }
@@ -94,7 +97,7 @@ function ChangeCard({
 }
 
 /**
- * 今日主页面模块栏
+ * 经营动态主模块栏
  * 变化解读就在本页，不进二级页；拍板只在决策室
  */
 export function DecisionCenterMorning({
@@ -296,7 +299,7 @@ export function DecisionCenterMorning({
           <p className="text-[14px] leading-6 text-[#6f747b]">
             {clipLine(
               radar?.emptyIntelNote ||
-                "今天没有尖锐变化。可先进对话说清一件事，或进决策室开案。",
+                "今天没有尖锐变化。可先进对话说清一件事，或去拍板。",
               72,
             )}
           </p>
@@ -308,7 +311,7 @@ export function DecisionCenterMorning({
             onClick={() => enterDecisionRoom(Boolean(primary))}
             className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-[16px] bg-[#181817] px-5 text-[15px] font-semibold text-white touch-manipulation"
           >
-            {primary ? "带着这条去拍板" : "进入决策室"}
+            {primary ? "带着这条去拍板" : "去拍板"}
             <ArrowRight className="h-4 w-4" />
           </button>
           <Link
@@ -316,7 +319,7 @@ export function DecisionCenterMorning({
             prefetch={false}
             className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[16px] border border-[rgba(24,24,23,0.12)] bg-white px-5 text-[14px] font-semibold text-[#181817] no-underline touch-manipulation"
           >
-            回对话先说清楚
+            回对话
           </Link>
         </div>
       </section>
@@ -380,20 +383,33 @@ export function DecisionCenterMorning({
       {/* 模块栏：推进中（系统 / Agent 事项） */}
       <DynamicModule
         eyebrow="推进中"
-        emptyText="决策执行或 Agent 任务启动后，进度会出现在这里。"
+        emptyText="拍板后的执行与复盘会出现在这里。"
+        footer={
+          <Link
+            href={`/projects/${projectId}/decisions`}
+            prefetch={false}
+            className="inline-flex min-h-10 items-center text-[13px] font-medium text-[#66735E] no-underline underline-offset-2 hover:underline"
+          >
+            去跟进
+          </Link>
+        }
       >
         {advancing.length > 0 ? (
           <ul className="space-y-2">
             {advancing.map((item) => (
               <li key={item.id}>
-                <div className="rounded-[14px] border border-[rgba(24,24,23,0.08)] bg-white px-4 py-3.5">
+                <Link
+                  href={item.href || `/projects/${projectId}/decisions`}
+                  prefetch={false}
+                  className="block rounded-[14px] border border-[rgba(24,24,23,0.08)] bg-white px-4 py-3.5 no-underline transition hover:border-[rgba(24,24,23,0.16)]"
+                >
                   <p className="text-[11px] tracking-[0.08em] text-[#66735E]">
                     {item.bucket === "reviewing" ? "复盘中" : "执行中"}
                   </p>
                   <p className="mt-1 text-[14px] font-medium text-[#202124]">
                     {clipLine(item.title, 36)}
                   </p>
-                </div>
+                </Link>
               </li>
             ))}
           </ul>

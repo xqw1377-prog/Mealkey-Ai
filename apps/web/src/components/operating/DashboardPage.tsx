@@ -155,7 +155,7 @@ function CouncilPendingBanner({
   return (
     <section className="relative mt-5 flex flex-col gap-3 border-l-2 border-[#B47C5C] bg-[rgba(180,124,92,0.06)] py-3.5 pl-4 pr-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
       <div className="min-w-0">
-        <p className="text-[11px] tracking-[0.1em] text-[#B47C5C]">待你进决策室</p>
+        <p className="text-[11px] tracking-[0.1em] text-[#B47C5C]">待你拍板</p>
         <p className="mt-1 text-[15px] font-medium leading-6 text-[#202124] sm:truncate">
           {item.topic}
         </p>
@@ -171,7 +171,7 @@ function CouncilPendingBanner({
           prefetch={false}
           className="inline-flex min-h-12 flex-1 items-center justify-center gap-1 rounded-[16px] bg-[#181817] px-5 text-[15px] font-semibold text-white no-underline touch-manipulation active:scale-[0.98] sm:min-h-11 sm:flex-none sm:rounded-none sm:bg-transparent sm:px-0 sm:text-[13px] sm:text-[#181817]"
         >
-          去决策室 <ArrowRight className="h-3.5 w-3.5" />
+          去拍板 <ArrowRight className="h-3.5 w-3.5" />
         </Link>
         <button
           type="button"
@@ -179,7 +179,7 @@ function CouncilPendingBanner({
           onClick={() => dismiss.mutate({ projectId })}
           className="inline-flex min-h-12 items-center justify-center rounded-[16px] border border-[rgba(24,24,23,0.12)] bg-white px-4 text-[15px] text-[#6f747b] touch-manipulation disabled:cursor-not-allowed disabled:opacity-50 sm:min-h-11 sm:rounded-none sm:border-0 sm:bg-transparent sm:px-0 sm:text-[13px] sm:underline sm:underline-offset-2"
         >
-          放弃
+          暂不处理
         </button>
       </div>
     </section>
@@ -209,8 +209,8 @@ function EmptyWorldGate({ greeting }: { greeting: string }) {
 }
 
 /**
- * 经营动态看板 — Phase 1 细节打磨
- * 经营动态 → 值得关注 → 决策室（拍板只在决策室）
+ * 经营动态看板
+ * 一眼看清变化 → 去拍板 / 回对话 / 去跟进（拍板只在决策室）
  */
 export function DashboardPage({
   currentProject,
@@ -229,6 +229,7 @@ export function DashboardPage({
   const isConsultingDraft = Boolean(
     home.pendingMeetingDraft?.href.includes("/advisor"),
   );
+  const projectId = currentProject.id;
 
   return (
     <PageContent width="console" inset="shell" className="relative space-y-6 pb-8">
@@ -239,29 +240,26 @@ export function DashboardPage({
         title={greeting}
         description={`${home.todayLabel} · ${currentProject.name} · 一眼看清今天最该做的事`}
         meta={
-          <div className="space-y-2">
-            <ThreeEasyHint projectId={currentProject.id} />
-            <OpsSecondaryLinks
-              projectId={currentProject.id}
-              links={[
-                { href: `/projects/${currentProject.id}/agent`, label: "回对话" },
-                {
-                  href: `/projects/${currentProject.id}/decision-room`,
-                  label: "决策室",
-                },
-                {
-                  href: `/projects/${currentProject.id}/decisions`,
-                  label: "跟进",
-                },
-              ]}
-            />
-          </div>
+          <OpsSecondaryLinks
+            projectId={projectId}
+            links={[
+              { href: `/projects/${projectId}/agent`, label: "回对话" },
+              {
+                href: `/projects/${projectId}/decision-room`,
+                label: "去拍板",
+              },
+              {
+                href: `/projects/${projectId}/decisions`,
+                label: "去跟进",
+              },
+            ]}
+          />
         }
       />
 
       {home.pendingCouncilAdjudication ? (
         <CouncilPendingBanner
-          projectId={currentProject.id}
+          projectId={projectId}
           item={home.pendingCouncilAdjudication}
         />
       ) : null}
@@ -285,7 +283,7 @@ export function DashboardPage({
               prefetch={false}
               className="inline-flex min-h-12 w-full items-center justify-center gap-1 rounded-[16px] bg-[#181817] px-5 text-[15px] font-semibold text-white no-underline touch-manipulation sm:w-auto"
             >
-              去决策室 <ArrowRight className="h-3.5 w-3.5" />
+              去拍板 <ArrowRight className="h-3.5 w-3.5" />
             </Link>
             <Link
               href={home.pendingMobileDecision.agentHref}
@@ -302,7 +300,7 @@ export function DashboardPage({
         <section className="relative mt-5 flex flex-col gap-3 border-l-2 border-[#66735E] bg-[rgba(102,115,94,0.05)] py-3.5 pl-4 pr-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
           <div className="min-w-0">
             <p className="text-[11px] tracking-[0.1em] text-[#66735E]">
-              未完成的决策
+              未完成的拍板
             </p>
             <p className="mt-1 text-[15px] font-medium leading-6 text-[#202124] sm:truncate">
               {home.pendingMeetingDraft.topic}
@@ -312,12 +310,12 @@ export function DashboardPage({
             href={
               home.pendingMeetingDraft.href.includes("decision-")
                 ? home.pendingMeetingDraft.href
-                : `/projects/${currentProject.id}/decision-room?topic=${encodeURIComponent(home.pendingMeetingDraft.topic)}`
+                : `/projects/${projectId}/decision-room?topic=${encodeURIComponent(home.pendingMeetingDraft.topic)}`
             }
             prefetch={false}
             className="inline-flex min-h-12 w-full items-center justify-center gap-1 rounded-[16px] bg-[#181817] px-5 text-[15px] font-semibold text-white no-underline touch-manipulation sm:w-auto"
           >
-            继续决策 <ArrowRight className="h-3.5 w-3.5" />
+            继续去拍板 <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </section>
       ) : null}
@@ -326,7 +324,7 @@ export function DashboardPage({
         <div className="relative mt-2">
           <DecisionCenterMorning
             scan={scan}
-            projectId={currentProject.id}
+            projectId={projectId}
             embedded
           />
         </div>
@@ -336,32 +334,49 @@ export function DashboardPage({
             经营动态
           </p>
           <h2 className="font-display text-[22px] font-semibold text-[#202124]">
-            系统扫描还在准备，你仍可先进入决策室
+            系统扫描还在准备，你仍可先去拍板
           </h2>
           <p className="text-[15px] leading-7 text-[#6f747b]">
-            用语音说清一件事，就能进入决策室完成判断。
+            用语音说清一件事，就能进决策室完成判断。
           </p>
           <Link
-            href={`/projects/${currentProject.id}/decision-room?intake=voice`}
+            href={`/projects/${projectId}/decision-room?intake=voice`}
             prefetch={false}
             className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[16px] bg-[#181817] px-5 text-[15px] font-semibold text-white no-underline touch-manipulation active:scale-[0.98]"
           >
-            语音发起决策
+            去拍板
             <ArrowRight className="h-4 w-4" />
           </Link>
+          <div className="flex flex-wrap gap-x-4 gap-y-2 text-[13px] font-medium text-[#66735E]">
+            <Link
+              href={`/projects/${projectId}/agent`}
+              prefetch={false}
+              className="no-underline underline-offset-2 hover:underline"
+            >
+              回对话
+            </Link>
+            <Link
+              href={`/projects/${projectId}/decisions`}
+              prefetch={false}
+              className="no-underline underline-offset-2 hover:underline"
+            >
+              去跟进
+            </Link>
+          </div>
         </section>
       )}
 
-      {/* 次级入口：咨询 / 习惯 / 快捷链，不与主决策区同层竞争 */}
       <details className="relative mt-8 border-t border-[rgba(24,24,23,0.06)] pt-4">
         <summary className="cursor-pointer list-none text-[13px] font-medium text-[#6f747b] underline-offset-4 hover:underline [&::-webkit-details-marker]:hidden">
           更多入口
         </summary>
         <div className="mt-4 space-y-5">
+          <ThreeEasyHint projectId={projectId} />
+
           {home.pendingMeetingDraft && isConsultingDraft ? (
             <section>
               <p className="text-[11px] tracking-[0.1em] text-[#6f747b]">
-                未完成的咨询（与决策室分开）
+                未完成的咨询（与拍板分开）
               </p>
               <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-[14px] text-[#3a3d41]">
@@ -398,25 +413,18 @@ export function DashboardPage({
             </section>
           ) : null}
 
-          <div className="flex flex-wrap gap-x-1 gap-y-1">
+          <div className="flex flex-wrap gap-x-4 gap-y-2 text-[13px] font-medium text-[#66735E]">
             <Link
-              href={`/projects/${currentProject.id}/agent`}
+              href={`/projects/${projectId}/capability`}
               prefetch={false}
-              className="inline-flex min-h-11 items-center px-2 text-[13px] font-medium text-[#181817] no-underline underline-offset-4 touch-manipulation hover:underline"
+              className="no-underline underline-offset-2 hover:underline"
             >
-              回对话
-            </Link>
-            <Link
-              href={`/projects/${currentProject.id}/decision-room`}
-              prefetch={false}
-              className="inline-flex min-h-11 items-center px-2 text-[13px] font-medium text-[#66735E] no-underline underline-offset-4 touch-manipulation hover:underline"
-            >
-              决策室
+              能力一览
             </Link>
             <Link
               href="/profile"
               prefetch={false}
-              className="inline-flex min-h-11 items-center px-2 text-[13px] font-medium text-[#66735E] no-underline underline-offset-4 touch-manipulation hover:underline"
+              className="no-underline underline-offset-2 hover:underline"
             >
               我的
             </Link>

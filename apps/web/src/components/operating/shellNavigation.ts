@@ -21,7 +21,7 @@ export function createShellNavItems(defaultProjectId?: string | null): ShellNavI
       disabledHint: "先建立企业",
     },
     {
-      label: "决策",
+      label: "拍板",
       href: hasWorld
         ? `/projects/${defaultProjectId}/decision-room`
         : "/projects",
@@ -47,7 +47,8 @@ function normalizeSection(section: NavSection): NavSection {
 }
 
 export function detectShellSection(pathname: string): NavSection {
-  if (pathname.startsWith("/dashboard")) return "today";
+  // 经营动态不占底栏高亮（避免人在雷达却亮「对话」）
+  if (pathname.startsWith("/dashboard")) return "capability";
   // Mobile Agent = 主对话入口
   if (pathname.startsWith("/projects/") && pathname.includes("/agent")) return "today";
   if (pathname.startsWith("/capability")) return "growth";

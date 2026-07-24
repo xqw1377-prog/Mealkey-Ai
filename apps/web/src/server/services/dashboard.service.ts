@@ -612,8 +612,8 @@ export function buildDashboardHome(bundle: ProjectInsightBundle) {
         status: councilDraft.status,
         statusLabel:
           councilDraft.status === "awaiting_founder"
-            ? "待你裁决"
-            : "决策板已就绪",
+            ? "待你拍板"
+            : "可去拍板",
         href: `/projects/${bundle.project.id}/decision-room?resume=1`,
       }
     : null;

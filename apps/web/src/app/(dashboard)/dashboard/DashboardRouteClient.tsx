@@ -1,10 +1,10 @@
 "use client";
 
 import type { inferRouterOutputs } from "@trpc/server";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { PageErrorState } from "@/components/operating/PageState";
+import { PageErrorState, PageLoadingState } from "@/components/operating/PageState";
 import { useProjectStore } from "@/stores/projectStore";
 import { DashboardPage } from "@/components/operating/DashboardPage";
 import { trpc } from "@/lib/trpc";
@@ -12,6 +12,8 @@ import type { AppRouter } from "@/server";
 import { DashboardRouteSkeleton } from "./DashboardRouteSkeleton";
 
 type DashboardHomeResponse = inferRouterOutputs<AppRouter>["dashboard"]["getHome"];
+
+const SLOW_LOAD_MS = 12_000;
 
 export function DashboardRouteClient({
   initialHomeResponse,
@@ -32,24 +34,23 @@ export function DashboardRouteClient({
       {
         initialData: useInitialHomeResponse ? initialHomeResponse : undefined,
         staleTime: useInitialHomeResponse ? 30_000 : 0,
+        retry: 1,
       },
     );
   const homeResponse: DashboardHomeResponse | undefined = data ?? undefined;
   const gateProjectId =
     homeResponse?.currentProject?.id ?? currentProjectId ?? undefined;
 
-  const { data: ripGate, isFetched: ripFetched } =
-    trpc.restaurantIntelligence.get.useQuery(
-      { projectId: gateProjectId! },
-      {
-        enabled: Boolean(gateProjectId),
-        retry: false,
-        staleTime: 30_000,
-      },
-    );
+  const { data: ripGate } = trpc.restaurantIntelligence.get.useQuery(
+    { projectId: gateProjectId! },
+    {
+      enabled: Boolean(gateProjectId),
+      retry: false,
+      staleTime: 30_000,
+    },
+  );
 
-  // Phase 1：有企业后默认进对话 Agent；?radar=1 留在经营动态看板。
-  // 未确认 RIP 不再整页拦截看板（只顶部提示），避免「看板打不开」。
+  // 服务端 page.tsx 已在无 ?radar=1 时 redirect；此处兜底客户端直达 /dashboard
   useEffect(() => {
     if (!gateProjectId) return;
     if (typeof window === "undefined") return;
@@ -77,8 +78,43 @@ export function DashboardRouteClient({
   }, [currentProject?.id, homeResponse, setCurrentProject]);
 
   const awaitingFirstHome = !isFetched && (isPending || isLoading) && !error;
+  const [loadTimedOut, setLoadTimedOut] = useState(false);
+  useEffect(() => {
+    if (!awaitingFirstHome) {
+      setLoadTimedOut(false);
+      return;
+    }
+    const timer = window.setTimeout(() => setLoadTimedOut(true), SLOW_LOAD_MS);
+    return () => window.clearTimeout(timer);
+  }, [awaitingFirstHome]);
 
   if (awaitingFirstHome) {
+    if (loadTimedOut) {
+      return (
+        <PageLoadingState
+          eyebrow="经营动态"
+          title="打开较慢…"
+          description="数据仍在同步。可先回对话，稍后再看经营动态。"
+          primaryAction={
+            gateProjectId
+              ? {
+                  href: `/projects/${gateProjectId}/agent`,
+                  label: "回对话",
+                }
+              : { href: "/login", label: "去登录" }
+          }
+          secondaryAction={
+            gateProjectId
+              ? {
+                  href: `/projects/${gateProjectId}/decision-room`,
+                  label: "去拍板",
+                }
+              : { href: "/projects", label: "企业列表" }
+          }
+          slowHint="超过 12 秒仍未就绪时，优先回对话继续经营。"
+        />
+      );
+    }
     return <DashboardRouteSkeleton />;
   }
 
@@ -100,8 +136,22 @@ export function DashboardRouteClient({
         eyebrow="经营动态"
         title="经营动态暂时打不开"
         description="数据还在同步，稍后再试。"
-        primaryAction={{ href: "/projects", label: "看企业" }}
-        secondaryAction={{ href: "/profile", label: "账号设置" }}
+        primaryAction={
+          gateProjectId
+            ? {
+                href: `/projects/${gateProjectId}/agent`,
+                label: "回对话",
+              }
+            : { href: "/projects", label: "看企业" }
+        }
+        secondaryAction={
+          gateProjectId
+            ? {
+                href: `/projects/${gateProjectId}/decision-room`,
+                label: "去拍板",
+              }
+            : { href: "/profile", label: "账号设置" }
+        }
       />
     );
   }
@@ -112,17 +162,17 @@ export function DashboardRouteClient({
   return (
     <div className="space-y-3">
       {gateProjectId && ripGate?.needsConfirm ? (
-        <div className="flex flex-col gap-2 rounded-[12px] border border-[rgba(102,115,94,0.22)] bg-[linear-gradient(180deg,#FBFAF7_0%,#F1F3EC_100%)] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-[14px] leading-6 text-[#2F3A28]">
-            经营画像尚未确认——确认后驾驶舱会更懂你的生意。
-          </p>
+        <p className="text-[13px] leading-6 text-[#5f655d]">
+          经营画像尚未确认——
           <Link
             href={`/projects/${gateProjectId}/restaurant-intelligence`}
-            className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-[14px] bg-[#181817] px-4 text-[14px] font-semibold text-white no-underline"
+            prefetch={false}
+            className="font-medium text-[#66735E] underline-offset-2 hover:underline"
           >
             去确认画像
           </Link>
-        </div>
+          ，确认后经营动态会更准。
+        </p>
       ) : null}
       <DashboardPage currentProject={resolvedProject} home={resolvedHome} />
     </div>

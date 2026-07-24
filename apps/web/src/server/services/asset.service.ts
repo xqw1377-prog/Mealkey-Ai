@@ -481,7 +481,7 @@ async function extractAssetInsights(
             kind,
             title,
             extractedText,
-            fallback: `文档资料已提取文本，可进入会议判断：${extractedText.slice(0, 160)}`,
+            fallback: `文档资料已提取文本，可进决策室判断：${extractedText.slice(0, 160)}`,
           })
         : `文档资料已导入：${stripExtension(file.name)}。暂不支持此格式的自动文本提取，请在会议中手动补充关键信息。`,
     };
@@ -696,7 +696,7 @@ async function analyzeImage(file: File, buffer: Buffer, title: string): Promise<
         kind: "image",
         title,
         extractedText,
-        fallback: `图片资料已提取文字，可进入会议判断：${extractedText.slice(0, 160)}`,
+        fallback: `图片资料已提取文字，可进决策室判断：${extractedText.slice(0, 160)}`,
       })
     : null;
   return {

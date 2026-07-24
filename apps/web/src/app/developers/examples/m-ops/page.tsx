@@ -27,7 +27,7 @@ export default function MOpsExamplePage() {
             <li>如何租用 Context</li>
             <li>如何组织 Evidence</li>
             <li>如何输出 Signal / Insight / Gap</li>
-            <li>如何 Handoff 进今日 / 决策室候选（不在 Agent 内拍板）</li>
+            <li>如何 Handoff 进今日 / 拍板候选（不在 Agent 内拍板）</li>
           </ul>
         </DocSection>
         <DocSection title="本地仓">

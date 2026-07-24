@@ -291,7 +291,7 @@ export function PositioningResultCard({
             href={`/projects/${projectId}/decisions`}
             className="inline-flex items-center gap-2 rounded-full border border-[rgba(24,24,23,0.08)] bg-[#F5F3EE] px-4 py-2 text-[13px] font-medium text-[#202124] no-underline"
           >
-            决策档案
+            去跟进
           </Link>
           <Link
             href={`/projects/${projectId}/decision-room`}

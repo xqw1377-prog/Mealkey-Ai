@@ -34,7 +34,7 @@ export function PositioningReviewBanner({
           href={`/projects/${projectId}/decisions#decision-${decisionId}`}
           className="inline-flex min-h-11 items-center justify-center rounded-full border border-[rgba(24,24,23,0.08)] bg-white px-4 text-[13px] text-[#202124] no-underline touch-manipulation"
         >
-          回到决策档案
+          去跟进
         </Link>
       </div>
     </section>

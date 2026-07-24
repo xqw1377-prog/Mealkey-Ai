@@ -480,7 +480,7 @@ function DecisionsArchivePageInner() {
     return (
       <div className="space-y-4 pb-2 pt-5 md:pt-6">
         <PageErrorState
-          eyebrow="行动"
+          eyebrow="跟进"
           title="找不到企业"
           description="请从企业列表或经营动态重新进入。"
           primaryAction={{ href: "/projects", label: "企业列表" }}
@@ -491,14 +491,14 @@ function DecisionsArchivePageInner() {
   }
 
   if (projectLoading || isLoading) {
-    return <PageLoadingState eyebrow="行动" title="正在打开…" />;
+    return <PageLoadingState eyebrow="跟进" title="正在打开…" />;
   }
 
   if (error) {
     return (
       <div className="space-y-4 pb-2 pt-5 md:pt-6">
         <PageErrorState
-          eyebrow="行动"
+          eyebrow="跟进"
           title="暂时打不开"
           description={error.message || "稍后再试。"}
           primaryAction={{ href: "/dashboard?radar=1", label: "经营动态" }}
@@ -519,9 +519,9 @@ function DecisionsArchivePageInner() {
   return (
     <PageContent width="console" inset="shell" className="space-y-8">
       <MKPageHeader
-        eyebrow="行动"
+        eyebrow="跟进"
         title="跟进验证"
-        description="拍板后的验证与学习跟进。"
+        description="拍板后的验证、复盘与学习。"
         badge={
           <div className="inline-flex shrink-0 items-center gap-1.5 rounded-[10px] border border-[rgba(24,24,23,0.08)] bg-[#FBFAF7] px-2.5 py-1 text-[12px] text-[#6f747b]">
             <History className="h-3.5 w-3.5" />

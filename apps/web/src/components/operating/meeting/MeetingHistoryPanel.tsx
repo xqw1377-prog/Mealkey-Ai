@@ -76,7 +76,7 @@ export function MeetingHistoryPanel({ projectId, items, onClose }: Props) {
         prefetch={false}
         className="mt-3 inline-flex items-center gap-2 text-[13px] font-medium text-[#202124] no-underline"
       >
-        打开决策档案
+        去跟进
         <ArrowRight className="h-4 w-4" />
       </Link>
     </section>

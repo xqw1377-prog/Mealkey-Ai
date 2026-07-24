@@ -451,7 +451,7 @@ export default function RuntimeHubPage() {
         {tab === "decision" ? (
           <div className="space-y-5">
             {decisionsLoading && !decisions.length ? (
-              <p className="text-[13px] text-[#6f747b]">加载决策档案…</p>
+              <p className="text-[13px] text-[#6f747b]">加载跟进…</p>
             ) : decisions.length === 0 ? (
               <div className="space-y-3 border-y border-[rgba(24,24,23,0.08)] py-8 text-center">
                 <p className="font-display text-[18px] font-semibold text-[#202124]">

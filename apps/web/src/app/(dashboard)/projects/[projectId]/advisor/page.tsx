@@ -133,13 +133,13 @@ export default function AdvisorPage({
     <Suspense
       fallback={
         <PageLoadingState
-          eyebrow="会议"
+          eyebrow="顾问咨询"
           title="正在打开…"
           description="读取议题与上下文。"
         />
       }
     >
-      <PageErrorBoundary fallbackTitle="会议页暂时无法打开">
+      <PageErrorBoundary fallbackTitle="顾问咨询暂时无法打开">
         <AdvisorPageContent params={params} />
       </PageErrorBoundary>
     </Suspense>
@@ -1675,7 +1675,7 @@ function AdvisorPageContent({
   if (isLoading) {
     return (
       <PageLoadingState
-        eyebrow="会议"
+        eyebrow="顾问咨询"
         title="正在准备…"
         description="读取议题与证据。"
       />
@@ -1686,8 +1686,8 @@ function AdvisorPageContent({
     return (
       <div className="space-y-5 pb-2 pt-6 md:pt-8">
         <PageErrorState
-          eyebrow="会议"
-          title="会议暂时打不开"
+          eyebrow="顾问咨询"
+          title="顾问咨询暂时打不开"
           description="上下文还在同步，稍后再试。"
           primaryAction={{
             href: `/projects/${params.projectId}/agent`,
@@ -1706,8 +1706,8 @@ function AdvisorPageContent({
     return (
       <div className="space-y-5 pb-2 pt-6 md:pt-8">
         <PageEmptyState
-          eyebrow="会议"
-          title="还进不了这场会"
+          eyebrow="顾问咨询"
+          title="还进不了这场咨询"
           description="先回对话，再从决策室或专业能力进入。"
           primaryAction={{
             href: `/projects/${params.projectId}/agent`,
@@ -2133,7 +2133,7 @@ function AdvisorPageContent({
         <div>
           <p className="text-[13px] leading-5 tracking-[0.01em] text-[#66735E]">记录</p>
           <h2 className="mt-1 text-[19px] font-semibold leading-[1.25] tracking-[-0.02em] text-[#202124]">
-            会议记录
+            会商记录
           </h2>
         </div>
         <div className="flex items-center gap-2">
@@ -2143,14 +2143,14 @@ function AdvisorPageContent({
             className="inline-flex items-center gap-2 rounded-full border border-[rgba(24,24,23,0.08)] bg-[#F5F3EE] px-3 py-2 text-[13px] font-medium text-[#202124]"
           >
             <History className="h-4 w-4" />
-            决策档案
+            去跟进
           </Link>
           <button
             type="button"
             onClick={() => setShowMeetingHistory((prev) => !prev)}
             className="inline-flex items-center gap-2 rounded-full border border-[rgba(24,24,23,0.08)] bg-white px-3 py-2 text-[13px] font-medium text-[#202124]"
           >
-            会议历史
+            会商历史
             <ArrowRight className="h-4 w-4" />
           </button>
         </div>
@@ -2169,7 +2169,7 @@ function AdvisorPageContent({
           role="log"
           aria-live="polite"
           aria-relevant="additions"
-          aria-label="会议记录消息"
+          aria-label="会商记录消息"
         >
           {allMessages.map((msg) => (
             <div key={msg.id} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>

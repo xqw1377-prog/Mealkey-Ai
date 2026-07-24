@@ -162,7 +162,7 @@ export function AdvisorComposer({
             prefetch={false}
             className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[14px] border border-[rgba(24,24,23,0.08)] bg-white px-3.5 text-[13px] font-semibold text-[#202124]"
           >
-            决策档案
+            去跟进
             <History className="h-4 w-4" />
           </Link>
           <button

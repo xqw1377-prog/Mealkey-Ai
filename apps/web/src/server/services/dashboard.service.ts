@@ -484,7 +484,7 @@ export function buildDashboardHome(bundle: ProjectInsightBundle) {
       ? {
           title: `${positioningReviewCount} 条判断因定位变更待复审`,
           summary:
-            "品牌定位已更新，部分选址/投资/营销等判断可能失效。优先在会议中复审，或到决策档案处理。",
+            "品牌定位已更新，部分选址/投资/营销等判断可能失效。优先在决策室复审，或到跟进页处理。",
           href: `/projects/${bundle.project.id}/decisions`,
           meetingHref: pendingReviewItems[0]?.href,
           count: positioningReviewCount,
@@ -1391,7 +1391,7 @@ export function buildProjectOverview(bundle: ProjectInsightBundle) {
             bundle.project.id,
             "先补齐品牌定位，再决定后续经营动作。",
           ),
-          actions: ["启动 M-PNT", "明确心智位置", "写入决策档案"],
+          actions: ["启动 M-PNT", "明确心智位置", "写入跟进"],
         };
       }
       const meetingTopic = isInitialWorld
@@ -1461,7 +1461,7 @@ export function buildReportSnapshot(bundle: ProjectInsightBundle) {
       latestReport: null as null,
       reportTypeLabel: "暂无报告",
       score: scorecard.score,
-      conclusion: "尚未形成正式决策档案",
+      conclusion: "尚未形成正式决策跟进",
       positioning: bundle.project.target || "定位待明确",
       riskTitle: "信息不足",
       counterArgument: "缺少反方验证材料",
@@ -1559,7 +1559,7 @@ export function buildAdvisorWorkspace(
     asString(profile.currentProblemImpact)?.replace(/^未来一年的关键目标是：/, "") ??
     "形成未来一年的关键经营目标";
   const kickoffSummary = isInitialMeeting
-    ? `我已经读取你的经营诊断启动信息：你当前经营的是「${businessType}」，眼下最大的挑战是「${currentChallenge}」，未来一年的核心目标是「${yearlyGoal}」。这场会议的任务不是继续收集表面信息，而是把这三个输入压成第一轮经营判断。`
+    ? `我已经读取你的经营诊断启动信息：你当前经营的是「${businessType}」，眼下最大的挑战是「${currentChallenge}」，未来一年的核心目标是「${yearlyGoal}」。这场会商的任务不是继续收集表面信息，而是把这三个输入压成第一轮经营判断。`
     : null;
   const kickoffQuestions = isInitialMeeting
     ? [

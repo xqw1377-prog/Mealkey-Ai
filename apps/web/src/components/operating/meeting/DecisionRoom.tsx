@@ -11,6 +11,7 @@ import {
 } from "@/components/operating/VoiceDecisionComposer";
 import { VoiceDecisionDialogue } from "@/components/operating/VoiceDecisionDialogue";
 import { DecisionClosedActions } from "@/components/operating/DecisionLoopRail";
+import { EngineDegradationBanner } from "@/components/operating/EngineDegradationBanner";
 import { VoiceInputRow } from "@/components/operating/VoiceInputRow";
 import {
   clearDecisionVoiceBrief,
@@ -819,14 +820,20 @@ export function DecisionRoom({ projectId }: Props) {
                     ? "裁决已形成，可回对话跟进。"
                     : "语音采集 → 常委判断 → 你来拍板 → 回对话跟进。"}
         </p>
-        {/* 闭环轨道不进主路径首屏，避免与议题/CTA 抢位 */}
+        {/* 闭环轨道不进主路径首屏；降级必须置顶可见 */}
         {session &&
         (opinionSource === "heuristic" || opinionSource === "mixed") ? (
-          <p className="mt-2 border border-[#C45C26]/25 bg-[#FFF6F0] px-3 py-2 text-[12px] leading-5 text-[#8A4F31]">
-            {opinionSource === "heuristic"
-              ? "本轮常委意见为启发式强制降级，非正式深度审议；勿当作已签字结论。"
-              : "本轮意见含启发式降级席位，深度与非正式混杂；拍板前请核对证据与缺口。"}
-          </p>
+          <div className="mt-2">
+            <EngineDegradationBanner
+              mode={opinionSource === "heuristic" ? "heuristic" : "hybrid"}
+              note={
+                opinionSource === "heuristic"
+                  ? "本轮常委意见为启发式强制降级，非正式深度审议；勿当作已签字结论。"
+                  : "本轮意见含启发式降级席位，深度与非正式混杂；拍板前请核对证据与缺口。"
+              }
+              blockConfirm={step === "board"}
+            />
+          </div>
         ) : null}
         {session && (step === "board" || step === "closed") ? (
           <details className="mt-3 rounded-[12px] border border-[rgba(24,24,23,0.08)] bg-[#FBFAF7] px-3 py-2">

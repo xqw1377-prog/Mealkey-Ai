@@ -790,7 +790,7 @@ export function DecisionRoom({ projectId }: Props) {
         <div className="min-w-0 flex-1">
           <p className="truncate text-[15px] font-medium text-[#202124]">决策室</p>
           <p className="truncate text-[11px] tracking-[0.08em] text-[#6f747b]">
-            语音开案 · 回对话继续经营
+            {step === "setup" ? "说清一件事再拍板" : "拍板后回对话跟进"}
           </p>
         </div>
         {session ? (
@@ -834,16 +834,15 @@ export function DecisionRoom({ projectId }: Props) {
           决策室 · 语音开案
         </p>
         <h1 className="font-display text-[30px] font-semibold leading-[1.1] tracking-[-0.045em] text-[#202124] md:text-[36px]">
-          我问你说，采齐再拍
+          {step === "setup" ? "今天要拍什么板？" : "我问你说，采齐再拍"}
         </h1>
         <p className="max-w-2xl text-[15px] leading-7 text-[#6f747b]">
-          语音采集 → 常委判断 → 你来拍板 → 回对话跟进。
+          {step === "setup"
+            ? "说清一件事，采齐再进常委判断。"
+            : "语音采集 → 常委判断 → 你来拍板 → 回对话跟进。"}
         </p>
-        {step === "setup" ? (
-          <div className="mt-4">
-            <DecisionLoopRail current="capture" projectId={projectId} compact />
-          </div>
-        ) : step === "board" ? (
+        {/* 闭环轨道不进 setup 首屏（三易 L1）；开案后再露出 */}
+        {step === "setup" ? null : step === "board" ? (
           <div className="mt-4">
             <DecisionLoopRail current="decide" projectId={projectId} compact />
           </div>
@@ -961,21 +960,6 @@ export function DecisionRoom({ projectId }: Props) {
 
       {step === "setup" ? (
         <section className="space-y-5 border border-[rgba(24,24,23,0.08)] bg-white p-6">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="text-[12px] tracking-[0.08em] text-[#66735E]">
-              开案 · 语音采集决策事项
-            </p>
-            <button
-              type="button"
-              onClick={() =>
-                setSetupPath((p) => (p === "dialogue" ? "oneshot" : "dialogue"))
-              }
-              className="text-[12px] font-medium text-[#66735E] underline-offset-4 touch-manipulation hover:underline"
-            >
-              {setupPath === "dialogue" ? "改成一句话说完" : "改回对话引导"}
-            </button>
-          </div>
-
           {readyBrief && intakeMode === "ready" ? (
             <div className="space-y-3 rounded-[14px] border border-[rgba(24,24,23,0.08)] bg-[#FBFAF7] p-4">
               <p className="text-[11px] tracking-[0.1em] text-[#66735E]">
@@ -984,24 +968,39 @@ export function DecisionRoom({ projectId }: Props) {
               <p className="font-display text-[18px] font-semibold text-[#202124]">
                 {readyBrief.topic}
               </p>
-              <ul className="space-y-1.5 text-[13px] leading-6 text-[#3a3d41]">
-                <li>为何现在 · {readyBrief.whyNow}</li>
-                {readyBrief.evidenceSummary &&
-                readyBrief.evidenceSummary.length > 0 ? (
-                  <li>
-                    证据 ·{" "}
-                    {readyBrief.evidenceSummary.slice(0, 3).join("；")}
-                  </li>
-                ) : null}
-                {readyBrief.reviewQuestions &&
-                readyBrief.reviewQuestions.length > 0 ? (
-                  <li>
-                    复盘三问 · {readyBrief.reviewQuestions.join(" / ")}
-                  </li>
-                ) : null}
-                <li>底线 · {readyBrief.constraints}</li>
-                <li>做成什么样 · {readyBrief.successLooksLike}</li>
-              </ul>
+              <p className="text-[13px] leading-6 text-[#6f747b]">
+                {[
+                  readyBrief.whyNow ? `为何现在 · ${readyBrief.whyNow}` : null,
+                  readyBrief.evidenceSummary?.length
+                    ? `证据 ${readyBrief.evidenceSummary.length} 条`
+                    : null,
+                ]
+                  .filter(Boolean)
+                  .join(" · ") || "可直接开案；细节在下方展开。"}
+              </p>
+              <details className="text-[13px] leading-6 text-[#3a3d41]">
+                <summary className="cursor-pointer font-medium text-[#66735E]">
+                  查看 Brief 细节
+                </summary>
+                <ul className="mt-2 space-y-1.5">
+                  <li>为何现在 · {readyBrief.whyNow}</li>
+                  {readyBrief.evidenceSummary &&
+                  readyBrief.evidenceSummary.length > 0 ? (
+                    <li>
+                      证据 ·{" "}
+                      {readyBrief.evidenceSummary.slice(0, 3).join("；")}
+                    </li>
+                  ) : null}
+                  {readyBrief.reviewQuestions &&
+                  readyBrief.reviewQuestions.length > 0 ? (
+                    <li>
+                      复盘三问 · {readyBrief.reviewQuestions.join(" / ")}
+                    </li>
+                  ) : null}
+                  <li>底线 · {readyBrief.constraints}</li>
+                  <li>做成什么样 · {readyBrief.successLooksLike}</li>
+                </ul>
+              </details>
               <button
                 type="button"
                 disabled={busy}
@@ -1047,32 +1046,49 @@ export function DecisionRoom({ projectId }: Props) {
             />
           ) : null}
 
-          <div className="space-y-2">
-            <p className="text-[12px] tracking-[0.08em] text-[#6f747b]">
-              常用题（点一下进入对话预填）
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {(meta.data?.presets ?? []).slice(0, 4).map((p) => (
-                <button
-                  key={p.id}
-                  type="button"
-                  onClick={() => {
-                    setPresetId(p.id);
-                    setCustomTopic(p.topic);
-                    setSetupPath("dialogue");
-                    setReadyBrief(null);
-                  }}
-                  className={`inline-flex min-h-10 items-center rounded-full border px-3 text-[12px] ${
-                    presetId === p.id && customTopic === p.topic
-                      ? "border-[#181817] bg-[#181817] text-white"
-                      : "border-[rgba(24,24,23,0.1)] bg-[#FBFAF7] text-[#3a3d41]"
-                  }`}
-                >
-                  {p.label}
-                </button>
-              ))}
+          <details className="rounded-[14px] border border-[rgba(24,24,23,0.08)] bg-[#FBFAF7] px-4 py-3">
+            <summary className="cursor-pointer text-[13px] font-medium text-[#202124]">
+              换种开案方式 · 常用题
+            </summary>
+            <div className="mt-3 space-y-3">
+              <button
+                type="button"
+                onClick={() =>
+                  setSetupPath((p) =>
+                    p === "dialogue" ? "oneshot" : "dialogue",
+                  )
+                }
+                className="text-[12px] font-medium text-[#66735E] underline-offset-4 touch-manipulation hover:underline"
+              >
+                {setupPath === "dialogue"
+                  ? "改成一句话说完"
+                  : "改回对话引导"}
+              </button>
+              {(meta.data?.presets ?? []).length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {(meta.data?.presets ?? []).slice(0, 4).map((p) => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => {
+                        setPresetId(p.id);
+                        setCustomTopic(p.topic);
+                        setSetupPath("dialogue");
+                        setReadyBrief(null);
+                      }}
+                      className={`inline-flex min-h-10 items-center rounded-full border px-3 text-[12px] ${
+                        presetId === p.id && customTopic === p.topic
+                          ? "border-[#181817] bg-[#181817] text-white"
+                          : "border-[rgba(24,24,23,0.1)] bg-white text-[#3a3d41]"
+                      }`}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
             </div>
-          </div>
+          </details>
 
           <details
             className="rounded-[14px] border border-[rgba(24,24,23,0.08)] bg-[#FBFAF7] px-4 py-3"

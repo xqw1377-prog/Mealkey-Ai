@@ -482,9 +482,9 @@ function DecisionsArchivePageInner() {
         <PageErrorState
           eyebrow="行动"
           title="找不到企业"
-          description="请从企业列表或今日重新进入。"
+          description="请从企业列表或经营动态重新进入。"
           primaryAction={{ href: "/projects", label: "企业列表" }}
-          secondaryAction={{ href: "/dashboard", label: "今日" }}
+          secondaryAction={{ href: "/dashboard?radar=1", label: "经营动态" }}
         />
       </div>
     );
@@ -501,7 +501,7 @@ function DecisionsArchivePageInner() {
           eyebrow="行动"
           title="暂时打不开"
           description={error.message || "稍后再试。"}
-          primaryAction={{ href: "/dashboard", label: "今日" }}
+          primaryAction={{ href: "/dashboard?radar=1", label: "经营动态" }}
         />
       </div>
     );

@@ -1804,7 +1804,7 @@ export function buildOwnerPortrait(
       ? [
           { label: "重定义问题", action: `把「${currentChallenge}」压成一个能验证的问题` },
           { label: "锁定变量", action: `围绕「${yearlyGoal}」锁定最不能判错的关键变量` },
-          { label: "形成首判", action: "第一次开会，收束出第一条判断和下一步" },
+          { label: "形成首判", action: "第一次进决策室，收束出第一条判断和下一步" },
         ]
       : [
           { label: "形成判断", action: "每周至少开一次会，留下判断" },
@@ -1841,7 +1841,7 @@ export function buildOwnerPortrait(
         : isInitialPortrait
           ? `已知你在做 ${bundle?.project.category || "餐饮业务"}，眼下挑战是“${currentChallenge}”，目标是“${yearlyGoal}”。`
           : `已根据你的企业与判断，开始摸清能力短板。`,
-    nextAction: bundle?.decisions[0]?.action ?? (isInitialPortrait ? "开第一次会，留下第一条判断。" : "继续开会，留下新的判断。"),
+    nextAction: bundle?.decisions[0]?.action ?? (isInitialPortrait ? "第一次进决策室，留下第一条判断。" : "继续进决策室，留下新的判断。"),
     currentJudgement:
       bundle?.decisions[0]?.judgement ??
       bundle?.latestReport?.summary ??

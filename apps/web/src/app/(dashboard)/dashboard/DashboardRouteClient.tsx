@@ -86,7 +86,7 @@ export function DashboardRouteClient({
     if (isAuthError) {
       return (
         <PageErrorState
-          eyebrow="今日"
+          eyebrow="经营动态"
           title="需要重新登录"
           description="登录状态已失效。"
           primaryAction={{ href: "/login", label: "去登录" }}
@@ -97,8 +97,8 @@ export function DashboardRouteClient({
 
     return (
       <PageErrorState
-        eyebrow="今日"
-        title="今日简报暂时打不开"
+        eyebrow="经营动态"
+        title="经营动态暂时打不开"
         description="数据还在同步，稍后再试。"
         primaryAction={{ href: "/projects", label: "看企业" }}
         secondaryAction={{ href: "/profile", label: "账号设置" }}

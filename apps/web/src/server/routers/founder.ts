@@ -231,7 +231,7 @@ export const founderRouter = router({
           code: "PRECONDITION_FAILED",
           message:
             engineGate.note ||
-            "专业引擎未就绪，已阻止扣点开会。请先启动引擎后再试。",
+            "专业引擎未就绪，已阻止扣点开案。请先启动引擎后再试。",
         });
       }
 
@@ -411,7 +411,7 @@ export const founderRouter = router({
       if (degradedSeats > 0 && !engineGate.allowDegraded) {
         throw new TRPCError({
           code: "PRECONDITION_FAILED",
-          message: `本场有 ${degradedSeats} 个顾问席降级为启发式，不能当作引擎交付。经营点将退回，请修好外呼后再开会。`,
+          message: `本场有 ${degradedSeats} 个顾问席降级为启发式，不能当作引擎交付。经营点将退回，请修好外呼后再开案。`,
         });
       }
 

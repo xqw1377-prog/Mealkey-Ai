@@ -82,7 +82,7 @@ export default function ProjectSettingsPage() {
         eyebrow="企业设置"
         title="暂时无法打开企业设置"
         description={error?.message || "请稍后重试"}
-        primaryAction={{ href: "/dashboard", label: "回到今日" }}
+        primaryAction={{ href: "/dashboard?radar=1", label: "经营动态" }}
       />
     );
   }
@@ -253,11 +253,11 @@ export default function ProjectSettingsPage() {
           回到能力中心 →
         </Link>
         <Link
-          href="/dashboard"
+          href="/dashboard?radar=1"
           prefetch={false}
           className="text-[14px] font-medium text-[#6f747b] no-underline"
         >
-          回到今日
+          经营动态
         </Link>
       </div>
     </PageContent>

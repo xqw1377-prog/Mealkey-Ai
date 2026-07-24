@@ -297,7 +297,7 @@ export const decisionCouncilRouter = router({
         assertCouncilIngressViaMkInsight({
           insights,
           allowEmpty: allowStubReports,
-          label: "决策室开会",
+          label: "决策室开案",
         });
         let session = openDecisionRoom({
           topic: input.topic,
@@ -327,7 +327,7 @@ export const decisionCouncilRouter = router({
           session = {
             ...session,
             cdoNote: `${session.cdoNote} · 【证据/强度提醒】${gaps.slice(0, 3).join("；")}${
-              input.allowGaps ? "（已确认带着缺口开会）" : ""
+              input.allowGaps ? "（已确认带着缺口开案）" : ""
             }`,
           };
         }

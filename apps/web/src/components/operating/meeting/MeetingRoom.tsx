@@ -301,7 +301,7 @@ export function MeetingRoom({
 
       {showPrepare ? (
         <section className="border border-[rgba(24,24,23,0.08)] bg-[linear-gradient(180deg,#fbfaf7_0%,#eef1ea_100%)] p-4 md:p-5">
-          <p className="text-[12px] tracking-[0.08em] text-[#66735E]">准备开会</p>
+          <p className="text-[12px] tracking-[0.08em] text-[#66735E]">准备开案</p>
           <p className="mt-2 text-[18px] leading-[1.4] text-[#202124]">
             {inviteComplete ? "顾问已到齐" : "正在召集顾问…"}
           </p>

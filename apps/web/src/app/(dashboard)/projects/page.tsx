@@ -49,8 +49,8 @@ export default function ProjectsPage() {
         <PageErrorState
           eyebrow="企业"
           title="暂时打不开"
-          description="先回对话。"
-          primaryAction={{ href: "/dashboard", label: "回对话" }}
+          description="先回经营动态，或稍后再试。"
+          primaryAction={{ href: "/dashboard?radar=1", label: "经营动态" }}
           secondaryAction={{ href: "/profile", label: "我的" }}
           inset="shell"
         />

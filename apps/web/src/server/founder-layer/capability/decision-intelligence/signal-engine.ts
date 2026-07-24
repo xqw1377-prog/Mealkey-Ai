@@ -86,7 +86,7 @@ export function collectDecisionSignals(
       rawDesc = `${brand || "本店"}：内部经营风险需处理（区域市场结论暂不可用，请先补城市锚点）`;
     }
     const desc = clip(
-      rawDesc + (r.suggestCouncil ? "。建议进入今日决策判断。" : "。"),
+      rawDesc + (r.suggestCouncil ? "。建议进入决策室判断。" : "。"),
       160,
     );
     const id = `sig_risk_${r.id || "1"}`;

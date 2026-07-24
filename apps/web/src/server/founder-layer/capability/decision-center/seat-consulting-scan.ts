@@ -186,7 +186,7 @@ export function signalsFromSeatConsulting(input: {
     const isGap = /证据强度不足/.test(c.title);
     const isSign = /待签字|待确认策略/.test(c.title);
     const question = clip(
-      c.decisionTopic || "是否根据最新咨询进展调整今日决策？",
+      c.decisionTopic || "是否根据最新咨询进展进决策室再拍一板？",
       80,
     );
     return {

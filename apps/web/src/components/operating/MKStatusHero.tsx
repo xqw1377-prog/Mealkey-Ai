@@ -59,7 +59,7 @@ export function MKStatusHero({
               <span>{modeLabel}</span>
             </div>
             <div>
-              <p className="text-[13px] leading-5 tracking-[0.01em] text-[#66735E]">今日首屏</p>
+              <p className="text-[13px] leading-5 tracking-[0.01em] text-[#66735E]">经营动态</p>
               <h2 className="mt-1 font-display text-[30px] font-semibold leading-[1.05] tracking-[-0.05em] text-[#202124] md:text-[40px]">
                 {heroTitle}
               </h2>

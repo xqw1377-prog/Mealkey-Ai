@@ -277,13 +277,22 @@ export function MeetingRoom({
     <div className="space-y-4 md:space-y-5">
       <header className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <Link
-            href="/dashboard?radar=1"
-            prefetch={false}
-            className="inline-flex min-h-11 items-center gap-1 border border-[rgba(24,24,23,0.08)] bg-white px-3 text-[13px] font-medium text-[#66735E] no-underline touch-manipulation"
-          >
-            经营动态
-          </Link>
+          <div className="flex flex-wrap items-center gap-2">
+            <Link
+              href={`/projects/${projectId}/agent`}
+              prefetch={false}
+              className="inline-flex min-h-11 items-center gap-1 border border-[rgba(24,24,23,0.08)] bg-white px-3 text-[13px] font-medium text-[#66735E] no-underline touch-manipulation"
+            >
+              回对话
+            </Link>
+            <Link
+              href="/dashboard?radar=1"
+              prefetch={false}
+              className="inline-flex min-h-11 items-center gap-1 border border-[rgba(24,24,23,0.08)] bg-white px-3 text-[13px] font-medium text-[#6f747b] no-underline touch-manipulation"
+            >
+              经营动态
+            </Link>
+          </div>
           <span className="rounded-full border border-[rgba(24,24,23,0.08)] bg-white px-3 py-1 text-[12px] text-[#6f747b]">
             {lifecycleLabel(lifecycle)} · {roundLabel(deliberationRound)}
           </span>
@@ -976,12 +985,19 @@ export function MeetingRoom({
               {acceptedDecisionId ? (
                 <div className="mt-4 flex flex-wrap gap-2">
                   <Link
-                    href={`/projects/${projectId}/decisions`}
+                    href={`/projects/${projectId}/agent`}
                     prefetch={false}
                     className="inline-flex min-h-11 items-center gap-2 rounded-full bg-white px-4 text-[13px] font-medium text-[#202124] no-underline touch-manipulation"
                   >
-                    去跟进
+                    回对话
                     <ArrowRight className="h-4 w-4" />
+                  </Link>
+                  <Link
+                    href={`/projects/${projectId}/decisions`}
+                    prefetch={false}
+                    className="inline-flex min-h-11 items-center gap-2 rounded-full border border-white/30 px-4 text-[13px] font-medium text-white no-underline touch-manipulation"
+                  >
+                    去跟进
                   </Link>
                   <Link
                     href="/dashboard?radar=1"

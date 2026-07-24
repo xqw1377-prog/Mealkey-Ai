@@ -146,7 +146,7 @@ function expansionCaseHref(projectId: string) {
   return `/projects/${projectId}/decision-case`;
 }
 
-/** 今日决策入口：默认 ready（可配 why 摘要）；扩店走 case */
+/** 决策室入口：默认 ready（可配 why 摘要）；扩店走 case */
 function decisionEntryHref(
   projectId: string,
   topic: string,
@@ -404,7 +404,7 @@ export function toDailyScanV1(
       situationLine: clip(
         home.dailyDiagnosis ||
           home.dailyObservation ||
-          "餐厅认知与证据仍在积累——先做一个今日决策，系统会越来越懂你",
+          "餐厅认知与证据仍在积累——先进决策室拍一板，系统会越来越懂你",
         72,
       ),
       impactStars: 3,
@@ -486,7 +486,7 @@ export function toDailyScanV1(
     };
   } else if (primaryCard) {
     primaryCta = {
-      label: "进入今日决策",
+      label: "进入决策室",
       href: isExpansionTopic(primaryCard.title)
         ? expansionCaseHref(projectId)
         : primaryCard.href.startsWith(`/projects/${projectId}/advisor`)
@@ -496,7 +496,7 @@ export function toDailyScanV1(
     };
   } else {
     primaryCta = {
-      label: "发起今日决策",
+      label: "进入决策室",
       href: `/projects/${projectId}/decision-room`,
       reason: "meeting",
     };
@@ -686,7 +686,7 @@ export function toDailyScanV1(
       primaryCta.reason === "meeting"
     ) {
       primaryCta = {
-        label: "进入今日决策",
+        label: "进入决策室",
         href,
         reason: "open_card",
       };
@@ -712,7 +712,7 @@ export function toDailyScanV1(
       missing: missing.slice(0, 4),
     };
     primaryCta = {
-      label: "进入决策会议室",
+      label: "进入决策室",
       href,
       reason: "open_card",
     };
@@ -753,7 +753,7 @@ export function toDailyScanV1(
     patchHref: `/projects/${projectId}/business-identity`,
     summaryLine: missingAnchors.length
       ? `还缺${missingAnchors.join("、")}：补齐后才能用外部市场证据做判断`
-      : `${restaurantName} · 经营身份已就绪，可用于今日决策`,
+      : `${restaurantName} · 经营身份已就绪，可用于决策室`,
   };
 
   const openActions =

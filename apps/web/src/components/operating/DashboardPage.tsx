@@ -209,8 +209,8 @@ function EmptyWorldGate({ greeting }: { greeting: string }) {
 }
 
 /**
- * 今日决策看板 — Phase 1 细节打磨
- * 今日经营动态 → 值得关注 → 决策室（拍板只在决策室）
+ * 经营动态看板 — Phase 1 细节打磨
+ * 经营动态 → 值得关注 → 决策室（拍板只在决策室）
  */
 export function DashboardPage({
   currentProject,
@@ -333,7 +333,7 @@ export function DashboardPage({
       ) : (
         <section className="relative mt-8 space-y-4">
           <p className="text-[11px] tracking-[0.12em] text-[#66735E]">
-            今日决策
+            经营动态
           </p>
           <h2 className="font-display text-[22px] font-semibold text-[#202124]">
             系统扫描还在准备，你仍可先进入决策室
@@ -361,7 +361,7 @@ export function DashboardPage({
           {home.pendingMeetingDraft && isConsultingDraft ? (
             <section>
               <p className="text-[11px] tracking-[0.1em] text-[#6f747b]">
-                未完成的咨询（与今日决策分开）
+                未完成的咨询（与决策室分开）
               </p>
               <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-[14px] text-[#3a3d41]">

@@ -125,7 +125,7 @@ export function buildWorldChangesFromDiff(input: {
       id: `wc_watch_${w.slice(0, 12)}`,
       kind: "customer",
       title: `顾客侧需关注：${w}`,
-      detail: "差评或风险关键词上升，建议评估是否升格为今日决策。",
+      detail: "差评或风险关键词上升，建议评估是否升格进决策室。",
     });
   }
 

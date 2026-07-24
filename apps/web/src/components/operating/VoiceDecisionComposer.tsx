@@ -22,12 +22,12 @@ type Props = {
   fieldId?: string;
   rows?: number;
   disabled?: boolean;
-  /** 紧凑：用于今日页主入口 */
+  /** 紧凑：用于经营动态主入口 */
   compact?: boolean;
 };
 
 /**
- * 今日决策 / 决策室语音主体：按住说 → 松手成字 → 可改可再加 → 一键进入。
+ * 决策室语音主体：按住说 → 松手成字 → 可改可再加 → 一键进入。
  * 复用咨询会同一套云端 ASR，不新开 Runtime。
  */
 export function VoiceDecisionComposer({
@@ -37,8 +37,8 @@ export function VoiceDecisionComposer({
   onSubmit,
   submitLabel = "进入决策",
   placeholder = "按住右边说，松手成字；不对可改",
-  cloudTitle = "今日决策·口述议题",
-  fieldId = "today-decision-topic",
+  cloudTitle = "决策室·口述议题",
+  fieldId = "decision-topic",
   rows = 3,
   disabled,
   compact,

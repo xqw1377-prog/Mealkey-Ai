@@ -182,7 +182,7 @@ function focusToUiSignal(
       kind: "internal_fact",
       claim: focus.known[0]
         ? `已知：${clip(focus.known[0], 80)}`
-        : "来自今日决策焦点升格",
+        : "来自经营动态焦点升格",
       sourceRef: "focus:known",
     },
     {

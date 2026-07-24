@@ -73,7 +73,7 @@ type Props = {
 };
 
 /**
- * 会议页底部 sticky 输入区：工具条 / 资料库 / 发送与录音。
+ * 会商页底部 sticky 输入区：工具条 / 资料库 / 发送与录音。
  */
 export function AdvisorComposer({
   projectId,

@@ -1610,7 +1610,7 @@ export function buildAdvisorWorkspace(
           "拆解本周执行",
           "复盘上次决策",
         ],
-    meetingDecision: latest?.judgement || (isInitialMeeting ? "待形成首轮经营判断" : "待会议收束"),
+    meetingDecision: latest?.judgement || (isInitialMeeting ? "待形成首轮经营判断" : "待会商收束"),
     decisionNextStep:
       latest?.action || (isInitialMeeting ? "先把真实问题、关键变量与第一步动作收束出来" : "形成一条可执行动作"),
     ...focus,

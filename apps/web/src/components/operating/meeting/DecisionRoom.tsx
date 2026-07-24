@@ -757,8 +757,24 @@ export function DecisionRoom({ projectId }: Props) {
         <div className="min-w-0 flex-1">
           <p className="truncate text-[15px] font-medium text-[#202124]">决策室</p>
           <p className="truncate text-[11px] tracking-[0.08em] text-[#6f747b]">
-            {step === "setup" ? "说清一件事再拍板" : "拍板后回对话跟进"}
+            {step === "setup" ? "说清一件事再拍板" : "拍板后可回对话、去跟进"}
           </p>
+        </div>
+        <div className="hidden items-center gap-1 sm:flex">
+          <Link
+            href={`/projects/${projectId}/decisions`}
+            prefetch={false}
+            className="inline-flex min-h-11 items-center rounded-[12px] px-2.5 text-[13px] font-medium text-[#6f747b] no-underline touch-manipulation"
+          >
+            去跟进
+          </Link>
+          <Link
+            href="/dashboard?radar=1"
+            prefetch={false}
+            className="inline-flex min-h-11 items-center rounded-[12px] px-2.5 text-[13px] font-medium text-[#6f747b] no-underline touch-manipulation"
+          >
+            经营动态
+          </Link>
         </div>
         {session ? (
           <button
@@ -817,7 +833,7 @@ export function DecisionRoom({ projectId }: Props) {
                 : step === "board"
                   ? "先看建议与争议，再拍板。"
                   : step === "closed"
-                    ? "裁决已形成，可回对话跟进。"
+                    ? "已拍板。可回对话、去跟进或经营动态。"
                     : "语音采集 → 常委判断 → 你来拍板 → 回对话跟进。"}
         </p>
         {/* 闭环轨道不进主路径首屏；降级必须置顶可见 */}

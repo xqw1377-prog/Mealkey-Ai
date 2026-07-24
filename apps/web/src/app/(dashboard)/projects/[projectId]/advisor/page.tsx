@@ -386,7 +386,7 @@ function AdvisorPageContent({
     incomingTopic: string;
   } | null>(null);
   const [showMeetingHistory, setShowMeetingHistory] = useState(false);
-  /** hub = 会议大厅；consulting = 四席咨询会议选题 */
+  /** hub = 选题大厅；consulting = 四席咨询选题 */
   const [meetingLane, setMeetingLane] = useState<"hub" | "consulting">("hub");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const topicConfirmedRef = useRef(false);
@@ -523,7 +523,7 @@ function AdvisorPageContent({
     setShowDraftBanner(true);
     setDraftConflict(null);
     setAgentState("completed");
-    setAgentStateDescription("已恢复上次未结束的会议");
+    setAgentStateDescription("已恢复上次未结束的会商");
   }, []);
 
   useEffect(() => {
@@ -636,8 +636,8 @@ function AdvisorPageContent({
       setAgentState("completed");
       setAgentStateDescription(
         data.workspace.isInitialMeeting
-          ? "我已经根据经营诊断完成了首场会议准备"
-          : "我已经读取这个项目，并完成了第一轮会议准备",
+          ? "我已经根据经营诊断完成了首场会商准备"
+          : "我已经读取这个项目，并完成了第一轮会商准备",
       );
       setAgentReferences(["项目记忆", "历史判断", "经营规则"]);
       setMessages([
@@ -645,8 +645,8 @@ function AdvisorPageContent({
           id: "welcome",
           role: "assistant",
           content: data.workspace.isInitialMeeting
-            ? `首场会议准备已完成。\n\n当前议题：${data.workspace.currentProblem}\n\n会议背景：${data.workspace.kickoffSummary}\n\n我建议先围绕这三个问题推进：\n${(data.workspace.kickoffQuestions ?? []).map((item: string, index: number) => `${index + 1}. ${item}`).join("\n")}\n\n你可以直接选择一个问题开始，也可以先补充新的事实和约束。`
-            : `会议准备已完成。\n\n当前议题：${data.workspace.currentProblem}\n\nAI 主持判断：${data.workspace.consultantSummary}\n\n你可以先补充事实、查看证据、挑战判断，或者直接把这次会议收束成经营决策。`,
+            ? `首场会商准备已完成。\n\n当前议题：${data.workspace.currentProblem}\n\n会商背景：${data.workspace.kickoffSummary}\n\n我建议先围绕这三个问题推进：\n${(data.workspace.kickoffQuestions ?? []).map((item: string, index: number) => `${index + 1}. ${item}`).join("\n")}\n\n你可以直接选择一个问题开始，也可以先补充新的事实和约束。`
+            : `会商准备已完成。\n\n当前议题：${data.workspace.currentProblem}\n\nAI 主持判断：${data.workspace.consultantSummary}\n\n你可以先补充事实、查看证据、挑战判断，或者直接把这次会商收束成经营决策。`,
         },
       ]);
     }
@@ -728,7 +728,7 @@ function AdvisorPageContent({
             );
           }
         } else {
-          setUploadSuccess("资料已上传并选入本次会议");
+          setUploadSuccess("资料已上传并选入本次会商");
         }
         setTimeout(() => setUploadSuccess(null), 5000);
       } catch (err) {
@@ -915,7 +915,7 @@ function AdvisorPageContent({
         { type: recorder.mimeType || "audio/webm" },
       );
       await uploadAsset(audioFile, {
-        title: "语音会议输入",
+        title: "语音会商输入",
         transcriptHint: transcriptHint || undefined,
       });
     };
@@ -1077,7 +1077,7 @@ function AdvisorPageContent({
               }
               if (data.type === "text") {
                 setAgentState("reasoning");
-                setAgentStateDescription("AI 正在形成这轮会议判断");
+                setAgentStateDescription("AI 正在形成这轮会商判断");
                 accumulated += data.content;
                 setStreamingText(accumulated);
               }
@@ -1140,12 +1140,12 @@ function AdvisorPageContent({
           if (deliberationRoundRef.current < 2) {
             setDeliberationRound(2);
           }
-          setAgentStateDescription("顾问补充判断已写入会议纪要");
+          setAgentStateDescription("顾问补充判断已写入会商记录");
         }
       }
       setAgentState("completed");
       if (!topicConfirmedRef.current) {
-        setAgentStateDescription("本次会议判断已完成，可以继续追问或进入报告");
+        setAgentStateDescription("本次会商判断已完成，可以继续追问或进入报告");
       }
       setSelectedAssetIds([]);
 
@@ -1754,7 +1754,7 @@ function AdvisorPageContent({
   const challenge = workspace.challenge ?? consultantJudgements[0] ?? "这次判断仍需要更多反方验证。";
   const kickoffQuestions = workspace.kickoffQuestions ?? [];
   const finalizeDecisionPrompt =
-    "请把这次会议正式收束成一条经营决策，包含最终判断、关键依据、主要风险、执行动作和复盘点。";
+    "请把这次会商正式收束成一条经营决策，包含最终判断、关键依据、主要风险、执行动作和复盘点。";
   const actionPrompts = workspace.actionPrompts ?? [];
   const primaryComposerPrompts = actionPrompts.slice(0, 3);
 
@@ -2042,7 +2042,7 @@ function AdvisorPageContent({
       problem: topic,
       judgement: selected?.summary || draft.proposedDecision,
       diagnosis: challenge,
-      observation: `会议议题：${topic}`,
+      observation: `会商议题：${topic}`,
       strategy: draft.summary,
       action: nextActions[0] || "按验证计划推进",
       nextActions,
@@ -2159,7 +2159,7 @@ function AdvisorPageContent({
       {allMessages.length === 0 ? (
         <div className="mt-4 min-h-[40dvh] rounded-[12px] border border-dashed border-[rgba(24,24,23,0.12)] bg-[#FBFAF7] px-4 py-8 text-center md:mt-5 md:min-h-[48vh] md:py-10">
           <p className="font-display text-[18px] font-semibold leading-7 text-[#202124]">
-            会议还没有进入正式讨论
+            会商还没有进入正式讨论
           </p>
           <p className="mt-2 text-[15px] leading-7 text-[#3a3d41]">先补充，再继续。</p>
         </div>
@@ -2287,16 +2287,25 @@ function AdvisorPageContent({
         <div className="min-w-0 flex-1">
           <p className="truncate text-[15px] font-medium text-[#202124]">顾问咨询</p>
           <p className="truncate text-[11px] tracking-[0.08em] text-[#6f747b]">
-            拍板请用决策室
+            拍板请去拍板
           </p>
         </div>
-        <Link
-          href={`/projects/${params.projectId}/decision-room`}
-          prefetch={false}
-          className="inline-flex min-h-11 items-center rounded-[12px] px-3 text-[13px] font-medium text-[#66735E] no-underline touch-manipulation"
-        >
-          决策室
-        </Link>
+        <div className="flex items-center gap-1">
+          <Link
+            href={`/projects/${params.projectId}/decision-room`}
+            prefetch={false}
+            className="inline-flex min-h-11 items-center rounded-[12px] px-2.5 text-[13px] font-medium text-[#66735E] no-underline touch-manipulation"
+          >
+            去拍板
+          </Link>
+          <Link
+            href="/dashboard?radar=1"
+            prefetch={false}
+            className="hidden min-h-11 items-center rounded-[12px] px-2.5 text-[13px] font-medium text-[#6f747b] no-underline touch-manipulation sm:inline-flex"
+          >
+            经营动态
+          </Link>
+        </div>
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3 md:px-6 md:py-6">
         <div className="space-y-4 md:space-y-5">

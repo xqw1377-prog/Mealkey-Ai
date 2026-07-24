@@ -197,6 +197,7 @@ export function buildConsensusDraft(input: MeetingSeedInput): ConsensusDraft {
   const proposed =
     input.meetingDecision &&
     input.meetingDecision !== "待会议收束" &&
+    input.meetingDecision !== "待会商收束" &&
     input.meetingDecision !== "待形成首轮经营判断"
       ? input.meetingDecision
       : "先完成关键能力验证，再决定是否加速扩张";

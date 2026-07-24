@@ -541,7 +541,7 @@ export function MeetingRoom({
                   {item.evidence && item.evidence.length > 0 ? (
                     <div className="mt-4 rounded-[14px] bg-[#F8F7F3] px-3 py-3">
                       <p className="text-[12px] tracking-[0.06em] text-[#66735E]">为什么这样判断？</p>
-                      <p className="mt-1 text-[13px] font-medium text-[#202124]">会议依据</p>
+                      <p className="mt-1 text-[13px] font-medium text-[#202124]">会商依据</p>
                       <ul className="mt-2 space-y-1.5">
                         {item.evidence.slice(0, 4).map((ev) => (
                           <li key={ev.evidenceId} className="text-[13px] leading-6 text-[#5f655d]">
@@ -902,7 +902,7 @@ export function MeetingRoom({
 
           {decisionContract && decisionContract.tensions.length > 0 ? (
             <div className="mt-4 rounded-[14px] bg-white/10 px-3 py-3">
-              <p className="text-[12px] text-white/65">会议分歧</p>
+              <p className="text-[12px] text-white/65">会商分歧</p>
               {decisionContract.tensions.slice(0, 2).map((tension) => (
                 <div key={tension.topic} className="mt-2">
                   <p className="text-[14px] font-medium text-white">关于{tension.topic}</p>
@@ -1034,7 +1034,7 @@ export function MeetingRoom({
           className="inline-flex min-h-11 w-full items-center justify-center gap-2 border border-[rgba(24,24,23,0.08)] bg-white px-4 text-[13px] font-medium text-[#66735E] touch-manipulation"
         >
           <MessageSquare className="h-4 w-4" />
-          {showTranscript ? "收起补充记录" : "补充观点 / 会议记录"}
+          {showTranscript ? "收起补充记录" : "补充观点 / 会商记录"}
         </button>
       ) : null}
 

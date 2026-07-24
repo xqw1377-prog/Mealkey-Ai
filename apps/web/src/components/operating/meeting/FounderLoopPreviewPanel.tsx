@@ -33,7 +33,7 @@ export function FounderLoopPreviewPanel({
             协同闭环预览
           </h2>
           <p className="mt-2 text-[13px] leading-6 text-[#6f747b]">
-            先预跑 Founder 协同闭环，再把结果一键接入会议桌。记忆写入会在服务端同步落库，不只停在前台预览。
+            先预跑 Founder 协同闭环，再把结果一键接入会商。记忆写入会在服务端同步落库，不只停在前台预览。
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -61,7 +61,7 @@ export function FounderLoopPreviewPanel({
               onClick={() => onActivate(preview)}
               className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-[rgba(24,24,23,0.08)] bg-[#F5F3EE] px-4 py-2 text-[13px] font-medium text-[#202124]"
             >
-              接入会议桌
+              接入会商
             </button>
           ) : null}
         </div>
@@ -89,7 +89,7 @@ export function FounderLoopPreviewPanel({
               </p>
             </div>
             <div className="rounded-[16px] bg-[#F8F7F3] px-3 py-3">
-              <p className="text-[12px] tracking-[0.08em] text-[#66735E]">会议冲突</p>
+              <p className="text-[12px] tracking-[0.08em] text-[#66735E]">会商冲突</p>
               <p className="mt-2 text-[13px] leading-6 text-[#202124]">
                 {preview.meeting.conflicts.length} 个
               </p>

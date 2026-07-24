@@ -229,22 +229,38 @@ export function DecisionIntelligenceRoom({ projectId }: { projectId: string }) {
           <ArrowLeft className="h-4 w-4" />
           回对话
         </Link>
-        <button
-          type="button"
-          disabled={refreshMut.isPending}
-          onClick={async () => {
-            setError(null);
-            try {
-              await refreshMut.mutateAsync({ projectId, decisionId: c.id });
-              await afterMut();
-            } catch (e) {
-              setError(e instanceof Error ? e.message : "刷新失败");
-            }
-          }}
-          className="inline-flex min-h-11 items-center border border-[rgba(24,24,23,0.08)] bg-white px-3 text-[13px] font-medium text-[#66735E] touch-manipulation disabled:opacity-60"
-        >
-          刷新事实
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            href={`/projects/${projectId}/decisions`}
+            prefetch={false}
+            className="inline-flex min-h-11 items-center rounded-[12px] px-2.5 text-[13px] font-medium text-[#6f747b] no-underline touch-manipulation"
+          >
+            去跟进
+          </Link>
+          <Link
+            href="/dashboard?radar=1"
+            prefetch={false}
+            className="inline-flex min-h-11 items-center rounded-[12px] px-2.5 text-[13px] font-medium text-[#6f747b] no-underline touch-manipulation"
+          >
+            经营动态
+          </Link>
+          <button
+            type="button"
+            disabled={refreshMut.isPending}
+            onClick={async () => {
+              setError(null);
+              try {
+                await refreshMut.mutateAsync({ projectId, decisionId: c.id });
+                await afterMut();
+              } catch (e) {
+                setError(e instanceof Error ? e.message : "刷新失败");
+              }
+            }}
+            className="inline-flex min-h-11 items-center border border-[rgba(24,24,23,0.08)] bg-white px-3 text-[13px] font-medium text-[#66735E] touch-manipulation disabled:opacity-60"
+          >
+            刷新事实
+          </button>
+        </div>
       </div>
 
       <header className="space-y-3 border-b border-[rgba(24,24,23,0.08)] pb-6">
@@ -409,7 +425,7 @@ export function DecisionIntelligenceRoom({ projectId }: { projectId: string }) {
           prefetch={false}
           className="inline-flex text-[13px] text-[#66735E] underline-offset-4 hover:underline"
         >
-          打开完整七常委决策室（可选加深）
+          去拍板加深（七常委）
         </Link>
       </div>
 
